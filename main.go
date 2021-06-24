@@ -40,7 +40,7 @@ func (p program) Start(s service.Service) error {
 
 func (p program) run() {
 	e := echo.New()
-	e.POST("/heartbeat", heartbeat)
+	e.GET("/heartbeat", heartbeat)
 	e.POST("/generateTransferZKP", generateTransferZKP)
 	e.POST("/generateReclaimZKP", generateReclaimZKP)
 	err := e.Start(addr)

@@ -102,4 +102,4 @@ Cargo.lock
 **/*.rs.bk
 
 .idea
-manta
+dist/*
