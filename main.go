@@ -10,14 +10,23 @@ import (
 	"fmt"
 	"github.com/kardianos/service"
 	"github.com/labstack/echo/v4"
+	"github.com/urfave/cli/v2"
 	"io/ioutil"
 	"log"
 	"net/http"
+	"os"
 	"unsafe"
 )
 
 const (
-	DaemonVersion = "0.1.0"
+	DaemonName        = "manta-daemon"
+	DaemonDisplayName = "manta-daemon"
+	DaemonUsage       = "This is an a daemon service for manta."
+	DaemonVersion     = "0.1.0"
+)
+
+var (
+	addr string
 )
 
 var logger service.Logger
@@ -34,7 +43,7 @@ func (p program) run() {
 	e.POST("/heartbeat", heartbeat)
 	e.POST("/generateTransferZKP", generateTransferZKP)
 	e.POST("/generateReclaimZKP", generateReclaimZKP)
-	err := e.Start(":8081")
+	err := e.Start(addr)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -45,22 +54,36 @@ func (p program) Stop(s service.Service) error {
 }
 
 func main() {
-	svcConfig := &service.Config{
-		Name:        "GoServiceExampleSimple",
-		DisplayName: "Go Service Example",
-		Description: "This is an example Go service.",
+	app := cli.NewApp()
+	app.Name = DaemonName
+	app.Version = DaemonVersion
+	app.Flags = []cli.Flag{
+		&cli.StringFlag{
+			Name:        "addr",
+			Value:       ":9988",
+			Usage:       "set the http addr for daemon progress to listen",
+			Destination: &addr,
+		},
 	}
-	s, err := service.New(&program{}, svcConfig)
+	app.Action = func(context *cli.Context) error {
+		svcConfig := &service.Config{
+			Name:        DaemonName,
+			DisplayName: DaemonDisplayName,
+			Description: DaemonUsage,
+		}
+		s, err := service.New(&program{}, svcConfig)
+		if err != nil {
+			log.Fatal(err)
+		}
+		logger, err = s.Logger(nil)
+		if err != nil {
+			log.Fatal(err)
+		}
+		return s.Run()
+	}
+	err := app.Run(os.Args)
 	if err != nil {
 		log.Fatal(err)
-	}
-	logger, err = s.Logger(nil)
-	if err != nil {
-		log.Fatal(err)
-	}
-	err = s.Run()
-	if err != nil {
-		logger.Error(err)
 	}
 }
 
