@@ -1,13 +1,12 @@
 package main
 
 /*
-#cgo LDFLAGS: -L./lib -lhello
-#include "./lib/hello.h"
+#cgo LDFLAGS: -L./lib -lzkp
+#include "./lib/zkp.h"
 #include <stdlib.h>
 */
 import "C"
 import (
-	"fmt"
 	"github.com/kardianos/service"
 	"github.com/labstack/echo/v4"
 	"github.com/urfave/cli/v2"
@@ -99,15 +98,21 @@ func generateTransferZKP(ctx echo.Context) error {
 	if err != nil {
 		log.Fatal(err)
 	}
-	input := fmt.Sprintf("%d", len(bytes))
-	output := C.hello(C.CString(input))
-	resp := C.GoString(output)
-	C.free(unsafe.Pointer(output))
-	return ctx.JSON(http.StatusOK, map[string]interface{}{
-		"transfer_zkp":   resp,
+	var outBuffer string
+	outBufferRef := C.CString(outBuffer)
+	var outLen C.size_t
+	ret := C.generate_transfer(C.CString(appVersion), (*C.char)(unsafe.Pointer(&bytes[0])), C.size_t(len(bytes)), &outBufferRef, &outLen)
+	message := map[string]interface{}{
+		"transfer_zkp":   C.GoString(outBufferRef),
 		"daemon_version": DaemonVersion,
 		"app_version":    appVersion,
-	})
+	}
+	if ret == 0 {
+		return ctx.JSON(http.StatusOK, message)
+	} else {
+		return ctx.JSON(http.StatusInternalServerError, message)
+	}
+	return nil
 }
 
 func generateReclaimZKP(ctx echo.Context) error {
@@ -118,13 +123,19 @@ func generateReclaimZKP(ctx echo.Context) error {
 	if err != nil {
 		log.Fatal(err)
 	}
-	input := fmt.Sprintf("%d", len(bytes))
-	output := C.hello(C.CString(input))
-	resp := C.GoString(output)
-	C.free(unsafe.Pointer(output))
-	return ctx.JSON(http.StatusOK, map[string]interface{}{
-		"reclaim_zkp":    resp,
+	var outBuffer string
+	outBufferRef := C.CString(outBuffer)
+	var outLen C.size_t
+	ret := C.generate_reclaim(C.CString(appVersion), (*C.char)(unsafe.Pointer(&bytes[0])), C.size_t(len(bytes)), &outBufferRef, &outLen)
+	message := map[string]interface{}{
+		"reclaim_zkp":    C.GoString(outBufferRef),
 		"daemon_version": DaemonVersion,
 		"app_version":    appVersion,
-	})
+	}
+	if ret == 0 {
+		return ctx.JSON(http.StatusOK, message)
+	} else {
+		return ctx.JSON(http.StatusInternalServerError, message)
+	}
+	return nil
 }

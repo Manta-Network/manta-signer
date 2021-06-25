@@ -1,0 +1,2 @@
+int generate_transfer(char *app_version, char *buffer, const size_t len, char **res, size_t *res_len);
+int generate_reclaim(char *app_version, char *buffer, const size_t len, char **res, size_t *res_len);
