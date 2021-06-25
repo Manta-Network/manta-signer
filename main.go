@@ -2,8 +2,8 @@ package main
 
 /*
 #cgo LDFLAGS: -L./lib -lzkp
-#include "./lib/zkp.h"
 #include <stdlib.h>
+#include "./lib/zkp.h"
 */
 import "C"
 import (
@@ -107,6 +107,7 @@ func generateTransferZKP(ctx echo.Context) error {
 		"daemon_version": DaemonVersion,
 		"app_version":    appVersion,
 	}
+	C.free(unsafe.Pointer(outBufferRef))
 	if ret == 0 {
 		return ctx.JSON(http.StatusOK, message)
 	} else {
@@ -132,6 +133,7 @@ func generateReclaimZKP(ctx echo.Context) error {
 		"daemon_version": DaemonVersion,
 		"app_version":    appVersion,
 	}
+	C.free(unsafe.Pointer(outBufferRef))
 	if ret == 0 {
 		return ctx.JSON(http.StatusOK, message)
 	} else {
