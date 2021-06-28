@@ -59,7 +59,7 @@ func main() {
 	app.Flags = []cli.Flag{
 		&cli.StringFlag{
 			Name:        "addr",
-			Value:       ":9988",
+			Value:       ":29986",
 			Usage:       "set the http addr for daemon progress to listen",
 			Destination: &addr,
 		},
