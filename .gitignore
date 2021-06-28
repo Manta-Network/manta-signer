@@ -103,3 +103,5 @@ Cargo.lock
 
 .idea
 dist/*
+manta-daemon.app
+resources/manta-daemon

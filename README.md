@@ -1,6 +1,13 @@
 ### 交叉编译
+
+#### linux
+安装需要`brew install FiloSottile/musl-cross/musl-cross`
+但是编译还是有问题，暂时没解决
+
 #### Windows
-windows 需要安装x86_65-w64-mingw32-gcc的linker
+执行 `rustup toolchain install stable-x86_64-pc-windows-gnu`
+安装toolchain
+windows 需要安装x86_64-w64-mingw32-gcc的linker
 安装方法brew install mingw-w64
 但是编译还是有问题，暂时没解决
 
@@ -77,3 +84,5 @@ Example:
 ```
 $ curl --request POST --data-binary "@dist/darwin/manta-daemon" http://localhost:9988/generateReclaimZKP
 ```
+
+### 生成macos app DMG
