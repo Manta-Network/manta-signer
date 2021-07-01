@@ -1,7 +1,7 @@
 build-mac:
 	cd lib/zkp && cargo build --release --target=x86_64-apple-darwin
 	cp lib/zkp/target/x86_64-apple-darwin/release/libzkp.a lib/
-	GOOS=darwin GOARCH=amd64 go build -o dist/darwin/manta-daemon main.go
+	GOOS=darwin GOARCH=amd64 go build -o dist/darwin/manta-daemon lstaticdarwin.go main.go
 	go build -o dist/darwin/bundler mac/bundler.go
 
 build-linux:
@@ -14,7 +14,7 @@ build-windows:
 	cp lib/zkp/target/x86_64-pc-windows-gnu/release/libzkp.a lib/
 	#GOOS=windows GOARCH=amd64 go build -ldflags=$(LD_FLAGS) -o dist/windows/manta-daemon.exe main.go
 	GOOS=windows GOARCH=amd64 CC=x86_64-w64-mingw32-gcc CXX=x86_64-w64-mingw32-g++ \
-	CGO_ENABLED=1 go build -o dist/windows/manta-daemon.exe main.go
+	CGO_ENABLED=1 go build -o dist/windows/manta-daemon.exe lstaticwindows.go main.go
 
 run-mac: build-mac
 	./dist/darwin/manta-daemon
