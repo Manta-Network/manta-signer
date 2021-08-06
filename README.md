@@ -13,7 +13,7 @@ windows 需要安装x86_64-w64-mingw32-gcc的linker
 
 #### 运行
 
-MacOS下执行在项目当前路径下执行dist/darwin/manta-daemon即可
+MacOS下执行在项目当前路径下执行dist/darwin/manta-signer即可
 
 ### 接口规范
 本daemon程序实现了符合restful规范的接口，运行在默认为localhost:9988地址
@@ -56,7 +56,7 @@ Response:
 
 Example:
 ```
-$ curl --request POST --data-binary "@dist/darwin/manta-daemon" http://localhost:9988/generateTransferZKP
+$ curl --request POST --data-binary "@dist/darwin/manta-signer" http://localhost:9988/generateTransferZKP
 ```
 
 3. /generateReclaimZKP
@@ -82,7 +82,7 @@ Response:
 
 Example:
 ```
-$ curl --request POST --data-binary "@dist/darwin/manta-daemon" http://localhost:9988/generateReclaimZKP
+$ curl --request POST --data-binary "@dist/darwin/manta-signer" http://localhost:9988/generateReclaimZKP
 ```
 
 ### 生成macos app DMG

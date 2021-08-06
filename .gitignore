@@ -102,6 +102,5 @@ Cargo.lock
 **/*.rs.bk
 
 .idea
-dist/*
-manta-daemon.app
-resources/manta-daemon
+build/bin
+.version

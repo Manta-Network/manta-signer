@@ -1,82 +1,80 @@
 package main
 
 import (
-	"github.com/kardianos/service"
-	"github.com/labstack/echo/v4"
-	"github.com/urfave/cli/v2"
-	"log"
+	_ "embed"
+	"fmt"
+	"github.com/pkg/errors"
+	"github.com/wailsapp/wails/v2"
+	"github.com/wailsapp/wails/v2/pkg/logger"
+	"github.com/wailsapp/wails/v2/pkg/options"
+	"github.com/wailsapp/wails/v2/pkg/options/mac"
+	"github.com/wailsapp/wails/v2/pkg/options/windows"
 	"os"
 )
 
 const (
-	DaemonName        = "manta-daemon"
-	DaemonDisplayName = "manta-daemon"
-	DaemonUsage       = "This is an a daemon service for manta."
-	DaemonVersion     = "0.1.0"
+	DaemonName = "manta-signer"
 )
 
-var (
-	addr string
-)
-
-var logger service.Logger
-
-type program struct{}
-
-func (p program) Start(s service.Service) error {
-	go p.run()
-	return nil
-}
-
-func (p program) run() {
-	e := echo.New()
-	e.GET("/heartbeat", heartbeat)
-	e.POST("/generateTransferZKP", generateTransferZKP)
-	e.POST("/generateReclaimZKP", generateReclaimZKP)
-	err := e.Start(addr)
-	if err != nil {
-		log.Fatal(err)
-	}
-}
-
-func (p program) Stop(s service.Service) error {
-	return nil
-}
+//go:embed .version
+var version string
 
 func main() {
-	app := cli.NewApp()
-	app.Name = DaemonName
-	app.Version = DaemonVersion
-	app.Flags = []cli.Flag{
-		&cli.StringFlag{
-			Name:        "addr",
-			Value:       ":29986",
-			Usage:       "set the http addr for daemon progress to listen",
-			Destination: &addr,
-		},
+	println(DaemonName, version)
+	if err := run(); err != nil {
+		fmt.Fprintf(os.Stderr, "%s\n", err)
+		os.Exit(1)
 	}
-	app.Action = func(context *cli.Context) error {
-		svcConfig := &service.Config{
-			Name:        DaemonName,
-			DisplayName: DaemonDisplayName,
-			Description: DaemonUsage,
-		}
-		s, err := service.New(&program{}, svcConfig)
-		if err != nil {
-			log.Fatal(err)
-		}
-		logger, err = s.Logger(nil)
-		if err != nil {
-			log.Fatal(err)
-		}
-		return s.Run()
-	}
-	err := app.Run(os.Args)
-	if err != nil {
-		log.Fatal(err)
-	}
+	println(DaemonName + " exited")
 }
 
-func heartbeat(ctx echo.Context) error {
-	return nil
+func run() error {
+	app, err := newApp(":29986")
+	if err != nil {
+		return errors.Wrap(err, "newApp")
+	}
+	wailsLogLevel := logger.ERROR
+	app.Verbose = true
+	if app.Verbose {
+		wailsLogLevel = logger.DEBUG
+	}
+
+	err = wails.Run(&options.App{
+		Title:     DaemonName,
+		Width:     1080,
+		Height:    700,
+		MinWidth:  800,
+		MinHeight: 600,
+		// 启用时隐藏界面
+		StartHidden: true,
+		// 按close是否隐藏窗口
+		HideWindowOnClose: true,
+
+		// mac配置
+		Mac: &mac.Options{
+			WebviewIsTransparent:          true,
+			WindowBackgroundIsTranslucent: true,
+			TitleBar:                      mac.TitleBarHiddenInset(),
+			Menu:                          app.appMenu,
+			// 不显示docker图标
+			ActivationPolicy: mac.NSApplicationActivationPolicyAccessory,
+			URLHandlers: map[string]func(string){
+				"manta": app.handleIncomeURL,
+			},
+		},
+		Windows: &windows.Options{
+			WebviewIsTransparent:          true,
+			WindowBackgroundIsTranslucent: true,
+			DisableWindowIcon:             true,
+			Menu:                          app.appMenu,
+		},
+
+		LogLevel: wailsLogLevel,
+		Startup:  app.startup,
+		Shutdown: app.shutdown,
+		Bind: []interface{}{
+			app,
+		},
+	})
+	return err
 }
