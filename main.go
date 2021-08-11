@@ -1,11 +1,12 @@
 package main
 
 import (
+	"log"
+	"os"
+
 	"github.com/kardianos/service"
 	"github.com/labstack/echo/v4"
 	"github.com/urfave/cli/v2"
-	"log"
-	"os"
 )
 
 const (
@@ -33,6 +34,8 @@ func (p program) run() {
 	e.GET("/heartbeat", heartbeat)
 	e.POST("/generateTransferZKP", generateTransferZKP)
 	e.POST("/generateReclaimZKP", generateReclaimZKP)
+	e.POST("/deriveShieldedAddress", deriveShieldedAddress)
+	e.POST("/generateAsset", generateAsset)
 	err := e.Start(addr)
 	if err != nil {
 		log.Fatal(err)
