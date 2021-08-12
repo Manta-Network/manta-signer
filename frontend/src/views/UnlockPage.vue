@@ -12,10 +12,10 @@
         <div class="unlock-page__password-container">
           <div
               class="unlock-page__password-input-container">
-            <el-input placeholder="请输入密码" v-model="input" show-password></el-input>
+            <el-input placeholder="请输入密码" v-model="password" show-password></el-input>
           </div>
         </div>
-        <el-button class="unlock-page__unlock-button">解锁</el-button>
+        <el-button class="unlock-page__unlock-button" :disabled="password.length === 0" type="primary">解锁</el-button>
       </form>
       <div class="unlock-page__links">
         <span> 或者 <button class="unlock-page__link unlock-page__link--import" @click.prevent="toRestoreVault">使用账户助记词恢复您的账户</button>
@@ -30,7 +30,7 @@ export default {
   name: "UnlockPage",
   data() {
     return {
-      input: ""
+      password: ""
     }
   },
   methods: {
@@ -99,8 +99,6 @@ export default {
   letter-spacing: 0.00938em;
 }
 .unlock-page__unlock-button {
-  background-color: rgb(3, 125, 214);
-  color: white;
   margin-top: 20px;
   height: 60px;
   font-weight: 400;

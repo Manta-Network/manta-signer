@@ -9,10 +9,10 @@
 
           <el-form-item label="钱包助记词">
             <template v-if="showSeed">
-              <el-input type="textarea" placeholder="用空格分隔每个单词"></el-input>
+              <el-input type="textarea" placeholder="用空格分隔每个单词" v-model="seed"></el-input>
             </template>
             <template v-else>
-              <el-input type="text" placeholder="从剪贴板粘贴账户助记词"></el-input>
+              <el-input type="password" placeholder="从剪贴板粘贴账户助记词" v-model="seed"></el-input>
             </template>
 
           </el-form-item>
@@ -42,7 +42,8 @@ export default {
     return {
       showSeed: false,
       password: "",
-      passwordConfirm: ""
+      passwordConfirm: "",
+      seed: ""
     }
   },
   methods: {

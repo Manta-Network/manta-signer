@@ -19,19 +19,19 @@
               <label class="reveal-seed__label">您的账户助记词</label>
               <div class="export-text-container">
                 <div class="export-text-container__text-container">
-                  <div class="export-text-container__text notranslate">wealth enrich manual process trap issue olympic
-                    stand gravity luggage tissue soon
+                  <div class="export-text-container__text notranslate">
+                    {{seed}}
                   </div>
                 </div>
                 <div class="export-text-container__buttons-container">
-                  <div class="export-text-container__button export-text-container__button--copy">
+                  <div class="export-text-container__button export-text-container__button--copy" @click="copyToClipboard">
                     <svg width="17" height="17" viewBox="0 0 11 11" fill="none" xmlns="http://www.w3.org/2000/svg">
                       <path fill-rule="evenodd" clip-rule="evenodd"
                             d="M0 0H1H9V1H1V9H0V0ZM2 2H11V11H2V2ZM3 3H10V10H3V3Z" fill="#3098DC"></path>
                     </svg>
                     <div class="export-text-container__button-text">复制到剪贴板</div>
                   </div>
-                  <div class="export-text-container__button"><img src="../assets/download.svg" alt="">
+                  <div class="export-text-container__button" @click="saveToCSV"><img src="../assets/download.svg" alt="">
                     <div class="export-text-container__button-text">保存为 CSV 文件</div>
                   </div>
                 </div>
@@ -49,11 +49,11 @@
       </div>
       <div class="page-container__footer">
         <footer v-if="authorized">
-          <el-button>关闭</el-button>
+          <el-button @click="closeWindow">关闭</el-button>
         </footer>
         <footer v-else>
-          <el-button>取消</el-button>
-          <el-button>下一步</el-button>
+          <el-button type="info">取消</el-button>
+          <el-button type="primary" @click="nextStep" :disabled="password.length === 0">下一步</el-button>
         </footer>
       </div>
     </div>
@@ -61,12 +61,35 @@
 </template>
 
 <script>
+import * as copy from 'copy-to-clipboard'
+import {ExportToCsv} from 'export-to-csv'
 export default {
   name: "CreateAccount",
   data() {
     return {
       password: "",
-      authorized: true,
+      authorized: false,
+      seed: "wealth enrich manual process trap issue olympic stand gravity luggage tissue soon"
+    }
+  },
+  methods: {
+    copyToClipboard() {
+      if (copy(this.seed)) {
+        this.$message.success("复制成功");
+      }
+    },
+    nextStep() {
+      this.authorized = true
+    },
+    closeWindow() {
+      window.backend.main.CommandService.WindowHide();
+    },
+    saveToCSV() {
+      let data = [{
+        seed: this.seed,
+      }]
+      const csvExporter = new ExportToCsv();
+      csvExporter.generateCsv(data);
     }
   }
 }

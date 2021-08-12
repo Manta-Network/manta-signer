@@ -31,7 +31,8 @@ type app struct {
 	autoUpdateMenu    *menu.MenuItem
 	appUpdatesMenu    *menu.MenuItem
 
-	lock sync.Mutex
+	CommandService *CommandService
+	lock           sync.Mutex
 	// 是否输出调试信息
 	Verbose bool
 	// 是否暗黑模式 todo 估计windows不支持
@@ -54,6 +55,9 @@ func newApp(addr string) (*app, error) {
 		menu.EditMenu(),
 		menu.WindowMenu(),
 	)
+
+	// 初始化要导出的服务
+	app.CommandService = NewCommandService()
 
 	// 自动更新
 	app.appUpdatesMenu = &menu.MenuItem{
@@ -119,6 +123,7 @@ func (b *app) startup(runtime *wails.Runtime) {
 		b.refreshAll()
 	})
 	b.runtime = runtime
+	b.CommandService.runtime = runtime
 	b.refreshAll()
 
 	// 暴露对外服务接口

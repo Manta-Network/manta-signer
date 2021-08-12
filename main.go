@@ -73,7 +73,7 @@ func run() error {
 		Startup:  app.startup,
 		Shutdown: app.shutdown,
 		Bind: []interface{}{
-			app,
+			app.CommandService,
 		},
 	})
 	return err
