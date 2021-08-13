@@ -3,7 +3,7 @@
 package main
 
 /*
-#cgo LDFLAGS: -L./lib -lzkp
+#cgo LDFLAGS: -L./lib/darwin -lzkp
 #include <stdlib.h>
 #include "./lib/zkp.h"
 */

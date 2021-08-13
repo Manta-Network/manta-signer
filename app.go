@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"github.com/labstack/echo/v4"
 	"github.com/wailsapp/wails/v2"
-	"github.com/wailsapp/wails/v2/pkg/mac"
 	"github.com/wailsapp/wails/v2/pkg/menu"
 	"github.com/wailsapp/wails/v2/pkg/menu/keys"
 	"github.com/wailsapp/wails/v2/pkg/options/dialog"
@@ -26,10 +25,10 @@ type app struct {
 	// appMenu 不可视，主要用途热键
 	appMenu *menu.Menu
 	// 托盘菜单
-	defaultTrayMenu   *menu.TrayMenu
-	startsAtLoginMenu *menu.MenuItem
-	autoUpdateMenu    *menu.MenuItem
-	appUpdatesMenu    *menu.MenuItem
+	defaultTrayMenu *menu.TrayMenu
+	//startsAtLoginMenu *menu.MenuItem
+	autoUpdateMenu *menu.MenuItem
+	appUpdatesMenu *menu.MenuItem
 
 	CommandService *CommandService
 	lock           sync.Mutex
@@ -72,21 +71,21 @@ func newApp(addr string) (*app, error) {
 	}
 
 	// 是否启动运行
-	app.startsAtLoginMenu = &menu.MenuItem{
-		Type:    menu.CheckboxType,
-		Label:   "Start at Login",
-		Checked: false,
-	}
-	startsAtLogin, err := mac.StartsAtLogin()
-	if err != nil {
-		if app.Verbose {
-			log.Println("start at login:", err)
-		}
-		app.startsAtLoginMenu.Label = "Start at Login"
-		app.startsAtLoginMenu.Checked = true
-	} else {
-		app.startsAtLoginMenu.Checked = startsAtLogin
-	}
+	//app.startsAtLoginMenu = &menu.MenuItem{
+	//	Type:    menu.CheckboxType,
+	//	Label:   "Start at Login",
+	//	Checked: false,
+	//}
+	//startsAtLogin, err := mac.StartsAtLogin()
+	//if err != nil {
+	//	if app.Verbose {
+	//		log.Println("start at login:", err)
+	//	}
+	//	app.startsAtLoginMenu.Label = "Start at Login"
+	//	app.startsAtLoginMenu.Checked = true
+	//} else {
+	//	app.startsAtLoginMenu.Checked = startsAtLogin
+	//}
 
 	app.defaultTrayMenu = &menu.TrayMenu{
 		Label: DaemonName,
@@ -174,7 +173,7 @@ func (b *app) newTrayMenu() *menu.Menu {
 	})
 	items = append(items, b.appUpdatesMenu)
 	items = append(items, b.autoUpdateMenu)
-	items = append(items, b.startsAtLoginMenu)
+	//items = append(items, b.startsAtLoginMenu)
 	items = append(items, menu.Separator())
 	items = append(items, &menu.MenuItem{
 		Type:        menu.TextType,

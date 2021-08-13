@@ -67,7 +67,8 @@ rm -rf ./build/bin
 sed "s/0.0.0/${VERSION}/" ./build/darwin/Info.plist.src > ./build/darwin/Info.plist
 cd ./lib/zkp && cargo build --release --target=x86_64-apple-darwin
 cd ../../
-cp ./lib/zkp/target/x86_64-apple-darwin/release/libzkp.a ./lib/libzkp.a
+mkdir ./lib/darwin
+cp ./lib/zkp/target/x86_64-apple-darwin/release/libzkp.a ./lib/darwin/libzkp.a
 CGO_LDFLAGS=-mmacosx-version-min=10.13 wails build -package -production -platform darwin -o manta-signer
 
 cd build/bin/

@@ -104,3 +104,6 @@ Cargo.lock
 .idea
 build/bin
 .version
+lib/darwin
+lib/linux
+lib/windows
