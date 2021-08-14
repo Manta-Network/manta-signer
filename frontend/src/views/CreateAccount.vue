@@ -7,7 +7,14 @@
       </div>
       <div class="page-container__content">
         <div class="page-container__warning-container">
-          <img class="page-container__warning-icon" src="../assets/warning.svg" alt="">
+          <svg class="page-container__warning-icon" height="32" width="33" xmlns="http://www.w3.org/2000/svg">
+            <g fill="none" fill-rule="evenodd">
+              <path d="M19.132 2.854l12.44 22.748a3 3 0 01-2.632 4.44H4.06a3 3 0 01-2.632-4.44l12.44-22.748a3 3 0 015.264 0z" stroke="#ff001f" stroke-width="2"/>
+              <g fill="#ff001f">
+                <path d="M15 8h3v13h-3zM15 23h3v3h-3z"/>
+              </g>
+            </g>
+          </svg>
           <div class="page-container__warning-message">
             <div class="page-container__warning-title">不要对任何人展示此账户助记词！</div>
             <div>该账户助记词可以用来窃取您的所有帐户</div>
@@ -31,7 +38,13 @@
                     </svg>
                     <div class="export-text-container__button-text">复制到剪贴板</div>
                   </div>
-                  <div class="export-text-container__button" @click="saveToCSV"><img src="../assets/download.svg" alt="">
+                  <div class="export-text-container__button" @click="saveToCSV">
+                    <svg height="18" width="20" xmlns="http://www.w3.org/2000/svg">
+                      <g fill="none" fill-rule="evenodd" stroke="#259de5" stroke-width="2">
+                        <path d="M1.336 11v6h17v-6M9.836 0v11"/>
+                        <path d="M4.524 7l5.312 4 5.313-4"/>
+                      </g>
+                    </svg>
                     <div class="export-text-container__button-text">保存为 CSV 文件</div>
                   </div>
                 </div>
