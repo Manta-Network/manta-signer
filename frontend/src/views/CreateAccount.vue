@@ -63,13 +63,14 @@
 <script>
 import * as copy from 'copy-to-clipboard'
 import {ExportToCsv} from 'export-to-csv'
+import backend from "@/backend";
 export default {
   name: "CreateAccount",
   data() {
     return {
       password: "",
       authorized: false,
-      seed: "wealth enrich manual process trap issue olympic stand gravity luggage tissue soon"
+      seed: ""
     }
   },
   methods: {
@@ -80,9 +81,13 @@ export default {
     },
     nextStep() {
       this.authorized = true
+      backend.main.Service.AcquireSeedByPassword(this.password).then((seed) => {
+        this.seed = seed
+      })
     },
     closeWindow() {
-      window.backend.main.CommandService.WindowHide();
+      this.$router.push('/')
+      // backend.main.Service.WindowHide();
     },
     saveToCSV() {
       let data = [{

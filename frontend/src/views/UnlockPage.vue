@@ -15,7 +15,10 @@
             <el-input placeholder="请输入密码" v-model="password" show-password></el-input>
           </div>
         </div>
-        <el-button class="unlock-page__unlock-button" :disabled="password.length === 0" type="primary">解锁</el-button>
+        <el-button class="unlock-page__unlock-button"
+                   :disabled="password.length === 0"
+                   type="primary"
+        @click="unlock">解锁</el-button>
       </form>
       <div class="unlock-page__links">
         <span> 或者 <button class="unlock-page__link unlock-page__link--import" @click.prevent="toRestoreVault">使用账户助记词恢复您的账户</button>
@@ -26,6 +29,8 @@
 </template>
 
 <script>
+import backend from "@/backend";
+
 export default {
   name: "UnlockPage",
   data() {
@@ -34,6 +39,14 @@ export default {
     }
   },
   methods: {
+    unlock() {
+      backend.main.Service.Unlock(this.password)
+      .then(() => {
+        this.$router.push('/')
+      }).catch(err => {
+        this.$message.error(err)
+      })
+    },
     toRestoreVault() {
       this.$router.push('/restore_vault')
     }

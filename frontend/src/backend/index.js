@@ -4,13 +4,52 @@
 
 const backend = {
   "main": {
-    "CommandService": {
+    "Service": {
+      /**
+       * AccountCreated
+       * @returns {Promise<boolean|Error>}  - Go Type: bool
+       */
+      "AccountCreated": () => {
+        return window.backend.main.Service.AccountCreated();
+      },
+      /**
+       * AcquireSeedByPassword
+       * @param {string} arg1 - Go Type: string
+       * @returns {Promise<string|Error>}  - Go Type: string
+       */
+      "AcquireSeedByPassword": (arg1) => {
+        return window.backend.main.Service.AcquireSeedByPassword(arg1);
+      },
+      /**
+       * LoggedIn
+       * @returns {Promise<boolean|Error>}  - Go Type: bool
+       */
+      "LoggedIn": () => {
+        return window.backend.main.Service.LoggedIn();
+      },
+      /**
+       * RestoreVaultBySeed
+       * @param {string} arg1 - Go Type: string
+       * @param {string} arg2 - Go Type: string
+       * @returns {Promise<Error>}  - Go Type: error
+       */
+      "RestoreVaultBySeed": (arg1, arg2) => {
+        return window.backend.main.Service.RestoreVaultBySeed(arg1, arg2);
+      },
+      /**
+       * Unlock
+       * @param {string} arg1 - Go Type: string
+       * @returns {Promise<Error>}  - Go Type: error
+       */
+      "Unlock": (arg1) => {
+        return window.backend.main.Service.Unlock(arg1);
+      },
       /**
        * WindowHide
        * @returns {Promise<void>} 
        */
       "WindowHide": () => {
-        return window.backend.main.CommandService.WindowHide();
+        return window.backend.main.Service.WindowHide();
       },
     }
   }

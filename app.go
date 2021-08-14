@@ -30,7 +30,7 @@ type app struct {
 	autoUpdateMenu *menu.MenuItem
 	appUpdatesMenu *menu.MenuItem
 
-	CommandService *CommandService
+	CommandService *Service
 	lock           sync.Mutex
 	// 是否输出调试信息
 	Verbose bool
@@ -56,7 +56,7 @@ func newApp(addr string) (*app, error) {
 	)
 
 	// 初始化要导出的服务
-	app.CommandService = NewCommandService()
+	app.CommandService = NewService()
 
 	// 自动更新
 	app.appUpdatesMenu = &menu.MenuItem{
@@ -173,6 +173,14 @@ func (b *app) newTrayMenu() *menu.Menu {
 	})
 	items = append(items, b.appUpdatesMenu)
 	items = append(items, b.autoUpdateMenu)
+	items = append(items, &menu.MenuItem{
+		Label: "Switch Logged",
+		Type:  menu.CheckboxType,
+		Click: func(data *menu.CallbackData) {
+			b.CommandService.logged = !b.CommandService.logged
+		},
+		Checked: b.CommandService.logged,
+	})
 	//items = append(items, b.startsAtLoginMenu)
 	items = append(items, menu.Separator())
 	items = append(items, &menu.MenuItem{

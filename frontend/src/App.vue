@@ -3,7 +3,8 @@
     <div id="nav">
       <router-link to="/">首页</router-link> |
       <router-link to="/create_account">创建账户</router-link> |
-      <router-link to="/restore_vault">恢复密码</router-link>
+      <router-link to="/restore_vault">恢复密码</router-link> |
+      <router-link to="/unlock_page">解锁</router-link>
     </div>
     <router-view/>
   </div>

@@ -2,32 +2,32 @@
   <div class="main-container-wrapper">
     <div class="first-view-main-wrapper">
       <div class="first-view-main">
-        <el-form class="import-account">
+        <el-form class="import-account" :model="ruleForm" :rules="rules" ref="ruleForm">
           <a class="import-account__back-button" href="#" @click="goBack">&lt; 返回</a>
           <div class="import-account__title">使用账户助记词恢复您的账户</div>
           <div class="import-account__selector-label">请输入助记词来恢复您的密码</div>
 
-          <el-form-item label="钱包助记词">
-            <template v-if="showSeed">
-              <el-input type="textarea" placeholder="用空格分隔每个单词" v-model="seed"></el-input>
+          <el-form-item label="钱包助记词" prop="seed">
+            <template v-if="ruleForm.showSeed">
+              <el-input type="textarea" placeholder="用空格分隔每个单词" v-model="ruleForm.seed" ></el-input>
             </template>
             <template v-else>
-              <el-input type="password" placeholder="从剪贴板粘贴账户助记词" v-model="seed"></el-input>
+              <el-input type="password" placeholder="从剪贴板粘贴账户助记词" v-model="ruleForm.seed"></el-input>
             </template>
-
           </el-form-item>
+
           <el-form-item label="显示账户助记词" prop="delivery">
-            <el-switch v-model="showSeed"></el-switch>
+            <el-switch v-model="ruleForm.showSeed"></el-switch>
           </el-form-item>
 
-          <el-form-item label="密码" prop="pass">
-            <el-input type="password" v-model="password" autocomplete="off"></el-input>
+          <el-form-item label="密码" prop="password">
+            <el-input type="password" v-model="ruleForm.password" autocomplete="off"></el-input>
           </el-form-item>
-          <el-form-item label="确认密码" prop="checkPass">
-            <el-input type="password" v-model="passwordConfirm" autocomplete="off"></el-input>
+          <el-form-item label="确认密码" prop="passwordConfirm">
+            <el-input type="password" v-model="ruleForm.passwordConfirm" autocomplete="off" prop="passwordConfirm"></el-input>
           </el-form-item>
           <el-form-item>
-            <el-button type="primary" @click="onSubmit">恢复</el-button>
+            <el-button type="primary" @click="onSubmit('ruleForm')">恢复</el-button>
           </el-form-item>
         </el-form>
       </div>
@@ -36,19 +36,55 @@
 </template>
 
 <script>
+import backend from "@/backend";
+
 export default {
   name: "RestoreVault",
   data() {
+    let confirmPwd = (rule, value, callback) => {
+      if (value !== this.ruleForm.password) {
+        callback(new Error("密码不匹配"))
+      } else {
+        callback()
+      }
+    }
     return {
-      showSeed: false,
-      password: "",
-      passwordConfirm: "",
-      seed: ""
+      ruleForm: {
+        showSeed: false,
+        password: '',
+        passwordConfirm: '',
+        seed: ''
+      },
+      rules: {
+        password: [
+          { required: true, message: '请输入密码', trigger: 'blur' },
+          { min: 8, message: '长度为 8 个字符', trigger: 'blur' }
+        ],
+        passwordConfirm: [
+          { required: true, message: '请输入密码', trigger: 'blur' },
+          { min: 8, message: '长度为 8 个字符', trigger: 'blur' },
+          { validator: confirmPwd, trigger: 'blur'}
+        ],
+        seed: [
+          { required: true, message: '请输入助记词', trigger: 'blur' }
+        ],
+      }
     }
   },
   methods: {
-    onSubmit() {
-      console.log(1);
+    onSubmit(formName) {
+      this.$refs[formName].validate((valid) => {
+        if (valid) {
+          backend.main.Service.RestoreVaultBySeed(this.ruleForm.seed, this.ruleForm.password)
+          .then(() => {
+            this.$router.push('/')
+          }).catch(err => {
+            this.$message.error(err)
+          })
+        } else {
+          return false
+        }
+      })
     },
     goBack() {
       window.history.length > 1 ? this.$router.go(-1) : this.$router.push('/')
