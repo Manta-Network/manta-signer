@@ -8,6 +8,7 @@ import (
 	"github.com/wailsapp/wails/v2/pkg/menu/keys"
 	"github.com/wailsapp/wails/v2/pkg/options/dialog"
 	"log"
+	"os"
 	"sync"
 	"time"
 )
@@ -30,8 +31,8 @@ type app struct {
 	autoUpdateMenu *menu.MenuItem
 	appUpdatesMenu *menu.MenuItem
 
-	CommandService *Service
-	lock           sync.Mutex
+	Service *Service
+	lock    sync.Mutex
 	// 是否输出调试信息
 	Verbose bool
 	// 是否暗黑模式 todo 估计windows不支持
@@ -56,7 +57,7 @@ func newApp(addr string) (*app, error) {
 	)
 
 	// 初始化要导出的服务
-	app.CommandService = NewService()
+	app.Service = NewService()
 
 	// 自动更新
 	app.appUpdatesMenu = &menu.MenuItem{
@@ -95,19 +96,14 @@ func newApp(addr string) (*app, error) {
 	return app, nil
 }
 
-func (b *app) startupServer() {
-	var heartbeat = func(ctx echo.Context) error {
-		return nil
-	}
-	e := echo.New()
-	e.GET("/heartbeat", heartbeat)
-	e.POST("/generateTransferZKP", generateTransferZKP)
-	e.POST("/generateReclaimZKP", generateReclaimZKP)
-	e.POST("/deriveShieldedAddress", deriveShieldedAddress)
-	e.POST("/generateAsset", generateAsset)
-	err := e.Start(b.addr)
+func (b *app) startupServer(runtime *wails.Runtime) {
+	svr := NewSvr()
+	svr.RegisterRoutes()
+	err := svr.Start(runtime, b.addr)
 	if err != nil {
-		log.Fatal(err)
+		println(err.Error())
+		os.Exit(1)
+		return
 	}
 }
 
@@ -122,11 +118,11 @@ func (b *app) startup(runtime *wails.Runtime) {
 		b.refreshAll()
 	})
 	b.runtime = runtime
-	b.CommandService.runtime = runtime
+	b.Service.runtime = runtime
 	b.refreshAll()
 
 	// 暴露对外服务接口
-	go b.startupServer()
+	go b.startupServer(runtime)
 	// 准备自动更新
 	go func() {
 		// 等待检查更新
@@ -177,9 +173,10 @@ func (b *app) newTrayMenu() *menu.Menu {
 		Label: "Switch Logged",
 		Type:  menu.CheckboxType,
 		Click: func(data *menu.CallbackData) {
-			b.CommandService.logged = !b.CommandService.logged
+			b.Service.logged = !b.Service.logged
+			b.refreshAll()
 		},
-		Checked: b.CommandService.logged,
+		Checked: b.Service.logged,
 	})
 	//items = append(items, b.startsAtLoginMenu)
 	items = append(items, menu.Separator())

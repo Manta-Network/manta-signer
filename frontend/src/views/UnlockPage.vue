@@ -30,6 +30,7 @@
 
 <script>
 import backend from "@/backend";
+import {Events} from "@wails/runtime";
 
 export default {
   name: "UnlockPage",
@@ -42,7 +43,7 @@ export default {
     unlock() {
       backend.main.Service.Unlock(this.password)
       .then(() => {
-        this.$router.push('/')
+        Events.Emit('manta.server.onUnlocked')
       }).catch(err => {
         this.$message.error(err)
       })

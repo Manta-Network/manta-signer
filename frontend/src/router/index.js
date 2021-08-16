@@ -4,18 +4,12 @@ import UnlockPage from '@/views/UnlockPage'
 import RestoreVault from "@/views/RestoreVault";
 import CreateAccount from "@/views/CreateAccount";
 import backend from "@/backend";
-import HomePage from "@/views/HomePage";
 
 Vue.use(VueRouter)
 
 const routes = [
   {
-    path: '/',
-    name: 'HomePage',
-    component: HomePage,
-  },
-  {
-    path: '/unlock_page',
+    path: '/unlock',
     name: 'UnlockPage',
     component: UnlockPage,
   },

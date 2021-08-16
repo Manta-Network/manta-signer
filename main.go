@@ -10,6 +10,7 @@ import (
 	"github.com/wailsapp/wails/v2/pkg/options/mac"
 	"github.com/wailsapp/wails/v2/pkg/options/windows"
 	"os"
+	"runtime"
 )
 
 const (
@@ -39,6 +40,11 @@ func run() error {
 		wailsLogLevel = logger.DEBUG
 	}
 
+	startHidden := true
+	if runtime.GOOS == "window" {
+		startHidden = false
+	}
+
 	err = wails.Run(&options.App{
 		Title:     DaemonName,
 		Width:     1080,
@@ -46,14 +52,14 @@ func run() error {
 		MinWidth:  800,
 		MinHeight: 600,
 		// 启用时隐藏界面
-		StartHidden: true,
+		StartHidden: startHidden,
 		// 按close是否隐藏窗口
 		HideWindowOnClose: true,
 
 		// mac配置
 		Mac: &mac.Options{
 			WebviewIsTransparent:          true,
-			WindowBackgroundIsTranslucent: true,
+			WindowBackgroundIsTranslucent: false,
 			TitleBar:                      mac.TitleBarHiddenInset(),
 			Menu:                          app.appMenu,
 			// 不显示docker图标
@@ -63,8 +69,8 @@ func run() error {
 			},
 		},
 		Windows: &windows.Options{
-			WebviewIsTransparent:          true,
-			WindowBackgroundIsTranslucent: true,
+			WebviewIsTransparent:          false,
+			WindowBackgroundIsTranslucent: false,
 			DisableWindowIcon:             true,
 			Menu:                          app.appMenu,
 		},
@@ -73,7 +79,7 @@ func run() error {
 		Startup:  app.startup,
 		Shutdown: app.shutdown,
 		Bind: []interface{}{
-			app.CommandService,
+			app.Service,
 		},
 	})
 	return err

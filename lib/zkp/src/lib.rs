@@ -4,14 +4,14 @@ extern crate alloc;
 use std::ffi::{CString, CStr};
 use std::ops::{Deref, DerefMut};
 use alloc::slice;
-use tiny_hderive::bip44::DerivationPath;
 use manta_asset::MantaSecretKey;
-use std::str::FromStr;
 use manta_api::signer::desktop_app::hd_wallet::derive_shielded_address as _derive_shielded_address;
 use manta_api::signer::desktop_app::payload_gen::generate_asset as _generate_asset;
 use manta_api::signer::shared::params::{DeriveShieldedAddressParams, GenerateAssetParams};
-use std::fmt::Debug;
 use manta_crypto::MantaSerDes;
+
+static mut PASSWORD: String = String::new();
+static mut ACCOUNT_CREATED: bool = false;
 
 struct Buffer {
     ptr: *mut libc::c_char,
@@ -95,7 +95,6 @@ pub extern "C" fn derive_shielded_address(
     out_len: *mut libc::size_t,
 ) -> libc::c_int {
     unsafe {
-
         let path: &str = CStr::from_ptr(path).to_str().unwrap();
         let root_seed: MantaSecretKey = [0u8; 32].into();
         let params = DeriveShieldedAddressParams {
@@ -103,9 +102,9 @@ pub extern "C" fn derive_shielded_address(
             asset_id
         };
 
-        let shieded_address = _derive_shielded_address(params, &root_seed);
+        let shielded_address = _derive_shielded_address(params, &root_seed);
         let mut buf: Vec<u8> = vec![];
-        shieded_address.serialize(&mut buf).unwrap();
+        shielded_address.serialize(&mut buf).unwrap();
         let a = hex::encode(buf);
         let len = a.len();
         let s = CString::new(a).expect("CString::new failed");
@@ -145,4 +144,54 @@ pub extern "C" fn generate_asset(
         *out_len = len;
     }
     0
+}
+
+#[no_mangle]
+pub extern "C" fn generate_recovery_phrase(
+    password: *const libc::c_char
+) -> *mut libc::c_char {
+    unsafe {
+        // todo this should to done by rust team to generate secret key by recovery phrase and password
+        ACCOUNT_CREATED = true;
+        PASSWORD = CStr::from_ptr(password).to_str().unwrap().to_string();
+        let s = CString::new("wealth enrich manual process trap issue olympic stand gravity luggage tissue soon").expect("CString::new failed");
+        return s.into_raw();
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn modify_password_by_recovery_phrase(
+    _recovery_phrase: *const libc::c_char,
+    password: *const libc::c_char,
+) -> libc::c_int {
+    unsafe {
+        // todo this function only return OK/ERR
+        PASSWORD = CStr::from_ptr(password).to_str().unwrap().to_string();
+    }
+    0
+}
+
+#[no_mangle]
+pub extern "C" fn verify_password(
+    password: *const libc::c_char,
+) -> libc::c_int {
+    unsafe {
+        return if CStr::from_ptr(password).to_str().unwrap().to_string() == PASSWORD {
+            0
+        } else {
+            1
+        }
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn account_created(
+) -> libc::c_int {
+    unsafe {
+        if ACCOUNT_CREATED {
+            1
+        } else {
+            0
+        }
+    }
 }

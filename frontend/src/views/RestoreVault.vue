@@ -21,10 +21,10 @@
           </el-form-item>
 
           <el-form-item label="密码" prop="password">
-            <el-input type="password" v-model="ruleForm.password" autocomplete="off"></el-input>
+            <el-input type="password" v-model="ruleForm.password" autocomplete="off" show-password></el-input>
           </el-form-item>
           <el-form-item label="确认密码" prop="passwordConfirm">
-            <el-input type="password" v-model="ruleForm.passwordConfirm" autocomplete="off" prop="passwordConfirm"></el-input>
+            <el-input type="password" v-model="ruleForm.passwordConfirm" autocomplete="off" show-password></el-input>
           </el-form-item>
           <el-form-item>
             <el-button type="primary" @click="onSubmit('ruleForm')">恢复</el-button>
@@ -77,7 +77,7 @@ export default {
         if (valid) {
           backend.main.Service.RestoreVaultBySeed(this.ruleForm.seed, this.ruleForm.password)
           .then(() => {
-            this.$router.push('/')
+            backend.main.Service.WindowHide()
           }).catch(err => {
             this.$message.error(err)
           })
@@ -87,7 +87,7 @@ export default {
       })
     },
     goBack() {
-      window.history.length > 1 ? this.$router.go(-1) : this.$router.push('/')
+        this.$router.push('/unlock')
     }
   }
 }

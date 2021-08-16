@@ -52,11 +52,11 @@
             </div>
           </template>
           <template v-else>
-            <form><label class="input-label" for="password-box">输入密码以继续</label>
-              <div class="input-group">
-                <el-input type="password" placeholder="密码" id="password-box" v-model="password"></el-input>
-              </div>
-            </form>
+            <el-form :rules="rules" :model="ruleForm" ref="ruleForm">
+              <el-form-item label="输入密码以继续" prop="password">
+                <el-input type="password" placeholder="密码" id="password-box" v-model="ruleForm.password" show-password></el-input>
+              </el-form-item>
+            </el-form>
           </template>
         </div>
       </div>
@@ -66,7 +66,7 @@
         </footer>
         <footer v-else>
           <el-button type="info">取消</el-button>
-          <el-button type="primary" @click="nextStep" :disabled="password.length === 0">下一步</el-button>
+          <el-button type="primary" @click="nextStep('ruleForm')" :disabled="ruleForm.password.length === 0">下一步</el-button>
         </footer>
       </div>
     </div>
@@ -81,7 +81,15 @@ export default {
   name: "CreateAccount",
   data() {
     return {
-      password: "",
+      ruleForm: {
+        password: "",
+      },
+      rules: {
+        password: [
+          {required: true, message: '请输入密码', trigger: 'blur'},
+          {min: 8, message: '长度为 8 个字符', trigger: 'blur'}
+        ],
+      },
       authorized: false,
       seed: ""
     }
@@ -92,15 +100,20 @@ export default {
         this.$message.success("复制成功");
       }
     },
-    nextStep() {
-      this.authorized = true
-      backend.main.Service.AcquireSeedByPassword(this.password).then((seed) => {
-        this.seed = seed
+    nextStep(formName) {
+      this.$refs[formName].validate((valid) => {
+        if (valid) {
+          this.authorized = true
+          backend.main.Service.AcquireSeedByPassword(this.password).then((seed) => {
+            this.seed = seed
+          })
+        } else {
+          return false
+        }
       })
     },
     closeWindow() {
-      this.$router.push('/')
-      // backend.main.Service.WindowHide();
+      backend.main.Service.WindowHide();
     },
     saveToCSV() {
       let data = [{
