@@ -1,19 +1,56 @@
-### 交叉编译
+### 编译
 
-#### linux
-安装需要`brew install FiloSottile/musl-cross/musl-cross`
-但是编译还是有问题，暂时没解决
+#### MacOS
 
 #### Windows
-执行 `rustup toolchain install stable-x86_64-pc-windows-gnu`
-安装toolchain
-windows 需要安装x86_64-w64-mingw32-gcc的linker
-安装方法brew install mingw-w64
-但是编译还是有问题，暂时没解决
+
+##### 安装依赖
+
+[Nodejs](https://nodejs.org/en/) 环境 
+执行命令 `npm install -g yarn`
+
+[golang](https://golang.org) 环境
+
+[rust](https://www.rust-lang.org/) 环境
+
+关于c语言的编译器，需要安装
+[msys2](https://www.msys2.org/) 
+安装完成后执行 
+
+`pacman -Syu`
+
+`pacman -Su`
+
+`pacman -S --needed base-devel mingw-w64-x86_64-toolchain`
+
+#### 编译
+
+```
+# 安装wails cli
+go get github.com/wailsapp/wails/v2/cmd/wails
+# 标记版本
+git describe --tags > .version 
+wails build
+```
+
+#### 打包
+
+##### MacOS
+```
+chmod +x package.sh && \
+export MANTA_SIGNER_SIGNING_IDENTITY=$identity \
+AC_USERNAME=$username \
+AC_PASSWORD=$password \
+AC_PROVIDER=$provider && \
+./package.sh
+```
+
+##### Windows
+
 
 #### 运行
 
-MacOS下执行在项目当前路径下执行dist/darwin/manta-signer即可
+执行`build/bin`下面相关平台的二进制文件
 
 ### 接口规范
 本daemon程序实现了符合restful规范的接口，运行在默认为localhost:9988地址
