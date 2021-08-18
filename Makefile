@@ -1,6 +1,6 @@
 build-mac:
 	cd lib/zkp && cargo build --release --target=x86_64-apple-darwin
-	cp lib/zkp/target/x86_64-apple-darwin/release/libzkp.a lib/
+	cp lib/zkp/target/x86_64-apple-darwin/release/libzkp.a lib/darwin
 	GOOS=darwin GOARCH=amd64 go build -o dist/darwin/manta-singer lstaticdarwin.go main.go
 
 build-linux:
