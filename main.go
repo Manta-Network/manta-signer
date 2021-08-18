@@ -6,6 +6,7 @@ import (
 
 	"github.com/kardianos/service"
 	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4/middleware"
 	"github.com/urfave/cli/v2"
 )
 
@@ -31,11 +32,14 @@ func (p program) Start(s service.Service) error {
 
 func (p program) run() {
 	e := echo.New()
+	e.Use(middleware.CORS())
 	e.GET("/heartbeat", heartbeat)
-	e.POST("/generateTransferZKP", generateTransferZKP)
-	e.POST("/generateReclaimZKP", generateReclaimZKP)
+	e.POST("/generateMintData", generateMintData)
+	e.POST("/generatePrivateTransferData", generatePrivateTransferData)
+	e.POST("/generateReclaimData", generateReclaimData)
 	e.POST("/deriveShieldedAddress", deriveShieldedAddress)
 	e.POST("/generateAsset", generateAsset)
+	e.POST("/recoverAccount", recoverAccount)
 	err := e.Start(addr)
 	if err != nil {
 		log.Fatal(err)
