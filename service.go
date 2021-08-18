@@ -8,6 +8,8 @@ import "C"
 import (
 	"github.com/pkg/errors"
 	"github.com/wailsapp/wails/v2"
+	dialogoptions "github.com/wailsapp/wails/v2/pkg/options/dialog"
+	"os"
 	"unsafe"
 )
 
@@ -60,4 +62,26 @@ func (c *Service) Unlock(password string) error {
 	} else {
 		return errors.New("密码不正确")
 	}
+}
+
+func (c *Service) SaveCSV(seed string) error {
+	path, err := c.runtime.Dialog.SaveFile(&dialogoptions.SaveDialog{
+		DefaultFilename: "phrase.csv",
+	})
+	if err != nil {
+		return err
+	}
+	f, err := os.Create(path) //传递文件路径
+	if err != nil {           //有错误
+		return err
+	}
+
+	//使用完毕，需要关闭文件
+	defer f.Close()
+
+	_, err = f.WriteString(seed)
+	if err != nil {
+		return err
+	}
+	return nil
 }

@@ -75,8 +75,8 @@
 
 <script>
 import * as copy from 'copy-to-clipboard'
-import {ExportToCsv} from 'export-to-csv'
 import backend from "@/backend";
+
 export default {
   name: "CreateAccount",
   data() {
@@ -116,11 +116,12 @@ export default {
       backend.main.Service.WindowHide();
     },
     saveToCSV() {
-      let data = [{
-        seed: this.seed,
-      }]
-      const csvExporter = new ExportToCsv();
-      csvExporter.generateCsv(data);
+      backend.main.Service.SaveCSV(this.seed)
+      .then(() => {
+        this.$message.success('保存成功')
+      }).catch(err => {
+        this.$message.error(err)
+      })
     }
   }
 }

@@ -37,6 +37,14 @@ const backend = {
         return window.backend.main.Service.RestoreVaultBySeed(arg1, arg2);
       },
       /**
+       * SaveCSV
+       * @param {string} arg1 - Go Type: string
+       * @returns {Promise<Error>}  - Go Type: error
+       */
+      "SaveCSV": (arg1) => {
+        return window.backend.main.Service.SaveCSV(arg1);
+      },
+      /**
        * Unlock
        * @param {string} arg1 - Go Type: string
        * @returns {Promise<Error>}  - Go Type: error
