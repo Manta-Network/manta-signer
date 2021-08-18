@@ -1,4 +1,4 @@
-module manta
+module github.com/Manta-Network/Manta-Singer
 
 go 1.16
 

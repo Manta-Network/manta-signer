@@ -28,8 +28,8 @@ type app struct {
 	// 托盘菜单
 	defaultTrayMenu *menu.TrayMenu
 	//startsAtLoginMenu *menu.MenuItem
-	autoUpdateMenu *menu.MenuItem
-	appUpdatesMenu *menu.MenuItem
+	//autoUpdateMenu *menu.MenuItem
+	//appUpdatesMenu *menu.MenuItem
 
 	Service *Service
 	lock    sync.Mutex
@@ -60,16 +60,16 @@ func newApp(addr string) (*app, error) {
 	app.Service = NewService()
 
 	// 自动更新
-	app.appUpdatesMenu = &menu.MenuItem{
-		Type:  menu.TextType,
-		Label: "Check for updates...",
-	}
+	//app.appUpdatesMenu = &menu.MenuItem{
+	//	Type:  menu.TextType,
+	//	Label: "Check for updates...",
+	//}
 
 	// 启动时自动更新
-	app.autoUpdateMenu = &menu.MenuItem{
-		Type:  menu.CheckboxType,
-		Label: "Update automatically",
-	}
+	//app.autoUpdateMenu = &menu.MenuItem{
+	//	Type:  menu.CheckboxType,
+	//	Label: "Update automatically",
+	//}
 
 	// 是否启动运行
 	//app.startsAtLoginMenu = &menu.MenuItem{
@@ -167,17 +167,8 @@ func (b *app) newTrayMenu() *menu.Menu {
 			b.runtime.Window.Show()
 		},
 	})
-	items = append(items, b.appUpdatesMenu)
-	items = append(items, b.autoUpdateMenu)
-	items = append(items, &menu.MenuItem{
-		Label: "Switch Logged",
-		Type:  menu.CheckboxType,
-		Click: func(data *menu.CallbackData) {
-			b.Service.logged = !b.Service.logged
-			b.refreshAll()
-		},
-		Checked: b.Service.logged,
-	})
+	//items = append(items, b.appUpdatesMenu)
+	//items = append(items, b.autoUpdateMenu)
 	//items = append(items, b.startsAtLoginMenu)
 	items = append(items, menu.Separator())
 	items = append(items, &menu.MenuItem{
