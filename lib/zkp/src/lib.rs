@@ -1,22 +1,22 @@
 extern crate libc;
 
-use manta_api::signer::hd_wallet::derive_shielded_address as _derive_shielded_address;
-use manta_api::signer::payload_gen::generate_ui_asset as _generate_ui_asset;
-use manta_api::signer::payload_gen::generate_private_transfer_data as _generate_private_transfer_data;
-use manta_api::signer::payload_gen::generate_mint_data as _generate_mint_data;
-use manta_api::signer::payload_gen::generate_reclaim_data as _generate_reclaim_data;
-use manta_api::signer::recover_account::recover_account as _recover_account;
+use manta_api::derive_shielded_address as _derive_shielded_address;
+use manta_api::generate_mint_data as _generate_mint_data;
+use manta_api::generate_private_transfer_data as _generate_private_transfer_data;
+use manta_api::generate_reclaim_data as _generate_reclaim_data;
+use manta_api::generate_ui_asset as _generate_ui_asset;
+use manta_api::recover_account as _recover_account;
 
-use manta_api::signer::params::{
+use manta_api::{
     DeriveShieldedAddressParams, GenerateAssetParams, GeneratePrivateTransferDataParams,
-    GenerateReclaimDataParams, RecoverAccountParams
+    GenerateReclaimDataParams, RecoverAccountParams,
 };
 
 use codec::Decode;
+use codec::Encode;
 use manta_asset::MantaSecretKey;
 use manta_crypto::MantaSerDes;
 use rand::thread_rng;
-use codec::Encode;
 
 #[no_mangle]
 pub extern "C" fn derive_shielded_address(
