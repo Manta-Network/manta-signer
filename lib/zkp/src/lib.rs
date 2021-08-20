@@ -5,9 +5,9 @@ use std::ffi::{CString, CStr};
 use std::ops::{Deref, DerefMut};
 use alloc::slice;
 use manta_asset::MantaSecretKey;
-use manta_api::signer::desktop_app::hd_wallet::derive_shielded_address as _derive_shielded_address;
-use manta_api::signer::desktop_app::payload_gen::generate_asset as _generate_asset;
-use manta_api::signer::shared::params::{DeriveShieldedAddressParams, GenerateAssetParams};
+use manta_api::signer::hd_wallet::derive_shielded_address as _derive_shielded_address;
+use manta_api::signer::payload_gen::generate_asset as _generate_asset;
+use manta_api::signer::params::{DeriveShieldedAddressParams, GenerateAssetParams};
 use manta_crypto::MantaSerDes;
 
 static mut PASSWORD: String = String::new();
