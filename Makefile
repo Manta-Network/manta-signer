@@ -1,6 +1,16 @@
-build-mac:
+build-mac-arm:
+	cd lib/zkp && cargo build --release --target=aarch64-apple-darwin
+	cp lib/zkp/target/aarch64-apple-darwin/release/libzkp.a lib/
+	cd prover_key_gen && cargo run --release
+	mkdir lib/zkp/keys && mv prover_key_gen/*.bin lib/zkp/keys
+	GOOS=darwin GOARCH=arm64 go build -o dist/darwin/manta-daemon lstaticdarwin.go main.go
+	go build -o dist/darwin/bundler mac/bundler.go
+
+build-mac-x86:
 	cd lib/zkp && cargo build --release --target=x86_64-apple-darwin
 	cp lib/zkp/target/x86_64-apple-darwin/release/libzkp.a lib/
+	cd prover_key_gen && cargo run --release
+	mkdir lib/zkp/keys && mv prover_key_gen/*.bin lib/zkp/keys
 	GOOS=darwin GOARCH=amd64 go build -o dist/darwin/manta-daemon lstaticdarwin.go main.go
 	go build -o dist/darwin/bundler mac/bundler.go
 
