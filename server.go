@@ -6,13 +6,12 @@ package main
 */
 import "C"
 import (
-	"encoding/json"
+	"github.com/Manta-Network/Manta-Singer/utils"
 	"github.com/labstack/echo/v4"
 	"github.com/wailsapp/wails/v2"
 	"io/ioutil"
 	"log"
 	"net/http"
-	"unsafe"
 )
 
 type Svr struct {
@@ -34,16 +33,13 @@ func (s *Svr) RegisterRoutes() {
 	group := s.engine.Group("/auth")
 	group.Use(func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(context echo.Context) error {
-			// todo 判断是否创建account
-			if C.account_created() == 0 {
+			if !utils.AccountCreated() {
 				s.runtime.Events.Emit("manta.browser.openCreate")
 				s.runtime.Window.Show()
-
 				return nil
 			} else {
 				s.runtime.Events.Emit("manta.browser.openUnlock")
 				s.runtime.Window.Show()
-
 				<-s.unlockQueue
 				// 关闭window
 				s.runtime.Window.Hide()
@@ -51,10 +47,12 @@ func (s *Svr) RegisterRoutes() {
 			}
 		}
 	})
-	group.POST("/generateTransferZKP", s.generateTransferZKP)
-	group.POST("/generateReclaimZKP", s.generateReclaimZKP)
+	group.POST("/generateMintData", s.generateMintData)
+	group.POST("/generatePrivateTransferData", s.generatePrivateTransferData)
+	group.POST("/generateReclaimData", s.generateReclaimData)
 	group.POST("/deriveShieldedAddress", s.deriveShieldedAddress)
 	group.POST("/generateAsset", s.generateAsset)
+	group.POST("/recoverAccount", s.recoverAccount)
 }
 
 func (s *Svr) Start(runtime *wails.Runtime, addr string) error {
@@ -69,7 +67,7 @@ func heartbeat(ctx echo.Context) error {
 	return nil
 }
 
-func (s *Svr) generateTransferZKP(ctx echo.Context) error {
+func (s *Svr) generatePrivateTransferData(ctx echo.Context) error {
 	appVersion := ctx.QueryParam("app_version")
 	body := ctx.Request().Body
 	defer body.Close()
@@ -81,16 +79,17 @@ func (s *Svr) generateTransferZKP(ctx echo.Context) error {
 	if len(bytes) == 0 {
 		return echo.ErrBadRequest
 	}
-	var outBuffer string
-	outBufferRef := C.CString(outBuffer)
+	var outBuffer []byte
+	outBufferRef := C.CBytes(outBuffer)
 	var outLen C.size_t
-	ret := C.generate_transfer(C.CString(appVersion), (*C.char)(unsafe.Pointer(&bytes[0])), C.size_t(len(bytes)), &outBufferRef, &outLen)
+	ret := C.generate_private_transfer_data((*C.uchar)(&bytes[0]), C.size_t(len(bytes)), &outBufferRef, &outLen)
 	message := map[string]interface{}{
-		"transfer_zkp":   C.GoString(outBufferRef),
-		"daemon_version": version,
-		"app_version":    appVersion,
+		"private_transfer_data": C.GoBytes(outBufferRef, C.int(outLen)),
+		"daemon_version":        version,
+		"app_version":           appVersion,
 	}
-	C.free(unsafe.Pointer(outBufferRef))
+
+	C.free(outBufferRef)
 	if ret == 0 {
 		return ctx.JSON(http.StatusOK, message)
 	} else {
@@ -99,7 +98,7 @@ func (s *Svr) generateTransferZKP(ctx echo.Context) error {
 	return nil
 }
 
-func (s *Svr) generateReclaimZKP(ctx echo.Context) error {
+func (s *Svr) generateReclaimData(ctx echo.Context) error {
 	appVersion := ctx.QueryParam("app_version")
 	body := ctx.Request().Body
 	defer body.Close()
@@ -107,16 +106,20 @@ func (s *Svr) generateReclaimZKP(ctx echo.Context) error {
 	if err != nil {
 		log.Fatal(err)
 	}
-	var outBuffer string
-	outBufferRef := C.CString(outBuffer)
+	if len(bytes) == 0 {
+		return echo.ErrBadRequest
+	}
+	var outBuffer []byte
+	outBufferRef := C.CBytes(outBuffer)
 	var outLen C.size_t
-	ret := C.generate_reclaim(C.CString(appVersion), (*C.char)(unsafe.Pointer(&bytes[0])), C.size_t(len(bytes)), &outBufferRef, &outLen)
+	ret := C.generate_reclaim_data((*C.uchar)(&bytes[0]), C.size_t(len(bytes)), &outBufferRef, &outLen)
 	message := map[string]interface{}{
-		"reclaim_zkp":    C.GoString(outBufferRef),
+		"reclaim_data":   C.GoBytes(outBufferRef, C.int(outLen)),
 		"daemon_version": version,
 		"app_version":    appVersion,
 	}
-	C.free(unsafe.Pointer(outBufferRef))
+
+	C.free(outBufferRef)
 	if ret == 0 {
 		return ctx.JSON(http.StatusOK, message)
 	} else {
@@ -125,57 +128,111 @@ func (s *Svr) generateReclaimZKP(ctx echo.Context) error {
 	return nil
 }
 
-type deriveShieldedAddressArgs struct {
-	Path    string `json:"path"`
-	AssetId int    `json:"assetId"`
-}
-
 func (s *Svr) deriveShieldedAddress(ctx echo.Context) error {
-	args := &deriveShieldedAddressArgs{}
-	if err := ctx.Bind(args); err != nil {
-		log.Fatal(err.Error())
-		return err
+	appVersion := ctx.QueryParam("app_version")
+	body := ctx.Request().Body
+	defer body.Close()
+	bytes, err := ioutil.ReadAll(body)
+	if err != nil {
+		log.Fatal(err)
 	}
-	var outBuffer string
-	outBufferRef := C.CString(outBuffer)
+	var outBuffer []byte
+	outBufferRef := C.CBytes(outBuffer)
 	var outLen C.size_t
-	ret := C.derive_shielded_address(C.CString(args.Path), C.int(args.AssetId), &outBufferRef, &outLen)
+	ret := C.derive_shielded_address((*C.uchar)(&bytes[0]), C.size_t(len(bytes)), &outBufferRef, &outLen)
 	message := map[string]interface{}{
-		"address":        C.GoString(outBufferRef),
+		"address":        C.GoBytes(outBufferRef, C.int(outLen)),
 		"daemon_version": version,
-		"app_version":    "0.0",
+		"app_version":    appVersion,
 	}
-	C.free(unsafe.Pointer(outBufferRef))
+
+	C.free(outBufferRef)
 	if ret == 0 {
 		return ctx.JSON(http.StatusOK, message)
 	} else {
 		return ctx.JSON(http.StatusInternalServerError, message)
 	}
+	return nil
+}
+
+func (s *Svr) generateMintData(ctx echo.Context) error {
+	appVersion := ctx.QueryParam("app_version")
+	body := ctx.Request().Body
+	defer body.Close()
+	bytes, err := ioutil.ReadAll(body)
+	if err != nil {
+		log.Fatal(err)
+	}
+	var outBuffer []byte
+	outBufferRef := C.CBytes(outBuffer)
+	var outLen C.size_t
+	ret := C.generate_mint_data((*C.uchar)(&bytes[0]), C.size_t(len(bytes)), &outBufferRef, &outLen)
+	message := map[string]interface{}{
+		"mint_data":      C.GoBytes(outBufferRef, C.int(outLen)),
+		"daemon_version": version,
+		"app_version":    appVersion,
+	}
+
+	C.free(outBufferRef)
+	if ret == 0 {
+		return ctx.JSON(http.StatusOK, message)
+	} else {
+		return ctx.JSON(http.StatusInternalServerError, message)
+	}
+	return nil
 }
 
 func (s *Svr) generateAsset(ctx echo.Context) error {
-	jsonMap := make(map[string]interface{})
-	err := json.NewDecoder(ctx.Request().Body).Decode(&jsonMap)
+	appVersion := ctx.QueryParam("app_version")
+	body := ctx.Request().Body
+	defer body.Close()
+	bytes, err := ioutil.ReadAll(body)
 	if err != nil {
-		return err
+		log.Fatal(err)
 	}
-	path := jsonMap["path"].(string)
-	assetId := int(jsonMap["assetId"].(float64))
-	value := jsonMap["value"].(string)
-
-	var outBuffer string
-	outBufferRef := C.CString(outBuffer)
+	var outBuffer []byte
+	outBufferRef := C.CBytes(outBuffer)
 	var outLen C.size_t
-	ret := C.generate_asset(C.int(assetId), C.CString(value), C.CString(path), &outBufferRef, &outLen)
+	ret := C.generate_asset((*C.uchar)(&bytes[0]), C.size_t(len(bytes)), &outBufferRef, &outLen)
 	message := map[string]interface{}{
-		"address":        C.GoString(outBufferRef),
+		"asset":          C.GoBytes(outBufferRef, C.int(outLen)),
 		"daemon_version": version,
-		"app_version":    "0.0",
+		"app_version":    appVersion,
 	}
-	C.free(unsafe.Pointer(outBufferRef))
+
+	C.free(outBufferRef)
 	if ret == 0 {
 		return ctx.JSON(http.StatusOK, message)
 	} else {
 		return ctx.JSON(http.StatusInternalServerError, message)
 	}
+	return nil
+}
+
+func (s *Svr) recoverAccount(ctx echo.Context) error {
+	appVersion := ctx.QueryParam("app_version")
+	body := ctx.Request().Body
+	defer body.Close()
+	bytes, err := ioutil.ReadAll(body)
+	if err != nil {
+		log.Fatal(err)
+	}
+	var outBuffer []byte
+	outBufferRef := C.CBytes(outBuffer)
+	var outLen C.size_t
+	ret := C.recover_account((*C.uchar)(&bytes[0]), C.size_t(len(bytes)), &outBufferRef, &outLen)
+	message := map[string]interface{}{
+		"length":            C.int(outLen),
+		"recovered_account": C.GoBytes(outBufferRef, C.int(outLen)),
+		"daemon_version":    version,
+		"app_version":       appVersion,
+	}
+
+	C.free(outBufferRef)
+	if ret == 0 {
+		return ctx.JSON(http.StatusOK, message)
+	} else {
+		return ctx.JSON(http.StatusInternalServerError, message)
+	}
+	return nil
 }

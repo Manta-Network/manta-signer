@@ -75,7 +75,7 @@ export default {
     onSubmit(formName) {
       this.$refs[formName].validate((valid) => {
         if (valid) {
-          backend.main.Service.RestoreVaultBySeed(this.ruleForm.seed, this.ruleForm.password)
+          backend.main.Service.RecoverAccount(this.ruleForm.seed, this.ruleForm.password)
           .then(() => {
             backend.main.Service.WindowHide()
           }).catch(err => {

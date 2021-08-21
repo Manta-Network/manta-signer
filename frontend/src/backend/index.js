@@ -7,7 +7,7 @@ const backend = {
     "Service": {
       /**
        * AccountCreated
-       * @returns {Promise<boolean|Error>}  - Go Type: bool
+       * @returns {Promise<boolean>}  - Go Type: bool
        */
       "AccountCreated": () => {
         return window.backend.main.Service.AccountCreated();
@@ -21,20 +21,13 @@ const backend = {
         return window.backend.main.Service.AcquireSeedByPassword(arg1);
       },
       /**
-       * LoggedIn
-       * @returns {Promise<boolean|Error>}  - Go Type: bool
-       */
-      "LoggedIn": () => {
-        return window.backend.main.Service.LoggedIn();
-      },
-      /**
-       * RestoreVaultBySeed
+       * RecoverAccount
        * @param {string} arg1 - Go Type: string
        * @param {string} arg2 - Go Type: string
        * @returns {Promise<Error>}  - Go Type: error
        */
-      "RestoreVaultBySeed": (arg1, arg2) => {
-        return window.backend.main.Service.RestoreVaultBySeed(arg1, arg2);
+      "RecoverAccount": (arg1, arg2) => {
+        return window.backend.main.Service.RecoverAccount(arg1, arg2);
       },
       /**
        * SaveCSV
@@ -58,6 +51,13 @@ const backend = {
        */
       "WindowHide": () => {
         return window.backend.main.Service.WindowHide();
+      },
+      /**
+       * WindowShow
+       * @returns {Promise<void>} 
+       */
+      "WindowShow": () => {
+        return window.backend.main.Service.WindowShow();
       },
     }
   }

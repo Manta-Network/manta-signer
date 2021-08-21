@@ -36,16 +36,6 @@ router.beforeEach((to, from, next) => {
         next({
           path: '/create_account'
         })
-      } else {
-        // 已创建账户需要判断登录状态
-        backend.main.Service.LoggedIn().then((logged) => {
-          if (to.path === '/' && !logged) {
-            next({
-              path: '/unlock_page'
-            })
-          }
-          next()
-        })
       }
     })
   }

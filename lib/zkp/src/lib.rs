@@ -1,197 +1,160 @@
 extern crate libc;
-extern crate alloc;
 
-use std::ffi::{CString, CStr};
-use std::ops::{Deref, DerefMut};
-use alloc::slice;
+use manta_api::derive_shielded_address as _derive_shielded_address;
+use manta_api::generate_ui_asset as _generate_ui_asset;
+use manta_api::generate_private_transfer_data as _generate_private_transfer_data;
+use manta_api::generate_mint_data as _generate_mint_data;
+use manta_api::generate_reclaim_data as _generate_reclaim_data;
+use manta_api::recover_account as _recover_account;
+
+use manta_api::{
+    DeriveShieldedAddressParams, GenerateAssetParams, GeneratePrivateTransferDataParams,
+    GenerateReclaimDataParams, RecoverAccountParams,
+};
+
+use codec::Decode;
+use codec::Encode;
 use manta_asset::MantaSecretKey;
-use manta_api::signer::hd_wallet::derive_shielded_address as _derive_shielded_address;
-use manta_api::signer::payload_gen::generate_asset as _generate_asset;
-use manta_api::signer::params::{DeriveShieldedAddressParams, GenerateAssetParams};
 use manta_crypto::MantaSerDes;
+use rand::thread_rng;
 
-static mut PASSWORD: String = String::new();
-static mut ACCOUNT_CREATED: bool = false;
-
-struct Buffer {
-    ptr: *mut libc::c_char,
-    len: libc::size_t,
-}
-
-impl Buffer {
-    pub unsafe fn from_owning(buffer: *mut libc::c_char, len: libc::size_t) -> Option<Self> {
-        if buffer.is_null() || len >= usize::MAX as usize {
-            None
-        } else {
-            Some(Buffer{
-                ptr: buffer,
-                len,
-            })
-        }
-    }
-}
-
-impl Deref for Buffer {
-    type Target = [u8];
-    fn deref(&self) -> &Self::Target {
-        unsafe {
-            slice::from_raw_parts(self.ptr as *const u8, self.len)
-        }
-    }
-}
-
-impl DerefMut for Buffer {
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        unsafe {
-            slice::from_raw_parts_mut(self.ptr as *mut u8, self.len)
-        }
-    }
-}
-
-
-#[no_mangle]
-pub extern "C" fn generate_transfer(
-    _app_version: *const libc::c_char,
-    buffer: *mut libc::c_char,
-    len: libc::size_t,
-    _out: *mut *mut libc::c_char,
-    out_len: *mut libc::size_t) -> libc::c_int {
-    unsafe {
-        let buf = Buffer::from_owning(buffer, len).unwrap();
-        let digest = md5::compute(buf.deref());
-        let a = format!("{:x}", digest);
-        let len = a.len();
-        let s = CString::new(a).expect("CString::new failed");
-        *_out = s.into_raw();
-        *out_len = len;
-    }
-    0
-}
-
-#[no_mangle]
-pub extern "C" fn generate_reclaim(
-    _app_version: *const libc::c_char,
-    _name: *const libc::c_char,
-    _len: libc::size_t,
-    _out: *mut *mut libc::c_char,
-    out_len: *mut libc::size_t) -> libc::c_int {
-    unsafe {
-        let a = String::from("0xgenerate_reclaim");
-        let len = a.len();
-        let s = CString::new(a).expect("CString::new failed");
-        *_out = s.into_raw();
-        *out_len = len;
-    }
-    0
-}
-
-
-// todo: to_string for shielded address
 #[no_mangle]
 pub extern "C" fn derive_shielded_address(
-    path: *const libc::c_char,
-    asset_id: u32,
-    out: *mut *mut libc::c_char,
+    buffer: *const libc::c_uchar,
+    len: libc::size_t,
+    out: *mut *mut u8,
     out_len: *mut libc::size_t,
-) -> libc::c_int {
+) -> libc::size_t {
+    let mut bytes: &[u8] = unsafe { std::slice::from_raw_parts(buffer, len) };
+    let params = DeriveShieldedAddressParams::decode(&mut bytes).unwrap();
+    let root_seed: MantaSecretKey = [0u8; 32].into();
+    let shielded_address = _derive_shielded_address(params, &root_seed);
+    let mut buf: Vec<u8> = vec![];
+    shielded_address.serialize(&mut buf).unwrap();
+    let len = buf.len();
+    let ptr = buf.as_mut_ptr();
+    std::mem::forget(buf);
     unsafe {
-        let path: &str = CStr::from_ptr(path).to_str().unwrap();
-        let root_seed: MantaSecretKey = [0u8; 32].into();
-        let params = DeriveShieldedAddressParams {
-            path: String::from(path),
-            asset_id
-        };
-
-        let shielded_address = _derive_shielded_address(params, &root_seed);
-        let mut buf: Vec<u8> = vec![];
-        shielded_address.serialize(&mut buf).unwrap();
-        let a = hex::encode(buf);
-        let len = a.len();
-        let s = CString::new(a).expect("CString::new failed");
-        *out = s.into_raw();
+        *out = ptr;
         *out_len = len;
     }
     0
 }
 
-// todo: to_string for shielded address
 #[no_mangle]
 pub extern "C" fn generate_asset(
-    asset_id: u32,
-    value: *const libc::c_char,
-    path: *const libc::c_char,
-    out: *mut *mut libc::c_char,
+    buffer: *const libc::c_uchar,
+    len: libc::size_t,
+    out: *mut *mut u8,
     out_len: *mut libc::size_t,
-) -> libc::c_int {
+) -> libc::size_t {
+    let mut bytes: &[u8] = unsafe { std::slice::from_raw_parts(buffer, len) };
+    let params = GenerateAssetParams::decode(&mut bytes).unwrap();
+    let root_seed: MantaSecretKey = [0u8; 32].into();
+    let asset = _generate_ui_asset(params, &root_seed);
+    let mut buf = asset.encode();
+    let len = buf.len();
+    let ptr = buf.as_mut_ptr();
+    std::mem::forget(buf);
     unsafe {
-        let value: &str = CStr::from_ptr(value).to_str().unwrap();
-        let value: u128 = u128::from_str_radix(value, 10).unwrap();
-        let path: &str = CStr::from_ptr(path).to_str().unwrap();
-        let root_seed: MantaSecretKey = [0u8; 32].into();
-        let params = GenerateAssetParams{
-            asset_id,
-            value,
-            path: String::from(path),
-        };
-        // todo: make ui safe asset type; private key is exposed here!!!
-        let asset = _generate_asset(params, &root_seed);
-        let mut buf: Vec<u8> = vec![];
-        asset.serialize(&mut buf).unwrap();
-        let a = hex::encode(buf);
-        let len = a.len();
-        let s = CString::new(a).expect("CString::new failed");
-        *out = s.into_raw();
+        *out = ptr;
         *out_len = len;
     }
     0
 }
 
 #[no_mangle]
-pub extern "C" fn generate_recovery_phrase(
-    password: *const libc::c_char
-) -> *mut libc::c_char {
+pub extern "C" fn generate_mint_data(
+    buffer: *const libc::c_uchar,
+    len: libc::size_t,
+    out: *mut *mut u8,
+    out_len: *mut libc::size_t,
+) -> libc::size_t {
+    let mut bytes: &[u8] = unsafe { std::slice::from_raw_parts(buffer, len) };
+    let params = GenerateAssetParams::decode(&mut bytes).unwrap();
+    let root_seed: MantaSecretKey = [0u8; 32].into();
+    let mint_data = _generate_mint_data(params, &root_seed);
+    let mut buf: Vec<u8> = vec![];
+    mint_data.serialize(&mut buf).unwrap();
+    let len = buf.len();
+    let ptr = buf.as_mut_ptr();
+    std::mem::forget(buf);
     unsafe {
-        // todo this should to done by rust team to generate secret key by recovery phrase and password
-        ACCOUNT_CREATED = true;
-        PASSWORD = CStr::from_ptr(password).to_str().unwrap().to_string();
-        let s = CString::new("wealth enrich manual process trap issue olympic stand gravity luggage tissue soon").expect("CString::new failed");
-        return s.into_raw();
-    }
-}
-
-#[no_mangle]
-pub extern "C" fn modify_password_by_recovery_phrase(
-    _recovery_phrase: *const libc::c_char,
-    password: *const libc::c_char,
-) -> libc::c_int {
-    unsafe {
-        // todo this function only return OK/ERR
-        PASSWORD = CStr::from_ptr(password).to_str().unwrap().to_string();
+        *out = ptr;
+        *out_len = len;
     }
     0
 }
 
 #[no_mangle]
-pub extern "C" fn verify_password(
-    password: *const libc::c_char,
-) -> libc::c_int {
+pub extern "C" fn generate_private_transfer_data(
+    buffer: *const libc::c_uchar,
+    len: libc::size_t,
+    out: *mut *mut u8,
+    out_len: *mut libc::size_t,
+) -> libc::size_t {
+    let mut bytes: &[u8] = unsafe { std::slice::from_raw_parts(buffer, len) };
+    let params = GeneratePrivateTransferDataParams::decode(&mut bytes).unwrap();
+    let root_seed: MantaSecretKey = [0u8; 32].into();
+    let proving_key_path = "./lib/zkp/keys/transfer_pk.bin";
+    let mut rng = thread_rng();
+    let private_transfer_data =
+        _generate_private_transfer_data(params, &root_seed, &proving_key_path, &mut rng);
+    let mut buf: Vec<u8> = vec![];
+    private_transfer_data.serialize(&mut buf).unwrap();
+    let len = buf.len();
+    let ptr = buf.as_mut_ptr();
+    std::mem::forget(buf);
     unsafe {
-        return if CStr::from_ptr(password).to_str().unwrap().to_string() == PASSWORD {
-            0
-        } else {
-            1
-        }
+        *out = ptr;
+        *out_len = len;
     }
+    0
 }
 
 #[no_mangle]
-pub extern "C" fn account_created(
-) -> libc::c_int {
+pub extern "C" fn generate_reclaim_data(
+    buffer: *const libc::c_uchar,
+    len: libc::size_t,
+    out: *mut *mut u8,
+    out_len: *mut libc::size_t,
+) -> libc::size_t {
+    let mut bytes: &[u8] = unsafe { std::slice::from_raw_parts(buffer, len) };
+    let params = GenerateReclaimDataParams::decode(&mut bytes).unwrap();
+    let root_seed: MantaSecretKey = [0u8; 32].into();
+    let proving_key_path = "./lib/zkp/keys/reclaim_pk.bin";
+    let mut rng = thread_rng();
+    let reclaim_data = _generate_reclaim_data(params, &root_seed, &proving_key_path, &mut rng);
+    let mut buf: Vec<u8> = vec![];
+    reclaim_data.serialize(&mut buf).unwrap();
+    let len = buf.len();
+    let ptr = buf.as_mut_ptr();
+    std::mem::forget(buf);
     unsafe {
-        if ACCOUNT_CREATED {
-            1
-        } else {
-            0
-        }
+        *out = ptr;
+        *out_len = len;
     }
+    0
+}
+
+#[no_mangle]
+pub extern "C" fn recover_account(
+    buffer: *const libc::c_uchar,
+    len: libc::size_t,
+    out: *mut *mut u8,
+    out_len: *mut libc::size_t,
+) -> libc::size_t {
+    let mut bytes: &[u8] = unsafe { std::slice::from_raw_parts(buffer, len) };
+    let params = RecoverAccountParams::decode(&mut bytes).unwrap();
+    let root_seed: MantaSecretKey = [0u8; 32].into();
+    let account = _recover_account(params, &root_seed);
+    let mut buf = account.encode();
+    let len = buf.len();
+    let ptr = buf.as_mut_ptr();
+    std::mem::forget(buf);
+    unsafe {
+        *out = ptr;
+        *out_len = len;
+    }
+    0
 }

@@ -6,19 +6,15 @@ package main
 */
 import "C"
 import (
+	"github.com/Manta-Network/Manta-Singer/utils"
 	"github.com/pkg/errors"
 	"github.com/wailsapp/wails/v2"
 	dialogoptions "github.com/wailsapp/wails/v2/pkg/options/dialog"
 	"os"
-	"unsafe"
 )
 
 type Service struct {
-	// 是否登录
-	logged bool
-	// 是否已创建账户
-	accountCreated bool
-	runtime        *wails.Runtime
+	runtime *wails.Runtime
 }
 
 func NewService() *Service {
@@ -29,35 +25,29 @@ func (c *Service) WindowHide() {
 	c.runtime.Window.Hide()
 }
 
-func (c *Service) LoggedIn() (bool, error) {
-	return c.logged, nil
+func (c *Service) WindowShow() {
+	c.runtime.Window.Show()
 }
 
-func (c *Service) AccountCreated() (bool, error) {
-	return c.accountCreated, nil
+func (c *Service) AccountCreated() bool {
+	return utils.AccountCreated()
 }
 
 // AcquireSeedByPassword 通过密码获取助记词
 func (c *Service) AcquireSeedByPassword(password string) (string, error) {
-	// todo 是否需要校验密码
-	c.accountCreated = true
-	c.logged = true
-	seed := C.generate_recovery_phrase(C.CString(password))
-	defer C.free(unsafe.Pointer(seed))
-	return C.GoString(seed), nil
+	err := utils.CreateAccountCreatedFlag()
+	if err != nil {
+		return "", err
+	}
+	return "hello world", nil
 }
 
-func (c *Service) RestoreVaultBySeed(seed, password string) error {
-	c.logged = true
-	res := C.modify_password_by_recovery_phrase(C.CString(seed), C.CString(password))
-	if res == 0 {
-		return nil
-	}
-	return errors.New("不正确的助记词")
+func (c *Service) RecoverAccount(seed, password string) error {
+	return nil
 }
 
 func (c *Service) Unlock(password string) error {
-	if C.verify_password(C.CString(password)) == 0 {
+	if password == "12345678" {
 		return nil
 	} else {
 		return errors.New("密码不正确")
