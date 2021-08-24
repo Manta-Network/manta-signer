@@ -2,8 +2,8 @@
   <div class="main-container-wrapper">
     <div class="page-container">
       <div class="page-container__header">
-        <div class="page-container__title">账户助记词</div>
-        <div class="page-container__subtitle">如果您更换浏览器或计算机，则需要使用此账户助记词访问您的帐户。请将它们保存在安全秘密的地方。</div>
+        <div class="page-container__title">Manta Mnemonics</div>
+        <div class="page-container__subtitle">Manta Mnemonics can be used to recover your account.</div>
       </div>
       <div class="page-container__content">
         <div class="page-container__warning-container">
@@ -16,14 +16,14 @@
             </g>
           </svg>
           <div class="page-container__warning-message">
-            <div class="page-container__warning-title">不要对任何人展示此账户助记词！</div>
-            <div>该账户助记词可以用来窃取您的所有帐户</div>
+            <div class="page-container__warning-title">Please don't show your mnemonics to others.</div>
+            <div>Otherwise your account could be compromised.</div>
           </div>
         </div>
         <div class="reveal-seed__content">
           <template v-if="authorized">
             <div>
-              <label class="reveal-seed__label">您的账户助记词</label>
+              <label class="reveal-seed__label">Your Account Mnemonics</label>
               <div class="export-text-container">
                 <div class="export-text-container__text-container">
                   <div class="export-text-container__text notranslate">
@@ -36,7 +36,7 @@
                       <path fill-rule="evenodd" clip-rule="evenodd"
                             d="M0 0H1H9V1H1V9H0V0ZM2 2H11V11H2V2ZM3 3H10V10H3V3Z" fill="#3098DC"></path>
                     </svg>
-                    <div class="export-text-container__button-text">复制到剪贴板</div>
+                    <div class="export-text-container__button-text">Copy to Clipboard</div>
                   </div>
                   <div class="export-text-container__button" @click="saveToCSV">
                     <svg height="18" width="20" xmlns="http://www.w3.org/2000/svg">
@@ -45,7 +45,7 @@
                         <path d="M4.524 7l5.312 4 5.313-4"/>
                       </g>
                     </svg>
-                    <div class="export-text-container__button-text">保存为 CSV 文件</div>
+                    <div class="export-text-container__button-text">Save to file</div>
                   </div>
                 </div>
               </div>
@@ -53,8 +53,8 @@
           </template>
           <template v-else>
             <el-form :rules="rules" :model="ruleForm" ref="ruleForm">
-              <el-form-item label="输入密码以继续" prop="password">
-                <el-input type="password" placeholder="密码" id="password-box" v-model="ruleForm.password" show-password></el-input>
+              <el-form-item label="Enter password to continue" prop="password">
+                <el-input type="password" placeholder="password" id="password-box" v-model="ruleForm.password" show-password></el-input>
               </el-form-item>
             </el-form>
           </template>
@@ -62,11 +62,11 @@
       </div>
       <div class="page-container__footer">
         <footer v-if="authorized">
-          <el-button @click="closeWindow">关闭</el-button>
+          <el-button @click="closeWindow">Close</el-button>
         </footer>
         <footer v-else>
-          <el-button type="info">取消</el-button>
-          <el-button type="primary" @click="nextStep('ruleForm')" :disabled="ruleForm.password.length === 0">下一步</el-button>
+          <el-button type="info">Cancel</el-button>
+          <el-button type="primary" @click="nextStep('ruleForm')" :disabled="ruleForm.password.length === 0">Next</el-button>
         </footer>
       </div>
     </div>
@@ -86,8 +86,8 @@ export default {
       },
       rules: {
         password: [
-          {required: true, message: '请输入密码', trigger: 'blur'},
-          {min: 8, message: '长度为 8 个字符', trigger: 'blur'}
+          {required: true, message: 'Please enter password', trigger: 'blur'},
+          {min: 8, message: '8 digit minimal', trigger: 'blur'}
         ],
       },
       authorized: false,
@@ -97,7 +97,7 @@ export default {
   methods: {
     copyToClipboard() {
       if (copy(this.seed)) {
-        this.$message.success("复制成功");
+        this.$message.success("Copy succeed");
       }
     },
     nextStep(formName) {
@@ -118,7 +118,7 @@ export default {
     saveToCSV() {
       backend.main.Service.SaveCSV(this.seed)
       .then(() => {
-        this.$message.success('保存成功')
+        this.$message.success('Copy succeed')
       }).catch(err => {
         this.$message.error(err)
       })
