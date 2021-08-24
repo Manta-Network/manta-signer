@@ -23,12 +23,12 @@
 
 `pacman -S --needed base-devel mingw-w64-x86_64-toolchain`
 
-#### 编译
+#### Compile
 
 ```
-# 安装wails cli
+# install wails cli
 go get github.com/wailsapp/wails/v2/cmd/wails
-# 标记版本
+# create version file
 git describe --tags > .version 
 wails build
 ```
