@@ -50,7 +50,7 @@ func (c *Service) Unlock(password string) error {
 	if password == "12345678" {
 		return nil
 	} else {
-		return errors.New("密码不正确")
+		return errors.New("incorrect password")
 	}
 }
 
@@ -61,12 +61,11 @@ func (c *Service) SaveCSV(seed string) error {
 	if err != nil {
 		return err
 	}
-	f, err := os.Create(path) //传递文件路径
-	if err != nil {           //有错误
+	f, err := os.Create(path)
+	if err != nil {
 		return err
 	}
 
-	//使用完毕，需要关闭文件
 	defer f.Close()
 
 	_, err = f.WriteString(seed)
