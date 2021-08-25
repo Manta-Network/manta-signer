@@ -33,14 +33,13 @@ type app struct {
 
 	Service *Service
 	lock    sync.Mutex
-	// 是否输出调试信息
 	Verbose bool
-	// 是否暗黑模式 todo 估计windows不支持
+	// support darkMode todo i'm not sure if windows can support dark mode.
 	isDarkMode bool
 
 	defaultTrayMenuActive bool
 
-	// incomingURLSemaphore 用通道确保一次只处理一个url事件
+	// incomingURLSemaphore use channel that ensure only one event will be processed
 	incomingURLSemaphore chan struct{}
 }
 
@@ -56,7 +55,8 @@ func newApp(addr string) (*app, error) {
 		menu.WindowMenu(),
 	)
 
-	// 初始化要导出的服务
+	// initialize service,
+	// we put logic that interact with frontend into service
 	app.Service = NewService()
 
 	// 自动更新
@@ -121,7 +121,7 @@ func (b *app) startup(runtime *wails.Runtime) {
 	b.Service.runtime = runtime
 	b.refreshAll()
 
-	// 暴露对外服务接口
+	// export web service
 	go b.startupServer(runtime)
 	// 准备自动更新
 	go func() {

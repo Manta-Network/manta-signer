@@ -6,22 +6,22 @@
           <img src="../assets/logo.png" width="120px" height="120px">
         </div>
       </div>
-      <h1 class="unlock-page__title">欢迎回来！</h1>
-      <div>即将进入去中心化网络</div>
+      <h1 class="unlock-page__title">Welcome back！</h1>
+      <div>About to enter the manta network</div>
       <form class="unlock-page__form">
         <div class="unlock-page__password-container">
           <div
               class="unlock-page__password-input-container">
-            <el-input placeholder="请输入密码" v-model="password" show-password></el-input>
+            <el-input placeholder="password" v-model="password" show-password></el-input>
           </div>
         </div>
         <el-button class="unlock-page__unlock-button"
                    :disabled="password.length === 0"
                    type="primary"
-        @click="unlock">解锁</el-button>
+        @click="unlock">unlock</el-button>
       </form>
       <div class="unlock-page__links">
-        <span> 或者 <button class="unlock-page__link unlock-page__link--import" @click.prevent="toRestoreVault">使用账户助记词恢复您的账户</button>
+        <span> or <button class="unlock-page__link unlock-page__link--import" @click.prevent="toRestoreVault">use mnemonics to recover your account</button>
         </span>
       </div>
     </div>

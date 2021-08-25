@@ -23,7 +23,7 @@ type Svr struct {
 func NewSvr() *Svr {
 	return &Svr{
 		engine: echo.New(),
-		// 默认只有一个解锁队列
+		// Only unlock one at a time
 		unlockQueue: make(chan struct{}, 1),
 	}
 }

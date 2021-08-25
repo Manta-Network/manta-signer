@@ -41,19 +41,17 @@ func run() error {
 	}
 
 	startHidden := true
-	if runtime.GOOS == "window" {
+	if runtime.GOOS == "windows" {
 		startHidden = false
 	}
 
 	err = wails.Run(&options.App{
-		Title:     DaemonName,
-		Width:     1080,
-		Height:    700,
-		MinWidth:  800,
-		MinHeight: 600,
-		// 启用时隐藏界面
-		StartHidden: startHidden,
-		// 按close是否隐藏窗口
+		Title:             DaemonName,
+		Width:             1080,
+		Height:            700,
+		MinWidth:          800,
+		MinHeight:         600,
+		StartHidden:       startHidden,
 		HideWindowOnClose: true,
 
 		// mac配置

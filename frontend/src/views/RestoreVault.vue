@@ -3,31 +3,31 @@
     <div class="first-view-main-wrapper">
       <div class="first-view-main">
         <el-form class="import-account" :model="ruleForm" :rules="rules" ref="ruleForm">
-          <a class="import-account__back-button" href="#" @click="goBack">&lt; 返回</a>
-          <div class="import-account__title">使用账户助记词恢复您的账户</div>
-          <div class="import-account__selector-label">请输入助记词来恢复您的密码</div>
+          <a class="import-account__back-button" href="#" @click="goBack">&lt; Back</a>
+          <div class="import-account__title">Manta Mnemonics can be used to recover your account.</div>
+          <div class="import-account__selector-label">Manta Mnemonics can be used to recover your password.</div>
 
-          <el-form-item label="钱包助记词" prop="seed">
+          <el-form-item label="Manta Mnemonics" prop="seed">
             <template v-if="ruleForm.showSeed">
-              <el-input type="textarea" placeholder="用空格分隔每个单词" v-model="ruleForm.seed" ></el-input>
+              <el-input type="textarea" placeholder="Use space to split words" v-model="ruleForm.seed" ></el-input>
             </template>
             <template v-else>
-              <el-input type="password" placeholder="从剪贴板粘贴账户助记词" v-model="ruleForm.seed"></el-input>
+              <el-input type="password" placeholder="copy to clipboard" v-model="ruleForm.seed"></el-input>
             </template>
           </el-form-item>
 
-          <el-form-item label="显示账户助记词" prop="delivery">
+          <el-form-item label="show mnemonics" prop="delivery">
             <el-switch v-model="ruleForm.showSeed"></el-switch>
           </el-form-item>
 
-          <el-form-item label="密码" prop="password">
+          <el-form-item label="password" prop="password">
             <el-input type="password" v-model="ruleForm.password" autocomplete="off" show-password></el-input>
           </el-form-item>
-          <el-form-item label="确认密码" prop="passwordConfirm">
+          <el-form-item label="confirm password" prop="passwordConfirm">
             <el-input type="password" v-model="ruleForm.passwordConfirm" autocomplete="off" show-password></el-input>
           </el-form-item>
           <el-form-item>
-            <el-button type="primary" @click="onSubmit('ruleForm')">恢复</el-button>
+            <el-button type="primary" @click="onSubmit('ruleForm')">recover</el-button>
           </el-form-item>
         </el-form>
       </div>
@@ -43,7 +43,7 @@ export default {
   data() {
     let confirmPwd = (rule, value, callback) => {
       if (value !== this.ruleForm.password) {
-        callback(new Error("密码不匹配"))
+        callback(new Error("Password didn't match"))
       } else {
         callback()
       }
@@ -57,16 +57,16 @@ export default {
       },
       rules: {
         password: [
-          { required: true, message: '请输入密码', trigger: 'blur' },
-          { min: 8, message: '长度为 8 个字符', trigger: 'blur' }
+          { required: true, message: 'please enter password', trigger: 'blur' },
+          { min: 8, message: 'characters should be 8 length', trigger: 'blur' }
         ],
         passwordConfirm: [
-          { required: true, message: '请输入密码', trigger: 'blur' },
-          { min: 8, message: '长度为 8 个字符', trigger: 'blur' },
+          { required: true, message: 'please enter password', trigger: 'blur' },
+          { min: 8, message: 'characters should be 8 length', trigger: 'blur' },
           { validator: confirmPwd, trigger: 'blur'}
         ],
         seed: [
-          { required: true, message: '请输入助记词', trigger: 'blur' }
+          { required: true, message: 'please enter mnemonics', trigger: 'blur' }
         ],
       }
     }
