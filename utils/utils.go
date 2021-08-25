@@ -1,7 +1,6 @@
 package utils
 
 import (
-	"fmt"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -25,7 +24,6 @@ func filename() string {
 func AccountCreated() bool {
 	// 默认相对路径查找
 	_, err := os.Stat(filename())
-	fmt.Println(err)
 	return !os.IsNotExist(err)
 }
 
