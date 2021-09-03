@@ -3,7 +3,7 @@
 set -e
 
 VERSION=`git describe --tags`
-RUST_ARC_OS=aarch64-apple-darwin
+RUST_ARC_OS=x86_64-apple-darwin
 
 # functions
 requeststatus() { # $1: requestUUID
@@ -69,16 +69,16 @@ sed "s/0.0.0/${VERSION}/" ./build/darwin/Info.plist.src > ./build/darwin/Info.pl
 cd ./lib/zkp && cargo build --release --target=${RUST_ARC_OS}
 cd ../../
 cp ./lib/zkp/target/${RUST_ARC_OS}/release/libzkp.a ./lib/darwin/libzkp.a
-CGO_LDFLAGS=-mmacosx-version-min=10.13 wails build -package -production -platform darwin -o manta-signer
+CGO_LDFLAGS=-mmacosx-version-min=10.13 ~/go/bin/wails build -package -production -platform darwin -o manta-signer
 
 cd build/bin/
 
-echo "Signing the binary..."
-codesign -s "${MANTA_SIGNER_SIGNING_IDENTITY}" -o runtime -v './manta-signer.app/Contents/MacOS/manta-signer'
+# echo "Signing the binary..."
+# codesign -s "${MANTA_SIGNER_SIGNING_IDENTITY}" -o runtime -v './manta-signer.app/Contents/MacOS/manta-signer'
 
 echo "Creating DMG..."
 # npm install -g create-dmg
-create-dmg ./manta-signer.app --overwrite --identity="${MANTA_SIGNER_SIGNING_IDENTITY}" --dmg-title "Install manta-signer"
+create-dmg manta-signer.dmg --overwrite --identity="${MANTA_SIGNER_SIGNING_IDENTITY}" --dmg-title "Install manta-signer"
 mv manta-signer*.dmg "manta-signer.${VERSION}.dmg"
 
 echo "Zipping..."

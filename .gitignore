@@ -107,3 +107,5 @@ build/bin
 lib/darwin
 lib/linux
 lib/windows
+
+/prover_key_gen/*.bin

@@ -2,15 +2,16 @@ package main
 
 import (
 	"fmt"
+	"log"
+	"os"
+	"sync"
+	"time"
+
 	"github.com/labstack/echo/v4"
 	"github.com/wailsapp/wails/v2"
 	"github.com/wailsapp/wails/v2/pkg/menu"
 	"github.com/wailsapp/wails/v2/pkg/menu/keys"
 	"github.com/wailsapp/wails/v2/pkg/options/dialog"
-	"log"
-	"os"
-	"sync"
-	"time"
 )
 
 const (

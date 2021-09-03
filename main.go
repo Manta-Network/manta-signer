@@ -3,14 +3,15 @@ package main
 import (
 	_ "embed"
 	"fmt"
+	"os"
+	"runtime"
+
 	"github.com/pkg/errors"
 	"github.com/wailsapp/wails/v2"
 	"github.com/wailsapp/wails/v2/pkg/logger"
 	"github.com/wailsapp/wails/v2/pkg/options"
 	"github.com/wailsapp/wails/v2/pkg/options/mac"
 	"github.com/wailsapp/wails/v2/pkg/options/windows"
-	"os"
-	"runtime"
 )
 
 const (
@@ -47,10 +48,10 @@ func run() error {
 
 	err = wails.Run(&options.App{
 		Title:             DaemonName,
-		Width:             1080,
-		Height:            700,
-		MinWidth:          800,
-		MinHeight:         600,
+		Width:             320,
+		Height:            240,
+		MinWidth:          160,
+		MinHeight:         120,
 		StartHidden:       startHidden,
 		HideWindowOnClose: true,
 
