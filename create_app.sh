@@ -3,7 +3,7 @@
 set -e
 
 VERSION=`git describe --tags`
-RUST_ARC_OS=aarch64-apple-darwin
+RUST_ARC_OS=x86_64-apple-darwin
 
 # functions
 requeststatus() { # $1: requestUUID
@@ -69,4 +69,4 @@ sed "s/0.0.0/${VERSION}/" ./build/darwin/Info.plist.src > ./build/darwin/Info.pl
 cd ./lib/zkp && cargo build --release --target=${RUST_ARC_OS}
 cd ../../
 cp ./lib/zkp/target/${RUST_ARC_OS}/release/libzkp.a ./lib/darwin/libzkp.a
-CGO_LDFLAGS=-mmacosx-version-min=10.13 wails build -package -production -platform darwin -o manta-signer
+CGO_LDFLAGS=-mmacosx-version-min=10.13 ~/go/bin/wails build -package -production -platform darwin -o manta-signer

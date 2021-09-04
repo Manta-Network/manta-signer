@@ -2,129 +2,96 @@
   <div class="main-container-wrapper">
     <div class="page-container">
       <div class="page-container__header">
-        <div class="page-container__title">Manta Mnemonics</div>
-        <div class="page-container__subtitle">Manta Mnemonics can be used to recover your account.</div>
+        <div class="page-container__title">Create Account</div>
       </div>
       <div class="page-container__content">
-        <div class="page-container__warning-container">
-          <svg class="page-container__warning-icon" height="32" width="33" xmlns="http://www.w3.org/2000/svg">
-            <g fill="none" fill-rule="evenodd">
-              <path d="M19.132 2.854l12.44 22.748a3 3 0 01-2.632 4.44H4.06a3 3 0 01-2.632-4.44l12.44-22.748a3 3 0 015.264 0z" stroke="#ff001f" stroke-width="2"/>
-              <g fill="#ff001f">
-                <path d="M15 8h3v13h-3zM15 23h3v3h-3z"/>
-              </g>
-            </g>
-          </svg>
-          <div class="page-container__warning-message">
-            <div class="page-container__warning-title">Please don't show your mnemonics to others.</div>
-            <div>Otherwise your account could be compromised.</div>
-          </div>
-        </div>
         <div class="reveal-seed__content">
-          <template v-if="authorized">
-            <div>
-              <label class="reveal-seed__label">Your Account Mnemonics</label>
-              <div class="export-text-container">
-                <div class="export-text-container__text-container">
-                  <div class="export-text-container__text notranslate">
-                    {{seed}}
-                  </div>
-                </div>
-                <div class="export-text-container__buttons-container">
-                  <div class="export-text-container__button export-text-container__button--copy" @click="copyToClipboard">
-                    <svg width="17" height="17" viewBox="0 0 11 11" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <path fill-rule="evenodd" clip-rule="evenodd"
-                            d="M0 0H1H9V1H1V9H0V0ZM2 2H11V11H2V2ZM3 3H10V10H3V3Z" fill="#3098DC"></path>
-                    </svg>
-                    <div class="export-text-container__button-text">Copy to Clipboard</div>
-                  </div>
-                  <div class="export-text-container__button" @click="saveToCSV">
-                    <svg height="18" width="20" xmlns="http://www.w3.org/2000/svg">
-                      <g fill="none" fill-rule="evenodd" stroke="#259de5" stroke-width="2">
-                        <path d="M1.336 11v6h17v-6M9.836 0v11"/>
-                        <path d="M4.524 7l5.312 4 5.313-4"/>
-                      </g>
-                    </svg>
-                    <div class="export-text-container__button-text">Save to file</div>
-                  </div>
+          <div>
+            <label class="reveal-seed__label">Your recovery phrase</label>
+            <div class="export-text-container">
+              <div class="export-text-container__text-container">
+                <div class="export-text-container__text notranslate">
+                  {{ seed }}
                 </div>
               </div>
             </div>
-          </template>
-          <template v-else>
-            <el-form :rules="rules" :model="ruleForm" ref="ruleForm">
-              <el-form-item label="Enter password to continue" prop="password">
-                <el-input type="password" placeholder="password" id="password-box" v-model="ruleForm.password" show-password></el-input>
-              </el-form-item>
-            </el-form>
-          </template>
+          </div>
+          <el-form :rules="rules" :model="ruleForm" ref="ruleForm">
+            <el-form-item label="Choose a password" prop="password">
+              <el-input
+                type="password"
+                placeholder="password"
+                id="password-box"
+                v-model="ruleForm.password"
+                show-password
+              ></el-input>
+            </el-form-item>
+            <el-button
+              type="primary"
+              @click="nextStep('ruleForm')"
+              :disabled="ruleForm.password.length === 0"
+              >Next</el-button
+            >
+          </el-form>
         </div>
-      </div>
-      <div class="page-container__footer">
-        <footer v-if="authorized">
-          <el-button @click="closeWindow">Close</el-button>
-        </footer>
-        <footer v-else>
-          <el-button type="info">Cancel</el-button>
-          <el-button type="primary" @click="nextStep('ruleForm')" :disabled="ruleForm.password.length === 0">Next</el-button>
-        </footer>
       </div>
     </div>
   </div>
 </template>
 
 <script>
-import * as copy from 'copy-to-clipboard'
-import backend from "@/backend";
+import * as copy from 'copy-to-clipboard';
+import backend from '@/backend';
 
 export default {
-  name: "CreateAccount",
+  name: 'CreateAccount',
   data() {
     return {
       ruleForm: {
-        password: "",
+        password: '',
       },
       rules: {
         password: [
-          {required: true, message: 'Please enter password', trigger: 'blur'},
-          {min: 8, message: '8 digit minimal', trigger: 'blur'}
+          { required: true, message: 'Please enter password', trigger: 'blur' },
+          { min: 8, message: '8 digit minimal', trigger: 'blur' },
         ],
       },
-      authorized: false,
-      seed: ""
-    }
+      seed: '',
+    };
   },
   methods: {
     copyToClipboard() {
       if (copy(this.seed)) {
-        this.$message.success("Copy succeed");
+        this.$message.success('Copy succeed');
       }
     },
     nextStep(formName) {
-      this.$refs[formName].validate((valid) => {
+      this.$refs[formName].validate(valid => {
         if (valid) {
-          this.authorized = true
-          backend.main.Service.AcquireSeedByPassword(this.password).then((seed) => {
-            this.seed = seed
-          })
+          backend.main.Service.AcquireSeedByPassword(this.password).then(
+            seed => {
+              this.seed = seed;
+            }
+          );
         } else {
-          return false
+          return false;
         }
-      })
+      });
     },
     closeWindow() {
       backend.main.Service.WindowHide();
     },
     saveToCSV() {
       backend.main.Service.SaveCSV(this.seed)
-      .then(() => {
-        this.$message.success('Copy succeed')
-      }).catch(err => {
-        this.$message.error(err)
-      })
-    }
-  }
-}
+        .then(() => {
+          this.$message.success('Copy succeed');
+        })
+        .catch(err => {
+          this.$message.error(err);
+        });
+    },
+  },
+};
 </script>
 
 <style scoped>
@@ -137,8 +104,8 @@ export default {
 }
 
 .page-container {
-  max-height: 82vh;
-  min-height: 570px;
+  /* max-height: 82vh;
+  min-height: 570px; */
   flex: 0 0 auto;
   margin-right: auto;
   margin-left: auto;
@@ -194,18 +161,6 @@ export default {
   align-items: flex-start;
 }
 
-.page-container__warning-icon {
-  padding-top: 5px;
-}
-
-.page-container__warning-message {
-  padding-left: 15px;
-}
-
-.page-container__warning-title {
-  font-weight: 500;
-}
-
 .reveal-seed__content {
   padding: 20px;
 }
@@ -216,27 +171,12 @@ export default {
   display: inline-block;
 }
 
-.page-container__footer {
-  display: flex;
-  flex-flow: column;
-  justify-content: center;
-  border-top: 1px solid #d2d8dd;
-  flex: 0 0 auto;
-}
-
-.page-container__footer > footer {
-  display: flex;
-  flex-flow: row;
-  justify-content: center;
-  padding: 16px;
-  flex: 0 0 auto;
-}
-
 .reveal-seed__label {
   padding-bottom: 10px;
   font-weight: 400;
   display: inline-block;
 }
+
 .export-text-container {
   display: flex;
   justify-content: center;
