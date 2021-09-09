@@ -1,31 +1,49 @@
-### 交叉编译
+Manta Signer
+=========================
 
-#### linux
-安装需要`brew install FiloSottile/musl-cross/musl-cross`
-但是编译还是有问题，暂时没解决
+## Compile
 
-#### Windows
-执行 `rustup toolchain install stable-x86_64-pc-windows-gnu`
-安装toolchain
-windows 需要安装x86_64-w64-mingw32-gcc的linker
-安装方法brew install mingw-w64
-但是编译还是有问题，暂时没解决
+### MacOS Arm
 
-#### 运行
+### MacOS x86-64
 
-MacOS下执行在项目当前路径下执行dist/darwin/manta-daemon即可
 
-### 接口规范
-本daemon程序实现了符合restful规范的接口，运行在默认为localhost:9988地址
-可以通过指定`--addr=0.0.0.0:12345`来实现在其他端口监听
-提供3个接口供外部交互
+### Ubuntu 20.04 LTS (x86_64) 
+need `brew install FiloSottile/musl-cross/musl-cross`
+(To be fix: Compilation issues)
 
+### Windows (x86_64)
+1. Install toolchain
+
+```bash
+rustup toolchain install stable-x86_64-pc-windows-gnu
+```
+
+2. Install x86_64-w64-mingw32-gcc linker:
+```bash
+brew install mingw-w64
+```
+(To be fixed: compilation issue)
+
+## Running
+
+### MacOS
+```bash
+dist/darwin/manta-daemon
+```
+
+## Interaction with DApp (web based)
+
+via RESTful API on `localhost:9988`.
+A customized port could be specified at `--addr=0.0.0.0:<port number>`:
+
+There are 3 RESTful APIs:
 ---
 1. /heartbeat
 
 Method: GET
 
-返回http_status_code = 200即为成功，表明本daemon程序正在运行
+http_status_code = 200 on success, indicate that the signer is running.
 
 Example:
 
@@ -40,11 +58,11 @@ Method: POST
 Params:
 
     Query_param:
-        app_version: 必须 app版本
+        app_version:  the current App version
 
 Body:
     
-    二进制payload
+    ZKP payload (in binary).
 
 Response: 
 
@@ -66,11 +84,11 @@ Method: POST
 Params:
 
     Query_param:
-        app_version: 必须 app版本
+        app_version: the current App version
 
 Body:
 
-    二进制payload
+    ZKP payload (in binary).
 
 Response:
 
@@ -85,4 +103,5 @@ Example:
 $ curl --request POST --data-binary "@dist/darwin/manta-daemon" http://localhost:9988/generateReclaimZKP
 ```
 
-### 生成macos app DMG
+### Generating MacOS `.dmg`
+(TBD)
