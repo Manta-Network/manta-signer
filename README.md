@@ -1,6 +1,10 @@
 Manta Signer
 =========================
 
+## Singer Spec
+
+https://hackmd.io/0ZnJMf9jRwug2_ZBE0F4fA?both
+
 ## Compile
 
 ### MacOS Arm
