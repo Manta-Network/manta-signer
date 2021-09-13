@@ -98,8 +98,12 @@ func newApp(addr string) (*app, error) {
 }
 
 func (b *app) startupServer(runtime *wails.Runtime) {
+	log.Print("Startuup server????")
+
 	svr := NewSvr()
+	log.Print("start regiter routes I hope????")
 	svr.RegisterRoutes()
+	log.Print("done regiter routes????")
 	err := svr.Start(runtime, b.addr)
 	if err != nil {
 		println(err.Error())
@@ -121,6 +125,8 @@ func (b *app) startup(runtime *wails.Runtime) {
 	b.runtime = runtime
 	b.Service.runtime = runtime
 	b.refreshAll()
+
+	log.Print("Calling startupserver ????")
 
 	// export web service
 	go b.startupServer(runtime)

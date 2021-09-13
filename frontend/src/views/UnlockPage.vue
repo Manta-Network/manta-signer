@@ -1,137 +1,83 @@
 <template>
-  <div class="unlock-page__container">
-    <div class="unlock-page">
-      <div class="unlock-page__logo-container">
-        <div style="z-index: 0">
-          <img src="../assets/logo.png" width="120px" height="120px">
-        </div>
+  <div class="main-container-wrapper">
+    <div class="page-container">
+      <div class="page-container__header">
+        <div class="page-container__title">Transaction</div>
       </div>
-      <h1 class="unlock-page__title">Welcome back！</h1>
-      <div>About to enter the manta network</div>
-      <form class="unlock-page__form">
-        <div class="unlock-page__password-container">
-          <div
-              class="unlock-page__password-input-container">
-            <el-input placeholder="password" v-model="password" show-password></el-input>
-          </div>
-        </div>
-        <el-button class="unlock-page__unlock-button"
-                   :disabled="password.length === 0"
-                   type="primary"
-        @click="unlock">unlock</el-button>
-      </form>
-      <div class="unlock-page__links">
-        <span> or <button class="unlock-page__link unlock-page__link--import" @click.prevent="toRestoreVault">use mnemonics to recover your account</button>
-        </span>
+      <div class="page-container__content">
+        <el-form>
+          <el-form-item
+            v-bind:label="
+              `${txType} ${totalAmount}${this.denomination} to ${recipientAddress}?`
+            "
+            prop="password"
+          >
+            <el-input
+              type="password"
+              placeholder="password"
+              id="password-box"
+              v-model="password"
+              show-password
+            ></el-input>
+          </el-form-item>
+          <el-button
+            class="approve-button"
+            type="primary"
+            @click="handleClickApproveTransaction"
+            >Approve</el-button
+          >
+          <el-button
+            class="decline-button"
+            type="primary"
+            @click="handleClickDeclineTransaction"
+            >Decline</el-button
+          >
+        </el-form>
       </div>
     </div>
   </div>
 </template>
 
 <script>
-import backend from "@/backend";
-import {Events} from "@wails/runtime";
+import backend from '@/backend';
+import { Events } from '@wails/runtime';
 
 export default {
-  name: "UnlockPage",
+  name: 'UnlockPage',
   data() {
     return {
-      password: ""
-    }
+      txType: 'Transfer',
+      totalAmount: 100,
+      denomination: 'DOT',
+      recipientAddress: '12c6DSiU4Rq3P4ZxziKxzrL5LmMBrzjrJX',
+      password: '',
+    };
   },
   methods: {
-    unlock() {
-      backend.main.Service.Unlock(this.password)
-      .then(() => {
-        Events.Emit('manta.server.onUnlocked')
-      }).catch(err => {
-        this.$message.error(err)
-      })
+    async handleClickApproveTransaction() {
+      console.log('unlock');
+      const success = await backend.main.Service.LoadRootSeed(this.password);
+      console.log(success);
+      //   .then(() => {
+      //     Events.Emit('manta.server.onUnlocked');
+      //   })
+      //   .catch(err => {
+      //     this.$message.error(err);
+      //   });
+    },
+    handleClickDeclineTransaction() {
+      this.closeWindow();
+      // backend.main.Service.Unlock(this.password)
+      //   .then(() => {
+      //     Events.Emit('manta.server.onUnlocked');
+      //   })
+      //   .catch(err => {
+      //     this.$message.error(err);
+      //   });
     },
     toRestoreVault() {
-      this.$router.push('/restore_vault')
-    }
-  }
-}
+      this.$router.push('/restore_vault');
+    },
+  },
+};
 </script>
-
-<style scoped>
-.unlock-page__container {
-  background-color: white;
-  display: flex;
-  align-self: stretch;
-  justify-content: center;
-  flex: 1 0 auto;
-}
-.unlock-page {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  width: 357px;
-  padding: 30px;
-  font-weight: 400;
-  color: #aeaeae;
-}
-.unlock-page__logo-container {
-  margin-top: 24px;
-}
-.unlock-page__title {
-  font-size: 2rem;
-  line-height: 140%;
-  margin-top: 5px;
-  font-weight: 800;
-  color: #4d4d4d;
-}
-.unlock-page__form {
-  width: 100%;
-  margin: 56px 0 8px;
-}
-.unlock-page__password-container {
-  width: 100%;
-  border: 0;
-  margin: 0;
-  display: inline-flex;
-  padding: 0;
-  position: relative;
-  min-width: 0;
-  flex-direction: column;
-  vertical-align: top;
-}
-.unlock-page__password-input-container {
-  margin-top: 16px;
-  position: relative;
-  width: 100%;
-  color: rgba(0, 0, 0, 0.87);
-  cursor: text;
-  display: inline-flex;
-  font-size: 1rem;
-  box-sizing: border-box;
-  align-items: center;
-  font-weight: 400;
-  line-height: 1.1876em;
-  letter-spacing: 0.00938em;
-}
-.unlock-page__unlock-button {
-  margin-top: 20px;
-  height: 60px;
-  font-weight: 400;
-  box-shadow: none;
-  border-radius: 4px;
-  width: 100%;
-}
-.unlock-page__links {
-  margin-top: 15px;
-  width: 100%;
-  text-align: center;
-  font-size: 0.75rem;
-}
-.unlock-page__link {
-  cursor: pointer;
-  background-color: unset;
-  color: #037dd6;
-  font-size: unset;
-  font-weight: bold;
-  border-style: none;
-}
-</style>

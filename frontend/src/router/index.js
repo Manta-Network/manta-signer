@@ -1,11 +1,11 @@
-import Vue from 'vue'
-import VueRouter from 'vue-router'
-import UnlockPage from '@/views/UnlockPage'
-import RestoreVault from "@/views/RestoreVault";
-import CreateAccount from "@/views/CreateAccount";
-import backend from "@/backend";
+import Vue from 'vue';
+import VueRouter from 'vue-router';
+import UnlockPage from '@/views/UnlockPage';
+import RestoreVault from '@/views/RestoreVault';
+import CreateAccount from '@/views/CreateAccount';
+// import backend from '@/backend';
 
-Vue.use(VueRouter)
+Vue.use(VueRouter);
 
 const routes = [
   {
@@ -23,23 +23,23 @@ const routes = [
     name: 'RestoreVault',
     component: RestoreVault,
   },
-]
+];
 
 const router = new VueRouter({
-  routes
-})
+  routes,
+});
 
 router.beforeEach((to, from, next) => {
-  if (to.path !== '/create_account') {
-    backend.main.Service.AccountCreated().then((created) => {
-      if (!created) {
-        next({
-          path: '/create_account'
-        })
-      }
-    })
-  }
+  // if (to.path !== '/create_account') {
+  //   backend.main.Service.AccountCreated().then((created) => {
+  //     if (!created) {
+  //       next({
+  //         path: '/create_account'
+  //       })
+  //     }
+  //   })
+  // }
   next();
-})
+});
 
-export default router
+export default router;

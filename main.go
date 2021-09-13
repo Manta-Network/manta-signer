@@ -48,10 +48,10 @@ func run() error {
 
 	err = wails.Run(&options.App{
 		Title:             DaemonName,
-		Width:             320,
-		Height:            240,
-		MinWidth:          160,
-		MinHeight:         120,
+		Width:             400,
+		Height:            400,
+		MinWidth:          400,
+		MinHeight:         400,
 		StartHidden:       startHidden,
 		HideWindowOnClose: true,
 

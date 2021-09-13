@@ -9,11 +9,13 @@ crate-type = ["staticlib"]
 
 [dependencies]
 libc = "0.2.2"
-manta-api = { git = "https://github.com/Manta-Network/manta-api.git", branch = "manta_signer", default_features = false, features = ["signer", "manta"]}
+manta-api = { git = "https://github.com/Manta-Network/manta-api.git", branch = "manta-signer-ark-0.3", default_features = false, features = ["signer", "manta"]}
 manta-asset = { git = "https://github.com/Manta-Network/manta-types.git", branch = "manta" }
-manta-crypto = { git = "https://github.com/Manta-Network/manta-crypto.git", branch = "manta"}
+manta-crypto = { git = "https://github.com/Manta-Network/manta-crypto.git", branch = "manta" }
 tiny-hderive = { git = "https://github.com/Manta-Network/tiny-hderive" }
 hex = { version = "0.4.3" }
 codec = { package = "parity-scale-codec", version = "2.0.0", default-features = false, features = [ "derive", "full" ] }
 rand = { version = "0.7.3" }
+rand_chacha = { version = "0.3.0", default-features = false }
 ark-std = { version = "0.2.0", default-features = false }
+bip0039 = { version = "0.9.0" }

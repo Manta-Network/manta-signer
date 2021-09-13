@@ -21,6 +21,22 @@ const backend = {
         return window.backend.main.Service.AcquireSeedByPassword(arg1);
       },
       /**
+       * CreateAccount
+       * @param {string} arg1 - Go Type: string
+       * @returns {Promise<string>}  - Go Type: string
+       */
+      "CreateAccount": (arg1) => {
+        return window.backend.main.Service.CreateAccount(arg1);
+      },
+      /**
+       * LoadRootSeed
+       * @param {string} arg1 - Go Type: string
+       * @returns {Promise<boolean>}  - Go Type: bool
+       */
+      "LoadRootSeed": (arg1) => {
+        return window.backend.main.Service.LoadRootSeed(arg1);
+      },
+      /**
        * RecoverAccount
        * @param {string} arg1 - Go Type: string
        * @param {string} arg2 - Go Type: string
@@ -28,14 +44,6 @@ const backend = {
        */
       "RecoverAccount": (arg1, arg2) => {
         return window.backend.main.Service.RecoverAccount(arg1, arg2);
-      },
-      /**
-       * SaveCSV
-       * @param {string} arg1 - Go Type: string
-       * @returns {Promise<Error>}  - Go Type: error
-       */
-      "SaveCSV": (arg1) => {
-        return window.backend.main.Service.SaveCSV(arg1);
       },
       /**
        * Unlock

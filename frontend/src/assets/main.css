@@ -1,0 +1,255 @@
+#app {
+    font-family: Euclid, Roboto, Helvetica, Arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-align: center;
+    color: #2c3e50;
+    margin-top: 50px;
+}
+
+html,
+body,
+div,
+span,
+applet,
+object,
+iframe,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+p,
+blockquote,
+pre,
+a,
+abbr,
+acronym,
+address,
+big,
+cite,
+code,
+del,
+dfn,
+em,
+img,
+ins,
+kbd,
+q,
+s,
+samp,
+small,
+strike,
+strong,
+sub,
+sup,
+tt,
+var,
+b,
+u,
+i,
+center,
+dl,
+dt,
+dd,
+ol,
+ul,
+li,
+fieldset,
+form,
+label,
+legend,
+table,
+caption,
+tbody,
+tfoot,
+thead,
+tr,
+th,
+td,
+article,
+aside,
+canvas,
+details,
+embed,
+figure,
+figcaption,
+footer,
+header,
+hgroup,
+menu,
+nav,
+output,
+ruby,
+section,
+summary,
+time,
+mark,
+audio,
+video {
+    margin: 0;
+    padding: 0;
+    border: 0;
+    font-size: 100%;
+    font-weight: inherit;
+    font-style: inherit;
+    font-variant: inherit;
+    font-size: inherit;
+    line-height: inherit;
+    vertical-align: baseline;
+}
+
+#nav {
+    padding: 30px;
+}
+
+#nav a {
+    font-weight: bold;
+    color: #2c3e50;
+}
+
+#nav a.router-link-exact-active {
+    color: #42b983;
+}
+
+.main-container-wrapper {
+    display: flex;
+    justify-content: center;
+    flex: 1 0 auto;
+    min-height: 0;
+    width: 100%;
+}
+
+.page-container {
+    /* max-height: 82vh;
+  min-height: 570px; */
+    padding: 20px;
+    flex: 0 0 auto;
+    margin-right: auto;
+    margin-left: auto;
+    width: 408px;
+    background-color: #fff;
+    box-shadow: 0 0 7px 0 rgb(0 0 0 / 8%);
+    z-index: 25;
+    display: flex;
+    flex-flow: column;
+    border-radius: 8px;
+    overflow-y: auto;
+}
+
+.page-container__header {
+    display: flex;
+    flex-flow: column;
+    border-bottom: 1px solid #d2d8dd;
+    padding: 16px;
+    flex: 0 0 auto;
+    position: relative;
+}
+
+.page-container__title {
+    font-size: 1.25rem;
+    font-family: Euclid, Roboto, Helvetica, Arial, sans-serif;
+    line-height: 140%;
+    font-style: normal;
+    font-weight: normal;
+    color: #000;
+    font-weight: 500;
+    /* margin-right: 1.5rem; */
+}
+
+.page-container__content {
+    overflow-y: auto;
+    flex: 1;
+}
+
+.page-container__warning-container {
+    background: #fdf4f4;
+    padding: 20px;
+    display: flex;
+    align-items: flex-start;
+}
+
+.input-label {
+    padding-bottom: 10px;
+    font-weight: 400;
+    display: inline-block;
+}
+
+.reveal-recoveryPhrase__label {
+    font-size: 1rem;
+    padding-top: 10px;
+    padding-bottom: 10px;
+    font-weight: 400;
+    display: inline-block;
+}
+
+.recovery-phrase-container {
+    display: flex;
+    justify-content: center;
+    flex-direction: column;
+    align-items: center;
+    border: 1px solid #dedede;
+    border-radius: 4px;
+    font-weight: 400;
+    margin-bottom: 1rem;
+}
+
+.recovery-phrase-container__text-container {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    padding: 20px 0 20px 0;
+    border-radius: 4px;
+    background: #fafafa;
+}
+
+.recovery-phrase-container__text {
+    font-size: 1.125rem;
+    font-family: Euclid, Roboto, Helvetica, Arial, sans-serif;
+    line-height: 140%;
+    font-style: normal;
+    font-weight: normal;
+    resize: none;
+    border: none;
+    background: #fafafa;
+    text-align: center;
+}
+
+.recovery-phrase-container__buttons-container {
+    display: flex;
+    flex-direction: row;
+    border-top: 1px solid #dedede;
+    width: 100%;
+}
+
+.recovery-phrase-container__button {
+    font-size: 0.75rem;
+    font-family: Euclid, Roboto, Helvetica, Arial, sans-serif;
+    line-height: 140%;
+    font-style: normal;
+    font-weight: normal;
+    padding: 10px;
+    margin-top: 1rem;
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+}
+
+.recovery-phrase-container__button--copy {
+    border-right: 1px solid #dedede;
+}
+
+.recovery-phrase-container__button-text {
+    padding-left: 10px;
+}
+
+.approve-button {
+    background-color: green;
+}
+
+.decline-button {
+    background-color: red;
+}

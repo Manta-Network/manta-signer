@@ -1,18 +1,18 @@
 build-mac-arm:
 	cd lib/zkp && cargo build --release --target=aarch64-apple-darwin
 	cp lib/zkp/target/aarch64-apple-darwin/release/libzkp.a lib/darwin
-	GOOS=darwin GOARCH=arm64 go build -o dist/darwin/manta-signer lstaticdarwin.go main.go
+	GOOS=darwin GOARCH=arm64 go build -o lstaticdarwin.go main.go app.go server.go service.go incoming_urls.go
 
 build-mac-x86:
 	cd lib/zkp && cargo build --release --target=x86_64-apple-darwin
 	cp lib/zkp/target/x86_64-apple-darwin/release/libzkp.a lib/darwin
-	GOOS=darwin GOARCH=amd64 go build -o dist/darwin/manta-signer lstaticdarwin.go main.go
+	GOOS=darwin GOARCH=amd64 ~/go/bin/wails build -o dist/darwin/manta-signer lstaticdarwin.go main.go app.go server.go service.go incoming_urls.go
 
 build-linux:
 	mkdir -p lib/linux
 	cd lib/zkp && cargo build --release --target=x86_64-unknown-linux-musl
 	cp lib/zkp/target/x86_64-unknown-linux-gnu/release/libzkp.a lib/linux
-	GOOS=linux GOARCH=amd64 CGO_ENABLED=1 CC=x86_64-linux-musl-gcc  CXX=x86_64-linux-musl-g++ go build -o dist/linux/manta-signer main.go
+	GOOS=linux GOARCH=amd64 CGO_ENABLED=1 CC=x86_64-linux-musl-gcc  CXX=x86_64-linux-musl-g++ go build -o dist/linux/manta-signer main.go app.go server.go service.go incoming_urls.go
 
 
 build-windows:
