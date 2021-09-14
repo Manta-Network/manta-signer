@@ -15,13 +15,15 @@ ready(() => {
 });
 
 // After Ready
-Events.On('manta.browser.openCreate', function() {
+Events.On('manta.browser.openCreate', function(data) {
+  console.log(data);
   // check the path match
   if (router.currentRoute.path !== '/create_account') {
     router.push('/create_account');
   }
 });
-Events.On('manta.browser.openUnlock', function() {
+Events.On('manta.browser.openUnlock', function(data) {
+  console.log(data);
   if (router.currentRoute.path !== '/unlock') {
     router.push('/unlock');
   }

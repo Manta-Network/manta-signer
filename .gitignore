@@ -107,3 +107,4 @@ lib/windows
 /prover_key_gen/*.bin
 *.aes
 wails_dev.sh
+/lib/zkp/keys

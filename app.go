@@ -20,6 +20,8 @@ const (
 
 // app struct
 type app struct {
+	rootSeed *[64]byte
+	userIsSignedIn *bool
 	addr    string
 	svr     *echo.Echo
 	runtime *wails.Runtime
@@ -46,9 +48,13 @@ type app struct {
 
 // newApp creates a new app application struct
 func newApp(addr string) (*app, error) {
+	var rootSeed [64]byte
+	userIsSignedIn := false
 	app := &app{
 		addr:                 addr,
 		incomingURLSemaphore: make(chan struct{}, ConcurrentIncomeURL),
+		rootSeed: &rootSeed,
+		userIsSignedIn: &userIsSignedIn,
 	}
 	app.appMenu = menu.NewMenuFromItems(
 		menu.AppMenu(),
@@ -58,7 +64,7 @@ func newApp(addr string) (*app, error) {
 
 	// initialize service,
 	// we put logic that interact with frontend into service
-	app.Service = NewService()
+	app.Service = NewService(app.rootSeed, app.userIsSignedIn)
 
 	// 自动更新
 	//app.appUpdatesMenu = &menu.MenuItem{
@@ -98,12 +104,8 @@ func newApp(addr string) (*app, error) {
 }
 
 func (b *app) startupServer(runtime *wails.Runtime) {
-	log.Print("Startuup server????")
-
-	svr := NewSvr()
-	log.Print("start regiter routes I hope????")
+	svr := NewSvr(b.rootSeed, b.userIsSignedIn)
 	svr.RegisterRoutes()
-	log.Print("done regiter routes????")
 	err := svr.Start(runtime, b.addr)
 	if err != nil {
 		println(err.Error())

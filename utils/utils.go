@@ -7,7 +7,7 @@ import (
 	"strings"
 )
 
-const AccountCreatedFlagName = ".created"
+const AccountCreatedFlagName = "root_seed.aes"
 
 func execDir() string {
 	file, _ := exec.LookPath(os.Args[0])

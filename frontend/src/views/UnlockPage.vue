@@ -42,6 +42,10 @@
 import backend from '@/backend';
 import { Events } from '@wails/runtime';
 
+Events.On('manta.browser.openUnlock', function(data) {
+  console.log(data + '!!!!!');
+});
+
 export default {
   name: 'UnlockPage',
   data() {
@@ -58,25 +62,21 @@ export default {
       console.log('unlock');
       const success = await backend.main.Service.LoadRootSeed(this.password);
       console.log(success);
+      if (success) {
+        Events.Emit('manta.server.onUnlockSuccess');
+        this.password = '';
+        this.closeWindow();
+      }
       //   .then(() => {
-      //     Events.Emit('manta.server.onUnlocked');
+      //     Events.Emit('manta.server.onUnlockSuccess');
       //   })
       //   .catch(err => {
       //     this.$message.error(err);
       //   });
     },
     handleClickDeclineTransaction() {
+      Events.Emit('manta.server.onUnlockFail');
       this.closeWindow();
-      // backend.main.Service.Unlock(this.password)
-      //   .then(() => {
-      //     Events.Emit('manta.server.onUnlocked');
-      //   })
-      //   .catch(err => {
-      //     this.$message.error(err);
-      //   });
-    },
-    toRestoreVault() {
-      this.$router.push('/restore_vault');
     },
   },
 };

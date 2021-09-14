@@ -17,11 +17,15 @@ import (
 
 type Service struct {
 	runtime *wails.Runtime
-	rootSeed    []byte
+	rootSeed    *[64]byte
+	userIsSignedIn *bool
 }
 
-func NewService() *Service {
-	return &Service{}
+func NewService(rootSeed *[64]byte, userIsSignedIn *bool) *Service {
+	return &Service{
+		rootSeed: rootSeed,
+		userIsSignedIn: userIsSignedIn,
+	}
 }
 
 func (c *Service) WindowHide() {
@@ -52,18 +56,19 @@ func (c *Service) CreateAccount(password string) string {
 }
 
 func (c *Service) LoadRootSeed(password string) bool {
-	log.Print("prev root seed :)", c.rootSeed)
 	var outBuffer []byte
 	outBufferRef := C.CBytes(outBuffer)
 	res := C.load_root_seed(C.CString(password), &outBufferRef)
 	if (res == 0) {
 		rootSeed := C.GoBytes(outBufferRef, C.int(64))
-		c.rootSeed = rootSeed
-		log.Print("root seed :)", c.rootSeed)
+		var rootSeedSized [64]byte
+		copy(rootSeedSized[:], rootSeed)
+		*c.rootSeed = rootSeedSized
+		*c.userIsSignedIn = true
+		// println("rootSeed in service", c.rootSeed)
 		C.free(outBufferRef)
 		return true
 	}
-	log.Print("error loading root seed :(")
 	return false
 }
 
