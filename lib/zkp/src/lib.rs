@@ -14,19 +14,20 @@ use manta_api::save_root_seed;
 
 use manta_api::{
     DeriveShieldedAddressParams, GenerateAssetParams, GeneratePrivateTransferDataParams,
-    GenerateReclaimDataParams, RecoverAccountParams,
+    GenerateReclaimDataParams, RecoverAccountParams, MantaRootSeed
 };
 
 use bip0039::{Mnemonic, Count};
 use codec::Decode;
 use codec::Encode;
-use manta_asset::MantaSecretKey;
 use manta_crypto::MantaSerDes;
 use rand::thread_rng;
 use rand::RngCore;
 use rand_chacha::ChaCha20Rng;
 use rand_chacha::rand_core::SeedableRng;
 
+
+// todo: feed real secret key
 
 #[no_mangle]
 pub extern "C" fn load_root_seed(password: *const libc::c_char, out: *mut *mut u8) -> libc::size_t {
@@ -74,39 +75,56 @@ pub extern "C" fn create_account(
     0
 }
 
+
+
+
+
+
+
+
+
+
 #[no_mangle]
 pub extern "C" fn derive_shielded_address(
+    root_seed: *const libc::c_uchar,
     buffer: *const libc::c_uchar,
     len: libc::size_t,
     out: *mut *mut u8,
     out_len: *mut libc::size_t,
 ) -> libc::size_t {
-    let mut bytes: &[u8] = unsafe { std::slice::from_raw_parts(buffer, len) };
-    let params = DeriveShieldedAddressParams::decode(&mut bytes).unwrap();
-    let root_seed: MantaSecretKey = [0u8; 32].into();
-    let shielded_address = _derive_shielded_address(params, &root_seed);
-    let mut buf: Vec<u8> = vec![];
-    shielded_address.serialize(&mut buf).unwrap();
-    let len = buf.len();
-    let ptr = buf.as_mut_ptr();
-    std::mem::forget(buf);
-    unsafe {
-        *out = ptr;
-        *out_len = len;
-    }
+    // panic!("suffer");
+    // println!("1");
+    // let root_seed: MantaRootSeed = deserialize_root_seed(root_seed);
+    // println!("2");
+    // let mut bytes: &[u8] = unsafe { std::slice::from_raw_parts(buffer, len) };
+    // println!("3");
+    // let params = DeriveShieldedAddressParams::decode(&mut bytes).unwrap();
+    // println!("4");
+    // let shielded_address = _derive_shielded_address(params, &root_seed);
+    // let mut buf: Vec<u8> = vec![];
+    // shielded_address.serialize(&mut buf).unwrap();
+    // println!("5");
+    // let len = buf.len();
+    // let ptr = buf.as_mut_ptr();
+    // std::mem::forget(buf);
+    // unsafe {
+    //     *out = ptr;
+    //     *out_len = len;
+    // }
     0
 }
 
 #[no_mangle]
 pub extern "C" fn generate_asset(
+    root_seed: *const libc::c_uchar,
     buffer: *const libc::c_uchar,
     len: libc::size_t,
     out: *mut *mut u8,
     out_len: *mut libc::size_t,
 ) -> libc::size_t {
+    let root_seed: MantaRootSeed = deserialize_root_seed(root_seed);
     let mut bytes: &[u8] = unsafe { std::slice::from_raw_parts(buffer, len) };
     let params = GenerateAssetParams::decode(&mut bytes).unwrap();
-    let root_seed: MantaSecretKey = [0u8; 32].into();
     let asset = _generate_ui_asset(params, &root_seed);
     let mut buf = asset.encode();
     let len = buf.len();
@@ -121,14 +139,15 @@ pub extern "C" fn generate_asset(
 
 #[no_mangle]
 pub extern "C" fn generate_mint_data(
+    root_seed: *const libc::c_uchar,
     buffer: *const libc::c_uchar,
     len: libc::size_t,
     out: *mut *mut u8,
     out_len: *mut libc::size_t,
 ) -> libc::size_t {
+    let root_seed: MantaRootSeed = deserialize_root_seed(root_seed);
     let mut bytes: &[u8] = unsafe { std::slice::from_raw_parts(buffer, len) };
     let params = GenerateAssetParams::decode(&mut bytes).unwrap();
-    let root_seed: MantaSecretKey = [0u8; 32].into();
     let mint_data = _generate_mint_data(params, &root_seed);
     let mut buf: Vec<u8> = vec![];
     mint_data.serialize(&mut buf).unwrap();
@@ -144,14 +163,15 @@ pub extern "C" fn generate_mint_data(
 
 #[no_mangle]
 pub extern "C" fn generate_private_transfer_data(
+    root_seed: *const libc::c_uchar,
     buffer: *const libc::c_uchar,
     len: libc::size_t,
     out: *mut *mut u8,
     out_len: *mut libc::size_t,
 ) -> libc::size_t {
+    let root_seed: MantaRootSeed = deserialize_root_seed(root_seed);
     let mut bytes: &[u8] = unsafe { std::slice::from_raw_parts(buffer, len) };
     let params = GeneratePrivateTransferDataParams::decode(&mut bytes).unwrap();
-    let root_seed: MantaSecretKey = [0u8; 32].into();
     let proving_key_path = "./lib/zkp/keys/transfer_pk.bin";
     let mut rng = get_crypto_rng();
     let private_transfer_data =
@@ -170,14 +190,15 @@ pub extern "C" fn generate_private_transfer_data(
 
 #[no_mangle]
 pub extern "C" fn generate_reclaim_data(
+    root_seed: *const libc::c_uchar,
     buffer: *const libc::c_uchar,
     len: libc::size_t,
     out: *mut *mut u8,
     out_len: *mut libc::size_t,
 ) -> libc::size_t {
+    let root_seed: MantaRootSeed = deserialize_root_seed(root_seed);
     let mut bytes: &[u8] = unsafe { std::slice::from_raw_parts(buffer, len) };
     let params = GenerateReclaimDataParams::decode(&mut bytes).unwrap();
-    let root_seed: MantaSecretKey = [0u8; 32].into();
     let proving_key_path = "./lib/zkp/keys/reclaim_pk.bin";
     let mut rng = get_crypto_rng();
     let reclaim_data = _generate_reclaim_data(params, &root_seed, &proving_key_path, &mut rng);
@@ -195,14 +216,15 @@ pub extern "C" fn generate_reclaim_data(
 
 #[no_mangle]
 pub extern "C" fn recover_account(
+    root_seed: *const libc::c_uchar,
     buffer: *const libc::c_uchar,
     len: libc::size_t,
     out: *mut *mut u8,
     out_len: *mut libc::size_t,
 ) -> libc::size_t {
+    let root_seed: MantaRootSeed = deserialize_root_seed(root_seed);
     let mut bytes: &[u8] = unsafe { std::slice::from_raw_parts(buffer, len) };
     let params = RecoverAccountParams::decode(&mut bytes).unwrap();
-    let root_seed: MantaSecretKey = [0u8; 32].into();
     let account = _recover_account(params, &root_seed);
     let mut buf = account.encode();
     let len = buf.len();
@@ -221,4 +243,9 @@ fn get_crypto_rng() -> ChaCha20Rng {
     rng.fill_bytes(&mut crypto_rng_seed);
 
     ChaCha20Rng::from_seed(crypto_rng_seed)
+}
+
+fn deserialize_root_seed(root_seed: *const libc::c_uchar) -> MantaRootSeed {
+    let bytes: &[u8] = unsafe { std::slice::from_raw_parts(root_seed, 64) };
+    bytes.try_into().expect("Failed to deserialize root seed")
 }
