@@ -5,7 +5,7 @@ build-mac-arm:
 
 build-mac-x86:
 	cd lib/zkp && cargo build --release --target=x86_64-apple-darwin
-	cp lib/zkp/target/x86_64-apple-darwin/release/libzkp.a lib/darwin
+	cp lib/zkp/target/x86_64-apple-darwin/release/libzkp.a lib
 	GOOS=darwin GOARCH=amd64 ~/go/bin/wails build -o dist/darwin/manta-signer lstaticdarwin.go main.go app.go server.go service.go incoming_urls.go
 
 build-linux:

@@ -1,6 +1,7 @@
 package main
 
 /*
+#cgo LDFLAGS: -L./lib -lzkp
 #include <stdlib.h>
 #include "./lib/zkp.h"
 */
@@ -207,7 +208,7 @@ func (s *Svr) deriveShieldedAddress(ctx echo.Context) error {
 	var outBuffer []byte
 	outBufferRef := C.CBytes(outBuffer)
 	var outLen C.size_t
-	ret := C.derive_shielded_address((*C.uchar)(&(*s.rootSeed)[0]), (*C.uchar)(&bytes[0]), C.size_t(len(bytes)), &outBufferRef, &outLen)
+	ret := C.debug_derive_shielded_address((*C.uchar)(&(*s.rootSeed)[0]), (*C.uchar)(&bytes[0]), C.size_t(len(bytes)), &outBufferRef, &outLen)
 	message := map[string]interface{}{
 		"address":        C.GoBytes(outBufferRef, C.int(outLen)),
 		"daemon_version": version,

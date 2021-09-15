@@ -1,7 +1,6 @@
 package main
 
 /*
-#cgo LDFLAGS: -L./lib -lzkp
 #include <stdlib.h>
 #include "./lib/zkp.h"
 */

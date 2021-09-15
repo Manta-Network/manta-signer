@@ -4,7 +4,7 @@
 	<key>CFBundleName</key><string>manta-signer</string>
 	<key>CFBundleExecutable</key><string>manta-signer</string>
 	<key>CFBundleIdentifier</key><string>com.manta-signer.app</string>
-	<key>CFBundleVersion</key><string>0.0.2-2-gf70241f</string>
+	<key>CFBundleVersion</key><string>0.0.2-5-gbabe965</string>
 	<key>CFBundleURLTypes</key>
     	<array>
     		<dict>
@@ -16,7 +16,7 @@
     			</array>
     		</dict>
     	</array>
-	<key>CFBundleShortVersionString</key><string>0.0.2-2-gf70241f</string>
+	<key>CFBundleShortVersionString</key><string>0.0.2-5-gbabe965</string>
 	<key>CFBundleIconFile</key><string>iconfile</string>
 	<key>NSHighResolutionCapable</key><string>true</string>
 	<key>LSMinimumSystemVersion</key><string>10.13.0</string>

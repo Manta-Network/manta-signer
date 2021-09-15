@@ -26,9 +26,6 @@ use rand::RngCore;
 use rand_chacha::ChaCha20Rng;
 use rand_chacha::rand_core::SeedableRng;
 
-
-// todo: feed real secret key
-
 #[no_mangle]
 pub extern "C" fn load_root_seed(password: *const libc::c_char, out: *mut *mut u8) -> libc::size_t {
     let password: &CStr = unsafe { CStr::from_ptr(password) };
@@ -75,42 +72,27 @@ pub extern "C" fn create_account(
     0
 }
 
-
-
-
-
-
-
-
-
-
 #[no_mangle]
-pub extern "C" fn derive_shielded_address(
+pub extern "C" fn debug_derive_shielded_address(
     root_seed: *const libc::c_uchar,
     buffer: *const libc::c_uchar,
     len: libc::size_t,
     out: *mut *mut u8,
     out_len: *mut libc::size_t,
 ) -> libc::size_t {
-    // panic!("suffer");
-    // println!("1");
-    // let root_seed: MantaRootSeed = deserialize_root_seed(root_seed);
-    // println!("2");
-    // let mut bytes: &[u8] = unsafe { std::slice::from_raw_parts(buffer, len) };
-    // println!("3");
-    // let params = DeriveShieldedAddressParams::decode(&mut bytes).unwrap();
-    // println!("4");
-    // let shielded_address = _derive_shielded_address(params, &root_seed);
-    // let mut buf: Vec<u8> = vec![];
-    // shielded_address.serialize(&mut buf).unwrap();
-    // println!("5");
-    // let len = buf.len();
-    // let ptr = buf.as_mut_ptr();
-    // std::mem::forget(buf);
-    // unsafe {
-    //     *out = ptr;
-    //     *out_len = len;
-    // }
+    let root_seed: MantaRootSeed = deserialize_root_seed(root_seed);
+    let mut bytes: &[u8] = unsafe { std::slice::from_raw_parts(buffer, len) };
+    let params = DeriveShieldedAddressParams::decode(&mut bytes).unwrap();
+    let shielded_address = _derive_shielded_address(params, &root_seed);
+    let mut buf: Vec<u8> = vec![];
+    shielded_address.serialize(&mut buf).unwrap();
+    let len = buf.len();
+    let ptr = buf.as_mut_ptr();
+    std::mem::forget(buf);
+    unsafe {
+        *out = ptr;
+        *out_len = len;
+    }
     0
 }
 
