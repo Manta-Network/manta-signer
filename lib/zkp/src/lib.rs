@@ -4,13 +4,14 @@ use std::ffi::{CStr, CString};
 use std::convert::TryInto;
 
 use manta_api::derive_shielded_address as _derive_shielded_address;
-use manta_api::generate_ui_asset as _generate_ui_asset;
-use manta_api::generate_private_transfer_data as _generate_private_transfer_data;
+use manta_api::generate_signer_input_asset as _generate_signer_input_asset;
+use manta_api::batch_generate_private_transfer_data as _batch_generate_private_transfer_data;
+use manta_api::batch_generate_reclaim_data as _batch_generate_reclaim_data;
 use manta_api::generate_mint_data as _generate_mint_data;
-use manta_api::generate_reclaim_data as _generate_reclaim_data;
 use manta_api::recover_account as _recover_account;
 use manta_api::load_root_seed as _load_root_seed;
 use manta_api::save_root_seed;
+use manta_api::{GenerateReclaimDataParamsBatch, GeneratePrivateTransferDataParamsBatch};
 
 use manta_api::{
     DeriveShieldedAddressParams, GenerateAssetParams, GeneratePrivateTransferDataParams,
@@ -47,7 +48,6 @@ pub extern "C" fn load_root_seed(password: *const libc::c_char, out: *mut *mut u
     }
 }
 
-// todo: modify this to return mnemonic
 #[no_mangle]
 pub extern "C" fn create_account(
     password: *const libc::c_char,
@@ -73,7 +73,7 @@ pub extern "C" fn create_account(
 }
 
 #[no_mangle]
-pub extern "C" fn debug_derive_shielded_address(
+pub extern "C" fn derive_shielded_address(
     root_seed: *const libc::c_uchar,
     buffer: *const libc::c_uchar,
     len: libc::size_t,
@@ -107,7 +107,7 @@ pub extern "C" fn generate_asset(
     let root_seed: MantaRootSeed = deserialize_root_seed(root_seed);
     let mut bytes: &[u8] = unsafe { std::slice::from_raw_parts(buffer, len) };
     let params = GenerateAssetParams::decode(&mut bytes).unwrap();
-    let asset = _generate_ui_asset(params, &root_seed);
+    let asset = _generate_signer_input_asset(params, &root_seed);
     let mut buf = asset.encode();
     let len = buf.len();
     let ptr = buf.as_mut_ptr();
@@ -144,7 +144,7 @@ pub extern "C" fn generate_mint_data(
 }
 
 #[no_mangle]
-pub extern "C" fn generate_private_transfer_data(
+pub extern "C" fn batch_generate_private_transfer_data(
     root_seed: *const libc::c_uchar,
     buffer: *const libc::c_uchar,
     len: libc::size_t,
@@ -153,13 +153,12 @@ pub extern "C" fn generate_private_transfer_data(
 ) -> libc::size_t {
     let root_seed: MantaRootSeed = deserialize_root_seed(root_seed);
     let mut bytes: &[u8] = unsafe { std::slice::from_raw_parts(buffer, len) };
-    let params = GeneratePrivateTransferDataParams::decode(&mut bytes).unwrap();
+    let params_batch = GeneratePrivateTransferDataParamsBatch::decode(&mut bytes).unwrap();
     let proving_key_path = "./lib/zkp/keys/transfer_pk.bin";
     let mut rng = get_crypto_rng();
-    let private_transfer_data =
-        _generate_private_transfer_data(params, &root_seed, &proving_key_path, &mut rng);
-    let mut buf: Vec<u8> = vec![];
-    private_transfer_data.serialize(&mut buf).unwrap();
+    let private_transfer_data_batch =
+        _batch_generate_private_transfer_data(params_batch, &root_seed, &proving_key_path, &mut rng);
+    let mut buf = private_transfer_data_batch.encode();
     let len = buf.len();
     let ptr = buf.as_mut_ptr();
     std::mem::forget(buf);
@@ -171,7 +170,7 @@ pub extern "C" fn generate_private_transfer_data(
 }
 
 #[no_mangle]
-pub extern "C" fn generate_reclaim_data(
+pub extern "C" fn batch_generate_reclaim_data(
     root_seed: *const libc::c_uchar,
     buffer: *const libc::c_uchar,
     len: libc::size_t,
@@ -180,12 +179,11 @@ pub extern "C" fn generate_reclaim_data(
 ) -> libc::size_t {
     let root_seed: MantaRootSeed = deserialize_root_seed(root_seed);
     let mut bytes: &[u8] = unsafe { std::slice::from_raw_parts(buffer, len) };
-    let params = GenerateReclaimDataParams::decode(&mut bytes).unwrap();
+    let params_batch = GenerateReclaimDataParamsBatch::decode(&mut bytes).unwrap();
     let proving_key_path = "./lib/zkp/keys/reclaim_pk.bin";
     let mut rng = get_crypto_rng();
-    let reclaim_data = _generate_reclaim_data(params, &root_seed, &proving_key_path, &mut rng);
-    let mut buf: Vec<u8> = vec![];
-    reclaim_data.serialize(&mut buf).unwrap();
+    let reclaim_data_batch = _batch_generate_reclaim_data(params_batch, &root_seed, &proving_key_path, &mut rng);
+    let mut buf = reclaim_data_batch.encode();
     let len = buf.len();
     let ptr = buf.as_mut_ptr();
     std::mem::forget(buf);
