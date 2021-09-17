@@ -6,11 +6,9 @@ package main
 */
 import "C"
 import (
-	"log"
 	"unsafe"
 
 	"github.com/Manta-Network/Manta-Singer/utils"
-	"github.com/pkg/errors"
 	"github.com/wailsapp/wails/v2"
 )
 
@@ -43,15 +41,10 @@ func (c *Service) CreateAccount(password string) string {
 	var outBuffer string
 	outBufferRef := C.CString(outBuffer)
 	var outLen C.size_t
-	res := C.create_account(C.CString(password), &outBufferRef, &outLen)
-	if (res == 0) {
-		recovery_phrase := C.GoString(outBufferRef)
-		log.Print("recovery_phrase", recovery_phrase)
-		C.free(unsafe.Pointer(outBufferRef))
-		return C.GoString(outBufferRef)
-	}
-	log.Print("error creating account")
-	return "";
+	C.create_account(C.CString(password), &outBufferRef, &outLen)
+	recovery_phrase := C.GoString(outBufferRef)
+	C.free(unsafe.Pointer(outBufferRef))
+	return recovery_phrase
 }
 
 func (c *Service) LoadRootSeed(password string) bool {
@@ -64,30 +57,8 @@ func (c *Service) LoadRootSeed(password string) bool {
 		copy(rootSeedSized[:], rootSeed)
 		*c.rootSeed = rootSeedSized
 		*c.userIsSignedIn = true
-		// println("rootSeed in service", c.rootSeed)
 		C.free(outBufferRef)
 		return true
 	}
 	return false
-}
-
-// AcquireSeedByPassword 通过密码获取助记词
-func (c *Service) AcquireSeedByPassword(password string) (string, error) {
-	err := utils.CreateAccountCreatedFlag()
-	if err != nil {
-		return "", err
-	}
-	return "hello world", nil
-}
-
-func (c *Service) RecoverAccount(seed, password string) error {
-	return nil
-}
-
-func (c *Service) Unlock(password string) error {
-	if password == "12345678" {
-		return nil
-	} else {
-		return errors.New("incorrect password")
-	}
 }

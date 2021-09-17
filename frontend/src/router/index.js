@@ -1,9 +1,8 @@
 import Vue from 'vue';
 import VueRouter from 'vue-router';
 import UnlockPage from '@/views/UnlockPage';
-import RestoreVault from '@/views/RestoreVault';
+import SignInPage from '@/views/SignInPage';
 import CreateAccount from '@/views/CreateAccount';
-// import backend from '@/backend';
 
 Vue.use(VueRouter);
 
@@ -19,27 +18,14 @@ const routes = [
     component: CreateAccount,
   },
   {
-    path: '/restore_vault',
-    name: 'RestoreVault',
-    component: RestoreVault,
+    path: '/sign_in',
+    name: 'SignIn',
+    component: SignInPage,
   },
 ];
 
 const router = new VueRouter({
   routes,
-});
-
-router.beforeEach((to, from, next) => {
-  // if (to.path !== '/create_account') {
-  //   backend.main.Service.AccountCreated().then((created) => {
-  //     if (!created) {
-  //       next({
-  //         path: '/create_account'
-  //       })
-  //     }
-  //   })
-  // }
-  next();
 });
 
 export default router;

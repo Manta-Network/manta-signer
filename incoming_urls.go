@@ -12,7 +12,6 @@ type incomingURL struct {
 	Params url.Values
 }
 
-// parseIncomingURL 解析manta://格式数据
 func parseIncomingURL(urlStr string) (incomingURL, error) {
 	var inURL incomingURL
 	u, err := url.Parse(urlStr)
@@ -26,7 +25,7 @@ func parseIncomingURL(urlStr string) (incomingURL, error) {
 	inURL.Params = u.Query()
 	switch inURL.Action {
 	case "show":
-	default: // not ok
+	default:
 		return inURL, errors.Errorf("unsupported action %q", inURL.Action)
 	}
 	return inURL, nil

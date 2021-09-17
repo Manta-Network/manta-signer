@@ -127,9 +127,6 @@ func (b *app) startup(runtime *wails.Runtime) {
 	b.runtime = runtime
 	b.Service.runtime = runtime
 	b.refreshAll()
-
-	log.Print("Calling startupserver ????")
-
 	// export web service
 	go b.startupServer(runtime)
 	// 准备自动更新

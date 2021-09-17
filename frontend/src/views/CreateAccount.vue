@@ -78,7 +78,6 @@ export default {
     async handleSetPassword() {
       this.$refs['passwordForm'].validate(async valid => {
         if (valid) {
-          console.log('really????');
           this.recoveryPhrase = await backend.main.Service.CreateAccount(
             this.passwordForm.password
           );
@@ -86,7 +85,7 @@ export default {
       });
     },
     handleConfirmRecoveryPhrase() {
-      this.closeWindow();
+      this.$router.push('/sign_in');
     },
     closeWindow() {
       backend.main.Service.WindowHide();

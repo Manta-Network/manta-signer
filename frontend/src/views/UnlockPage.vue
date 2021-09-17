@@ -17,8 +17,10 @@
               placeholder="password"
               id="password-box"
               v-model="password"
+              v-on:input="onChangePasswordInput()"
               show-password
             ></el-input>
+            <div v-if="passwordIsInvalid">Invalid password</div>
           </el-form-item>
           <el-button
             class="approve-button"
@@ -42,41 +44,36 @@
 import backend from '@/backend';
 import { Events } from '@wails/runtime';
 
-Events.On('manta.browser.openUnlock', function(data) {
-  console.log(data + '!!!!!');
-});
-
 export default {
   name: 'UnlockPage',
   data() {
     return {
       txType: 'Transfer',
-      totalAmount: 100,
-      denomination: 'DOT',
-      recipientAddress: '12c6DSiU4Rq3P4ZxziKxzrL5LmMBrzjrJX',
+      totalAmount: '{amount}',
+      denomination: '{ticker}',
+      recipientAddress: '{recipient}',
       password: '',
+      passwordIsInvalid: false,
     };
   },
   methods: {
+    onChangePasswordInput() {
+      this.passwordIsInvalid = false;
+    },
     async handleClickApproveTransaction() {
-      console.log('unlock');
       const success = await backend.main.Service.LoadRootSeed(this.password);
-      console.log(success);
       if (success) {
         Events.Emit('manta.server.onUnlockSuccess');
+        this.passwordIsInvalid = false;
         this.password = '';
-        this.closeWindow();
+        backend.main.Service.WindowHide();
+      } else {
+        this.passwordIsInvalid = true;
       }
-      //   .then(() => {
-      //     Events.Emit('manta.server.onUnlockSuccess');
-      //   })
-      //   .catch(err => {
-      //     this.$message.error(err);
-      //   });
     },
     handleClickDeclineTransaction() {
       Events.Emit('manta.server.onUnlockFail');
-      this.closeWindow();
+      backend.main.Service.WindowHide();
     },
   },
 };

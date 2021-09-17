@@ -14,17 +14,18 @@ ready(() => {
   }).$mount('#app');
 });
 
-// After Ready
-Events.On('manta.browser.openCreate', function(data) {
-  console.log(data);
-  // check the path match
+Events.On('manta.browser.openCreateAccount', function() {
   if (router.currentRoute.path !== '/create_account') {
     router.push('/create_account');
   }
 });
-Events.On('manta.browser.openUnlock', function(data) {
-  console.log(data);
+Events.On('manta.browser.openUnlock', function() {
   if (router.currentRoute.path !== '/unlock') {
     router.push('/unlock');
+  }
+});
+Events.On('manta.browser.openSignIn', function() {
+  if (router.currentRoute.path !== '/sign_in') {
+    router.push('/sign_in');
   }
 });
