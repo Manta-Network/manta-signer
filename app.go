@@ -20,15 +20,15 @@ const (
 
 // app struct
 type app struct {
-	rootSeed *[64]byte
+	rootSeed       *[64]byte
 	userIsSignedIn *bool
-	addr    string
-	svr     *echo.Echo
-	runtime *wails.Runtime
+	addr           string
+	svr            *echo.Echo
+	runtime        *wails.Runtime
 
-	// appMenu 不可视，主要用途热键
+	// appMenu non-visible, used for short cuts
 	appMenu *menu.Menu
-	// 托盘菜单
+	// try menu
 	defaultTrayMenu *menu.TrayMenu
 	//startsAtLoginMenu *menu.MenuItem
 	//autoUpdateMenu *menu.MenuItem
@@ -53,8 +53,8 @@ func newApp(addr string) (*app, error) {
 	app := &app{
 		addr:                 addr,
 		incomingURLSemaphore: make(chan struct{}, ConcurrentIncomeURL),
-		rootSeed: &rootSeed,
-		userIsSignedIn: &userIsSignedIn,
+		rootSeed:             &rootSeed,
+		userIsSignedIn:       &userIsSignedIn,
 	}
 	app.appMenu = menu.NewMenuFromItems(
 		menu.AppMenu(),
@@ -66,19 +66,19 @@ func newApp(addr string) (*app, error) {
 	// we put logic that interact with frontend into service
 	app.Service = NewService(app.rootSeed, app.userIsSignedIn)
 
-	// 自动更新
+	// automated updates
 	//app.appUpdatesMenu = &menu.MenuItem{
 	//	Type:  menu.TextType,
 	//	Label: "Check for updates...",
 	//}
 
-	// 启动时自动更新
+	// automated update when start
 	//app.autoUpdateMenu = &menu.MenuItem{
 	//	Type:  menu.CheckboxType,
 	//	Label: "Update automatically",
 	//}
 
-	// 是否启动运行
+	// start at login or not
 	//app.startsAtLoginMenu = &menu.MenuItem{
 	//	Type:    menu.CheckboxType,
 	//	Label:   "Start at Login",
@@ -117,7 +117,7 @@ func (b *app) startupServer(runtime *wails.Runtime) {
 // startup is called at application startup
 func (b *app) startup(runtime *wails.Runtime) {
 	b.setDarkMode(runtime.System.IsDarkMode())
-	// 暗黑模式更新
+	// change to dark mode
 	runtime.Events.OnThemeChange(func(darkMode bool) {
 		// keep track of dark mode changing, and refresh all
 		// plugins if it does.
@@ -129,13 +129,13 @@ func (b *app) startup(runtime *wails.Runtime) {
 	b.refreshAll()
 	// export web service
 	go b.startupServer(runtime)
-	// 准备自动更新
+	// prepare for automated update
 	go func() {
-		// 等待检查更新
+		// wait for checking automated update
 		time.Sleep(10 * time.Second)
 		for {
 			// todo app.checkForUpdates(true)
-			// 12小时等待再次检查更新
+			// wait 12 hour for checking automated update again
 			time.Sleep(12 * time.Hour)
 		}
 	}()
