@@ -1,68 +1,60 @@
-### 编译
+# Manta Signer
 
-#### MacOS
+## Singer Spec
 
-#### Windows
+https://hackmd.io/0ZnJMf9jRwug2_ZBE0F4fA?both
 
-##### 安装依赖
+## Compile
 
-[Nodejs](https://nodejs.org/en/) 环境 
-执行命令 `npm install -g yarn`
-
-[golang](https://golang.org) 环境
-
-[rust](https://www.rust-lang.org/) 环境
-
-关于c语言的编译器，需要安装
-[msys2](https://www.msys2.org/) 
-安装完成后执行 
-
-`pacman -Syu`
-
-`pacman -Su`
-
-`pacman -S --needed base-devel mingw-w64-x86_64-toolchain`
-
-#### Compile
-
-```
-# install wails cli
-go get github.com/wailsapp/wails/v2/cmd/wails
-# create version file
-git describe --tags > .version 
-wails build
-```
-
-#### 打包
-
-##### MacOS
-```
-chmod +x package.sh && \
-export MANTA_SIGNER_SIGNING_IDENTITY=$identity \
-AC_USERNAME=$username \
-AC_PASSWORD=$password \
-AC_PROVIDER=$provider && \
-./package.sh
-```
-
-##### Windows
-
-
-#### 运行
-
+<<<<<<< HEAD
 执行`build/bin`下面相关平台的二进制文件
+=======
 
-### 接口规范
-本daemon程序实现了符合restful规范的接口，运行在默认为localhost:9988地址
-可以通过指定`--addr=0.0.0.0:12345`来实现在其他端口监听
-提供3个接口供外部交互
+### MacOS Arm
 
----
+### MacOS x86-64
+
+### Ubuntu 20.04 LTS (x86_64)
+
+need `brew install FiloSottile/musl-cross/musl-cross`
+(To be fix: Compilation issues)
+
+### Windows (x86_64)
+
+1. Install toolchain
+
+```bash
+rustup toolchain install stable-x86_64-pc-windows-gnu
+```
+
+2. Install x86_64-w64-mingw32-gcc linker:
+
+```bash
+brew install mingw-w64
+```
+
+(To be fixed: compilation issue)
+
+## Running
+
+### MacOS
+
+```bash
+dist/darwin/manta-daemon
+```
+
+## Interaction with DApp (web based)
+
+via RESTful API on `localhost:9988`.
+A customized port could be specified at `--addr=0.0.0.0:<port number>`:
+
+## There are 3 RESTful APIs:
+
 1. /heartbeat
 
 Method: GET
 
-返回http_status_code = 200即为成功，表明本daemon程序正在运行
+http_status_code = 200 on success, indicate that the signer is running.
 
 Example:
 
@@ -77,13 +69,13 @@ Method: POST
 Params:
 
     Query_param:
-        app_version: 必须 app版本
+        app_version:  the current App version
 
 Body:
-    
-    二进制payload
 
-Response: 
+    ZKP payload (in binary).
+
+Response:
 
     {
         "transfer_zkp":   "0x22023891",
@@ -92,6 +84,7 @@ Response:
     }
 
 Example:
+
 ```
 $ curl --request POST --data-binary "@dist/darwin/manta-signer" http://localhost:9988/generateTransferZKP
 ```
@@ -103,11 +96,11 @@ Method: POST
 Params:
 
     Query_param:
-        app_version: 必须 app版本
+        app_version: the current App version
 
 Body:
 
-    二进制payload
+    ZKP payload (in binary).
 
 Response:
 
@@ -118,8 +111,11 @@ Response:
     }
 
 Example:
+
 ```
 $ curl --request POST --data-binary "@dist/darwin/manta-signer" http://localhost:9988/generateReclaimZKP
 ```
 
-### 生成macos app DMG
+### Generating MacOS `.dmg`
+
+(TBD)
