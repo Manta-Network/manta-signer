@@ -17,6 +17,8 @@ import (
 	"github.com/wailsapp/wails/v2"
 )
 
+
+
 type Svr struct {
 	rootSeed   *[64]byte
 	userIsSignedIn *bool
@@ -25,6 +27,9 @@ type Svr struct {
 	unlockQueue chan struct{}
 }
 
+// For all requests, wait indefinitely until the user has created an account
+// Then wait indefinitely until the user has signed in through Manta Signer UI
+// and thus loaded the root seed into memory
 func (s *Svr) awaitSignIn(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		if (!utils.AccountCreated()) {
@@ -41,6 +46,7 @@ func (s *Svr) awaitSignIn(next echo.HandlerFunc) echo.HandlerFunc {
 	}
 }
 
+// Constructs Manta Signer's daemon server
 func NewSvr(rootSeed *[64]byte, userIsSignedIn *bool) *Svr {
 	server := Svr{
 		rootSeed: rootSeed,
@@ -55,6 +61,7 @@ func NewSvr(rootSeed *[64]byte, userIsSignedIn *bool) *Svr {
 	return &server
 }
 
+// Defines the routes that Manta Signer's daemon server exposes
 func (s *Svr) RegisterRoutes() {
 	// Not sensitive
 	s.engine.GET("/heartbeat", heartbeat)
@@ -67,15 +74,22 @@ func (s *Svr) RegisterRoutes() {
 	s.engine.POST("/requestGeneratePrivateTransferData", s.requestGeneratePrivateTransferData)
 }
 
+// Starts Manta Signer's daemon server
 func (s *Svr) Start(runtime *wails.Runtime, addr string) error {
 	s.runtime = runtime
 	return s.engine.Start(addr)
 }
 
+// Allows client to verify that Manta Signer's daemon is running
 func heartbeat(ctx echo.Context) error {
 	return nil
 }
 
+// For use in sensitive endpoints;
+// Prompts the user to approve an incoming transaction in Signer UI,
+// then waits indefinitely for the user to either decline the transaction,
+// or enter the account password and approve the transaction. On approval, the
+// `onUnlock` function will generate the transaction payload and return it to the client
 func (s *Svr) awaitUnlock(ctx echo.Context, onUnlock func(echo.Context) error) error {
 	s.runtime.Window.Show()
 	s.runtime.Events.Emit("manta.browser.openUnlock")
@@ -99,18 +113,24 @@ func (s *Svr) awaitUnlock(ctx echo.Context, onUnlock func(echo.Context) error) e
 	}
 }
 
+// Returns a reclaim payload to the client if the user inputs a password and
+// approves the reclaim through Manta Signer's UI; see `awaitUnlock` above
 func (s *Svr) requestGenerateReclaimData(ctx echo.Context) error {
-	// s.awaitSignIn()
 	onUnlock := s.generateReclaimData
 	return s.awaitUnlock(ctx, onUnlock)
 }
 
+// Returns a reclaim payload to the client if the user inputs a password and approves the private
+// transfer through Manta Signer's UI; see `awaitUnlock` above
 func (s *Svr) requestGeneratePrivateTransferData(ctx echo.Context) error {
-	// s.awaitSignIn()
 	onUnlock := s.generatePrivateTransferData
 	return s.awaitUnlock(ctx, onUnlock)
 }
 
+// Generates a private transfer payload (Go -> C -> Rust) and returns the
+// payload plus relevant metadata to the client
+// Payload generation logic lives in rust code, which this function only wraps
+// see: `lib/zkp`
 func (s *Svr) generatePrivateTransferData(ctx echo.Context) error {
 	appVersion := ctx.QueryParam("app_version")
 	body := ctx.Request().Body
@@ -140,6 +160,10 @@ func (s *Svr) generatePrivateTransferData(ctx echo.Context) error {
 	}
 }
 
+// Generates a reclaim payload (Go -> C -> Rust) and returns the payload plus
+// relevant metadata to the client
+// Payload generation logic lives in rust code, which this function only wraps
+// see: `lib/zkp`
 func (s *Svr) generateReclaimData(ctx echo.Context) error {
 	appVersion := ctx.QueryParam("app_version")
 	body := ctx.Request().Body
@@ -168,9 +192,10 @@ func (s *Svr) generateReclaimData(ctx echo.Context) error {
 	}
 }
 
-
+// Generates a shielded address and returns the payload plus relevant metadata to the client
+// Payload generation logic lives in rust code, which this function only wraps
+// see: `lib/zkp`
 func (s *Svr) deriveShieldedAddress(ctx echo.Context) error {
-	// s.awaitSignIn()
 	appVersion := ctx.QueryParam("app_version")
 	body := ctx.Request().Body
 	defer body.Close()
@@ -195,8 +220,10 @@ func (s *Svr) deriveShieldedAddress(ctx echo.Context) error {
 	}
 }
 
+// Generates a mint payload and returns the payload plus relevant metadata to the client
+// Payload generation logic lives in rust code, which this function only wraps
+// see: `lib/zkp`
 func (s *Svr) generateMintData(ctx echo.Context) error {
-	// s.awaitSignIn()
 	appVersion := ctx.QueryParam("app_version")
 	body := ctx.Request().Body
 	defer body.Close()
@@ -221,8 +248,11 @@ func (s *Svr) generateMintData(ctx echo.Context) error {
 	}
 }
 
+// Generates a manta asset stripped of sensitive data and returns the payload
+// plus relevant metadata to the client
+// Payload generation logic lives in rust code, which this function only wraps
+// see: `lib/zkp`
 func (s *Svr) generateAsset(ctx echo.Context) error {
-	// s.awaitSignIn()
 	appVersion := ctx.QueryParam("app_version")
 	body := ctx.Request().Body
 	defer body.Close()
@@ -247,8 +277,11 @@ func (s *Svr) generateAsset(ctx echo.Context) error {
 	}
 }
 
+// Generates a list of spendable assets owned by the root seed  and returns the
+// assets plus relevant metadata to the client
+// Payload generation logic lives in rust code, which this function only wraps
+// see: `lib/zkp`
 func (s *Svr) recoverAccount(ctx echo.Context) error {
-	// s.awaitSignIn()
 	appVersion := ctx.QueryParam("app_version")
 	body := ctx.Request().Body
 	defer body.Close()

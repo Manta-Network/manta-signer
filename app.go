@@ -26,18 +26,12 @@ type app struct {
 	svr     *echo.Echo
 	runtime *wails.Runtime
 
-	// appMenu 不可视，主要用途热键
 	appMenu *menu.Menu
-	// 托盘菜单
 	defaultTrayMenu *menu.TrayMenu
-	//startsAtLoginMenu *menu.MenuItem
-	//autoUpdateMenu *menu.MenuItem
-	//appUpdatesMenu *menu.MenuItem
 
 	Service *Service
 	lock    sync.Mutex
 	Verbose bool
-	// support darkMode todo i'm not sure if windows can support dark mode.
 	isDarkMode bool
 
 	defaultTrayMenuActive bool

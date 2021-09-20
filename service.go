@@ -37,6 +37,8 @@ func (c *Service) AccountCreated() bool {
   return utils.AccountCreated()
 }
 
+// Generates a root seed, and saves it to disk encrypted under the given password
+// Returns the root seed represented as a BIP39 recovery phrase
 func (c *Service) CreateAccount(password string) string {
 	var outBuffer string
 	outBufferRef := C.CString(outBuffer)
@@ -47,6 +49,7 @@ func (c *Service) CreateAccount(password string) string {
 	return recovery_phrase
 }
 
+// Attempts to load the encrypted root seed from disk into memory with given password
 func (c *Service) LoadRootSeed(password string) bool {
 	var outBuffer []byte
 	outBufferRef := C.CBytes(outBuffer)

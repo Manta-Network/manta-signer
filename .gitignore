@@ -112,3 +112,4 @@ manta-daemon.app
 resources/manta-daemon
 transfer_pk.bin
 reclaim_pk.bin
+lib/libzkp.a

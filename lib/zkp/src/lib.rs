@@ -26,6 +26,7 @@ use rand::RngCore;
 use rand_chacha::rand_core::SeedableRng;
 use rand_chacha::ChaCha20Rng;
 
+
 #[no_mangle]
 pub unsafe extern "C" fn load_root_seed(
     password: *const libc::c_char,
@@ -58,7 +59,10 @@ pub unsafe extern "C" fn create_account(
     let password: String = password.to_str().unwrap().to_owned();
     let recovery_phrase = Mnemonic::generate(Count::Words12);
     let root_seed = recovery_phrase.to_seed("");
-    save_root_seed(root_seed, password);
+
+    if save_root_seed(root_seed, password).is_err() {
+        return 1;
+    };
 
     let recovery_phrase_string = recovery_phrase.into_phrase();
     let len = recovery_phrase_string.len();
@@ -79,7 +83,10 @@ pub unsafe extern "C" fn derive_shielded_address(
     out: *mut *mut u8,
     out_len: *mut libc::size_t,
 ) -> libc::size_t {
-    let root_seed: MantaRootSeed = deserialize_root_seed(root_seed);
+    let root_seed: MantaRootSeed = match deserialize_root_seed(root_seed) {
+        Ok(root_seed) => root_seed,
+        Err(_) => return 1,
+    };
     let mut bytes: &[u8] = std::slice::from_raw_parts(buffer, len);
     let params = DeriveShieldedAddressParams::decode(&mut bytes).unwrap();
     let shielded_address = _derive_shielded_address(params, &root_seed);
@@ -103,7 +110,10 @@ pub unsafe extern "C" fn generate_asset(
     out: *mut *mut u8,
     out_len: *mut libc::size_t,
 ) -> libc::size_t {
-    let root_seed: MantaRootSeed = deserialize_root_seed(root_seed);
+    let root_seed: MantaRootSeed = match deserialize_root_seed(root_seed) {
+        Ok(root_seed) => root_seed,
+        Err(_) => return 1,
+    };
     let mut bytes: &[u8] = std::slice::from_raw_parts(buffer, len);
     let params = GenerateAssetParams::decode(&mut bytes).unwrap();
     let asset = _generate_signer_input_asset(params, &root_seed);
@@ -126,7 +136,10 @@ pub unsafe extern "C" fn generate_mint_data(
     out: *mut *mut u8,
     out_len: *mut libc::size_t,
 ) -> libc::size_t {
-    let root_seed: MantaRootSeed = deserialize_root_seed(root_seed);
+    let root_seed: MantaRootSeed = match deserialize_root_seed(root_seed) {
+        Ok(root_seed) => root_seed,
+        Err(_) => return 1,
+    };
     let mut bytes: &[u8] = std::slice::from_raw_parts(buffer, len);
     let params = GenerateAssetParams::decode(&mut bytes).unwrap();
     let mint_data = _generate_mint_data(params, &root_seed);
@@ -150,7 +163,10 @@ pub unsafe extern "C" fn batch_generate_private_transfer_data(
     out: *mut *mut u8,
     out_len: *mut libc::size_t,
 ) -> libc::size_t {
-    let root_seed: MantaRootSeed = deserialize_root_seed(root_seed);
+    let root_seed: MantaRootSeed = match deserialize_root_seed(root_seed) {
+        Ok(root_seed) => root_seed,
+        Err(_) => return 1,
+    };
     let mut bytes: &[u8] = std::slice::from_raw_parts(buffer, len);
     let params_batch = GeneratePrivateTransferDataParamsBatch::decode(&mut bytes).unwrap();
     let proving_key_path = "./lib/zkp/keys/transfer_pk.bin";
@@ -180,7 +196,10 @@ pub unsafe extern "C" fn batch_generate_reclaim_data(
     out: *mut *mut u8,
     out_len: *mut libc::size_t,
 ) -> libc::size_t {
-    let root_seed: MantaRootSeed = deserialize_root_seed(root_seed);
+    let root_seed: MantaRootSeed = match deserialize_root_seed(root_seed) {
+        Ok(root_seed) => root_seed,
+        Err(_) => return 1,
+    };
     let mut bytes: &[u8] = std::slice::from_raw_parts(buffer, len);
     let params_batch = GenerateReclaimDataParamsBatch::decode(&mut bytes).unwrap();
     let proving_key_path = "./lib/zkp/keys/reclaim_pk.bin";
@@ -206,7 +225,10 @@ pub unsafe extern "C" fn recover_account(
     out: *mut *mut u8,
     out_len: *mut libc::size_t,
 ) -> libc::size_t {
-    let root_seed: MantaRootSeed = deserialize_root_seed(root_seed);
+    let root_seed: MantaRootSeed = match deserialize_root_seed(root_seed) {
+        Ok(root_seed) => root_seed,
+        Err(_) => return 1,
+    };
     let mut bytes: &[u8] = std::slice::from_raw_parts(buffer, len);
     let params = RecoverAccountParams::decode(&mut bytes).unwrap();
     let account = _recover_account(params, &root_seed);
@@ -229,7 +251,12 @@ fn get_crypto_rng() -> ChaCha20Rng {
     ChaCha20Rng::from_seed(crypto_rng_seed)
 }
 
-fn deserialize_root_seed(root_seed: *const libc::c_uchar) -> MantaRootSeed {
+fn deserialize_root_seed(
+    root_seed: *const libc::c_uchar,
+) -> Result<MantaRootSeed, <&'static [u8] as TryInto<MantaRootSeed>>::Error> {
     let bytes: &[u8] = unsafe { std::slice::from_raw_parts(root_seed, 64) };
-    bytes.try_into().expect("Failed to deserialize root seed")
+    match bytes.try_into() {
+        Ok(root_seed) => Ok(root_seed),
+        Err(error) => Err(error),
+    }
 }
