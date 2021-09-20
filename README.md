@@ -6,8 +6,6 @@ https://hackmd.io/0ZnJMf9jRwug2_ZBE0F4fA?both
 
 ## Compile
 
-# 执行`build/bin`下面相关平台的二进制文件
-
 ### MacOS Arm
 
 ### MacOS x86-64
