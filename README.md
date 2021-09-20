@@ -1,5 +1,4 @@
-Manta Signer
-=========================
+# Manta Signer
 
 ## Singer Spec
 
@@ -7,16 +6,19 @@ https://hackmd.io/0ZnJMf9jRwug2_ZBE0F4fA?both
 
 ## Compile
 
+# 执行`build/bin`下面相关平台的二进制文件
+
 ### MacOS Arm
 
 ### MacOS x86-64
 
+### Ubuntu 20.04 LTS (x86_64)
 
-### Ubuntu 20.04 LTS (x86_64) 
 need `brew install FiloSottile/musl-cross/musl-cross`
 (To be fix: Compilation issues)
 
 ### Windows (x86_64)
+
 1. Install toolchain
 
 ```bash
@@ -24,14 +26,17 @@ rustup toolchain install stable-x86_64-pc-windows-gnu
 ```
 
 2. Install x86_64-w64-mingw32-gcc linker:
+
 ```bash
 brew install mingw-w64
 ```
+
 (To be fixed: compilation issue)
 
 ## Running
 
 ### MacOS
+
 ```bash
 dist/darwin/manta-daemon
 ```
@@ -41,8 +46,8 @@ dist/darwin/manta-daemon
 via RESTful API on `localhost:9988`.
 A customized port could be specified at `--addr=0.0.0.0:<port number>`:
 
-There are 3 RESTful APIs:
----
+## There are 3 RESTful APIs:
+
 1. /heartbeat
 
 Method: GET
@@ -65,10 +70,10 @@ Params:
         app_version:  the current App version
 
 Body:
-    
+
     ZKP payload (in binary).
 
-Response: 
+Response:
 
     {
         "transfer_zkp":   "0x22023891",
@@ -77,8 +82,9 @@ Response:
     }
 
 Example:
+
 ```
-$ curl --request POST --data-binary "@dist/darwin/manta-daemon" http://localhost:9988/generateTransferZKP
+$ curl --request POST --data-binary "@dist/darwin/manta-signer" http://localhost:9988/generateTransferZKP
 ```
 
 3. /generateReclaimZKP
@@ -103,9 +109,11 @@ Response:
     }
 
 Example:
+
 ```
-$ curl --request POST --data-binary "@dist/darwin/manta-daemon" http://localhost:9988/generateReclaimZKP
+$ curl --request POST --data-binary "@dist/darwin/manta-signer" http://localhost:9988/generateReclaimZKP
 ```
 
 ### Generating MacOS `.dmg`
+
 (TBD)

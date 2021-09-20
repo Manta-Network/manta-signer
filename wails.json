@@ -1,0 +1,10 @@
+{
+  "name": "manta-signer",
+  "outputfilename": "manta-signer",
+  "html": "frontend/dist/index.html",
+  "frontend:build": "npm run build",
+  "frontend:install": "yarn install",
+  "author": {
+    "name": "valeamoris"
+  }
+}
