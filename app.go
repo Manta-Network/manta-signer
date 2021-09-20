@@ -26,13 +26,7 @@ type app struct {
 	svr            *echo.Echo
 	runtime        *wails.Runtime
 
-<<<<<<< HEAD
 	appMenu *menu.Menu
-=======
-	// appMenu non-visible, used for short cuts
-	appMenu *menu.Menu
-	// try menu
->>>>>>> d10217d534a46d605ead8a5b75353167d7241f83
 	defaultTrayMenu *menu.TrayMenu
 
 	Service *Service
