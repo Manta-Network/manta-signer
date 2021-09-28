@@ -27,9 +27,7 @@ Events.On('manta.browser.openAuthorizeTransaction', function(
   recipient
 ) {
   let route = `/authorize_transaction/${txType}/${amount}/${currencySymbol}/${recipient}`;
-  console.log('openAuthorizeTx?', route);
   if (router.currentRoute.path !== route) {
-    console.log('openAuthorizeTx!!', route);
     router.push(route);
   }
 });

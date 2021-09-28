@@ -12,11 +12,11 @@ use manta_api::generate_signer_input_asset as _generate_signer_input_asset;
 use manta_api::load_root_seed as _load_root_seed;
 use manta_api::recover_account as _recover_account;
 
-use manta_api::get_private_transfer_batch_params_recipient as _get_private_transfer_batch_params_recipient;
 use manta_api::get_private_transfer_batch_params_currency_symbol as _get_private_transfer_batch_params_currency_symbol;
+use manta_api::get_private_transfer_batch_params_recipient as _get_private_transfer_batch_params_recipient;
 use manta_api::get_private_transfer_batch_params_value as _get_private_transfer_batch_params_value;
-use manta_api::get_reclaim_batch_params_value as _get_reclaim_batch_params_value;
 use manta_api::get_reclaim_batch_params_currency_symbol as _get_reclaim_batch_params_currency_symbol;
+use manta_api::get_reclaim_batch_params_value as _get_reclaim_batch_params_value;
 
 use manta_api::save_root_seed;
 use manta_api::{GeneratePrivateTransferBatchParams, GenerateReclaimBatchParams};
@@ -297,7 +297,7 @@ pub unsafe extern "C" fn recover_account(
 pub unsafe extern "C" fn get_private_transfer_batch_params_value(
     buffer: *const libc::c_uchar,
     len: libc::size_t,
-    out: *mut *mut libc::c_char
+    out: *mut *mut libc::c_char,
 ) -> libc::size_t {
     let mut bytes: &[u8] = std::slice::from_raw_parts(buffer, len);
     let params_batch = match GeneratePrivateTransferBatchParams::decode(&mut bytes) {
@@ -323,10 +323,11 @@ pub unsafe extern "C" fn get_private_transfer_batch_params_currency_symbol(
         Ok(params_batch) => params_batch,
         Err(_) => return BAD_PARAMETERS_ERROR,
     };
-    let currency_symbol: String = match _get_private_transfer_batch_params_currency_symbol(params_batch) {
-        Some(currency_symbol) => currency_symbol,
-        None => return INVALID_ASSET_ID_ERROR,
-    };
+    let currency_symbol: String =
+        match _get_private_transfer_batch_params_currency_symbol(params_batch) {
+            Some(currency_symbol) => currency_symbol,
+            None => return INVALID_ASSET_ID_ERROR,
+        };
     let currency_symbol: CString = CString::new(currency_symbol).expect("CString::new failed");
 
     *out = currency_symbol.into_raw();
@@ -338,7 +339,7 @@ pub unsafe extern "C" fn get_private_transfer_batch_params_currency_symbol(
 pub unsafe extern "C" fn get_private_transfer_batch_params_recipient(
     buffer: *const libc::c_uchar,
     len: libc::size_t,
-    out: *mut *mut libc::c_char
+    out: *mut *mut libc::c_char,
 ) -> libc::size_t {
     let mut bytes: &[u8] = std::slice::from_raw_parts(buffer, len);
     let params_batch = match GeneratePrivateTransferBatchParams::decode(&mut bytes) {
@@ -357,7 +358,7 @@ pub unsafe extern "C" fn get_private_transfer_batch_params_recipient(
 pub unsafe extern "C" fn get_reclaim_batch_params_currency_symbol(
     buffer: *const libc::c_uchar,
     len: libc::size_t,
-    out: *mut *mut libc::c_char
+    out: *mut *mut libc::c_char,
 ) -> libc::size_t {
     let mut bytes: &[u8] = std::slice::from_raw_parts(buffer, len);
     let params_batch = match GenerateReclaimBatchParams::decode(&mut bytes) {

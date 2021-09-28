@@ -23,9 +23,9 @@ func getPrivateTransferBatchParamsValue(bytes []byte) string {
 	if (res != 0) {
 		return ""
 	}
-	res2 := C.GoString(outBufferRef)
+	valueString := C.GoString(outBufferRef)
 	C.free(unsafe.Pointer(outBufferRef))
-	return res2
+	return valueString
 }
 
 func getPrivateTransferBatchParamsCurrencySymbol(bytes []byte) string {
@@ -35,9 +35,9 @@ func getPrivateTransferBatchParamsCurrencySymbol(bytes []byte) string {
 	if (res != 0) {
 		return ""
 	}
-	res2 := C.GoString(outBufferRef)
+	currencySymbol := C.GoString(outBufferRef)
 	C.free(unsafe.Pointer(outBufferRef))
-	return res2
+	return currencySymbol
 }
 
 func getPrivateTransferBatchParamsRecipient(bytes []byte) string {
@@ -47,9 +47,9 @@ func getPrivateTransferBatchParamsRecipient(bytes []byte) string {
 	if (res != 0) {
 		return ""
 	}
-	res2 := C.GoString(outBufferRef)
+	recipient := C.GoString(outBufferRef)
 	C.free(unsafe.Pointer(outBufferRef))
-	return res2
+	return recipient
 }
 
 func getReclaimBatchParamsValue(bytes []byte) string {
@@ -59,9 +59,9 @@ func getReclaimBatchParamsValue(bytes []byte) string {
 	if (res != 0) {
 		return ""
 	}
-	res2 := C.GoString(outBufferRef)
+	valueString := C.GoString(outBufferRef)
 	C.free(unsafe.Pointer(outBufferRef))
-	return res2
+	return valueString
 }
 
 func getReclaimBatchParamsCurrencySymbol(bytes []byte) string {
@@ -71,14 +71,14 @@ func getReclaimBatchParamsCurrencySymbol(bytes []byte) string {
 	if (res != 0) {
 		return ""
 	}
-	res2 := C.GoString(outBufferRef)
+	currencySymbol := C.GoString(outBufferRef)
 	C.free(unsafe.Pointer(outBufferRef))
-	return res2
+	return currencySymbol
 }
 
 func getReclaimBatchSummary(bytes []byte) TransactioBatchSummary {
 	return TransactioBatchSummary{
-		transactionType: "Reclaim",
+		transactionType: "Withdraw",
 		value:           getReclaimBatchParamsValue(bytes),
 		denomination:    getReclaimBatchParamsCurrencySymbol(bytes),
 		recipient:       "your public wallet",
@@ -87,7 +87,7 @@ func getReclaimBatchSummary(bytes []byte) TransactioBatchSummary {
 
 func getPrivateTransferBatchSummary(bytes []byte) TransactioBatchSummary {
  return TransactioBatchSummary{
-	transactionType: "PrivateTransfer",
+	transactionType: "Private transfer",
 	value:           getPrivateTransferBatchParamsValue(bytes),
 	denomination:    getPrivateTransferBatchParamsCurrencySymbol(bytes),
 	recipient:       getPrivateTransferBatchParamsRecipient(bytes),
