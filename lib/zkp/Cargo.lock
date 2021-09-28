@@ -904,7 +904,7 @@ dependencies = [
 [[package]]
 name = "manta-api"
 version = "0.3.0"
-source = "git+https://github.com/Manta-Network/manta-api.git?branch=manta#04e9aba0e333581a91caa53b3cd45a73b3bd2bd1"
+source = "git+https://github.com/Manta-Network/manta-api.git?branch=signer_batching_auxiliary#fd3cfc3b422041ea2b4d6084d6f6ae2dd773cb5b"
 dependencies = [
  "ark-bls12-381",
  "ark-crypto-primitives",
@@ -917,6 +917,7 @@ dependencies = [
  "ark-std 0.3.0",
  "bip32",
  "blake2",
+ "bs58",
  "cocoon",
  "getrandom 0.2.3",
  "hkdf",

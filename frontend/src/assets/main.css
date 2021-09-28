@@ -4,7 +4,14 @@
     -moz-osx-font-smoothing: grayscale;
     text-align: center;
     color: #2c3e50;
-    margin-top: 50px;
+    margin-top: 20px;
+}
+
+
+/* Override element default styling to keep forms compact */
+
+.el-form-item {
+    margin-bottom: 0px !important;
 }
 
 html,
@@ -122,29 +129,16 @@ video {
 }
 
 .page-container {
-    /* max-height: 82vh;
-  min-height: 570px; */
     padding: 20px;
     flex: 0 0 auto;
     margin-right: auto;
     margin-left: auto;
     width: 408px;
-    background-color: #fff;
-    box-shadow: 0 0 7px 0 rgb(0 0 0 / 8%);
     z-index: 25;
     display: flex;
     flex-flow: column;
     border-radius: 8px;
     overflow-y: auto;
-}
-
-.page-container__header {
-    display: flex;
-    flex-flow: column;
-    border-bottom: 1px solid #d2d8dd;
-    padding: 16px;
-    flex: 0 0 auto;
-    position: relative;
 }
 
 .page-container__title {
@@ -155,25 +149,11 @@ video {
     font-weight: normal;
     color: #000;
     font-weight: 500;
-    /* margin-right: 1.5rem; */
 }
 
 .page-container__content {
     overflow-y: auto;
     flex: 1;
-}
-
-.page-container__warning-container {
-    background: #fdf4f4;
-    padding: 20px;
-    display: flex;
-    align-items: flex-start;
-}
-
-.input-label {
-    padding-bottom: 10px;
-    font-weight: 400;
-    display: inline-block;
 }
 
 .reveal-recoveryPhrase__label {
@@ -238,18 +218,65 @@ video {
     cursor: pointer;
 }
 
-.recovery-phrase-container__button--copy {
-    border-right: 1px solid #dedede;
+.main-container-wrapper {
+    display: flex;
+    justify-content: center;
+    flex: 1 0 auto;
+    min-height: 0;
+    width: 100%;
 }
 
-.recovery-phrase-container__button-text {
-    padding-left: 10px;
+.first-view-main-wrapper {
+    display: flex;
+    width: 100%;
+    height: 100%;
+    justify-content: center;
+    padding: 0 10px;
+}
+
+.first-view-main-wrapper>.first-view-main {
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-start;
+}
+
+.import-account {
+    display: flex;
+    flex-flow: column nowrap;
+    position: relative;
+    max-width: initial;
+}
+
+
+/* !important to override element default button styles */
+
+.main-button {
+    background-color: #1b344d !important;
+    border-color: #1b344d !important;
+    margin-top: 1rem !important;
 }
 
 .approve-button {
-    background-color: green;
+    color: white !important;
+    background-color: green !important;
+    border-color: green !important;
+    margin-top: 0.5rem !important;
 }
 
 .decline-button {
-    background-color: red;
+    color: white !important;
+    background-color: red !important;
+    border-color: red !important;
+    margin-top: 0.5rem !important;
+}
+
+.back-button {
+    margin-right: 15rem;
+    line-height: 140%;
+    color: #22232c;
+}
+
+.wrap-text {
+    inline-size: 21rem !important;
+    overflow-wrap: break-word !important;
 }

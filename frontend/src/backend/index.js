@@ -13,6 +13,18 @@ const backend = {
         return window.backend.main.Service.AccountCreated();
       },
       /**
+       * SaveRecoveredAccount
+       * @param {string} password - Go Type: string
+       * @param {string} recoveryPhrase - Go Type: string
+       * @returns {Promise<number>}  - Go Type: int
+       */
+      SaveRecoveredAccount: (password, recoveryPhrase) => {
+        return window.backend.main.Service.SaveRecoveredAccount(
+          password,
+          recoveryPhrase
+        );
+      },
+      /**
        * CreateAccount
        * @param {string} arg1 - Go Type: string
        * @returns {Promise<string>}  - Go Type: string

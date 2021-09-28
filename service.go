@@ -37,13 +37,18 @@ func (c *Service) AccountCreated() bool {
   return utils.AccountCreated()
 }
 
+func (c *Service) SaveRecoveredAccount(rootSeedBase64 string, password string) int {
+	res := C.save_recovered_account(C.CString(rootSeedBase64), C.CString(password))
+	res_int := int(res)
+	return res_int
+}
+
 // Generates a root seed, and saves it to disk encrypted under the given password
 // Returns the root seed represented as a BIP39 recovery phrase
 func (c *Service) CreateAccount(password string) string {
 	var outBuffer string
 	outBufferRef := C.CString(outBuffer)
-	var outLen C.size_t
-	C.create_account(C.CString(password), &outBufferRef, &outLen)
+	C.create_account(C.CString(password), &outBufferRef)
 	recovery_phrase := C.GoString(outBufferRef)
 	C.free(unsafe.Pointer(outBufferRef))
 	return recovery_phrase
