@@ -101,7 +101,7 @@ func (s *Svr) awaitAuthorizeTransaction(
 		"manta.browser.openAuthorizeTransaction",
 		transactionBatchSummary.transactionType,
 		transactionBatchSummary.value,
-		transactionBatchSummary.denomination,
+		transactionBatchSummary.currencySymbol,
 		transactionBatchSummary.recipient,
 	)
 
@@ -139,7 +139,7 @@ func (s *Svr) requestGenerateReclaimData(ctx echo.Context) error {
 	}
 
 	onUnlock := s.generateReclaimData
-	return s.awaitAuthorizeTransaction(ctx, onUnlock, bytes, "Reclaim")
+	return s.awaitAuthorizeTransaction(ctx, onUnlock, bytes, TRANSACTION_TYPE_WITHDRAW)
 }
 
 // Returns a reclaim payload to the client if the user inputs a password and approves the private
@@ -157,7 +157,7 @@ func (s *Svr) requestGeneratePrivateTransferData(ctx echo.Context) error {
 	}
 
 	onUnlock := s.generatePrivateTransferData
-	return s.awaitAuthorizeTransaction(ctx, onUnlock, bytes, "Private transfer")
+	return s.awaitAuthorizeTransaction(ctx, onUnlock, bytes, TRANSACTION_TYPE_PRIVATE_TRANSFER)
 }
 
 // Generates a private transfer payload (Go -> C -> Rust) and returns the

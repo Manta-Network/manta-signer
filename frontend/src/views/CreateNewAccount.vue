@@ -41,7 +41,6 @@
           class="main-button"
           type="primary"
           @click="handleSetPassword()"
-          :disabled="passwordForm.password.length === 0"
           >Set password</el-button
         >
       </el-form>
@@ -67,7 +66,7 @@ export default {
             message: 'Please choose a password',
             trigger: 'blur',
           },
-          { min: 8, message: '8 digit minimal', trigger: 'blur' },
+          { min: 8, message: '8 characters minimum', trigger: 'blur' },
         ],
       },
     };

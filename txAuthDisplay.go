@@ -9,10 +9,14 @@ import "C"
 import "unsafe"
 
 
+const TRANSACTION_TYPE_WITHDRAW = "Withdraw"
+const TRANSACTION_TYPE_PRIVATE_TRANSFER = "Private transfer"
+
+// Information that Signer UI displays during transaction validation
 type TransactioBatchSummary struct {
 	transactionType string
 	value           string
-	denomination    string
+	currencySymbol  string
 	recipient       string
 }
 
@@ -78,24 +82,24 @@ func getReclaimBatchParamsCurrencySymbol(bytes []byte) string {
 
 func getReclaimBatchSummary(bytes []byte) TransactioBatchSummary {
 	return TransactioBatchSummary{
-		transactionType: "Withdraw",
+		transactionType: TRANSACTION_TYPE_WITHDRAW,
 		value:           getReclaimBatchParamsValue(bytes),
-		denomination:    getReclaimBatchParamsCurrencySymbol(bytes),
+		currencySymbol:  getReclaimBatchParamsCurrencySymbol(bytes),
 		recipient:       "your public wallet",
 	 }
 }
 
 func getPrivateTransferBatchSummary(bytes []byte) TransactioBatchSummary {
  return TransactioBatchSummary{
-	transactionType: "Private transfer",
+	transactionType: TRANSACTION_TYPE_PRIVATE_TRANSFER,
 	value:           getPrivateTransferBatchParamsValue(bytes),
-	denomination:    getPrivateTransferBatchParamsCurrencySymbol(bytes),
+	currencySymbol:  getPrivateTransferBatchParamsCurrencySymbol(bytes),
 	recipient:       getPrivateTransferBatchParamsRecipient(bytes),
  }
 }
 
 func getTransactionBatchSummary(bytes []byte, transactionType string) TransactioBatchSummary {
-	if (transactionType == "Reclaim") {
+	if (transactionType == TRANSACTION_TYPE_WITHDRAW) {
 		return getReclaimBatchSummary(bytes)
 	} else {
 		return getPrivateTransferBatchSummary(bytes)

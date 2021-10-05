@@ -57,7 +57,6 @@ export default {
       if (success) {
         Events.Emit('manta.server.onUnlockSuccess');
         this.passwordIsInvalid = false;
-        this.password = '';
         backend.main.Service.WindowHide();
         this.$router.push('/');
       } else {
