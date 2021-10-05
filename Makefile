@@ -14,6 +14,7 @@ build-linux:
 	cp lib/zkp/target/x86_64-unknown-linux-gnu/release/libzkp.a lib/linux
 	GOOS=linux GOARCH=amd64 CGO_ENABLED=1 CC=x86_64-linux-musl-gcc  CXX=x86_64-linux-musl-g++ go build -o dist/linux/manta-signer main.go app.go server.go service.go incoming_urls.go
 
+
 build-windows:
 	source ~/.bash_profile
 	mkdir -p lib/windows
