@@ -59,7 +59,7 @@ func run() error {
 		Mac: &mac.Options{
 			WebviewIsTransparent:          true,
 			WindowBackgroundIsTranslucent: false,
-			TitleBar:                      mac.TitleBarHiddenInset(),
+			TitleBar:                      mac.TitleBarDefault(),
 			Menu:                          app.appMenu,
 			// 不显示docker图标
 			ActivationPolicy: mac.NSApplicationActivationPolicyAccessory,

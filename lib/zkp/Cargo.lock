@@ -903,8 +903,8 @@ dependencies = [
 
 [[package]]
 name = "manta-api"
-version = "0.3.0"
-source = "git+https://github.com/Manta-Network/manta-api.git?branch=manta#04e9aba0e333581a91caa53b3cd45a73b3bd2bd1"
+version = "0.3.1"
+source = "git+https://github.com/Manta-Network/manta-api.git?branch=manta#32840b8c97ce651091bcec7340b259f86c58c00e"
 dependencies = [
  "ark-bls12-381",
  "ark-crypto-primitives",
@@ -917,6 +917,7 @@ dependencies = [
  "ark-std 0.3.0",
  "bip32",
  "blake2",
+ "bs58",
  "cocoon",
  "getrandom 0.2.3",
  "hkdf",
@@ -924,7 +925,6 @@ dependencies = [
  "manta-crypto",
  "manta-data",
  "manta-error",
- "manta-ledger",
  "parity-scale-codec",
  "rand 0.8.4",
  "rand_chacha 0.3.1",
@@ -997,17 +997,6 @@ dependencies = [
  "ark-std 0.3.0",
  "displaydoc",
  "parity-scale-codec",
-]
-
-[[package]]
-name = "manta-ledger"
-version = "0.2.0"
-source = "git+https://github.com/Manta-Network/manta-types.git?branch=manta#fb76cbfc8d8d3fb421114b1972e8a7317fe6a948"
-dependencies = [
- "manta-crypto",
- "manta-error",
- "parity-scale-codec",
- "sp-std",
 ]
 
 [[package]]
@@ -1399,12 +1388,6 @@ dependencies = [
  "digest 0.9.0",
  "rand_core 0.6.3",
 ]
-
-[[package]]
-name = "sp-std"
-version = "3.0.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "35391ea974fa5ee869cb094d5b437688fbf3d8127d64d1b9fed5822a1ed39b12"
 
 [[package]]
 name = "subtle"

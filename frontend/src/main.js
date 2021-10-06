@@ -19,13 +19,24 @@ Events.On('manta.browser.openCreateAccount', function() {
     router.push('/create_account');
   }
 });
-Events.On('manta.browser.openUnlock', function() {
-  if (router.currentRoute.path !== '/unlock') {
-    router.push('/unlock');
+
+Events.On('manta.browser.openAuthorizeTransaction', function(
+  txType,
+  amount,
+  currencySymbol,
+  recipient
+) {
+  let route = `/authorize_transaction/${txType}/${amount}/${currencySymbol}/${recipient}`;
+  if (router.currentRoute.path !== route) {
+    router.push(route);
   }
 });
+
 Events.On('manta.browser.openSignIn', function() {
-  if (router.currentRoute.path !== '/sign_in') {
+  if (
+    router.currentRoute.path !== '/sign_in' &&
+    router.currentRoute.path !== '/create_new_account'
+  ) {
     router.push('/sign_in');
   }
 });

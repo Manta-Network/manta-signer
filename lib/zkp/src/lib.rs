@@ -2,6 +2,7 @@ extern crate libc;
 
 use std::convert::TryInto;
 use std::ffi::{CStr, CString};
+use std::str::FromStr;
 
 use manta_api::batch_generate_private_transfer_data as _batch_generate_private_transfer_data;
 use manta_api::batch_generate_reclaim_data as _batch_generate_reclaim_data;
@@ -10,8 +11,15 @@ use manta_api::generate_mint_data as _generate_mint_data;
 use manta_api::generate_signer_input_asset as _generate_signer_input_asset;
 use manta_api::load_root_seed as _load_root_seed;
 use manta_api::recover_account as _recover_account;
+
+use manta_api::get_private_transfer_batch_params_currency_symbol as _get_private_transfer_batch_params_currency_symbol;
+use manta_api::get_private_transfer_batch_params_recipient as _get_private_transfer_batch_params_recipient;
+use manta_api::get_private_transfer_batch_params_value as _get_private_transfer_batch_params_value;
+use manta_api::get_reclaim_batch_params_currency_symbol as _get_reclaim_batch_params_currency_symbol;
+use manta_api::get_reclaim_batch_params_value as _get_reclaim_batch_params_value;
+
 use manta_api::save_root_seed;
-use manta_api::{GeneratePrivateTransferDataParamsBatch, GenerateReclaimDataParamsBatch};
+use manta_api::{GeneratePrivateTransferBatchParams, GenerateReclaimBatchParams};
 
 use manta_api::{
     DeriveShieldedAddressParams, GenerateAssetParams, MantaRootSeed, RecoverAccountParams,
@@ -26,6 +34,13 @@ use rand::RngCore;
 use rand_chacha::rand_core::SeedableRng;
 use rand_chacha::ChaCha20Rng;
 
+const OKAY: libc::size_t = 0;
+const LOAD_ROOT_SEED_ERROR: libc::size_t = 1;
+const BAD_PARAMETERS_ERROR: libc::size_t = 2;
+const DESERIALIZE_ROOT_SEED_ERROR: libc::size_t = 3;
+const SAVE_ROOT_SEED_ERROR: libc::size_t = 4;
+const BAD_RECOVERY_PHRASE_ERROR: libc::size_t = 5;
+const INVALID_ASSET_ID_ERROR: libc::size_t = 6;
 
 #[no_mangle]
 pub unsafe extern "C" fn load_root_seed(
@@ -43,17 +58,36 @@ pub unsafe extern "C" fn load_root_seed(
             std::mem::forget(buf);
             *out = ptr;
 
-            0
+            OKAY
         }
-        Err(_) => 1,
+        Err(_) => LOAD_ROOT_SEED_ERROR,
     }
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn save_recovered_account(
+    password: *const libc::c_char,
+    recovery_phrase: *const libc::c_char,
+) -> libc::size_t {
+    let password: &CStr = CStr::from_ptr(password);
+    let password: String = password.to_str().unwrap().to_owned();
+    let recovery_phrase: &CStr = CStr::from_ptr(recovery_phrase);
+    let recovery_phrase: String = recovery_phrase.to_str().unwrap().to_owned();
+    let recovery_phrase: Mnemonic = match Mnemonic::from_str(&recovery_phrase) {
+        Ok(mnemonic) => mnemonic,
+        Err(_) => return BAD_RECOVERY_PHRASE_ERROR,
+    };
+    let root_seed = recovery_phrase.to_seed("");
+    if save_root_seed(root_seed, password).is_err() {
+        return SAVE_ROOT_SEED_ERROR;
+    };
+    OKAY
 }
 
 #[no_mangle]
 pub unsafe extern "C" fn create_account(
     password: *const libc::c_char,
     out: *mut *mut libc::c_char,
-    out_len: *mut libc::size_t,
 ) -> libc::size_t {
     let password: &CStr = CStr::from_ptr(password);
     let password: String = password.to_str().unwrap().to_owned();
@@ -61,18 +95,16 @@ pub unsafe extern "C" fn create_account(
     let root_seed = recovery_phrase.to_seed("");
 
     if save_root_seed(root_seed, password).is_err() {
-        return 1;
+        return SAVE_ROOT_SEED_ERROR;
     };
 
     let recovery_phrase_string = recovery_phrase.into_phrase();
-    let len = recovery_phrase_string.len();
     let recovery_phrase_c_string =
         CString::new(recovery_phrase_string).expect("CString::new failed");
 
     *out = recovery_phrase_c_string.into_raw();
-    *out_len = len;
 
-    0
+    OKAY
 }
 
 #[no_mangle]
@@ -85,10 +117,13 @@ pub unsafe extern "C" fn derive_shielded_address(
 ) -> libc::size_t {
     let root_seed: MantaRootSeed = match deserialize_root_seed(root_seed) {
         Ok(root_seed) => root_seed,
-        Err(_) => return 1,
+        Err(_) => return DESERIALIZE_ROOT_SEED_ERROR,
     };
     let mut bytes: &[u8] = std::slice::from_raw_parts(buffer, len);
-    let params = DeriveShieldedAddressParams::decode(&mut bytes).unwrap();
+    let params = match DeriveShieldedAddressParams::decode(&mut bytes) {
+        Ok(params) => params,
+        Err(_) => return BAD_PARAMETERS_ERROR,
+    };
     let shielded_address = _derive_shielded_address(params, &root_seed);
     let mut buf: Vec<u8> = vec![];
     shielded_address.serialize(&mut buf).unwrap();
@@ -99,7 +134,7 @@ pub unsafe extern "C" fn derive_shielded_address(
     *out = ptr;
     *out_len = len;
 
-    0
+    OKAY
 }
 
 #[no_mangle]
@@ -112,10 +147,13 @@ pub unsafe extern "C" fn generate_asset(
 ) -> libc::size_t {
     let root_seed: MantaRootSeed = match deserialize_root_seed(root_seed) {
         Ok(root_seed) => root_seed,
-        Err(_) => return 1,
+        Err(_) => return DESERIALIZE_ROOT_SEED_ERROR,
     };
     let mut bytes: &[u8] = std::slice::from_raw_parts(buffer, len);
-    let params = GenerateAssetParams::decode(&mut bytes).unwrap();
+    let params = match GenerateAssetParams::decode(&mut bytes) {
+        Ok(params) => params,
+        Err(_) => return BAD_PARAMETERS_ERROR,
+    };
     let asset = _generate_signer_input_asset(params, &root_seed);
     let mut buf = asset.encode();
     let len = buf.len();
@@ -125,7 +163,7 @@ pub unsafe extern "C" fn generate_asset(
     *out = ptr;
     *out_len = len;
 
-    0
+    OKAY
 }
 
 #[no_mangle]
@@ -138,10 +176,13 @@ pub unsafe extern "C" fn generate_mint_data(
 ) -> libc::size_t {
     let root_seed: MantaRootSeed = match deserialize_root_seed(root_seed) {
         Ok(root_seed) => root_seed,
-        Err(_) => return 1,
+        Err(_) => return DESERIALIZE_ROOT_SEED_ERROR,
     };
     let mut bytes: &[u8] = std::slice::from_raw_parts(buffer, len);
-    let params = GenerateAssetParams::decode(&mut bytes).unwrap();
+    let params = match GenerateAssetParams::decode(&mut bytes) {
+        Ok(params) => params,
+        Err(_) => return BAD_PARAMETERS_ERROR,
+    };
     let mint_data = _generate_mint_data(params, &root_seed);
     let mut buf: Vec<u8> = vec![];
     mint_data.serialize(&mut buf).unwrap();
@@ -152,7 +193,7 @@ pub unsafe extern "C" fn generate_mint_data(
     *out = ptr;
     *out_len = len;
 
-    0
+    OKAY
 }
 
 #[no_mangle]
@@ -165,10 +206,13 @@ pub unsafe extern "C" fn batch_generate_private_transfer_data(
 ) -> libc::size_t {
     let root_seed: MantaRootSeed = match deserialize_root_seed(root_seed) {
         Ok(root_seed) => root_seed,
-        Err(_) => return 1,
+        Err(_) => return DESERIALIZE_ROOT_SEED_ERROR,
     };
     let mut bytes: &[u8] = std::slice::from_raw_parts(buffer, len);
-    let params_batch = GeneratePrivateTransferDataParamsBatch::decode(&mut bytes).unwrap();
+    let params_batch = match GeneratePrivateTransferBatchParams::decode(&mut bytes) {
+        Ok(params_batch) => params_batch,
+        Err(_) => return BAD_PARAMETERS_ERROR,
+    };
     let proving_key_path = "./lib/zkp/keys/transfer_pk.bin";
     let mut rng = get_crypto_rng();
     let private_transfer_data_batch = _batch_generate_private_transfer_data(
@@ -185,7 +229,7 @@ pub unsafe extern "C" fn batch_generate_private_transfer_data(
     *out = ptr;
     *out_len = len;
 
-    0
+    OKAY
 }
 
 #[no_mangle]
@@ -198,10 +242,13 @@ pub unsafe extern "C" fn batch_generate_reclaim_data(
 ) -> libc::size_t {
     let root_seed: MantaRootSeed = match deserialize_root_seed(root_seed) {
         Ok(root_seed) => root_seed,
-        Err(_) => return 1,
+        Err(_) => return DESERIALIZE_ROOT_SEED_ERROR,
     };
     let mut bytes: &[u8] = std::slice::from_raw_parts(buffer, len);
-    let params_batch = GenerateReclaimDataParamsBatch::decode(&mut bytes).unwrap();
+    let params_batch = match GenerateReclaimBatchParams::decode(&mut bytes) {
+        Ok(params_batch) => params_batch,
+        Err(_) => return BAD_PARAMETERS_ERROR,
+    };
     let proving_key_path = "./lib/zkp/keys/reclaim_pk.bin";
     let mut rng = get_crypto_rng();
     let reclaim_data_batch =
@@ -214,7 +261,7 @@ pub unsafe extern "C" fn batch_generate_reclaim_data(
     *out = ptr;
     *out_len = len;
 
-    0
+    OKAY
 }
 
 #[no_mangle]
@@ -227,10 +274,13 @@ pub unsafe extern "C" fn recover_account(
 ) -> libc::size_t {
     let root_seed: MantaRootSeed = match deserialize_root_seed(root_seed) {
         Ok(root_seed) => root_seed,
-        Err(_) => return 1,
+        Err(_) => return DESERIALIZE_ROOT_SEED_ERROR,
     };
     let mut bytes: &[u8] = std::slice::from_raw_parts(buffer, len);
-    let params = RecoverAccountParams::decode(&mut bytes).unwrap();
+    let params = match RecoverAccountParams::decode(&mut bytes) {
+        Ok(params) => params,
+        Err(_) => return BAD_PARAMETERS_ERROR,
+    };
     let account = _recover_account(params, &root_seed);
     let mut buf = account.encode();
     let len = buf.len();
@@ -240,7 +290,110 @@ pub unsafe extern "C" fn recover_account(
     *out = ptr;
     *out_len = len;
 
-    0
+    OKAY
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn get_private_transfer_batch_params_value(
+    buffer: *const libc::c_uchar,
+    len: libc::size_t,
+    out: *mut *mut libc::c_char,
+) -> libc::size_t {
+    let mut bytes: &[u8] = std::slice::from_raw_parts(buffer, len);
+    let params_batch = match GeneratePrivateTransferBatchParams::decode(&mut bytes) {
+        Ok(params_batch) => params_batch,
+        Err(_) => return BAD_PARAMETERS_ERROR,
+    };
+    let value_string: String = _get_private_transfer_batch_params_value(params_batch);
+    let value_string: CString = CString::new(value_string).expect("CString::new failed");
+
+    *out = value_string.into_raw();
+
+    OKAY
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn get_private_transfer_batch_params_currency_symbol(
+    buffer: *const libc::c_uchar,
+    len: libc::size_t,
+    out: *mut *mut libc::c_char,
+) -> libc::size_t {
+    let mut bytes: &[u8] = std::slice::from_raw_parts(buffer, len);
+    let params_batch = match GeneratePrivateTransferBatchParams::decode(&mut bytes) {
+        Ok(params_batch) => params_batch,
+        Err(_) => return BAD_PARAMETERS_ERROR,
+    };
+    let currency_symbol: String =
+        match _get_private_transfer_batch_params_currency_symbol(params_batch) {
+            Some(currency_symbol) => currency_symbol,
+            None => return INVALID_ASSET_ID_ERROR,
+        };
+    let currency_symbol: CString = CString::new(currency_symbol).expect("CString::new failed");
+
+    *out = currency_symbol.into_raw();
+
+    OKAY
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn get_private_transfer_batch_params_recipient(
+    buffer: *const libc::c_uchar,
+    len: libc::size_t,
+    out: *mut *mut libc::c_char,
+) -> libc::size_t {
+    let mut bytes: &[u8] = std::slice::from_raw_parts(buffer, len);
+    let params_batch = match GeneratePrivateTransferBatchParams::decode(&mut bytes) {
+        Ok(params_batch) => params_batch,
+        Err(_) => return BAD_PARAMETERS_ERROR,
+    };
+    let recipient: String = _get_private_transfer_batch_params_recipient(params_batch);
+    let recipient: CString = CString::new(recipient).expect("CString::new failed");
+
+    *out = recipient.into_raw();
+
+    OKAY
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn get_reclaim_batch_params_currency_symbol(
+    buffer: *const libc::c_uchar,
+    len: libc::size_t,
+    out: *mut *mut libc::c_char,
+) -> libc::size_t {
+    let mut bytes: &[u8] = std::slice::from_raw_parts(buffer, len);
+    let params_batch = match GenerateReclaimBatchParams::decode(&mut bytes) {
+        Ok(params_batch) => params_batch,
+        Err(_) => return BAD_PARAMETERS_ERROR,
+    };
+    let currency_symbol: String = match _get_reclaim_batch_params_currency_symbol(params_batch) {
+        Some(currency_symbol) => currency_symbol,
+        None => return INVALID_ASSET_ID_ERROR,
+    };
+
+    let currency_symbol: CString = CString::new(currency_symbol).expect("CString::new failed");
+
+    *out = currency_symbol.into_raw();
+
+    OKAY
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn get_reclaim_batch_params_value(
+    buffer: *const libc::c_uchar,
+    len: libc::size_t,
+    out: *mut *mut libc::c_char,
+) -> libc::size_t {
+    let mut bytes: &[u8] = std::slice::from_raw_parts(buffer, len);
+    let params_batch = match GenerateReclaimBatchParams::decode(&mut bytes) {
+        Ok(params_batch) => params_batch,
+        Err(_) => return BAD_PARAMETERS_ERROR,
+    };
+    let value_string: String = _get_reclaim_batch_params_value(params_batch);
+    let value_string: CString = CString::new(value_string).expect("CString::new failed");
+
+    *out = value_string.into_raw();
+
+    OKAY
 }
 
 fn get_crypto_rng() -> ChaCha20Rng {

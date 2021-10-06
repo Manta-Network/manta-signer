@@ -17,8 +17,6 @@ import (
 	"github.com/wailsapp/wails/v2"
 )
 
-
-
 type Svr struct {
 	rootSeed   *[64]byte
 	userIsSignedIn *bool
@@ -90,9 +88,22 @@ func heartbeat(ctx echo.Context) error {
 // then waits indefinitely for the user to either decline the transaction,
 // or enter the account password and approve the transaction. On approval, the
 // `onUnlock` function will generate the transaction payload and return it to the client
-func (s *Svr) awaitUnlock(ctx echo.Context, onUnlock func(echo.Context) error) error {
+func (s *Svr) awaitAuthorizeTransaction(
+	ctx echo.Context,
+	onUnlock func(ctx echo.Context, bytes []byte) error,
+	bytes []byte,
+	transactionType string,
+	) error {
+
+	transactionBatchSummary := getTransactionBatchSummary(bytes, transactionType)
 	s.runtime.Window.Show()
-	s.runtime.Events.Emit("manta.browser.openUnlock")
+	s.runtime.Events.Emit(
+		"manta.browser.openAuthorizeTransaction",
+		transactionBatchSummary.transactionType,
+		transactionBatchSummary.value,
+		transactionBatchSummary.currencySymbol,
+		transactionBatchSummary.recipient,
+	)
 
 	unlockPopupResolved := false
 	var success bool
@@ -107,7 +118,7 @@ func (s *Svr) awaitUnlock(ctx echo.Context, onUnlock func(echo.Context) error) e
 
 	for loop := true; loop; loop = !unlockPopupResolved {}
 	if success {
-		return onUnlock(ctx)
+		return onUnlock(ctx, bytes)
 	} else {
 		return ctx.JSON(http.StatusUnauthorized, "Transaction rejected by user")
 	}
@@ -116,23 +127,6 @@ func (s *Svr) awaitUnlock(ctx echo.Context, onUnlock func(echo.Context) error) e
 // Returns a reclaim payload to the client if the user inputs a password and
 // approves the reclaim through Manta Signer's UI; see `awaitUnlock` above
 func (s *Svr) requestGenerateReclaimData(ctx echo.Context) error {
-	onUnlock := s.generateReclaimData
-	return s.awaitUnlock(ctx, onUnlock)
-}
-
-// Returns a reclaim payload to the client if the user inputs a password and approves the private
-// transfer through Manta Signer's UI; see `awaitUnlock` above
-func (s *Svr) requestGeneratePrivateTransferData(ctx echo.Context) error {
-	onUnlock := s.generatePrivateTransferData
-	return s.awaitUnlock(ctx, onUnlock)
-}
-
-// Generates a private transfer payload (Go -> C -> Rust) and returns the
-// payload plus relevant metadata to the client
-// Payload generation logic lives in rust code, which this function only wraps
-// see: `lib/zkp`
-func (s *Svr) generatePrivateTransferData(ctx echo.Context) error {
-	appVersion := ctx.QueryParam("app_version")
 	body := ctx.Request().Body
 	defer body.Close()
 	bytes, err := ioutil.ReadAll(body)
@@ -143,6 +137,34 @@ func (s *Svr) generatePrivateTransferData(ctx echo.Context) error {
 	if len(bytes) == 0 {
 		return echo.ErrBadRequest
 	}
+
+	onUnlock := s.generateReclaimData
+	return s.awaitAuthorizeTransaction(ctx, onUnlock, bytes, TRANSACTION_TYPE_WITHDRAW)
+}
+
+// Returns a reclaim payload to the client if the user inputs a password and approves the private
+// transfer through Manta Signer's UI; see `awaitUnlock` above
+func (s *Svr) requestGeneratePrivateTransferData(ctx echo.Context) error {
+	body := ctx.Request().Body
+	defer body.Close()
+	bytes, err := ioutil.ReadAll(body)
+	if err != nil {
+		log.Fatal(err)
+		return err
+	}
+	if len(bytes) == 0 {
+		return echo.ErrBadRequest
+	}
+
+	onUnlock := s.generatePrivateTransferData
+	return s.awaitAuthorizeTransaction(ctx, onUnlock, bytes, TRANSACTION_TYPE_PRIVATE_TRANSFER)
+}
+
+// Generates a private transfer payload (Go -> C -> Rust) and returns the
+// payload plus relevant metadata to the client
+// Payload generation logic lives in rust code, which this function only wraps
+// see: `lib/zkp`
+func (s *Svr) generatePrivateTransferData(ctx echo.Context, bytes []byte) error {
 	var outBuffer []byte
 	outBufferRef := C.CBytes(outBuffer)
 	var outLen C.size_t
@@ -150,7 +172,7 @@ func (s *Svr) generatePrivateTransferData(ctx echo.Context) error {
 	message := map[string]interface{}{
 		"private_transfer_data": C.GoBytes(outBufferRef, C.int(outLen)),
 		"daemon_version":        version,
-		"app_version":           appVersion,
+		"app_version":           ctx.QueryParam("app_version"),
 	}
 	C.free(outBufferRef)
 	if ret == 0 {
@@ -164,17 +186,7 @@ func (s *Svr) generatePrivateTransferData(ctx echo.Context) error {
 // relevant metadata to the client
 // Payload generation logic lives in rust code, which this function only wraps
 // see: `lib/zkp`
-func (s *Svr) generateReclaimData(ctx echo.Context) error {
-	appVersion := ctx.QueryParam("app_version")
-	body := ctx.Request().Body
-	defer body.Close()
-	bytes, err := ioutil.ReadAll(body)
-	if err != nil {
-		log.Fatal(err)
-	}
-	if len(bytes) == 0 {
-		return echo.ErrBadRequest
-	}
+func (s *Svr) generateReclaimData(ctx echo.Context, bytes []byte) error {
 	var outBuffer []byte
 	outBufferRef := C.CBytes(outBuffer)
 	var outLen C.size_t
@@ -182,7 +194,7 @@ func (s *Svr) generateReclaimData(ctx echo.Context) error {
 	message := map[string]interface{}{
 		"reclaim_data":   C.GoBytes(outBufferRef, C.int(outLen)),
 		"daemon_version": version,
-		"app_version":    appVersion,
+		"app_version":    ctx.QueryParam("app_version"),
 	}
 	C.free(outBufferRef)
 	if ret == 0 {
@@ -196,7 +208,6 @@ func (s *Svr) generateReclaimData(ctx echo.Context) error {
 // Payload generation logic lives in rust code, which this function only wraps
 // see: `lib/zkp`
 func (s *Svr) deriveShieldedAddress(ctx echo.Context) error {
-	appVersion := ctx.QueryParam("app_version")
 	body := ctx.Request().Body
 	defer body.Close()
 	bytes, err := ioutil.ReadAll(body)
@@ -210,7 +221,7 @@ func (s *Svr) deriveShieldedAddress(ctx echo.Context) error {
 	message := map[string]interface{}{
 		"address":        C.GoBytes(outBufferRef, C.int(outLen)),
 		"daemon_version": version,
-		"app_version":    appVersion,
+		"app_version":    ctx.QueryParam("app_version"),
 	}
 	C.free(outBufferRef)
 	if ret == 0 {
@@ -224,7 +235,6 @@ func (s *Svr) deriveShieldedAddress(ctx echo.Context) error {
 // Payload generation logic lives in rust code, which this function only wraps
 // see: `lib/zkp`
 func (s *Svr) generateMintData(ctx echo.Context) error {
-	appVersion := ctx.QueryParam("app_version")
 	body := ctx.Request().Body
 	defer body.Close()
 	bytes, err := ioutil.ReadAll(body)
@@ -238,7 +248,7 @@ func (s *Svr) generateMintData(ctx echo.Context) error {
 	message := map[string]interface{}{
 		"mint_data":      C.GoBytes(outBufferRef, C.int(outLen)),
 		"daemon_version": version,
-		"app_version":    appVersion,
+		"app_version":    ctx.QueryParam("app_version"),
 	}
 	C.free(outBufferRef)
 	if ret == 0 {
@@ -253,7 +263,6 @@ func (s *Svr) generateMintData(ctx echo.Context) error {
 // Payload generation logic lives in rust code, which this function only wraps
 // see: `lib/zkp`
 func (s *Svr) generateAsset(ctx echo.Context) error {
-	appVersion := ctx.QueryParam("app_version")
 	body := ctx.Request().Body
 	defer body.Close()
 	bytes, err := ioutil.ReadAll(body)
@@ -267,7 +276,7 @@ func (s *Svr) generateAsset(ctx echo.Context) error {
 	message := map[string]interface{}{
 		"asset":          C.GoBytes(outBufferRef, C.int(outLen)),
 		"daemon_version": version,
-		"app_version":    appVersion,
+		"app_version":    ctx.QueryParam("app_version"),
 	}
 	C.free(outBufferRef)
 	if ret == 0 {
@@ -282,7 +291,6 @@ func (s *Svr) generateAsset(ctx echo.Context) error {
 // Payload generation logic lives in rust code, which this function only wraps
 // see: `lib/zkp`
 func (s *Svr) recoverAccount(ctx echo.Context) error {
-	appVersion := ctx.QueryParam("app_version")
 	body := ctx.Request().Body
 	defer body.Close()
 	bytes, err := ioutil.ReadAll(body)
@@ -297,7 +305,7 @@ func (s *Svr) recoverAccount(ctx echo.Context) error {
 		"length":            C.int(outLen),
 		"recovered_account": C.GoBytes(outBufferRef, C.int(outLen)),
 		"daemon_version":    version,
-		"app_version":       appVersion,
+		"app_version":       ctx.QueryParam("app_version"),
 	}
 	C.free(outBufferRef)
 	if ret == 0 {

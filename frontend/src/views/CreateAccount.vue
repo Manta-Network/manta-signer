@@ -5,45 +5,18 @@
         <div class="page-container__title">Create Account</div>
       </div>
       <div class="page-container__content">
-        <div v-if="recoveryPhrase">
-          <label class="reveal-recoveryPhrase__label"
-            >Your recovery phrase</label
-          >
-          <div class="recovery-phrase-container">
-            <div class="recovery-phrase-container__text-container">
-              <div class="recovery-phrase-container__text notranslate">
-                {{ recoveryPhrase }}
-              </div>
-            </div>
-          </div>
+        <el-form>
           <el-button
+            class="approve-button"
             type="primary"
-            @click="handleConfirmRecoveryPhrase()"
-            :disabled="passwordForm.password.length === 0"
+            @click="handleClickCreateNewAccount"
+            >New Account</el-button
           >
-            Okay
-          </el-button>
-        </div>
-        <el-form
-          v-if="!recoveryPhrase"
-          :rules="rules"
-          :model="passwordForm"
-          ref="passwordForm"
-        >
-          <el-form-item label="Choose a password" prop="password">
-            <el-input
-              type="password"
-              placeholder="password"
-              id="password-box"
-              v-model="passwordForm.password"
-              show-password
-            ></el-input>
-          </el-form-item>
           <el-button
+            class="decline-button"
             type="primary"
-            @click="handleSetPassword()"
-            :disabled="passwordForm.password.length === 0"
-            >Set password</el-button
+            @click="handleClickRecoverExistingAccount"
+            >Recover Account</el-button
           >
         </el-form>
       </div>
@@ -53,41 +26,22 @@
 
 <script>
 import backend from '@/backend';
+import { Events } from '@wails/runtime';
 
 export default {
   name: 'CreateAccount',
   data() {
-    return {
-      recoveryPhrase: '',
-      passwordForm: {
-        password: '',
-      },
-      rules: {
-        password: [
-          {
-            required: true,
-            message: 'Please choose a password',
-            trigger: 'blur',
-          },
-          { min: 8, message: '8 digit minimal', trigger: 'blur' },
-        ],
-      },
-    };
+    return {};
   },
   methods: {
-    async handleSetPassword() {
-      this.$refs['passwordForm'].validate(async valid => {
-        if (valid) {
-          this.recoveryPhrase = await backend.main.Service.CreateAccount(
-            this.passwordForm.password
-          );
-        }
-      });
+    handleClickCreateNewAccount() {
+      this.$router.push('/create_new_account');
     },
-    handleConfirmRecoveryPhrase() {
-      this.$router.push('/sign_in');
+    handleClickRecoverExistingAccount() {
+      this.$router.push('/recover_account');
     },
-    closeWindow() {
+    handleClickDeclineTransaction() {
+      Events.Emit('manta.server.onUnlockFail');
       backend.main.Service.WindowHide();
     },
   },
