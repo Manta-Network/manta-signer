@@ -1,0 +1,17 @@
+{
+ "name": "Todos",
+ "description": "Enter your project description",
+ "author": {
+  "name": "lea",
+  "email": "l@l.com"
+ },
+ "version": "0.0.1",
+ "binaryname": "manta-signer",
+ "frontend": {
+  "dir": "frontend",
+  "install": "yarn install",
+  "build": "yarn build",
+  "bridge": "src",
+  "serve": "npm run serve"
+ }
+}
