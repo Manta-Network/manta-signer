@@ -1,7 +1,7 @@
 build-mac-arm:
 	cd lib/zkp && cargo +stable build --release --target=aarch64-apple-darwin
 	cp lib/zkp/target/aarch64-apple-darwin/release/libzkp.a lib
-	GOOS=darwin GOARCH=arm64 go build -o lstaticdarwin.go main.go app.go server.go service.go incoming_urls.go
+	GOOS=darwin GOARCH=arm64 wails build -o lstaticdarwin.go main.go app.go server.go service.go incoming_urls.go
 
 build-mac-x86:
 	cd lib/zkp && cargo +stable build --release --target=x86_64-apple-darwin
