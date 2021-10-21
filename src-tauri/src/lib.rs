@@ -445,7 +445,7 @@ impl Service {
         let private_transfer_data = manta_api::batch_generate_private_transfer_data(
             params,
             &root_seed.0,
-            "",
+            "transfer_pk.bin",
             &mut ChaCha20Rng::from_rng(thread_rng()).expect("Unable to sample RNG."),
         )
         .encode();
@@ -461,8 +461,8 @@ impl Service {
         let reclaim_data = manta_api::batch_generate_reclaim_data(
             params,
             &root_seed.0,
-            "",
-            "",
+            "transfer_pk.bin",
+            "reclaim_pk.bin",
             &mut ChaCha20Rng::from_rng(thread_rng()).expect("Unable to sample RNG."),
         )
         .encode();
