@@ -213,6 +213,7 @@ pub unsafe extern "C" fn batch_generate_private_transfer_data(
         Ok(params_batch) => params_batch,
         Err(_) => return BAD_PARAMETERS_ERROR,
     };
+
     let proving_key_path = "./lib/zkp/keys/transfer_pk.bin";
     let mut rng = get_crypto_rng();
     let private_transfer_data_batch = _batch_generate_private_transfer_data(
@@ -249,10 +250,17 @@ pub unsafe extern "C" fn batch_generate_reclaim_data(
         Ok(params_batch) => params_batch,
         Err(_) => return BAD_PARAMETERS_ERROR,
     };
-    let proving_key_path = "./lib/zkp/keys/reclaim_pk.bin";
+    let reclaim_proving_key_path = "./lib/zkp/keys/reclaim_pk.bin";
+    let transfer_proving_key_path = "./lib/zkp/keys/transfer_pk.bin";
+
     let mut rng = get_crypto_rng();
-    let reclaim_data_batch =
-        _batch_generate_reclaim_data(params_batch, &root_seed, &proving_key_path, &mut rng);
+    let reclaim_data_batch = _batch_generate_reclaim_data(
+        params_batch,
+        &root_seed,
+        &transfer_proving_key_path,
+        &reclaim_proving_key_path,
+        &mut rng,
+    );
     let mut buf = reclaim_data_batch.encode();
     let len = buf.len();
     let ptr = buf.as_mut_ptr();
@@ -346,6 +354,9 @@ pub unsafe extern "C" fn get_private_transfer_batch_params_recipient(
         Ok(params_batch) => params_batch,
         Err(_) => return BAD_PARAMETERS_ERROR,
     };
+    // println!("tx 1: {:?}", params_batch.private_transfer_params_list[0]);
+    // println!("tx 2: {:?}", params_batch.private_transfer_params_list[1]);
+
     let recipient: String = _get_private_transfer_batch_params_recipient(params_batch);
     let recipient: CString = CString::new(recipient).expect("CString::new failed");
 
@@ -363,7 +374,10 @@ pub unsafe extern "C" fn get_reclaim_batch_params_currency_symbol(
     let mut bytes: &[u8] = std::slice::from_raw_parts(buffer, len);
     let params_batch = match GenerateReclaimBatchParams::decode(&mut bytes) {
         Ok(params_batch) => params_batch,
-        Err(_) => return BAD_PARAMETERS_ERROR,
+        Err(e) => {
+            println!("error: {:?}", e.to_string());
+            return BAD_PARAMETERS_ERROR;
+        }
     };
     let currency_symbol: String = match _get_reclaim_batch_params_currency_symbol(params_batch) {
         Some(currency_symbol) => currency_symbol,
@@ -388,6 +402,8 @@ pub unsafe extern "C" fn get_reclaim_batch_params_value(
         Ok(params_batch) => params_batch,
         Err(_) => return BAD_PARAMETERS_ERROR,
     };
+    // println!("tx 1: {:?}", params_batch.private_transfer_params_list[0]);
+    // println!("tx 2: {:?}", params_batch.reclaim_params);
     let value_string: String = _get_reclaim_batch_params_value(params_batch);
     let value_string: CString = CString::new(value_string).expect("CString::new failed");
 

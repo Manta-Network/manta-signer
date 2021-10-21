@@ -1,0 +1,11 @@
+{
+    "name": "manta-signer",
+    "binaryname": "manta-signer",
+    "frontend": {
+        "dir": "frontend",
+        "install": "yarn install",
+        "build": "yarn build",
+        "bridge": "src",
+        "serve": "npm run serve"
+    }
+}
