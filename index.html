@@ -85,7 +85,7 @@
           document.getElementById("authorize").hidden = false;
         });
         window.__TAURI__.event.listen("authorize", event => {
-          // TODO: Show to user.
+          // TODO: Show the prompt to the user.
           console.log(event);
         });
       }
