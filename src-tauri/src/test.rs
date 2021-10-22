@@ -14,17 +14,33 @@
 // You should have received a copy of the GNU General Public License
 // along with manta-signer. If not, see <http://www.gnu.org/licenses/>.
 
-//! Manta Signer
+//! Manta Signer Testing Primitives
 
-#![cfg_attr(doc_cfg, feature(doc_cfg))]
-#![forbid(rustdoc::broken_intra_doc_links)]
-#![forbid(missing_docs)]
+use crate::{secret::Password, service::Authorizer};
+use futures::future::BoxFuture;
+use serde::Serialize;
 
-pub mod batching;
-pub mod secret;
-pub mod service;
-pub mod ui;
+/// Mock User
+pub struct MockUser {
+    /// Stored Password
+    password: String,
+}
 
-#[cfg(feature = "test")]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "test")))]
-pub mod test;
+impl MockUser {
+    /// Builds a new [`MockUser`] from `password`.
+    #[inline]
+    pub fn new(password: String) -> Self {
+        Self { password }
+    }
+}
+
+impl Authorizer for MockUser {
+    #[inline]
+    fn authorize<T>(&mut self, prompt: T) -> BoxFuture<'_, Option<Password>>
+    where
+        T: Serialize,
+    {
+        let _ = prompt;
+        Box::pin(async move { Some(Password::Known(self.password.clone())) })
+    }
+}

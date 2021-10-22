@@ -2989,6 +2989,8 @@ dependencies = [
  "bip0039",
  "bip32",
  "cocoon 0.3.0",
+ "derivative",
+ "futures",
  "hex",
  "manta-api",
  "manta-asset",
@@ -3004,7 +3006,6 @@ dependencies = [
  "tide",
  "tiny-hderive",
  "tokio",
- "url",
 ]
 
 [[package]]

@@ -3,6 +3,7 @@
 _Manta Signer Server_
 
 NB: Currently, the root seed is saved in the current directory instead of a standard location.
+
 NB: Currently, the proving keys are not automatically generated, but are read directly from the current directory.
 
 ## Development

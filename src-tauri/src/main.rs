@@ -19,7 +19,11 @@
     windows_subsystem = "windows"
 )]
 
-use manta_signer::{account_exists, create_account, PasswordStore, Service};
+use manta_signer::{
+    secret::{account_exists, create_account, PasswordStore},
+    service::Service,
+    ui::User,
+};
 use serde::{Deserialize, Serialize};
 use tauri::{
     async_runtime::spawn, CustomMenuItem, Manager, State, SystemTray, SystemTrayEvent,
@@ -73,7 +77,7 @@ async fn get_mnemonic(password: String) -> Option<String> {
 
 /// Ends the first round of communication between the UI and the signer.
 #[tauri::command]
-async fn end_connect(state: State<'_, PasswordStore>, window: Window) -> Result<(), ()> {
+async fn end_connect(window: Window, state: State<'_, PasswordStore>) -> Result<(), ()> {
     window.hide().unwrap();
     state.clear().await;
     Ok(())
@@ -97,7 +101,7 @@ fn main() {
             let window = app.get_window("main").unwrap();
             let password_store = app.state::<PasswordStore>().handle();
             spawn(async move {
-                Service::build(window, password_store.setup().await)
+                Service::build(User::new(window, password_store.setup().await))
                     .serve(WALLET_FRONTEND_URL)
                     .await
                     .unwrap();

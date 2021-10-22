@@ -5,8 +5,14 @@ edition = "2018"
 description = "Manta Signer"
 
 [features]
+# Default Features
 default = ["custom-protocol"]
+
+# Tauri Custom Protocol Building Feature
 custom-protocol = ["tauri/custom-protocol"]
+
+# Testing Framework
+test = []
 
 [dependencies]
 ark-serialize = { version = "0.3.0" }
@@ -15,6 +21,8 @@ bip0039 = { version = "0.9.0" }
 bip32 = { version = "0.2.2" }
 cocoon = { version = "0.3.0" }
 codec = { package = "parity-scale-codec", version = "2.0.0", default-features = false, features = [ "derive", "full" ] }
+derivative = { version = "2.2.0" }
+futures = { version = "0.3.17" }
 hex = { version = "0.4.3" }
 manta-api = { git = "https://github.com/Manta-Network/manta-api", branch = "avoid_address_reuse", default_features = false, features = ["signer", "testnet"] }
 manta-asset = { git = "https://github.com/Manta-Network/manta-types", branch = "manta" }
@@ -28,7 +36,6 @@ tauri = { version = "1.0.0-beta.8", features = ["reqwest-client", "system-tray"]
 tide = { version = "0.16.0" }
 tiny-hderive = { git = "https://github.com/Manta-Network/tiny-hderive" }
 tokio = { version = "1.12.0", features = ["time"] }
-url = { version = "2.2.2" }
 
 [build-dependencies]
 tauri-build = { version = "1.0.0-beta.4" }
