@@ -2988,6 +2988,7 @@ dependencies = [
  "async-std",
  "bip0039",
  "bip32",
+ "bs58",
  "cocoon 0.3.0",
  "derivative",
  "futures",

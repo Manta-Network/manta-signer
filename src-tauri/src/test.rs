@@ -16,9 +16,18 @@
 
 //! Manta Signer Testing Primitives
 
-use crate::{secret::Password, service::Authorizer};
+use crate::{
+    secret::Password,
+    service::{Authorizer, Service, State},
+};
 use futures::future::BoxFuture;
+use rand::{
+    distributions::{DistString, Standard},
+    thread_rng, Rng,
+};
 use serde::Serialize;
+use std::io;
+use tide::listener::ToListener;
 
 /// Mock User
 pub struct MockUser {
@@ -29,7 +38,7 @@ pub struct MockUser {
 impl MockUser {
     /// Builds a new [`MockUser`] from `password`.
     #[inline]
-    pub fn new(password: String) -> Self {
+    fn new(password: String) -> Self {
         Self { password }
     }
 }
@@ -42,5 +51,29 @@ impl Authorizer for MockUser {
     {
         let _ = prompt;
         Box::pin(async move { Some(Password::Known(self.password.clone())) })
+    }
+}
+
+/// Test Service
+pub struct TestService(Service<MockUser>);
+
+impl TestService {
+    /// Builds a new [`TestService`] with a random password.
+    #[inline]
+    pub fn build() -> Self {
+        let mut rng = thread_rng();
+        let length = rng.gen_range(20..50);
+        Self(Service::build(MockUser::new(
+            Standard.sample_string(&mut rng, length),
+        )))
+    }
+
+    /// Starts the test service on `listener`.
+    #[inline]
+    pub async fn serve<L>(self, listener: L) -> io::Result<()>
+    where
+        L: ToListener<State<MockUser>>,
+    {
+        self.0.serve(listener).await
     }
 }

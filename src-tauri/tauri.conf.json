@@ -55,7 +55,7 @@
         "label": "main",
         "title": "Manta Signer",
         "width": 500,
-        "height": 900,
+        "height": 600,
         "decorations": false,
         "visible": false,
         "transparent": true

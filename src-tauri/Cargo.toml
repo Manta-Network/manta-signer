@@ -19,6 +19,7 @@ ark-serialize = { version = "0.3.0" }
 async-std = { version = "1.10.0" }
 bip0039 = { version = "0.9.0" }
 bip32 = { version = "0.2.2" }
+bs58 = { version = "0.4.0" }
 cocoon = { version = "0.3.0" }
 codec = { package = "parity-scale-codec", version = "2.0.0", default-features = false, features = [ "derive", "full" ] }
 derivative = { version = "2.2.0" }
@@ -35,7 +36,7 @@ serde_json = { version = "1.0.68" }
 tauri = { version = "1.0.0-beta.8", features = ["reqwest-client", "system-tray"] }
 tide = { version = "0.16.0" }
 tiny-hderive = { git = "https://github.com/Manta-Network/tiny-hderive" }
-tokio = { version = "1.12.0", features = ["time"] }
+tokio = { version = "1.12.0" }
 
 [build-dependencies]
 tauri-build = { version = "1.0.0-beta.4" }

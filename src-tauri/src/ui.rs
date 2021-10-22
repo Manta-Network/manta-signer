@@ -45,6 +45,7 @@ impl Authorizer for User {
         T: Serialize,
     {
         self.window.emit("authorize", prompt).unwrap();
+        self.window.center().unwrap();
         self.window.show().unwrap();
         Box::pin(async move {
             let password = self.password.recv().await;

@@ -27,6 +27,7 @@ use manta_api::{
     DeriveShieldedAddressParams, GenerateAssetParams, GeneratePrivateTransferBatchParams,
     GenerateReclaimBatchParams, RecoverAccountParams,
 };
+use manta_asset::AssetId;
 use manta_crypto::MantaSerDes;
 use rand::{thread_rng, SeedableRng};
 use rand_chacha::ChaCha20Rng;
@@ -50,9 +51,19 @@ macro_rules! ensure {
     };
 }
 
-/// Transaction Type
-#[derive(Deserialize, Serialize)]
-pub enum TransactionType {
+/// Returns the currency symbol for the given `asset_id`.
+#[inline]
+pub fn get_currency_symbol_by_asset_id(asset_id: AssetId) -> Option<&'static str> {
+    Some(match asset_id {
+        1 => "DOT",
+        2 => "KSM",
+        _ => return None,
+    })
+}
+
+/// Transaction Kind
+#[derive(Clone, Debug, Deserialize, Eq, Hash, PartialEq, Serialize)]
+pub enum TransactionKind {
     /// Private Transfer
     PrivateTransfer {
         /// Recipient Address
@@ -64,16 +75,45 @@ pub enum TransactionType {
 }
 
 /// Transaction Summary
-#[derive(Deserialize, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, Hash, PartialEq, Serialize)]
 pub struct TransactionSummary {
-    /// Transaction Type
-    pub transaction: TransactionType,
+    /// Transaction Kind
+    pub kind: TransactionKind,
 
     /// Transaction Amount
     pub amount: String,
 
     /// Currency Symbol
-    pub currency_symbol: String,
+    pub currency_symbol: Option<&'static str>,
+}
+
+impl From<&GeneratePrivateTransferBatchParams> for TransactionSummary {
+    #[inline]
+    fn from(params: &GeneratePrivateTransferBatchParams) -> Self {
+        Self {
+            kind: TransactionKind::PrivateTransfer {
+                recipient: bs58::encode(params.receiving_address.encode()).into_string(),
+            },
+            amount: params
+                .private_transfer_params_list
+                .last()
+                .unwrap()
+                .non_change_output_value
+                .to_string(),
+            currency_symbol: get_currency_symbol_by_asset_id(params.asset_id),
+        }
+    }
+}
+
+impl From<&GenerateReclaimBatchParams> for TransactionSummary {
+    #[inline]
+    fn from(params: &GenerateReclaimBatchParams) -> Self {
+        Self {
+            kind: TransactionKind::Reclaim,
+            amount: params.reclaim_params.reclaim_value.to_string(),
+            currency_symbol: get_currency_symbol_by_asset_id(params.asset_id),
+        }
+    }
 }
 
 /// Authorizer
@@ -305,12 +345,18 @@ where
         let params = ensure!(GeneratePrivateTransferBatchParams::decode(
             &mut body.as_slice()
         ))?;
-        let root_seed = ensure!(state.check_root_seed("private_transfer").await.ok_or(()))?;
-        let mut rng = ChaCha20Rng::from_rng(thread_rng()).expect("Unable to sample RNG.");
-        let private_transfer_data =
-            batch_generate_private_transfer_data(params, &root_seed.0, "transfer_pk.bin", &mut rng)
-                .await
-                .encode();
+        let root_seed = ensure!(state
+            .check_root_seed(TransactionSummary::from(&params))
+            .await
+            .ok_or(()))?;
+        let private_transfer_data = batch_generate_private_transfer_data(
+            params,
+            &root_seed.0,
+            "transfer_pk.bin",
+            &mut Self::rng(),
+        )
+        .await
+        .encode();
         Ok(Body::from_json(&PrivateTransferMessage::new(private_transfer_data))?.into())
     }
 
@@ -319,14 +365,16 @@ where
     async fn reclaim(mut request: Request<A>) -> ServerResult {
         let (body, state) = Self::process(&mut request).await?;
         let params = ensure!(GenerateReclaimBatchParams::decode(&mut body.as_slice()))?;
-        let root_seed = ensure!(state.check_root_seed("private_transfer").await.ok_or(()))?;
-        let mut rng = ChaCha20Rng::from_rng(thread_rng()).expect("Unable to sample RNG.");
+        let root_seed = ensure!(state
+            .check_root_seed(TransactionSummary::from(&params))
+            .await
+            .ok_or(()))?;
         let reclaim_data = batch_generate_reclaim_data(
             params,
             &root_seed.0,
             "transfer_pk.bin",
             "reclaim_pk.bin",
-            &mut rng,
+            &mut Self::rng(),
         )
         .await
         .encode();
@@ -338,6 +386,12 @@ where
     #[inline]
     async fn process(request: &mut Request<A>) -> ServerResult<(Vec<u8>, &State<A>)> {
         Ok((request.body_bytes().await?, request.state()))
+    }
+
+    /// Samples a new RNG for generating ZKPs.
+    #[inline]
+    fn rng() -> ChaCha20Rng {
+        ChaCha20Rng::from_rng(thread_rng()).expect("Unable to sample RNG.")
     }
 }
 
