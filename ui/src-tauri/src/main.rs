@@ -20,15 +20,95 @@
 )]
 
 use manta_signer::{
-    secret::{account_exists, create_account, PasswordStore},
+    secret::{account_exists, create_account, Authorization, Authorizer, Password},
     service::Service,
-    ui::User,
 };
 use serde::{Deserialize, Serialize};
+use std::sync::Arc;
 use tauri::{
-    async_runtime::spawn, CustomMenuItem, Manager, State, SystemTray, SystemTrayEvent,
-    SystemTrayMenu, Window,
+    async_runtime::{channel, spawn, Receiver, RwLock, Sender},
+    CustomMenuItem, Manager, State, SystemTray, SystemTrayEvent, SystemTrayMenu, Window,
 };
+
+/// User
+pub struct User {
+    /// Main Window
+    window: Window,
+
+    /// Password Receiver
+    password: Receiver<Password>,
+}
+
+impl User {
+    /// Builds a new [`User`] from `window` and `password`.
+    #[inline]
+    pub fn new(window: Window, password: Receiver<Password>) -> Self {
+        Self { window, password }
+    }
+}
+
+impl Authorizer for User {
+    #[inline]
+    fn authorize<T>(&mut self, prompt: T) -> Authorization
+    where
+        T: Serialize,
+    {
+        self.window.emit("authorize", prompt).unwrap();
+        self.window.center().unwrap();
+        self.window.show().unwrap();
+        Box::pin(async move {
+            let password = self.password.recv().await;
+            self.window.hide().unwrap();
+            password
+        })
+    }
+}
+
+/// Password Storage Type
+type PasswordStoreType = Arc<RwLock<Option<Sender<Password>>>>;
+
+/// Password Storage Handle
+pub struct PasswordStoreHandle(PasswordStoreType);
+
+impl PasswordStoreHandle {
+    /// Builds a new password storage system, waiting on the receiver to receive it's first
+    /// message.
+    #[inline]
+    pub async fn setup(self) -> Receiver<Password> {
+        let (sender, mut receiver) = channel(1);
+        *self.0.write().await = Some(sender);
+        receiver.recv().await;
+        receiver
+    }
+}
+
+/// Password Storage
+#[derive(Default)]
+pub struct PasswordStore(PasswordStoreType);
+
+impl PasswordStore {
+    /// Returns a handle for setting up a [`PasswordStore`].
+    #[inline]
+    pub fn handle(&self) -> PasswordStoreHandle {
+        PasswordStoreHandle(self.0.clone())
+    }
+
+    /// Loads a new password into the state.
+    #[inline]
+    pub async fn load(&self, password: String) {
+        if let Some(state) = &*self.0.read().await {
+            state.send(Password::Known(password)).await.unwrap();
+        }
+    }
+
+    /// Clears the password state.
+    #[inline]
+    pub async fn clear(&self) {
+        if let Some(state) = &*self.0.read().await {
+            state.send(Password::Unknown).await.unwrap();
+        }
+    }
+}
 
 /// Loads the current `password` into storage from the UI.
 #[tauri::command]

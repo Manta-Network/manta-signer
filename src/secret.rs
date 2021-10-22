@@ -16,6 +16,8 @@
 
 //! Manta Signer Secrets
 
+// FIXME: Secure passwords.
+
 use async_std::{
     fs::{self, File},
     io::{self, ReadExt, WriteExt},
@@ -23,9 +25,9 @@ use async_std::{
 use bip0039::{Count, Mnemonic};
 use cocoon::{Cocoon, Error as CocoonError};
 use core::convert::TryInto;
+use futures::future::BoxFuture;
 use manta_api::MantaRootSeed;
-use std::sync::Arc;
-use tauri::async_runtime::{channel, Receiver, RwLock, Sender};
+use serde::Serialize;
 
 /// Password
 #[derive(Clone, Debug, Eq, Hash, PartialEq)]
@@ -55,51 +57,21 @@ impl Default for Password {
     }
 }
 
-/// Password Storage Type
-type PasswordStoreType = Arc<RwLock<Option<Sender<Password>>>>;
+/// Authorization Future
+///
+/// This `type` is returned by the [`authorize`] method on [`Authorizer`]. See its documentation for
+/// more.
+pub type Authorization<'t> = BoxFuture<'t, Option<Password>>;
 
-/// Password Storage Handle
-pub struct PasswordStoreHandle(PasswordStoreType);
-
-impl PasswordStoreHandle {
-    /// Builds a new password storage system, waiting on the receiver to receive it's first
-    /// message.
-    #[inline]
-    pub async fn setup(self) -> Receiver<Password> {
-        let (sender, mut receiver) = channel(1);
-        *self.0.write().await = Some(sender);
-        receiver.recv().await;
-        receiver
-    }
+/// Authorizer
+pub trait Authorizer {
+    /// Shows the given `prompt` to the authorizer, requesting their password, returning
+    /// `None` if the password future failed.
+    fn authorize<T>(&mut self, prompt: T) -> Authorization
+    where
+        T: Serialize;
 }
 
-/// Password Storage
-#[derive(Default)]
-pub struct PasswordStore(PasswordStoreType);
-
-impl PasswordStore {
-    /// Returns a handle for setting up a [`PasswordStore`].
-    #[inline]
-    pub fn handle(&self) -> PasswordStoreHandle {
-        PasswordStoreHandle(self.0.clone())
-    }
-
-    /// Loads a new password into the state.
-    #[inline]
-    pub async fn load(&self, password: String) {
-        if let Some(state) = &*self.0.read().await {
-            state.send(Password::Known(password)).await.unwrap();
-        }
-    }
-
-    /// Clears the password state.
-    #[inline]
-    pub async fn clear(&self) {
-        if let Some(state) = &*self.0.read().await {
-            state.send(Password::Unknown).await.unwrap();
-        }
-    }
-}
 /// Root Seed
 #[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
 pub struct RootSeed(pub MantaRootSeed);

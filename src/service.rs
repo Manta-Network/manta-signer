@@ -18,11 +18,10 @@
 
 use crate::{
     batching::{batch_generate_private_transfer_data, batch_generate_reclaim_data},
-    secret::{Password, RootSeed},
+    secret::{Authorizer, Password, RootSeed},
 };
-use async_std::io;
+use async_std::{io, sync::Mutex};
 use codec::{Decode, Encode};
-use futures::future::BoxFuture;
 use manta_api::{
     DeriveShieldedAddressParams, GenerateAssetParams, GeneratePrivateTransferBatchParams,
     GenerateReclaimBatchParams, RecoverAccountParams,
@@ -33,7 +32,6 @@ use rand::{thread_rng, SeedableRng};
 use rand_chacha::ChaCha20Rng;
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
-use tauri::async_runtime::Mutex;
 use tide::{
     listener::ToListener, Body, Error, Request as ServerRequest, Result as ServerResult, Server,
     StatusCode,
@@ -114,15 +112,6 @@ impl From<&GenerateReclaimBatchParams> for TransactionSummary {
             currency_symbol: get_currency_symbol_by_asset_id(params.asset_id),
         }
     }
-}
-
-/// Authorizer
-pub trait Authorizer {
-    /// Shows the given `prompt` to the authorizer, requesting their password, returning
-    /// `None` if the password future failed.
-    fn authorize<T>(&mut self, prompt: T) -> BoxFuture<'_, Option<Password>>
-    where
-        T: Serialize;
 }
 
 /// Inner State

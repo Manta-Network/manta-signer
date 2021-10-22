@@ -1,0 +1,41 @@
+[package]
+name = "manta-signer-ui"
+edition = "2018"
+version = "0.3.0"
+authors = ["Manta Network <contact@manta.network>"]
+readme = "README.md"
+license-file = "LICENSE"
+repository = "https://github.com/Manta-Network/manta-signer"
+homepage = "https://github.com/Manta-Network"
+documentation = "https://github.com/Manta-Network/manta-signer"
+categories = [""]
+keywords = [""]
+description = "Manta Signer UI"
+publish = false
+
+[package.metadata.docs.rs]
+# To build locally:
+# RUSTDOCFLAGS="--cfg doc_cfg" cargo +nightly doc --all-features --open
+all-features = true
+rustdoc-args = ["--cfg", "doc_cfg"]
+
+[badges]
+is-it-maintained-issue-resolution = { repository = "Manta-Network/manta-signer" }
+is-it-maintained-open-issues = { repository = "Manta-Network/manta-signer" }
+maintenance = { status = "actively-developed" }
+
+[features]
+# Default Features
+default = ["custom-protocol"]
+
+# Tauri Custom Protocol Building Feature
+custom-protocol = ["tauri/custom-protocol"]
+
+[dependencies]
+manta-signer = { path = "../../" }
+serde = { version = "1.0.130", features = ["derive"] }
+tauri = { version = "1.0.0-beta.8", features = ["reqwest-client", "system-tray"] }
+
+[build-dependencies]
+tauri-build = { version = "1.0.0-beta.4" }
+

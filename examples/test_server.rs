@@ -14,13 +14,13 @@
 // You should have received a copy of the GNU General Public License
 // along with manta-signer. If not, see <http://www.gnu.org/licenses/>.
 
-//! Manta Signer Testing Primitives
+//! Test Signer Server
 
-use crate::{
-    secret::Password,
-    service::{Authorizer, Service, State},
+use async_std::io;
+use manta_signer::{
+    secret::{Authorization, Authorizer, Password},
+    service::{Service, State},
 };
-use futures::future::BoxFuture;
 use rand::{
     distributions::{DistString, Standard},
     thread_rng, Rng,
@@ -45,7 +45,7 @@ impl MockUser {
 
 impl Authorizer for MockUser {
     #[inline]
-    fn authorize<T>(&mut self, prompt: T) -> BoxFuture<'_, Option<Password>>
+    fn authorize<T>(&mut self, prompt: T) -> Authorization
     where
         T: Serialize,
     {
@@ -76,4 +76,11 @@ impl TestService {
     {
         self.0.serve(listener).await
     }
+}
+
+#[async_std::main]
+async fn main() -> io::Result<()> {
+    TestService::build()
+        .serve(std::env::args().skip(1).collect::<Vec<_>>())
+        .await
 }

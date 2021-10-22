@@ -146,7 +146,7 @@ checksum = "65be532f9dd1e98ad0150b037276cde464c6f371059e6dd02c0222395761f6aa"
 dependencies = [
  "ark-ec",
  "ark-ff",
- "ark-std 0.3.0",
+ "ark-std",
 ]
 
 [[package]]
@@ -162,7 +162,7 @@ dependencies = [
  "ark-relations",
  "ark-serialize",
  "ark-snark",
- "ark-std 0.3.0",
+ "ark-std",
  "blake2",
  "derivative",
  "digest 0.9.0",
@@ -177,7 +177,7 @@ checksum = "dea978406c4b1ca13c2db2373b05cc55429c3575b8b21f1b9ee859aa5b03dd42"
 dependencies = [
  "ark-ff",
  "ark-serialize",
- "ark-std 0.3.0",
+ "ark-std",
  "derivative",
  "num-traits",
  "zeroize",
@@ -193,7 +193,7 @@ dependencies = [
  "ark-ec",
  "ark-ff",
  "ark-r1cs-std",
- "ark-std 0.3.0",
+ "ark-std",
 ]
 
 [[package]]
@@ -205,7 +205,7 @@ dependencies = [
  "ark-ff-asm",
  "ark-ff-macros",
  "ark-serialize",
- "ark-std 0.3.0",
+ "ark-std",
  "derivative",
  "num-bigint",
  "num-traits",
@@ -249,7 +249,7 @@ dependencies = [
  "ark-r1cs-std",
  "ark-relations",
  "ark-serialize",
- "ark-std 0.3.0",
+ "ark-std",
  "derivative",
  "tracing",
 ]
@@ -264,7 +264,7 @@ dependencies = [
  "ark-ff",
  "ark-r1cs-std",
  "ark-relations",
- "ark-std 0.3.0",
+ "ark-std",
  "derivative",
  "num-bigint",
  "num-integer",
@@ -280,7 +280,7 @@ checksum = "7b0f78f47537c2f15706db7e98fe64cc1711dbf9def81218194e17239e53e5aa"
 dependencies = [
  "ark-ff",
  "ark-serialize",
- "ark-std 0.3.0",
+ "ark-std",
  "derivative",
  "hashbrown",
 ]
@@ -294,7 +294,7 @@ dependencies = [
  "ark-ec",
  "ark-ff",
  "ark-relations",
- "ark-std 0.3.0",
+ "ark-std",
  "derivative",
  "num-bigint",
  "num-traits",
@@ -308,7 +308,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "4cba4c1c99792a6834bd97f7fd76578ec2cd58d2afc5139a17e1d1bec65b38f6"
 dependencies = [
  "ark-ff",
- "ark-std 0.3.0",
+ "ark-std",
  "tracing",
 ]
 
@@ -319,7 +319,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1d6c2b318ee6e10f8c2853e73a83adc0ccb88995aa978d8a3408d492ab2ee671"
 dependencies = [
  "ark-serialize-derive",
- "ark-std 0.3.0",
+ "ark-std",
  "digest 0.9.0",
 ]
 
@@ -342,7 +342,7 @@ checksum = "0dc3dff1a5f67a9c0b34df32b079752d8dd17f1e9d06253da0453db6c1b7cc8a"
 dependencies = [
  "ark-ff",
  "ark-relations",
- "ark-std 0.3.0",
+ "ark-std",
 ]
 
 [[package]]
@@ -354,20 +354,10 @@ dependencies = [
  "ark-ec",
  "ark-ff",
  "ark-serialize",
- "ark-std 0.3.0",
+ "ark-std",
  "derivative",
  "digest 0.9.0",
  "rand_chacha 0.3.1",
-]
-
-[[package]]
-name = "ark-std"
-version = "0.2.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "fb5b856a29bea7b810858116a596beee3d20fc4c5aeb240e8e5a8bca4845a470"
-dependencies = [
- "rand 0.7.3",
- "rand_xorshift",
 ]
 
 [[package]]
@@ -660,12 +650,6 @@ name = "base-x"
 version = "0.2.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a4521f3e3d031370679b3b140beb36dfe4801b09ac77e30c61941f97df3ef28b"
-
-[[package]]
-name = "base58"
-version = "0.1.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5024ee8015f02155eee35c711107ddd9a9bf3cb689cf2a9089c97e79b6e1ae83"
 
 [[package]]
 name = "base64"
@@ -1363,12 +1347,6 @@ dependencies = [
  "cfg-if 1.0.0",
  "lazy_static",
 ]
-
-[[package]]
-name = "crunchy"
-version = "0.2.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7a81dae078cea95a014a339291cec439d2f232ebe854a9d672b796c6afafa9b7"
 
 [[package]]
 name = "crypto-bigint"
@@ -2298,9 +2276,9 @@ dependencies = [
 
 [[package]]
 name = "h2"
-version = "0.3.6"
+version = "0.3.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6c06815895acec637cd6ed6e9662c935b866d20a106f8361892893a7d9234964"
+checksum = "7fd819562fcebdac5afc5c113c3ec36f902840b70fd4fc458799c8ce4607ae55"
 dependencies = [
  "bytes",
  "fnv",
@@ -2341,18 +2319,6 @@ checksum = "62b467343b94ba476dcb2500d242dadbb39557df889310ac77c5d99100aaac33"
 dependencies = [
  "libc",
 ]
-
-[[package]]
-name = "hex"
-version = "0.4.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7f24254aa9a54b5c858eaee2f5bccdb46aaf0e486a595ed5fd8f86ba55232a70"
-
-[[package]]
-name = "hex-literal"
-version = "0.3.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "21e4590e13640f19f249fe3e4eca5113bc4289f2497710378190e7f4bd96f45b"
 
 [[package]]
 name = "hkd32"
@@ -2429,17 +2395,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "hmac-drbg"
-version = "0.3.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "17ea0a1394df5b6574da6e0c1ade9e78868c9fb0a4e5ef4428e32da4676b85b1"
-dependencies = [
- "digest 0.9.0",
- "generic-array 0.14.4",
- "hmac 0.8.1",
-]
-
-[[package]]
 name = "html5ever"
 version = "0.25.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2466,9 +2421,9 @@ dependencies = [
 
 [[package]]
 name = "http-body"
-version = "0.4.3"
+version = "0.4.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "399c583b2979440c60be0821a6199eca73bc3c8dcd9d070d75ac726e2c6186e5"
+checksum = "1ff4f84919677303da5f147645dbea6b1881f368d03ac84e1dc09031ebd7b2c6"
 dependencies = [
  "bytes",
  "http",
@@ -2530,9 +2485,9 @@ checksum = "6456b8a6c8f33fee7d958fcd1b60d55b11940a79e63ae87013e6d22e26034440"
 
 [[package]]
 name = "hyper"
-version = "0.14.13"
+version = "0.14.14"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "15d1cfb9e4f68655fa04c01f59edb405b6074a0f7118ea881e5026e4a1cd8593"
+checksum = "2b91bb1f221b6ea1f1e4371216b70f40748774c2fb5971b450c07773fb92d26b"
 dependencies = [
  "bytes",
  "futures-channel",
@@ -2781,54 +2736,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7b2f96d100e1cf1929e7719b7edb3b90ab5298072638fccd77be9ce942ecdfce"
 
 [[package]]
-name = "libsecp256k1"
-version = "0.6.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c9d220bc1feda2ac231cb78c3d26f27676b8cf82c96971f7aeef3d0cf2797c73"
-dependencies = [
- "arrayref",
- "base64 0.12.3",
- "digest 0.9.0",
- "hmac-drbg",
- "libsecp256k1-core",
- "libsecp256k1-gen-ecmult",
- "libsecp256k1-gen-genmult",
- "rand 0.7.3",
- "serde",
- "sha2 0.9.8",
- "typenum",
-]
-
-[[package]]
-name = "libsecp256k1-core"
-version = "0.2.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d0f6ab710cec28cef759c5f18671a27dae2a5f952cdaaee1d8e2908cb2478a80"
-dependencies = [
- "crunchy",
- "digest 0.9.0",
- "subtle 2.4.1",
-]
-
-[[package]]
-name = "libsecp256k1-gen-ecmult"
-version = "0.2.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ccab96b584d38fac86a83f07e659f0deafd0253dc096dab5a36d53efe653c5c3"
-dependencies = [
- "libsecp256k1-core",
-]
-
-[[package]]
-name = "libsecp256k1-gen-genmult"
-version = "0.2.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "67abfe149395e3aa1c48a2beb32b068e2334402df8181f818d3aee2b304c4f5d"
-dependencies = [
- "libsecp256k1-core",
-]
-
-[[package]]
 name = "lock_api"
 version = "0.4.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2890,7 +2797,7 @@ dependencies = [
  "ark-r1cs-std",
  "ark-relations",
  "ark-serialize",
- "ark-std 0.3.0",
+ "ark-std",
  "bip32",
  "blake2",
  "bs58",
@@ -2917,7 +2824,7 @@ dependencies = [
  "ark-ed-on-bls12-381",
  "ark-ff",
  "ark-serialize",
- "ark-std 0.3.0",
+ "ark-std",
  "blake2",
  "manta-crypto",
  "manta-error",
@@ -2940,7 +2847,7 @@ dependencies = [
  "ark-relations",
  "ark-serialize",
  "ark-sponge",
- "ark-std 0.3.0",
+ "ark-std",
  "blake2",
  "derivative",
  "generic-array 0.14.4",
@@ -2960,7 +2867,7 @@ dependencies = [
  "ark-groth16",
  "ark-relations",
  "ark-serialize",
- "ark-std 0.3.0",
+ "ark-std",
  "manta-asset",
  "manta-crypto",
  "manta-error",
@@ -2975,14 +2882,14 @@ dependencies = [
  "ark-crypto-primitives",
  "ark-relations",
  "ark-serialize",
- "ark-std 0.3.0",
+ "ark-std",
  "displaydoc",
  "parity-scale-codec",
 ]
 
 [[package]]
 name = "manta-signer"
-version = "0.1.0"
+version = "0.3.0"
 dependencies = [
  "ark-serialize",
  "async-std",
@@ -2992,7 +2899,6 @@ dependencies = [
  "cocoon 0.3.0",
  "derivative",
  "futures",
- "hex",
  "manta-api",
  "manta-asset",
  "manta-crypto",
@@ -3002,11 +2908,17 @@ dependencies = [
  "rand_chacha 0.3.1",
  "serde",
  "serde_json",
+ "tide",
+]
+
+[[package]]
+name = "manta-signer-ui"
+version = "0.3.0"
+dependencies = [
+ "manta-signer",
+ "serde",
  "tauri",
  "tauri-build",
- "tide",
- "tiny-hderive",
- "tokio",
 ]
 
 [[package]]
@@ -3052,12 +2964,6 @@ checksum = "59accc507f1338036a0477ef61afdae33cde60840f4dfe481319ce3ad116ddf9"
 dependencies = [
  "autocfg",
 ]
-
-[[package]]
-name = "memzero"
-version = "0.1.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "93c0d11ac30a033511ae414355d80f70d9f29a44a49140face477117a1ee90db"
 
 [[package]]
 name = "mime"
@@ -3185,12 +3091,6 @@ name = "new_debug_unreachable"
 version = "1.0.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e4a24736216ec316047a1fc4252e27dabb04218aa4a3f37c6e7ddbf1f9782b54"
-
-[[package]]
-name = "no-std-compat"
-version = "0.4.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b93853da6d84c2e3c7d730d6473e8817692dd89be387eb01b94d7f108ecb5b8c"
 
 [[package]]
 name = "nodrop"
@@ -3643,9 +3543,9 @@ checksum = "8b870d8c151b6f2fb93e84a13146138f05d02ed11c7e7c54f8826aaaf7c9f184"
 
 [[package]]
 name = "pkg-config"
-version = "0.3.20"
+version = "0.3.21"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7c9b1041b4387893b91ee6746cddfc28516aff326a3519fb2adf820932c5e6cb"
+checksum = "10e2fcbb64ecbe64c8e040a386c3104d384583af58b956d870aaaf229df6e66d"
 
 [[package]]
 name = "png"
@@ -3890,15 +3790,6 @@ name = "rand_pcg"
 version = "0.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "16abd0c1b639e9eb4d7c50c0b8100b0d0f849be2349829c740fe8e6eb4816429"
-dependencies = [
- "rand_core 0.5.1",
-]
-
-[[package]]
-name = "rand_xorshift"
-version = "0.2.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "77d416b86801d23dde1aa643023b775c3a462efc0ed96443add11546cdf1dca8"
 dependencies = [
  "rand_core 0.5.1",
 ]
@@ -4996,21 +4887,6 @@ dependencies = [
  "quote",
  "standback",
  "syn",
-]
-
-[[package]]
-name = "tiny-hderive"
-version = "0.3.0"
-source = "git+https://github.com/Manta-Network/tiny-hderive#064045bf721e767d04bf6f2267fd58717a30ce0c"
-dependencies = [
- "ark-std 0.2.0",
- "base58",
- "hex-literal",
- "hmac 0.11.0",
- "libsecp256k1",
- "memzero",
- "no-std-compat",
- "sha2 0.9.8",
 ]
 
 [[package]]

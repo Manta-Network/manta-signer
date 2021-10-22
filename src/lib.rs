@@ -23,8 +23,3 @@
 pub mod batching;
 pub mod secret;
 pub mod service;
-pub mod ui;
-
-#[cfg(feature = "test")]
-#[cfg_attr(doc_cfg, doc(cfg(feature = "test")))]
-pub mod test;
