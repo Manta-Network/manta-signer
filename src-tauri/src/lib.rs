@@ -26,15 +26,21 @@ use async_std::{
     io::{self, ReadExt, WriteExt},
 };
 use bip0039::{Count, Mnemonic};
+use bip32::XPrv;
 use cocoon::{Cocoon, Error as CocoonError};
 use codec::{Decode, Encode};
 use core::convert::TryInto;
 use manta_api::{
     DeriveShieldedAddressParams, GenerateAssetParams, GeneratePrivateTransferBatchParams,
-    GenerateReclaimBatchParams, MantaRootSeed, RecoverAccountParams,
+    GeneratePrivateTransferParams, GenerateReclaimBatchParams, GenerateReclaimParams,
+    MantaRootSeed, PrivateTransferBatch, ReclaimBatch, RecoverAccountParams,
 };
-use manta_crypto::{Groth16Pk, MantaSerDes};
-use rand::{thread_rng, SeedableRng};
+use manta_asset::{AssetId, MantaAsset, MantaAssetShieldedAddress, Process, Sampling};
+use manta_crypto::{
+    commitment_parameters, leaf_parameters, two_to_one_parameters, Groth16Pk, MantaSerDes,
+};
+use manta_data::{BuildMetadata, PrivateTransferData, ReclaimData};
+use rand::{thread_rng, CryptoRng, RngCore, SeedableRng};
 use rand_chacha::ChaCha20Rng;
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
@@ -192,18 +198,6 @@ pub async fn create_account(password: String) -> Result<Mnemonic, CocoonError> {
     let mnemonic = Mnemonic::generate(Count::Words12);
     RootSeed::new(&mnemonic).save(password).await?;
     Ok(mnemonic)
-}
-
-/// Loads proving key from `path`.
-#[inline]
-pub async fn load_proving_key(path: &str) -> Groth16Pk {
-    Groth16Pk::deserialize_unchecked(
-        fs::read(path)
-            .await
-            .expect("Failed to read file.")
-            .as_slice(),
-    )
-    .expect("Failed to deserialize proving key.")
 }
 
 /// Transaction Type
@@ -442,13 +436,11 @@ impl Service {
             &mut body.as_slice()
         ))?;
         let root_seed = ensure!(state.check_root_seed("private_transfer").await.ok_or(()))?;
-        let private_transfer_data = manta_api::batch_generate_private_transfer_data(
-            params,
-            &root_seed.0,
-            "transfer_pk.bin",
-            &mut ChaCha20Rng::from_rng(thread_rng()).expect("Unable to sample RNG."),
-        )
-        .encode();
+        let mut rng = ChaCha20Rng::from_rng(thread_rng()).expect("Unable to sample RNG.");
+        let private_transfer_data =
+            batch_generate_private_transfer_data(params, &root_seed, "transfer_pk.bin", &mut rng)
+                .await
+                .encode();
         Ok(Body::from_json(&PrivateTransferMessage::new(private_transfer_data))?.into())
     }
 
@@ -458,13 +450,15 @@ impl Service {
         let (body, state) = Self::process(&mut request).await?;
         let params = ensure!(GenerateReclaimBatchParams::decode(&mut body.as_slice()))?;
         let root_seed = ensure!(state.check_root_seed("private_transfer").await.ok_or(()))?;
-        let reclaim_data = manta_api::batch_generate_reclaim_data(
+        let mut rng = ChaCha20Rng::from_rng(thread_rng()).expect("Unable to sample RNG.");
+        let reclaim_data = batch_generate_reclaim_data(
             params,
-            &root_seed.0,
+            &root_seed,
             "transfer_pk.bin",
             "reclaim_pk.bin",
-            &mut ChaCha20Rng::from_rng(thread_rng()).expect("Unable to sample RNG."),
+            &mut rng,
         )
+        .await
         .encode();
         Ok(Body::from_json(&ReclaimMessage::new(reclaim_data))?.into())
     }
@@ -601,4 +595,268 @@ impl ReclaimMessage {
             version: "0.0.0".into(),
         }
     }
+}
+
+/// Loads proving key from `path`.
+#[inline]
+pub async fn load_proving_key(path: &str) -> Groth16Pk {
+    Groth16Pk::deserialize_unchecked(
+        fs::read(path)
+            .await
+            .expect("Failed to read file.")
+            .as_slice(),
+    )
+    .expect("Failed to deserialize proving key.")
+}
+
+/// Generates batched private transfer data.
+#[inline]
+pub async fn batch_generate_private_transfer_data<R>(
+    params: GeneratePrivateTransferBatchParams,
+    root_seed: &RootSeed,
+    private_transfer_pk_path: &str,
+    rng: &mut R,
+) -> PrivateTransferBatch
+where
+    R: CryptoRng + RngCore,
+{
+    let private_transfer_pk = load_proving_key(private_transfer_pk_path).await;
+    let asset_id = params.asset_id;
+    let receiving_address = params.receiving_address;
+    let last_private_transfer_index = params.private_transfer_params_list.len() - 1;
+    PrivateTransferBatch {
+        private_transfer_data_list: params
+            .private_transfer_params_list
+            .into_iter()
+            .enumerate()
+            .map(|(i, p)| {
+                let receiving_address = if i == last_private_transfer_index {
+                    Some(receiving_address)
+                } else {
+                    None
+                };
+                generate_private_transfer_data(
+                    p,
+                    asset_id,
+                    receiving_address,
+                    root_seed,
+                    &private_transfer_pk,
+                    rng,
+                )
+            })
+            .collect(),
+    }
+}
+
+/// Generates batched reclaim data.
+#[inline]
+pub async fn batch_generate_reclaim_data<R>(
+    params: GenerateReclaimBatchParams,
+    root_seed: &RootSeed,
+    private_transfer_pk_path: &str,
+    reclaim_pk_path: &str,
+    rng: &mut R,
+) -> ReclaimBatch
+where
+    R: CryptoRng + RngCore,
+{
+    let private_transfer_pk = load_proving_key(private_transfer_pk_path).await;
+    let reclaim_pk = load_proving_key(reclaim_pk_path).await;
+    let asset_id = params.asset_id;
+    ReclaimBatch {
+        reclaim_data: generate_reclaim_data(
+            params.reclaim_params,
+            asset_id,
+            &root_seed.0,
+            &reclaim_pk,
+            rng,
+        ),
+        private_transfer_data_list: params
+            .private_transfer_params_list
+            .into_iter()
+            .map(|p| {
+                generate_private_transfer_data(
+                    p,
+                    asset_id,
+                    None,
+                    root_seed,
+                    &private_transfer_pk,
+                    rng,
+                )
+            })
+            .collect(),
+    }
+}
+
+/// Generates one round of private transfer data.
+#[inline]
+pub fn generate_private_transfer_data<R>(
+    params: GeneratePrivateTransferParams,
+    asset_id: AssetId,
+    receiving_address: Option<MantaAssetShieldedAddress>,
+    root_seed: &RootSeed,
+    transfer_pk: &Groth16Pk,
+    rng: &mut R,
+) -> PrivateTransferData
+where
+    R: CryptoRng + RngCore,
+{
+    let commit_params = commitment_parameters();
+    let leaf_params = leaf_parameters();
+    let two_to_one_params = two_to_one_parameters();
+    let sender_asset_1 = generate_asset(
+        GenerateAssetParams {
+            asset_id,
+            value: params.sender_asset_1_value,
+            keypath: params.sender_asset_1_keypath,
+        },
+        &root_seed.0,
+    );
+    let sender_asset_2 = generate_asset(
+        GenerateAssetParams {
+            asset_id,
+            value: params.sender_asset_2_value,
+            keypath: params.sender_asset_2_keypath,
+        },
+        &root_seed.0,
+    );
+    let sender_metadata_1 = sender_asset_1
+        .build(
+            &leaf_params,
+            &two_to_one_params,
+            &params.sender_asset_1_shard,
+        )
+        .expect("Failed to build sender 1 metadata");
+    let sender_metadata_2 = sender_asset_2
+        .build(
+            &leaf_params,
+            &two_to_one_params,
+            &params.sender_asset_2_shard,
+        )
+        .expect("Failed to build sender 2 metadata");
+    let non_change_receiving_address = match receiving_address {
+        Some(receiving_address) => receiving_address,
+        None => manta_api::derive_shielded_address(
+            DeriveShieldedAddressParams {
+                keypath: params.non_change_output_keypath.unwrap(),
+                asset_id,
+            },
+            &root_seed.0,
+        ),
+    };
+    let non_change_processed_receiver = non_change_receiving_address
+        .process(&params.non_change_output_value, rng)
+        .expect("Failed to process receiver 1 shielded address");
+    let change_address = manta_api::derive_shielded_address(
+        DeriveShieldedAddressParams {
+            keypath: params.change_output_keypath,
+            asset_id,
+        },
+        &root_seed.0,
+    );
+    let change_processed_receiver = change_address
+        .process(&params.change_output_value, rng)
+        .expect("Failed to process receiver 2 shielded address");
+    manta_api::generate_private_transfer_struct(
+        commit_params,
+        leaf_params,
+        two_to_one_params,
+        transfer_pk,
+        [sender_metadata_1, sender_metadata_2],
+        [non_change_processed_receiver, change_processed_receiver],
+        rng,
+    )
+    .expect("Failed to generate private transfer payload from deserialized data")
+}
+
+/// Generates one round of reclaim data.
+#[inline]
+pub fn generate_reclaim_data<R>(
+    params: GenerateReclaimParams,
+    asset_id: AssetId,
+    root_seed: &MantaRootSeed,
+    reclaim_pk: &Groth16Pk,
+    rng: &mut R,
+) -> ReclaimData
+where
+    R: CryptoRng + RngCore,
+{
+    let commit_params = commitment_parameters();
+    let leaf_params = leaf_parameters();
+    let two_to_one_params = two_to_one_parameters();
+    let input_asset_1 = generate_asset(
+        GenerateAssetParams {
+            asset_id,
+            value: params.input_asset_1_value,
+            keypath: params.input_asset_1_keypath,
+        },
+        root_seed,
+    );
+    let input_asset_2 = generate_asset(
+        GenerateAssetParams {
+            asset_id,
+            value: params.input_asset_2_value,
+            keypath: params.input_asset_2_keypath,
+        },
+        root_seed,
+    );
+    let sender_metadata_1 = input_asset_1
+        .build(
+            &leaf_params,
+            &two_to_one_params,
+            &params.input_asset_1_shard,
+        )
+        .expect("Failed to build sender 1 metadata");
+    let sender_metadata_2 = input_asset_2
+        .build(
+            &leaf_params,
+            &two_to_one_params,
+            &params.input_asset_2_shard,
+        )
+        .expect("Failed to build sender 2 metadata");
+
+    let change_address = manta_api::derive_shielded_address(
+        DeriveShieldedAddressParams {
+            keypath: params.change_keypath,
+            asset_id,
+        },
+        root_seed,
+    );
+    let change_value =
+        params.input_asset_1_value + params.input_asset_2_value - params.reclaim_value;
+    let change_processed_receiver = change_address
+        .process(&change_value, rng)
+        .expect("Failed to build processed receiver");
+    manta_api::generate_reclaim_struct(
+        commit_params,
+        leaf_params,
+        two_to_one_params,
+        reclaim_pk,
+        [sender_metadata_1, sender_metadata_2],
+        change_processed_receiver,
+        params.reclaim_value,
+        rng,
+    )
+    .expect("Failed to generate reclaim struct")
+}
+
+///
+#[inline]
+pub fn generate_asset(params: GenerateAssetParams, root_seed: &MantaRootSeed) -> MantaAsset {
+    let asset_secret_key = XPrv::derive_from_path(
+        root_seed.as_ref(),
+        &params.keypath.parse().expect("Invalid derivation path"),
+    )
+    .expect("Failed to derive extended private key from path")
+    .private_key()
+    .to_bytes()
+    .try_into()
+    .unwrap();
+    MantaAsset::sample(
+        &commitment_parameters(),
+        &asset_secret_key,
+        &params.asset_id,
+        &params.value,
+    )
+    .expect("Failed to sample asset")
 }

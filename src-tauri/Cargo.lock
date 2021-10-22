@@ -758,9 +758,9 @@ dependencies = [
 
 [[package]]
 name = "blake3"
-version = "1.0.0"
+version = "1.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "dcd555c66291d5f836dbb6883b48660ece810fe25a31f3bdfb911945dff2691f"
+checksum = "2607a74355ce2e252d0c483b2d8a348e1bba36036e786ccc2dcd777213c86ffd"
 dependencies = [
  "arrayref",
  "arrayvec 0.7.1",
@@ -2361,6 +2361,8 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "84f2a5541afe0725f0b95619d6af614f48c1b176385b8aa30918cfb8c4bfafc8"
 dependencies = [
  "hmac 0.11.0",
+ "once_cell",
+ "pbkdf2 0.8.0",
  "rand_core 0.6.3",
  "sha2 0.9.8",
  "zeroize",
@@ -2985,11 +2987,13 @@ dependencies = [
  "ark-serialize",
  "async-std",
  "bip0039",
+ "bip32",
  "cocoon 0.3.0",
  "hex",
  "manta-api",
  "manta-asset",
  "manta-crypto",
+ "manta-data",
  "parity-scale-codec",
  "rand 0.8.4",
  "rand_chacha 0.3.1",
@@ -3461,6 +3465,15 @@ dependencies = [
  "crypto-mac 0.7.0",
  "hmac 0.7.1",
  "sha2 0.8.2",
+]
+
+[[package]]
+name = "pbkdf2"
+version = "0.8.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d95f5254224e617595d2cc3cc73ff0a5eaf2637519e25f03388154e9378b6ffa"
+dependencies = [
+ "crypto-mac 0.11.1",
 ]
 
 [[package]]
@@ -4751,7 +4764,7 @@ version = "1.0.0-beta.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1663739ab53e281919676f216fb56a031104d0d2cd1a2dd5b012d279bcdb0ea4"
 dependencies = [
- "blake3 1.0.0",
+ "blake3 1.1.0",
  "kuchiki",
  "proc-macro2",
  "quote",

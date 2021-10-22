@@ -12,12 +12,14 @@ custom-protocol = ["tauri/custom-protocol"]
 ark-serialize = { version = "0.3.0" }
 async-std = { version = "1.10.0" }
 bip0039 = { version = "0.9.0" }
+bip32 = { version = "0.2.2" }
 cocoon = { version = "0.3.0" }
 codec = { package = "parity-scale-codec", version = "2.0.0", default-features = false, features = [ "derive", "full" ] }
 hex = { version = "0.4.3" }
 manta-api = { git = "https://github.com/Manta-Network/manta-api", branch = "avoid_address_reuse", default_features = false, features = ["signer", "testnet"] }
 manta-asset = { git = "https://github.com/Manta-Network/manta-types", branch = "manta" }
 manta-crypto = { git = "https://github.com/Manta-Network/manta-crypto", branch = "manta" }
+manta-data = { git = "https://github.com/Manta-Network/manta-types", branch = "manta" }
 rand = { version = "0.8.4" }
 rand_chacha = { version = "0.3.1", default-features = false }
 serde = { version = "1.0.130", features = ["derive"] }
