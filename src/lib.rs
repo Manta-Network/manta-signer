@@ -21,5 +21,6 @@
 #![forbid(missing_docs)]
 
 pub mod batching;
+pub mod config;
 pub mod secret;
 pub mod service;

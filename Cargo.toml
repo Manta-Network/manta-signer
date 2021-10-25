@@ -25,25 +25,27 @@ is-it-maintained-open-issues = { repository = "Manta-Network/manta-signer" }
 maintenance = { status = "actively-developed" }
 
 [dependencies]
-ark-serialize = { version = "0.3.0" }
+ark-serialize = { version = "0.3.0", default-features = false }
 async-std = { version = "1.10.0" }
 bip0039 = { version = "0.9.0" }
 bip32 = { version = "0.2.2" }
 bs58 = { version = "0.4.0" }
 cocoon = { version = "0.3.0" }
 codec = { package = "parity-scale-codec", version = "2.0.0", default-features = false, features = [ "derive", "full" ] }
-derivative = { version = "2.2.0" }
-futures = { version = "0.3.17" }
+derivative = { version = "2.2.0", default-features = false, features = ["use_core"] }
+dirs-next = { version = "2.0.0" }
+futures = { version = "0.3.17", default-features = false }
 manta-api = { git = "https://github.com/Manta-Network/manta-api", branch = "avoid_address_reuse", default-features = false, features = ["signer", "testnet"] }
 manta-asset = { git = "https://github.com/Manta-Network/manta-types", branch = "manta" }
 manta-crypto = { git = "https://github.com/Manta-Network/manta-crypto", branch = "manta" }
 manta-data = { git = "https://github.com/Manta-Network/manta-types", branch = "manta" }
-rand = { version = "0.8.4" }
+rand = { version = "0.8.4", default-features = false }
 rand_chacha = { version = "0.3.1", default-features = false }
-serde = { version = "1.0.130", features = ["derive"] }
-serde_json = { version = "1.0.68" }
+serde = { version = "1.0.130", default-features = false, features = ["derive"] }
+serde_json = { version = "1.0.68", default-features = false }
 tide = { version = "0.16.0" }
 
 [dev-dependencies]
 async-std = { version = "1.10.0", features = ["attributes"] }
+tempfile = { version = "3.2.0" }
 

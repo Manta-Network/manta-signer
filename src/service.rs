@@ -16,8 +16,11 @@
 
 //! Manta Signer Service
 
+// TODO: Add logging.
+
 use crate::{
     batching::{batch_generate_private_transfer_data, batch_generate_reclaim_data},
+    config::Config,
     secret::{Authorizer, Password, RootSeed},
 };
 use async_std::{io, sync::Mutex};
@@ -119,6 +122,9 @@ struct InnerState<A>
 where
     A: Authorizer,
 {
+    /// Server Configuration
+    config: Config,
+
     /// Authorizer
     authorizer: A,
 
@@ -130,10 +136,11 @@ impl<A> InnerState<A>
 where
     A: Authorizer,
 {
-    /// Builds a new [`InnerState`] from `authorizer`.
+    /// Builds a new [`InnerState`] from `config` and `authorizer`.
     #[inline]
-    fn new(authorizer: A) -> Self {
+    fn new(config: Config, authorizer: A) -> Self {
         Self {
+            config,
             authorizer,
             root_seed: None,
         }
@@ -156,7 +163,9 @@ where
         T: Serialize,
     {
         if let Password::Known(password) = self.authorize(prompt).await? {
-            self.root_seed = RootSeed::load(password).await.ok();
+            self.root_seed = RootSeed::load(&self.config.root_seed_file, password)
+                .await
+                .ok();
         }
         Some(())
     }
@@ -184,7 +193,11 @@ where
         match self.root_seed {
             Some(current_root_seed) => {
                 let password = self.authorize(prompt).await?.known()?;
-                if current_root_seed == RootSeed::load(password).await.ok()? {
+                if current_root_seed
+                    == RootSeed::load(&self.config.root_seed_file, password)
+                        .await
+                        .ok()?
+                {
                     Some(current_root_seed)
                 } else {
                     None
@@ -209,10 +222,23 @@ impl<A> State<A>
 where
     A: Authorizer,
 {
-    /// Builds a new [`State`] using `authorizer`.
+    /// Builds a new [`State`] using `config` and `authorizer`.
     #[inline]
-    pub fn new(authorizer: A) -> Self {
-        Self(Arc::new(Mutex::new(InnerState::new(authorizer))))
+    pub fn new(config: Config, authorizer: A) -> Self {
+        Self(Arc::new(Mutex::new(InnerState::new(config, authorizer))))
+    }
+
+    /// Performs the server setup.
+    #[inline]
+    pub async fn setup(&self) -> io::Result<()> {
+        self.0.lock().await.config.setup().await
+    }
+
+    /// Returns the server configuration for `self`.
+    #[inline]
+    pub async fn config(&self) -> Config {
+        // TODO: Consider removing this clone, if possible.
+        self.0.lock().await.config.clone()
     }
 
     /// Returns the stored root seed if it exists, otherwise, gets the password from the user
@@ -248,10 +274,10 @@ impl<A> Service<A>
 where
     A: 'static + Authorizer + Send,
 {
-    /// Builds a new [`Service`] from `authorizer`.
+    /// Builds a new [`Service`] from `config` and `authorizer`.
     #[inline]
-    pub fn build(authorizer: A) -> Self {
-        let mut server = Server::with_state(State::new(authorizer));
+    pub fn build(config: Config, authorizer: A) -> Self {
+        let mut server = Server::with_state(State::new(config, authorizer));
         server.at("/heartbeat").get(Self::heartbeat);
         server.at("/recoverAccount").post(Self::recover_account);
         server
@@ -272,6 +298,7 @@ where
     where
         L: ToListener<State<A>>,
     {
+        self.0.state().setup().await?;
         self.0.listen(listener).await
     }
 
@@ -341,7 +368,7 @@ where
         let private_transfer_data = batch_generate_private_transfer_data(
             params,
             &root_seed.0,
-            "transfer_pk.bin",
+            state.config().await.private_transfer_proving_key_path(),
             &mut Self::rng(),
         )
         .await
@@ -358,11 +385,12 @@ where
             .check_root_seed(TransactionSummary::from(&params))
             .await
             .ok_or(()))?;
+        let config = state.config().await;
         let reclaim_data = batch_generate_reclaim_data(
             params,
             &root_seed.0,
-            "transfer_pk.bin",
-            "reclaim_pk.bin",
+            config.private_transfer_proving_key_path(),
+            config.reclaim_proving_key_path(),
             &mut Self::rng(),
         )
         .await

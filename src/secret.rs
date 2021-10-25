@@ -21,13 +21,16 @@
 use async_std::{
     fs::{self, File},
     io::{self, ReadExt, WriteExt},
+    path::Path,
 };
 use bip0039::{Count, Mnemonic};
-use cocoon::{Cocoon, Error as CocoonError};
+use cocoon::Cocoon;
 use core::convert::TryInto;
 use futures::future::BoxFuture;
 use manta_api::MantaRootSeed;
 use serde::Serialize;
+
+pub use cocoon::Error as RootSeedError;
 
 /// Password
 #[derive(Clone, Debug, Eq, Hash, PartialEq)]
@@ -85,24 +88,30 @@ impl RootSeed {
 
     /// Saves `self` to the standard root seed file, encrypting it with `password`.
     #[inline]
-    pub async fn save(self, password: String) -> Result<(), CocoonError> {
+    pub async fn save<P>(self, path: P, password: String) -> Result<(), RootSeedError>
+    where
+        P: AsRef<Path>,
+    {
         let mut data = Vec::new();
         Cocoon::new(password.as_bytes()).dump(self.0.to_vec(), &mut data)?;
-        File::create("root_seed.aes")
+        File::create(path)
             .await
-            .map_err(CocoonError::Io)?
+            .map_err(RootSeedError::Io)?
             .write_all(&data)
             .await
-            .map_err(CocoonError::Io)
+            .map_err(RootSeedError::Io)
     }
 
     /// Loads `self` from the standard root seed file, decrypting it with `password`.
     #[inline]
-    pub async fn load(password: String) -> Result<Self, CocoonError> {
+    pub async fn load<P>(path: P, password: String) -> Result<Self, RootSeedError>
+    where
+        P: AsRef<Path>,
+    {
         let mut data = Vec::new();
-        File::open("root_seed.aes")
+        File::open(path)
             .await
-            .map_err(CocoonError::Io)?
+            .map_err(RootSeedError::Io)?
             .read_to_end(&mut data);
         Ok(Self(
             Cocoon::new(password.as_bytes())
@@ -122,14 +131,20 @@ impl Default for RootSeed {
 
 /// Checks if a root seed exists at the canonical file path.
 #[inline]
-pub async fn account_exists() -> io::Result<bool> {
-    Ok(fs::metadata("root_seed.aes").await?.is_file())
+pub async fn account_exists<P>(path: P) -> io::Result<bool>
+where
+    P: AsRef<Path>,
+{
+    Ok(fs::metadata(path).await?.is_file())
 }
 
 /// Creates a new account by building and saving a new root seed from the given `password`.
 #[inline]
-pub async fn create_account(password: String) -> Result<Mnemonic, CocoonError> {
+pub async fn create_account<P>(path: P, password: String) -> Result<Mnemonic, RootSeedError>
+where
+    P: AsRef<Path>,
+{
     let mnemonic = Mnemonic::generate(Count::Words12);
-    RootSeed::new(&mnemonic).save(password).await?;
+    RootSeed::new(&mnemonic).save(path, password).await?;
     Ok(mnemonic)
 }

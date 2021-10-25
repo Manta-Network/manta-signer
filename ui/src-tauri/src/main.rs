@@ -20,6 +20,7 @@
 )]
 
 use manta_signer::{
+    config::Config,
     secret::{account_exists, create_account, Authorization, Authorizer, Password},
     service::Service,
 };
@@ -112,15 +113,18 @@ impl PasswordStore {
 
 /// Loads the current `password` into storage from the UI.
 #[tauri::command]
-async fn load_password(state: State<'_, PasswordStore>, password: String) -> Result<(), ()> {
-    state.load(password).await;
+async fn load_password(
+    password_store: State<'_, PasswordStore>,
+    password: String,
+) -> Result<(), ()> {
+    password_store.load(password).await;
     Ok(())
 }
 
 /// Removes the current password from storage.
 #[tauri::command]
-async fn clear_password(state: State<'_, PasswordStore>) -> Result<(), ()> {
-    state.clear().await;
+async fn clear_password(password_store: State<'_, PasswordStore>) -> Result<(), ()> {
+    password_store.clear().await;
     Ok(())
 }
 
@@ -137,35 +141,42 @@ enum ConnectEvent {
 
 /// Starts the first round of communication between the UI and the signer.
 #[tauri::command]
-async fn connect(window: Window) -> ConnectEvent {
-    match account_exists().await {
-        Ok(true) => ConnectEvent::SetupAuthorization,
+async fn connect(window: Window, config: State<'_, Config>) -> Result<ConnectEvent, ()> {
+    match account_exists(&config.root_seed_file).await {
+        Ok(true) => Ok(ConnectEvent::SetupAuthorization),
         _ => {
             window.set_always_on_top(true).unwrap();
             window.center().unwrap();
             window.show().unwrap();
-            ConnectEvent::CreateAccount
+            Ok(ConnectEvent::CreateAccount)
         }
     }
 }
 
 /// Sends the mnemonic to the UI for the user to memorize.
 #[tauri::command]
-async fn get_mnemonic(password: String) -> Option<String> {
-    Some(create_account(password).await.ok()?.into_phrase())
+async fn get_mnemonic(config: State<'_, Config>, password: String) -> Result<String, ()> {
+    Ok(create_account(&config.root_seed_file, password)
+        .await
+        .map_err(move |_| ())?
+        .into_phrase())
 }
 
 /// Ends the first round of communication between the UI and the signer.
 #[tauri::command]
-async fn end_connect(window: Window, state: State<'_, PasswordStore>) -> Result<(), ()> {
+async fn end_connect(window: Window, password_store: State<'_, PasswordStore>) -> Result<(), ()> {
     window.hide().unwrap();
-    state.clear().await;
+    password_store.clear().await;
     Ok(())
 }
 
 /// Runs the main Tauri application.
 fn main() {
+    // FIXME: Put this in the build script or other part of the non-user-facing configuration.
     const WALLET_FRONTEND_URL: &str = "http://localhost:8181";
+
+    let config =
+        Config::try_default().expect("Unable to generate the default server configuration.");
 
     let mut app = tauri::Builder::default()
         .system_tray(
@@ -177,11 +188,15 @@ fn main() {
             _ => {}
         })
         .manage(PasswordStore::default())
+        .manage(config)
         .setup(|app| {
             let window = app.get_window("main").unwrap();
             let password_store = app.state::<PasswordStore>().handle();
+            let config = app.state::<Config>().inner().clone();
             spawn(async move {
-                Service::build(User::new(window, password_store.setup().await))
+                // FIXME: We are duplicating calls to `setup`.
+                config.setup().await.unwrap();
+                Service::build(config, User::new(window, password_store.setup().await))
                     .serve(WALLET_FRONTEND_URL)
                     .await
                     .unwrap();

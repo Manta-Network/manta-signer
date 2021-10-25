@@ -18,6 +18,7 @@
 
 use async_std::io;
 use manta_signer::{
+    config::Config,
     secret::{Authorization, Authorizer, Password},
     service::{Service, State},
 };
@@ -26,7 +27,6 @@ use rand::{
     thread_rng, Rng,
 };
 use serde::Serialize;
-use std::io;
 use tide::listener::ToListener;
 
 /// Mock User
@@ -58,14 +58,15 @@ impl Authorizer for MockUser {
 pub struct TestService(Service<MockUser>);
 
 impl TestService {
-    /// Builds a new [`TestService`] with a random password.
+    /// Builds a new [`TestService`] with the given `config` and a random password.
     #[inline]
-    pub fn build() -> Self {
+    pub fn build(config: Config) -> Self {
         let mut rng = thread_rng();
         let length = rng.gen_range(20..50);
-        Self(Service::build(MockUser::new(
-            Standard.sample_string(&mut rng, length),
-        )))
+        Self(Service::build(
+            config,
+            MockUser::new(Standard.sample_string(&mut rng, length)),
+        ))
     }
 
     /// Starts the test service on `listener`.
@@ -80,7 +81,11 @@ impl TestService {
 
 #[async_std::main]
 async fn main() -> io::Result<()> {
-    TestService::build()
+    let test_dir = tempfile::tempdir()?;
+    let mut config =
+        Config::try_default().expect("Unable to generate the default server configuration.");
+    config.root_seed_file = test_dir.path().join("root_seed.aes");
+    TestService::build(config)
         .serve(std::env::args().skip(1).collect::<Vec<_>>())
         .await
 }

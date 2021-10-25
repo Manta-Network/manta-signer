@@ -17,7 +17,7 @@
 //! Transaction Batching
 
 use ark_serialize::CanonicalDeserialize;
-use async_std::fs;
+use async_std::{fs, path::Path};
 use bip32::XPrv;
 use core::convert::TryInto;
 use manta_api::{
@@ -32,7 +32,10 @@ use rand::{CryptoRng, RngCore};
 
 /// Loads proving key from `path`.
 #[inline]
-pub async fn load_proving_key(path: &str) -> Groth16Pk {
+pub async fn load_proving_key<P>(path: P) -> Groth16Pk
+where
+    P: AsRef<Path>,
+{
     Groth16Pk::deserialize_unchecked(
         fs::read(path)
             .await
@@ -44,13 +47,14 @@ pub async fn load_proving_key(path: &str) -> Groth16Pk {
 
 /// Generates batched private transfer data.
 #[inline]
-pub async fn batch_generate_private_transfer_data<R>(
+pub async fn batch_generate_private_transfer_data<P, R>(
     params: GeneratePrivateTransferBatchParams,
     root_seed: &MantaRootSeed,
-    private_transfer_pk_path: &str,
+    private_transfer_pk_path: P,
     rng: &mut R,
 ) -> PrivateTransferBatch
 where
+    P: AsRef<Path>,
     R: CryptoRng + RngCore,
 {
     let private_transfer_pk = load_proving_key(private_transfer_pk_path).await;
@@ -83,14 +87,15 @@ where
 
 /// Generates batched reclaim data.
 #[inline]
-pub async fn batch_generate_reclaim_data<R>(
+pub async fn batch_generate_reclaim_data<P, R>(
     params: GenerateReclaimBatchParams,
     root_seed: &MantaRootSeed,
-    private_transfer_pk_path: &str,
-    reclaim_pk_path: &str,
+    private_transfer_pk_path: P,
+    reclaim_pk_path: P,
     rng: &mut R,
 ) -> ReclaimBatch
 where
+    P: AsRef<Path>,
     R: CryptoRng + RngCore,
 {
     let private_transfer_pk = load_proving_key(private_transfer_pk_path).await;
