@@ -75,7 +75,7 @@ impl TestService {
         ))
     }
 
-    /// Starts the test service on `listener`.
+    /// Starts the test service.
     #[inline]
     pub async fn serve(self) -> io::Result<()> {
         self.0.serve().await
