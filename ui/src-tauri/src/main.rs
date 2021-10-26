@@ -172,9 +172,6 @@ async fn end_connect(window: Window, password_store: State<'_, PasswordStore>) -
 
 /// Runs the main Tauri application.
 fn main() {
-    // FIXME: Put this in the build script or other part of the non-user-facing configuration.
-    const WALLET_FRONTEND_URL: &str = "http://localhost:29987";
-
     let config =
         Config::try_default().expect("Unable to generate the default server configuration.");
 
@@ -197,9 +194,9 @@ fn main() {
                 // FIXME: We are duplicating calls to `setup`.
                 config.setup().await.unwrap();
                 Service::build(config, User::new(window, password_store.setup().await))
-                    .serve(WALLET_FRONTEND_URL)
+                    .serve()
                     .await
-                    .unwrap();
+                    .expect("Unable to build manta-signer service.");
             });
             Ok(())
         })

@@ -19,15 +19,14 @@
 use async_std::io;
 use manta_signer::{
     config::Config,
-    secret::{Authorization, Authorizer, Password},
-    service::{Service, State},
+    secret::{create_account, Authorization, Authorizer, Password},
+    service::Service,
 };
 use rand::{
     distributions::{DistString, Standard},
     thread_rng, Rng,
 };
 use serde::Serialize;
-use tide::listener::ToListener;
 
 /// Mock User
 pub struct MockUser {
@@ -71,11 +70,16 @@ impl TestService {
 
     /// Starts the test service on `listener`.
     #[inline]
-    pub async fn serve<L>(self, listener: L) -> io::Result<()>
-    where
-        L: ToListener<State<MockUser>>,
-    {
-        self.0.serve(listener).await
+    pub async fn serve(self) -> io::Result<()> {
+        {
+            create_account(
+                self.0.config().await.root_seed_file,
+                self.0.state().0.lock().await.authorizer.password.clone(),
+            )
+            .await
+            .expect("Unable to create account for TestService.");
+        }
+        self.0.serve().await
     }
 }
 
@@ -85,7 +89,8 @@ async fn main() -> io::Result<()> {
     let mut config =
         Config::try_default().expect("Unable to generate the default server configuration.");
     config.root_seed_file = test_dir.path().join("root_seed.aes");
-    TestService::build(config)
-        .serve(std::env::args().skip(1).collect::<Vec<_>>())
-        .await
+    if let Some(url) = std::env::args().nth(1) {
+        config.service_url = url;
+    }
+    TestService::build(config).serve().await
 }

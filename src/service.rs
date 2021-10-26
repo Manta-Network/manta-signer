@@ -25,6 +25,7 @@ use crate::{
 };
 use async_std::{io, sync::Mutex};
 use codec::{Decode, Encode};
+use http_types::headers::HeaderValue;
 use manta_api::{
     DeriveShieldedAddressParams, GenerateAssetParams, GeneratePrivateTransferBatchParams,
     GenerateReclaimBatchParams, RecoverAccountParams,
@@ -36,11 +37,12 @@ use rand_chacha::ChaCha20Rng;
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 use tide::{
-    listener::ToListener, Body, Error, Request as ServerRequest, Result as ServerResult, Server,
-    StatusCode, security::{CorsMiddleware, Origin}
+    security::{CorsMiddleware, Origin},
+    Body, Error, Request as ServerRequest, Result as ServerResult, Server, StatusCode,
 };
-use http_types::headers::HeaderValue;
 
+/// Manta Signer Server Version
+const VERSION: &str = env!("CARGO_PKG_VERSION");
 
 /// Ensure that `$expr` is `Ok(_)` and if not returns a [`StatusCode::InternalServerError`].
 macro_rules! ensure {
@@ -120,15 +122,15 @@ impl From<&GenerateReclaimBatchParams> for TransactionSummary {
 }
 
 /// Inner State
-struct InnerState<A>
+pub struct InnerState<A>
 where
     A: Authorizer,
 {
     /// Server Configuration
-    config: Config,
+    pub config: Config,
 
     /// Authorizer
-    authorizer: A,
+    pub authorizer: A,
 
     /// Current Root Seed
     root_seed: Option<RootSeed>,
@@ -216,7 +218,7 @@ where
 /// Signer State
 #[derive(derivative::Derivative)]
 #[derivative(Clone(bound = ""))]
-pub struct State<A>(Arc<Mutex<InnerState<A>>>)
+pub struct State<A>(pub Arc<Mutex<InnerState<A>>>)
 where
     A: Authorizer;
 
@@ -279,15 +281,12 @@ where
     /// Builds a new [`Service`] from `config` and `authorizer`.
     #[inline]
     pub fn build(config: Config, authorizer: A) -> Self {
-        let mut server = Server::with_state(State::new(config, authorizer));
-
-        let cors_middleware = CorsMiddleware::new()
+        let cors = CorsMiddleware::new()
             .allow_methods("GET, POST".parse::<HeaderValue>().unwrap())
-            .allow_origin(Origin::from("http://localhost:8000"))
+            .allow_origin(Origin::from(config.origin_url.as_str()))
             .allow_credentials(false);
-        server.with(cors_middleware);
-
-
+        let mut server = Server::with_state(State::new(config, authorizer));
+        server.with(cors);
         server.at("/heartbeat").get(Self::heartbeat);
         server.at("/recoverAccount").post(Self::recover_account);
         server
@@ -304,12 +303,25 @@ where
 
     /// Starts the service on `listener`.
     #[inline]
-    pub async fn serve<L>(self, listener: L) -> io::Result<()>
-    where
-        L: ToListener<State<A>>,
-    {
-        self.0.state().setup().await?;
-        self.0.listen(listener).await
+    pub async fn serve(self) -> io::Result<()> {
+        let service_url = {
+            let state = self.0.state().0.lock().await;
+            state.config.setup().await?;
+            state.config.service_url.clone()
+        };
+        self.0.listen(service_url).await
+    }
+
+    /// Returns a reference to the internal state of the service.
+    #[inline]
+    pub fn state(&self) -> &State<A> {
+        self.0.state()
+    }
+
+    /// Returns a clone of the configuration used in this service.
+    #[inline]
+    pub async fn config(&self) -> Config {
+        self.state().0.lock().await.config.clone()
     }
 
     /// Sends a heartbeat to the client.
@@ -450,7 +462,7 @@ pub struct RecoverAccountMessage {
     pub recovered_account: Vec<u8>,
 
     /// Version
-    pub version: String,
+    pub version: &'static str,
 }
 
 impl RecoverAccountMessage {
@@ -459,7 +471,7 @@ impl RecoverAccountMessage {
     pub fn new(recovered_account: Vec<u8>) -> Self {
         Self {
             recovered_account,
-            version: "0.0.0".into(),
+            version: VERSION,
         }
     }
 }
@@ -471,7 +483,7 @@ pub struct AssetMessage {
     pub asset: Vec<u8>,
 
     /// Version
-    pub version: String,
+    pub version: &'static str,
 }
 
 impl AssetMessage {
@@ -480,7 +492,7 @@ impl AssetMessage {
     pub fn new(asset: Vec<u8>) -> Self {
         Self {
             asset,
-            version: "0.0.0".into(),
+            version: VERSION,
         }
     }
 }
@@ -492,7 +504,7 @@ pub struct MintMessage {
     pub mint_data: Vec<u8>,
 
     /// Version
-    pub version: String,
+    pub version: &'static str,
 }
 
 impl MintMessage {
@@ -501,7 +513,7 @@ impl MintMessage {
     pub fn new(mint_data: Vec<u8>) -> Self {
         Self {
             mint_data,
-            version: "0.0.0".into(),
+            version: VERSION,
         }
     }
 }
@@ -513,7 +525,7 @@ pub struct PrivateTransferMessage {
     pub private_transfer_data: Vec<u8>,
 
     /// Version
-    pub version: String,
+    pub version: &'static str,
 }
 
 impl PrivateTransferMessage {
@@ -522,7 +534,7 @@ impl PrivateTransferMessage {
     pub fn new(private_transfer_data: Vec<u8>) -> Self {
         Self {
             private_transfer_data,
-            version: "0.0.0".into(),
+            version: VERSION,
         }
     }
 }
@@ -534,7 +546,7 @@ pub struct ReclaimMessage {
     pub reclaim_data: Vec<u8>,
 
     /// Version
-    pub version: String,
+    pub version: &'static str,
 }
 
 impl ReclaimMessage {
@@ -543,7 +555,7 @@ impl ReclaimMessage {
     pub fn new(reclaim_data: Vec<u8>) -> Self {
         Self {
             reclaim_data,
-            version: "0.0.0".into(),
+            version: VERSION,
         }
     }
 }

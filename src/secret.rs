@@ -119,7 +119,7 @@ impl RootSeed {
             Cocoon::new(password.as_bytes())
                 .parse(&mut data.as_slice())?
                 .try_into()
-                .expect("Failed to convert root seed file contents to root seed"),
+                .expect("Failed to convert root seed file contents to root seed."),
         ))
     }
 }
