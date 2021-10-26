@@ -37,8 +37,10 @@ use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 use tide::{
     listener::ToListener, Body, Error, Request as ServerRequest, Result as ServerResult, Server,
-    StatusCode,
+    StatusCode, security::{CorsMiddleware, Origin}
 };
+use http_types::headers::HeaderValue;
+
 
 /// Ensure that `$expr` is `Ok(_)` and if not returns a [`StatusCode::InternalServerError`].
 macro_rules! ensure {
@@ -278,6 +280,14 @@ where
     #[inline]
     pub fn build(config: Config, authorizer: A) -> Self {
         let mut server = Server::with_state(State::new(config, authorizer));
+
+        let cors_middleware = CorsMiddleware::new()
+            .allow_methods("GET, POST".parse::<HeaderValue>().unwrap())
+            .allow_origin(Origin::from("http://localhost:8000"))
+            .allow_credentials(false);
+        server.with(cors_middleware);
+
+
         server.at("/heartbeat").get(Self::heartbeat);
         server.at("/recoverAccount").post(Self::recover_account);
         server

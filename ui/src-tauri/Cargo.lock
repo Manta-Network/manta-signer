@@ -2900,6 +2900,7 @@ dependencies = [
  "derivative",
  "dirs-next",
  "futures",
+ "http-types",
  "manta-api",
  "manta-asset",
  "manta-crypto",
