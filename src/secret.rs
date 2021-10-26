@@ -112,12 +112,14 @@ impl RootSeed {
         File::open(path)
             .await
             .map_err(RootSeedError::Io)?
-            .read_to_end(&mut data);
+            .read_to_end(&mut data)
+            .await
+            .map_err(RootSeedError::Io)?;
         Ok(Self(
             Cocoon::new(password.as_bytes())
                 .parse(&mut data.as_slice())?
                 .try_into()
-                .expect(""),
+                .expect("Failed to convert root seed file contents to root seed"),
         ))
     }
 }
