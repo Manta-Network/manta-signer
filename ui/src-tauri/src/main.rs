@@ -173,7 +173,7 @@ async fn end_connect(window: Window, password_store: State<'_, PasswordStore>) -
 /// Runs the main Tauri application.
 fn main() {
     // FIXME: Put this in the build script or other part of the non-user-facing configuration.
-    const WALLET_FRONTEND_URL: &str = "http://localhost:8181";
+    const WALLET_FRONTEND_URL: &str = "http://localhost:29987";
 
     let config =
         Config::try_default().expect("Unable to generate the default server configuration.");
