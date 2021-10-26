@@ -14,6 +14,14 @@
 // You should have received a copy of the GNU General Public License
 // along with manta-signer. If not, see <http://www.gnu.org/licenses/>.
 
+//! Manta Signer UI
+
+// TODO: Should we change from a channel model to shared data?
+// TODO: Check what the `windows_subsystem` attributes do, and if we need them.
+
+#![cfg_attr(doc_cfg, feature(doc_cfg))]
+#![forbid(rustdoc::broken_intra_doc_links)]
+#![forbid(missing_docs)]
 #![cfg_attr(
     all(not(debug_assertions), target_os = "windows"),
     windows_subsystem = "windows"
@@ -21,7 +29,10 @@
 
 use manta_signer::{
     config::Config,
-    secret::{account_exists, create_account, Authorization, Authorizer, Password},
+    secret::{
+        account_exists, create_account, Authorization, Authorizer, AuthorizerSetup, ExposeSecret,
+        Password, SecretString,
+    },
     service::Service,
 };
 use serde::{Deserialize, Serialize};
@@ -50,6 +61,14 @@ impl User {
 
 impl Authorizer for User {
     #[inline]
+    fn setup<'s>(&'s mut self, config: &'s Config) -> AuthorizerSetup<'s> {
+        let _ = config;
+        Box::pin(async move {
+            let _ = self.password.recv().await;
+        })
+    }
+
+    #[inline]
     fn authorize<T>(&mut self, prompt: T) -> Authorization
     where
         T: Serialize,
@@ -58,7 +77,11 @@ impl Authorizer for User {
         self.window.center().unwrap();
         self.window.show().unwrap();
         Box::pin(async move {
-            let password = self.password.recv().await;
+            let password = self
+                .password
+                .recv()
+                .await
+                .unwrap_or_else(Password::from_unknown);
             self.window.hide().unwrap();
             password
         })
@@ -72,13 +95,11 @@ type PasswordStoreType = Arc<RwLock<Option<Sender<Password>>>>;
 pub struct PasswordStoreHandle(PasswordStoreType);
 
 impl PasswordStoreHandle {
-    /// Builds a new password storage system, waiting on the receiver to receive it's first
-    /// message.
+    /// Returns the receiver side of the password store.
     #[inline]
-    pub async fn setup(self) -> Receiver<Password> {
-        let (sender, mut receiver) = channel(1);
+    pub async fn into_receiver(self) -> Receiver<Password> {
+        let (sender, receiver) = channel(1);
         *self.0.write().await = Some(sender);
-        receiver.recv().await;
         receiver
     }
 }
@@ -96,9 +117,9 @@ impl PasswordStore {
 
     /// Loads a new password into the state.
     #[inline]
-    pub async fn load(&self, password: String) {
+    pub async fn load(&self, password: SecretString) {
         if let Some(state) = &*self.0.read().await {
-            state.send(Password::Known(password)).await.unwrap();
+            let _ = state.send(Password::from_known(password)).await;
         }
     }
 
@@ -106,7 +127,7 @@ impl PasswordStore {
     #[inline]
     pub async fn clear(&self) {
         if let Some(state) = &*self.0.read().await {
-            state.send(Password::Unknown).await.unwrap();
+            let _ = state.send(Password::from_unknown()).await;
         }
     }
 }
@@ -117,7 +138,7 @@ async fn load_password(
     password_store: State<'_, PasswordStore>,
     password: String,
 ) -> Result<(), ()> {
-    password_store.load(password).await;
+    password_store.load(password.into()).await;
     Ok(())
 }
 
@@ -156,9 +177,11 @@ async fn connect(window: Window, config: State<'_, Config>) -> Result<ConnectEve
 /// Sends the mnemonic to the UI for the user to memorize.
 #[tauri::command]
 async fn get_mnemonic(config: State<'_, Config>, password: String) -> Result<String, ()> {
-    Ok(create_account(&config.root_seed_file, password)
+    Ok(create_account(&config.root_seed_file, &password.into())
         .await
         .map_err(move |_| ())?
+        .expose_secret()
+        .clone()
         .into_phrase())
 }
 
@@ -188,15 +211,16 @@ fn main() {
         .manage(config)
         .setup(|app| {
             let window = app.get_window("main").unwrap();
-            let password_store = app.state::<PasswordStore>().handle();
             let config = app.state::<Config>().inner().clone();
+            let password_store = app.state::<PasswordStore>().handle();
             spawn(async move {
-                // FIXME: We are duplicating calls to `setup`.
-                config.setup().await.unwrap();
-                Service::build(config, User::new(window, password_store.setup().await))
-                    .serve()
-                    .await
-                    .expect("Unable to build manta-signer service.");
+                Service::build(
+                    config,
+                    User::new(window, password_store.into_receiver().await),
+                )
+                .serve()
+                .await
+                .expect("Unable to build manta-signer service.");
             });
             Ok(())
         })

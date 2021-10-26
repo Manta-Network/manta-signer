@@ -19,37 +19,46 @@
 use async_std::io;
 use manta_signer::{
     config::Config,
-    secret::{create_account, Authorization, Authorizer, Password},
+    secret::{
+        create_account, sample_password, Authorization, Authorizer, AuthorizerSetup, Password,
+        SecretString,
+    },
     service::Service,
 };
-use rand::{
-    distributions::{DistString, Standard},
-    thread_rng, Rng,
-};
+use rand::thread_rng;
 use serde::Serialize;
 
 /// Mock User
 pub struct MockUser {
     /// Stored Password
-    password: String,
+    password: SecretString,
 }
 
 impl MockUser {
     /// Builds a new [`MockUser`] from `password`.
     #[inline]
-    fn new(password: String) -> Self {
+    fn new(password: SecretString) -> Self {
         Self { password }
     }
 }
 
 impl Authorizer for MockUser {
     #[inline]
+    fn setup<'s>(&'s mut self, config: &'s Config) -> AuthorizerSetup<'s> {
+        Box::pin(async move {
+            let _ = create_account(&config.root_seed_file, &self.password)
+                .await
+                .expect("Unable to create account for a mock user.");
+        })
+    }
+
+    #[inline]
     fn authorize<T>(&mut self, prompt: T) -> Authorization
     where
         T: Serialize,
     {
         let _ = prompt;
-        Box::pin(async move { Some(Password::Known(self.password.clone())) })
+        Box::pin(async move { Password::from_known(self.password.clone()) })
     }
 }
 
@@ -60,25 +69,15 @@ impl TestService {
     /// Builds a new [`TestService`] with the given `config` and a random password.
     #[inline]
     pub fn build(config: Config) -> Self {
-        let mut rng = thread_rng();
-        let length = rng.gen_range(20..50);
         Self(Service::build(
             config,
-            MockUser::new(Standard.sample_string(&mut rng, length)),
+            MockUser::new(sample_password(&mut thread_rng())),
         ))
     }
 
     /// Starts the test service on `listener`.
     #[inline]
     pub async fn serve(self) -> io::Result<()> {
-        {
-            create_account(
-                self.0.config().await.root_seed_file,
-                self.0.state().0.lock().await.authorizer.password.clone(),
-            )
-            .await
-            .expect("Unable to create account for TestService.");
-        }
         self.0.serve().await
     }
 }

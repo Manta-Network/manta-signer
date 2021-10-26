@@ -35,16 +35,18 @@ codec = { package = "parity-scale-codec", version = "2.0.0", default-features = 
 derivative = { version = "2.2.0", default-features = false, features = ["use_core"] }
 dirs-next = { version = "2.0.0" }
 futures = { version = "0.3.17", default-features = false }
-manta-api = { git = "https://github.com/Manta-Network/manta-api", branch = "avoid_address_reuse", default-features = false, features = ["signer", "testnet"] }
+http-types = { version = "2.12.0", default-features = false }
+manta-api = { git = "https://github.com/Manta-Network/manta-api", branch = "manta", default-features = false, features = ["signer", "testnet"] }
 manta-asset = { git = "https://github.com/Manta-Network/manta-types", branch = "manta" }
 manta-crypto = { git = "https://github.com/Manta-Network/manta-crypto", branch = "manta" }
 manta-data = { git = "https://github.com/Manta-Network/manta-types", branch = "manta" }
 rand = { version = "0.8.4", default-features = false }
 rand_chacha = { version = "0.3.1", default-features = false }
+secrecy = { version = "0.8.0", default-features = false, features = ["alloc"] }
 serde = { version = "1.0.130", default-features = false, features = ["derive"] }
 serde_json = { version = "1.0.68", default-features = false }
+subtle = { version = "2.4.1" }
 tide = { version = "0.16.0" }
-http-types = { version = "2.12.0" }
 
 [dev-dependencies]
 async-std = { version = "1.10.0", features = ["attributes"] }

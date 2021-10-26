@@ -34,6 +34,7 @@ use manta_asset::AssetId;
 use manta_crypto::MantaSerDes;
 use rand::{thread_rng, SeedableRng};
 use rand_chacha::ChaCha20Rng;
+use secrecy::ExposeSecret;
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 use tide::{
@@ -122,7 +123,7 @@ impl From<&GenerateReclaimBatchParams> for TransactionSummary {
 }
 
 /// Inner State
-pub struct InnerState<A>
+struct InnerState<A>
 where
     A: Authorizer,
 {
@@ -152,7 +153,7 @@ where
 
     /// Returns the password from the user, prompted with `prompt`.
     #[inline]
-    async fn authorize<T>(&mut self, prompt: T) -> Option<Password>
+    async fn authorize<T>(&mut self, prompt: T) -> Password
     where
         T: Serialize,
     {
@@ -166,8 +167,8 @@ where
     where
         T: Serialize,
     {
-        if let Password::Known(password) = self.authorize(prompt).await? {
-            self.root_seed = RootSeed::load(&self.config.root_seed_file, password)
+        if let Some(password) = self.authorize(prompt).await.known() {
+            self.root_seed = RootSeed::load(&self.config.root_seed_file, &password)
                 .await
                 .ok();
         }
@@ -184,7 +185,7 @@ where
         if self.root_seed.is_none() {
             self.set_seed_from_authorization(prompt).await?;
         }
-        self.root_seed
+        self.root_seed.clone()
     }
 
     /// Returns the currently stored root seed if it matches the one returned by the user after
@@ -194,11 +195,13 @@ where
     where
         T: Serialize,
     {
-        match self.root_seed {
+        match self.root_seed.take() {
             Some(current_root_seed) => {
-                let password = self.authorize(prompt).await?.known()?;
+                // TODO: Leverage constant time equality checking for root seeds to return a
+                //       `CtOption` instead of an option.
+                let password = self.authorize(prompt).await.known()?;
                 if current_root_seed
-                    == RootSeed::load(&self.config.root_seed_file, password)
+                    == RootSeed::load(&self.config.root_seed_file, &password)
                         .await
                         .ok()?
                 {
@@ -209,7 +212,7 @@ where
             }
             _ => {
                 self.set_seed_from_authorization(prompt).await?;
-                self.root_seed
+                self.root_seed.clone()
             }
         }
     }
@@ -218,7 +221,7 @@ where
 /// Signer State
 #[derive(derivative::Derivative)]
 #[derivative(Clone(bound = ""))]
-pub struct State<A>(pub Arc<Mutex<InnerState<A>>>)
+pub struct State<A>(Arc<Mutex<InnerState<A>>>)
 where
     A: Authorizer;
 
@@ -232,15 +235,9 @@ where
         Self(Arc::new(Mutex::new(InnerState::new(config, authorizer))))
     }
 
-    /// Performs the server setup.
-    #[inline]
-    pub async fn setup(&self) -> io::Result<()> {
-        self.0.lock().await.config.setup().await
-    }
-
     /// Returns the server configuration for `self`.
     #[inline]
-    pub async fn config(&self) -> Config {
+    async fn config(&self) -> Config {
         // TODO: Consider removing this clone, if possible.
         self.0.lock().await.config.clone()
     }
@@ -301,12 +298,13 @@ where
         Self(server)
     }
 
-    /// Starts the service on `listener`.
+    /// Starts the service.
     #[inline]
     pub async fn serve(self) -> io::Result<()> {
         let service_url = {
-            let state = self.0.state().0.lock().await;
+            let state = &mut *self.0.state().0.lock().await;
             state.config.setup().await?;
+            state.authorizer.setup(&state.config).await;
             state.config.service_url.clone()
         };
         self.0.listen(service_url).await
@@ -316,12 +314,6 @@ where
     #[inline]
     pub fn state(&self) -> &State<A> {
         self.0.state()
-    }
-
-    /// Returns a clone of the configuration used in this service.
-    #[inline]
-    pub async fn config(&self) -> Config {
-        self.state().0.lock().await.config.clone()
     }
 
     /// Sends a heartbeat to the client.
@@ -337,7 +329,8 @@ where
         let (body, state) = Self::process(&mut request).await?;
         let params = ensure!(RecoverAccountParams::decode(&mut body.as_slice()))?;
         let root_seed = ensure!(state.get_root_seed("recover_account").await.ok_or(()))?;
-        let recovered_account = manta_api::recover_account(params, &root_seed.0).encode();
+        let recovered_account =
+            manta_api::recover_account(params, root_seed.expose_secret()).encode();
         Ok(Body::from_json(&RecoverAccountMessage::new(recovered_account))?.into())
     }
 
@@ -351,7 +344,10 @@ where
             .await
             .ok_or(()))?;
         let mut address = Vec::new();
-        ensure!(manta_api::derive_shielded_address(params, &root_seed.0).serialize(&mut address))?;
+        ensure!(
+            manta_api::derive_shielded_address(params, root_seed.expose_secret())
+                .serialize(&mut address)
+        )?;
         Ok(Body::from_json(&ShieldedAddressMessage::new(address))?.into())
     }
 
@@ -361,7 +357,8 @@ where
         let (body, state) = Self::process(&mut request).await?;
         let params = ensure!(GenerateAssetParams::decode(&mut body.as_slice()))?;
         let root_seed = ensure!(state.get_root_seed("generate_asset").await.ok_or(()))?;
-        let asset = manta_api::generate_signer_input_asset(params, &root_seed.0).encode();
+        let asset =
+            manta_api::generate_signer_input_asset(params, root_seed.expose_secret()).encode();
         Ok(Body::from_json(&AssetMessage::new(asset))?.into())
     }
 
@@ -372,7 +369,10 @@ where
         let params = ensure!(GenerateAssetParams::decode(&mut body.as_slice()))?;
         let root_seed = ensure!(state.get_root_seed("mint").await.ok_or(()))?;
         let mut mint_data = Vec::new();
-        ensure!(manta_api::generate_mint_data(params, &root_seed.0).serialize(&mut mint_data))?;
+        ensure!(
+            manta_api::generate_mint_data(params, root_seed.expose_secret())
+                .serialize(&mut mint_data)
+        )?;
         Ok(Body::from_json(&MintMessage::new(mint_data))?.into())
     }
 
@@ -389,7 +389,7 @@ where
             .ok_or(()))?;
         let private_transfer_data = batch_generate_private_transfer_data(
             params,
-            &root_seed.0,
+            root_seed.expose_secret(),
             state.config().await.private_transfer_proving_key_path(),
             &mut Self::rng(),
         )
@@ -410,7 +410,7 @@ where
         let config = state.config().await;
         let reclaim_data = batch_generate_reclaim_data(
             params,
-            &root_seed.0,
+            root_seed.expose_secret(),
             config.private_transfer_proving_key_path(),
             config.reclaim_proving_key_path(),
             &mut Self::rng(),

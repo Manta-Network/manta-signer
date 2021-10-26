@@ -16,8 +16,7 @@
 
 //! Manta Signer Secrets
 
-// FIXME: Secure passwords.
-
+use crate::config::Config;
 use async_std::{
     fs::{self, File},
     io::{self, ReadExt, WriteExt},
@@ -28,72 +27,123 @@ use cocoon::Cocoon;
 use core::convert::TryInto;
 use futures::future::BoxFuture;
 use manta_api::MantaRootSeed;
+use rand::{
+    distributions::{DistString, Standard},
+    CryptoRng, Rng, RngCore,
+};
 use serde::Serialize;
 
 pub use cocoon::Error as RootSeedError;
+pub use secrecy::{ExposeSecret, Secret, SecretString};
+pub use subtle::{Choice, ConstantTimeEq, CtOption};
 
-/// Password
-#[derive(Clone, Debug, Eq, Hash, PartialEq)]
-pub enum Password {
-    /// Known Password
-    Known(String),
-
-    /// Unknown Password
-    Unknown,
+/// Samples a random password string from `rng`.
+#[inline]
+pub fn sample_password<R>(rng: &mut R) -> SecretString
+where
+    R: CryptoRng + RngCore + ?Sized,
+{
+    let length = rng.gen_range(1..65);
+    Secret::new(Standard.sample_string(rng, length))
 }
 
+/// Password Secret Wrapper
+pub struct Password(CtOption<SecretString>);
+
 impl Password {
-    /// Returns the inner password, if it is known.
+    /// Builds a new [`Password`] from `password` if `is_known` evaluates to `true`.
     #[inline]
-    pub fn known(self) -> Option<String> {
-        match self {
-            Self::Known(password) => Some(password),
-            _ => None,
-        }
+    pub fn new(password: SecretString, is_known: Choice) -> Self {
+        Self(CtOption::new(password, is_known))
+    }
+
+    /// Builds a new [`Password`] from `password`.
+    #[inline]
+    pub fn from_known(password: SecretString) -> Self {
+        Self::new(password, 1.into())
+    }
+
+    /// Builds a new [`Password`] with a no known value.
+    #[inline]
+    pub fn from_unknown() -> Self {
+        Self::new(Secret::new(String::with_capacity(64)), 0.into())
+    }
+
+    /// Returns [`Some`] if `self` represents a known password.
+    #[inline]
+    pub fn known(self) -> Option<SecretString> {
+        self.0.into()
     }
 }
 
 impl Default for Password {
     #[inline]
     fn default() -> Self {
-        Self::Unknown
+        Self::from_unknown()
     }
 }
 
+/// Authorizer Setup Future
+///
+/// This `type` is returned by the [`setup`](Authorizer::setup) method on [`Authorizer`].
+/// See its documentation for more.
+pub type AuthorizerSetup<'t> = BoxFuture<'t, ()>;
+
 /// Authorization Future
 ///
-/// This `type` is returned by the [`authorize`] method on [`Authorizer`]. See its documentation for
-/// more.
-pub type Authorization<'t> = BoxFuture<'t, Option<Password>>;
+/// This `type` is returned by the [`authorize`](Authorizer::authorize) method on [`Authorizer`].
+/// See its documentation for more.
+pub type Authorization<'t> = BoxFuture<'t, Password>;
 
 /// Authorizer
 pub trait Authorizer {
-    /// Shows the given `prompt` to the authorizer, requesting their password, returning
-    /// `None` if the password future failed.
+    /// Runs some setup for the authorizer using the `config`.
+    ///
+    /// # Implementation Note
+    ///
+    /// For custom service implementations, this method should be called before any service is run.
+    /// [`Service`] already calls this method internally when running [`Service::serve`].
+    ///
+    /// [`Service`]: crate::service::Service
+    /// [`Service::serve`]: crate::service::Service::serve
+    #[inline]
+    fn setup<'s>(&'s mut self, config: &'s Config) -> AuthorizerSetup<'s> {
+        let _ = config;
+        Box::pin(async move {})
+    }
+
+    /// Shows the given `prompt` to the authorizer, requesting their password.
     fn authorize<T>(&mut self, prompt: T) -> Authorization
     where
         T: Serialize;
 }
 
 /// Root Seed
-#[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
-pub struct RootSeed(pub MantaRootSeed);
+#[derive(Clone)]
+pub struct RootSeed(Secret<MantaRootSeed>);
 
 impl RootSeed {
+    /// Builds a new [`RootSeed`], converting the `seed` into a [`Secret`].
+    #[inline]
+    fn new_secret(seed: MantaRootSeed) -> Self {
+        Self(Secret::new(seed))
+    }
+
     /// Builds a new [`RootSeed`] from a `mnemonic`.
     #[inline]
-    pub fn new(mnemonic: &Mnemonic) -> Self {
-        Self(mnemonic.to_seed(""))
+    pub fn new(mnemonic: &Secret<Mnemonic>) -> Self {
+        Self::new_secret(mnemonic.expose_secret().to_seed(""))
     }
 
     /// Saves `self` to the standard root seed file, encrypting it with `password`.
     #[inline]
-    pub async fn save<P>(self, path: P, password: String) -> Result<(), RootSeedError>
+    pub async fn save<P>(self, path: P, password: &SecretString) -> Result<(), RootSeedError>
     where
         P: AsRef<Path>,
     {
         let mut data = Vec::new();
-        Cocoon::new(password.as_bytes()).dump(self.0.to_vec(), &mut data)?;
+        Cocoon::new(password.expose_secret().as_bytes())
+            .dump(self.0.expose_secret().to_vec(), &mut data)?;
         File::create(path)
             .await
             .map_err(RootSeedError::Io)?
@@ -104,7 +154,7 @@ impl RootSeed {
 
     /// Loads `self` from the standard root seed file, decrypting it with `password`.
     #[inline]
-    pub async fn load<P>(path: P, password: String) -> Result<Self, RootSeedError>
+    pub async fn load<P>(path: P, password: &SecretString) -> Result<Self, RootSeedError>
     where
         P: AsRef<Path>,
     {
@@ -115,8 +165,8 @@ impl RootSeed {
             .read_to_end(&mut data)
             .await
             .map_err(RootSeedError::Io)?;
-        Ok(Self(
-            Cocoon::new(password.as_bytes())
+        Ok(Self::new_secret(
+            Cocoon::new(password.expose_secret().as_bytes())
                 .parse(&mut data.as_slice())?
                 .try_into()
                 .expect("Failed to convert root seed file contents to root seed."),
@@ -124,10 +174,26 @@ impl RootSeed {
     }
 }
 
-impl Default for RootSeed {
+impl ConstantTimeEq for RootSeed {
     #[inline]
-    fn default() -> Self {
-        Self([Default::default(); 64])
+    fn ct_eq(&self, rhs: &Self) -> Choice {
+        self.expose_secret().ct_eq(rhs.expose_secret())
+    }
+}
+
+impl ExposeSecret<MantaRootSeed> for RootSeed {
+    #[inline]
+    fn expose_secret(&self) -> &MantaRootSeed {
+        self.0.expose_secret()
+    }
+}
+
+impl Eq for RootSeed {}
+
+impl PartialEq for RootSeed {
+    #[inline]
+    fn eq(&self, rhs: &Self) -> bool {
+        self.ct_eq(rhs).into()
     }
 }
 
@@ -142,11 +208,14 @@ where
 
 /// Creates a new account by building and saving a new root seed from the given `password`.
 #[inline]
-pub async fn create_account<P>(path: P, password: String) -> Result<Mnemonic, RootSeedError>
+pub async fn create_account<P>(
+    path: P,
+    password: &SecretString,
+) -> Result<Secret<Mnemonic>, RootSeedError>
 where
     P: AsRef<Path>,
 {
-    let mnemonic = Mnemonic::generate(Count::Words12);
+    let mnemonic = Secret::new(Mnemonic::generate(Count::Words12));
     RootSeed::new(&mnemonic).save(path, password).await?;
     Ok(mnemonic)
 }
