@@ -21,7 +21,7 @@
 use crate::{
     batching::{batch_generate_private_transfer_data, batch_generate_reclaim_data},
     config::Config,
-    secret::{Authorizer, Password, RootSeed},
+    secret::{Authorizer, RootSeed},
 };
 use async_std::{io, sync::Mutex};
 use codec::{Decode, Encode};
@@ -151,28 +151,19 @@ where
         }
     }
 
-    /// Returns the password from the user, prompted with `prompt`.
-    #[inline]
-    async fn authorize<T>(&mut self, prompt: T) -> Password
-    where
-        T: Serialize,
-    {
-        self.authorizer.authorize(prompt).await
-    }
-
     /// Sets the inner seed from the output of a call to [`Self::authorize`] using the given
     /// `prompt`.
     #[inline]
-    async fn set_seed_from_authorization<T>(&mut self, prompt: T) -> Option<()>
+    async fn set_seed_from_authorization<T>(&mut self, prompt: T) -> Option<RootSeed>
     where
         T: Serialize,
     {
-        if let Some(password) = self.authorize(prompt).await.known() {
+        if let Some(password) = self.authorizer.authorize(prompt).await.known() {
             self.root_seed = RootSeed::load(&self.config.root_seed_file, &password)
                 .await
                 .ok();
         }
-        Some(())
+        self.root_seed.clone()
     }
 
     /// Returns the stored root seed if it exists, otherwise, gets the password from the user
@@ -183,9 +174,10 @@ where
         T: Serialize,
     {
         if self.root_seed.is_none() {
-            self.set_seed_from_authorization(prompt).await?;
+            self.set_seed_from_authorization(prompt).await
+        } else {
+            self.root_seed.clone()
         }
-        self.root_seed.clone()
     }
 
     /// Returns the currently stored root seed if it matches the one returned by the user after
@@ -195,25 +187,22 @@ where
     where
         T: Serialize,
     {
-        match self.root_seed.take() {
+        match &self.root_seed {
             Some(current_root_seed) => {
                 // TODO: Leverage constant time equality checking for root seeds to return a
                 //       `CtOption` instead of an option.
-                let password = self.authorize(prompt).await.known()?;
+                let password = self.authorizer.authorize(prompt).await.known()?;
                 if current_root_seed
-                    == RootSeed::load(&self.config.root_seed_file, &password)
+                    == &RootSeed::load(&self.config.root_seed_file, &password)
                         .await
                         .ok()?
                 {
-                    Some(current_root_seed)
+                    Some(current_root_seed.clone())
                 } else {
                     None
                 }
             }
-            _ => {
-                self.set_seed_from_authorization(prompt).await?;
-                self.root_seed.clone()
-            }
+            _ => self.set_seed_from_authorization(prompt).await,
         }
     }
 }
