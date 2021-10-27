@@ -22,6 +22,8 @@ To build the project go to the `src-tauri` directory and run any `cargo` command
 cargo tauri dev
 ```
 
+Note that ZKP generation will be very slow for dev builds
+
 ### Packaging
 
 To package the binary for distribution, run `cargo tauri build`.

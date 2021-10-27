@@ -5,7 +5,7 @@
 To run the `test_server` example, use the following:
 
 ```sh
-cargo run --example test_server -- <URL>
+cargo run --example test_server --release -- <URL>
 ```
 
 where `<URL>` overrides the service listening URL for the service.
