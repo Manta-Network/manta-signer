@@ -69,7 +69,7 @@ impl Config {
             root_seed_file: file(dirs_next::config_dir(), "root_seed.aes")?,
             proving_key_directory: directory(dirs_next::data_local_dir())?,
             service_url: String::from("http://localhost:29987"),
-            origin_url: String::from("http://localhost:8080"),
+            origin_url: String::from("http://localhost:8000"),
         })
     }
 
