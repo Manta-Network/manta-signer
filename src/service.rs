@@ -123,6 +123,10 @@ impl From<&GenerateReclaimBatchParams> for TransactionSummary {
 }
 
 /// Inner State
+///
+/// The inner state of the server contains a copy of the server configuration as well as the
+/// currently known root seed an access to an [`Authorizer`] future which can reconfirm the root
+/// seed.
 struct InnerState<A>
 where
     A: Authorizer,
