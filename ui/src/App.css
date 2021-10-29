@@ -1,0 +1,22 @@
+.App {
+    position: absolute;
+    top: 45%;
+    left: 50%;
+    -moz-transform: translateX(-50%) translateY(-50%);
+    -webkit-transform: translateX(-50%) translateY(-50%);
+    transform: translateX(-50%) translateY(-50%);
+}
+
+.password-input {
+    max-width: 66%;
+}
+
+.page {
+    justify-content: space-between;
+    min-height: 60%;
+    text-align: center;
+}
+
+.button {
+    margin-top: 1rem !important;
+}
