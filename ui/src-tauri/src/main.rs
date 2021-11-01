@@ -74,15 +74,12 @@ impl Authorizer for User {
         T: Serialize,
     {
         self.window.emit("authorize", prompt).unwrap();
-        self.window.center().unwrap();
-        self.window.show().unwrap();
         Box::pin(async move {
             let password = self
                 .password
                 .recv()
                 .await
                 .unwrap_or_else(Password::from_unknown);
-            self.window.hide().unwrap();
             password
         })
     }
@@ -166,9 +163,6 @@ async fn connect(window: Window, config: State<'_, Config>) -> Result<ConnectEve
     match account_exists(&config.root_seed_file).await {
         Ok(true) => Ok(ConnectEvent::SetupAuthorization),
         _ => {
-            window.set_always_on_top(true).unwrap();
-            window.center().unwrap();
-            window.show().unwrap();
             Ok(ConnectEvent::CreateAccount)
         }
     }
@@ -188,7 +182,6 @@ async fn get_mnemonic(config: State<'_, Config>, password: String) -> Result<Str
 /// Ends the first round of communication between the UI and the signer.
 #[tauri::command]
 async fn end_connect(window: Window, password_store: State<'_, PasswordStore>) -> Result<(), ()> {
-    window.hide().unwrap();
     password_store.clear().await;
     Ok(())
 }

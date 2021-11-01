@@ -12,6 +12,7 @@
 }
 
 .page {
+    max-width: 500px;
     justify-content: space-between;
     min-height: 60%;
     text-align: center;
@@ -19,4 +20,39 @@
 
 .button {
     margin-top: 1rem !important;
+    margin-left: 1rem !important;
+    margin-right: 1rem !important;
+}
+
+.tx-summary {
+    max-width: 10rem;
+    inline-size: 26rem;
+    overflow-wrap: break-word;
+    text-align: center;
+    margin-bottom: 1.5rem;
+}
+
+.recovery-phrase-info {
+    min-width: 28rem;
+    text-align: left;
+    margin-left: 1rem !important;
+}
+
+.recovery-phrase {
+    min-width: 10rem;
+    text-align: center;
+    margin-top: 1.8rem;
+    margin-bottom: 1.2rem;
+    margin-left: 4.5rem;
+    margin-right: 4.5rem;
+    padding-bottom: 0.5rem;
+    padding-top: 0.3rem;
+    border: 1px solid white;
+    border-radius: 0.5rem;
+    background-color: lightblue;
+}
+
+.recovery-phrase-header {
+    margin-bottom: 0.5rem !important;
+    margin-top: 0.5rem !important;
 }

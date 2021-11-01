@@ -1,83 +1,95 @@
-import React, { useEffect, useState } from 'react';
-import logo from './logo.svg';
+import React, { useState, useEffect } from 'react';
 import './App.css';
-import TitleBar from './TitleBar';
 import CreateAccount from './pages/CreacteAccount';
 import { Container } from 'semantic-ui-react';
+import { appWindow } from '@tauri-apps/api/window';
+import AuthorizeTx from './pages/AuthorizeTx';
+import Login from './pages/Login';
 
 const CREATE_ACCOUNT_PAGE = 1;
+const LOGIN_PAGE = 2;
+const AUTHORIZE_TX_PAGE = 3;
 
 function App() {
-  const [currentPage, setCurrentPage] = useState(CREATE_ACCOUNT_PAGE);
+  const [currentPage, setCurrentPage] = useState(null);
+  const [isConnected, setIsConnected] = useState(false);
+  const [txSummary, setTxSummary] = useState(null);
 
-  if (window.__TAURI__) {
-    window.__TAURI__.invoke('connect').then((event) => {
+  useEffect(() => {
+    if (isConnected) return;
+    const connect = async () => {
+      const event = await window.__TAURI__.invoke('connect');
       switch (event) {
         case 'create-account':
           setCurrentPage(CREATE_ACCOUNT_PAGE);
           break;
-        default:
-          console.log('end connect?');
-          // endConnect();
+        case 'setup-authorization':
+          setCurrentPage(LOGIN_PAGE);
           break;
+        default:
+          break;
+      }
+    };
+    connect();
+  }, [isConnected]);
+
+  async function disconnect() {
+    await window.__TAURI__.invoke('clear_password');
+    setIsConnected(false);
+  }
+
+  // todo: get rid of
+  function isNonsensitiveTransaction(payload) {
+    return (
+      payload === 'recover_account' ||
+      payload === 'derive_shielded_address' ||
+      payload === 'mint' ||
+      payload === 'generate_asset'
+    );
+  }
+
+  async function listen() {
+    setIsConnected(true);
+    appWindow.hide();
+    window.__TAURI__.event.listen('authorize', (event) => {
+      appWindow.show();
+      appWindow.center();
+      appWindow.setAlwaysOnTop(true);
+      if (isNonsensitiveTransaction(event.payload)) {
+        setCurrentPage(LOGIN_PAGE);
+      } else {
+        setTxSummary(event.payload);
+        setCurrentPage(AUTHORIZE_TX_PAGE);
       }
     });
   }
 
-  // function getMnemonic() {
-  //   let password = document.getElementById('new-password');
-  //   if (password.reportValidity()) {
-  //     let promise = window.__TAURI__.invoke('get_mnemonic', {
-  //       password: password.value,
-  //     });
-  //     password.value = '';
-  //     document.getElementById('create-account-form').hidden = true;
-  //     document.getElementById('mnemonic-header').hidden = false;
-  //     document.getElementById('mnemonic').hidden = false;
-  //     document.getElementById('mnemonic').innerText = '...';
-  //     promise.then((event) => {
-  //       document.getElementById('mnemonic').innerText = event;
-  //       document.getElementById('close').hidden = false;
-  //     });
-  //   }
-  // }
-
-  function endConnect() {
-    window.__TAURI__.invoke('end_connect').then(() => {
-      setCurrentPage(CREATE_ACCOUNT_PAGE);
-      // document.getElementById('create-account').hidden = true;
-      // document.getElementById('authorize').hidden = false;
+  async function loadPassword(password) {
+    await window.__TAURI__.invoke('load_password', {
+      password: password,
     });
-    window.__TAURI__.event.listen('authorize', (event) => {
-      // TODO: Show the prompt to the user.
-      console.log(event);
-    });
+    setIsConnected(true);
   }
 
-  // function loadPassword() {
-  //   let password = document.getElementById('known-password');
-  //   if (password.reportValidity()) {
-  //     let promise = window.__TAURI__.invoke('load_password', {
-  //       password: password.value,
-  //     });
-  //     password.value = '';
-  //     promise.then(() => {});
-  //   }
-  // }
-
-  // function clearPassword() {
-  //   document.getElementById('known-password').value = '';
-  //   window.__TAURI__.invoke('clear_password').then(() => {});
-  // }
-
   return (
-    // <body>
     <div className="App">
       <Container className="page">
-        {currentPage === CREATE_ACCOUNT_PAGE && <CreateAccount />}
+        {currentPage === CREATE_ACCOUNT_PAGE && (
+          <CreateAccount listen={listen} loadPassword={loadPassword} />
+        )}
+        {currentPage === LOGIN_PAGE && (
+          <Login listen={listen} loadPassword={loadPassword} />
+        )}
+        {currentPage === AUTHORIZE_TX_PAGE && (
+          <AuthorizeTx
+            txSummary={txSummary}
+            disconnect={disconnect}
+            listen={listen}
+            loadPassword={loadPassword}
+          />
+        )}
       </Container>
     </div>
-    // </body>
   );
 }
 
