@@ -21,7 +21,7 @@
 use crate::{
     batching::{batch_generate_private_transfer_data, batch_generate_reclaim_data},
     config::Config,
-    secret::{Authorizer, RootSeed},
+    secret::{Authorizer, Password, RootSeed},
 };
 use async_std::{io, sync::Mutex};
 use codec::{Decode, Encode};
@@ -151,6 +151,16 @@ where
         }
     }
 
+    /// Sets the inner seed from a given `password`.
+    #[inline]
+    async fn set_seed_from_password(&mut self, password: Password) {
+        if let Some(password) = password.known() {
+            self.root_seed = RootSeed::load(&self.config.root_seed_file, &password)
+                .await
+                .ok();
+        }
+    }
+
     /// Sets the inner seed from the output of a call to [`Self::authorize`] using the given
     /// `prompt`.
     #[inline]
@@ -158,11 +168,8 @@ where
     where
         T: Serialize,
     {
-        if let Some(password) = self.authorizer.authorize(prompt).await.known() {
-            self.root_seed = RootSeed::load(&self.config.root_seed_file, &password)
-                .await
-                .ok();
-        }
+        let password = self.authorizer.authorize(prompt).await;
+        self.set_seed_from_password(password).await;
         self.root_seed.clone()
     }
 
@@ -293,7 +300,8 @@ where
         let service_url = {
             let state = &mut *self.0.state().0.lock().await;
             state.config.setup().await?;
-            state.authorizer.setup(&state.config).await;
+            let password = state.authorizer.setup(&state.config).await;
+            state.set_seed_from_password(password).await;
             state.config.service_url.clone()
         };
         self.0.listen(service_url).await

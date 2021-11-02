@@ -30,8 +30,8 @@
 use manta_signer::{
     config::Config,
     secret::{
-        account_exists, create_account, Authorization, Authorizer, AuthorizerSetup, ExposeSecret,
-        Password, SecretString,
+        account_exists, create_account, Authorizer, ExposeSecret, Password, PasswordFuture,
+        SecretString,
     },
     service::Service,
 };
@@ -61,26 +61,27 @@ impl User {
 
 impl Authorizer for User {
     #[inline]
-    fn setup<'s>(&'s mut self, config: &'s Config) -> AuthorizerSetup<'s> {
+    fn setup<'s>(&'s mut self, config: &'s Config) -> PasswordFuture<'s> {
         let _ = config;
         Box::pin(async move {
-            let _ = self.password.recv().await;
+            self.password
+                .recv()
+                .await
+                .unwrap_or_else(Password::from_unknown)
         })
     }
 
     #[inline]
-    fn authorize<T>(&mut self, prompt: T) -> Authorization
+    fn authorize<T>(&mut self, prompt: T) -> PasswordFuture
     where
         T: Serialize,
     {
         self.window.emit("authorize", prompt).unwrap();
         Box::pin(async move {
-            let password = self
-                .password
+            self.password
                 .recv()
                 .await
-                .unwrap_or_else(Password::from_unknown);
-            password
+                .unwrap_or_else(Password::from_unknown)
         })
     }
 }
@@ -162,9 +163,7 @@ enum ConnectEvent {
 async fn connect(window: Window, config: State<'_, Config>) -> Result<ConnectEvent, ()> {
     match account_exists(&config.root_seed_file).await {
         Ok(true) => Ok(ConnectEvent::SetupAuthorization),
-        _ => {
-            Ok(ConnectEvent::CreateAccount)
-        }
+        _ => Ok(ConnectEvent::CreateAccount),
     }
 }
 

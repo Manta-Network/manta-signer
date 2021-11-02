@@ -19,10 +19,7 @@
 use async_std::io;
 use manta_signer::{
     config::Config,
-    secret::{
-        create_account, sample_password, Authorization, Authorizer, AuthorizerSetup, Password,
-        SecretString,
-    },
+    secret::{create_account, sample_password, Authorizer, Password, PasswordFuture, SecretString},
     service::Service,
 };
 use rand::thread_rng;
@@ -44,16 +41,17 @@ impl MockUser {
 
 impl Authorizer for MockUser {
     #[inline]
-    fn setup<'s>(&'s mut self, config: &'s Config) -> AuthorizerSetup<'s> {
+    fn setup<'s>(&'s mut self, config: &'s Config) -> PasswordFuture<'s> {
         Box::pin(async move {
             let _ = create_account(&config.root_seed_file, &self.password)
                 .await
                 .expect("Unable to create account for a mock user.");
+            Password::from_known(self.password.clone())
         })
     }
 
     #[inline]
-    fn authorize<T>(&mut self, prompt: T) -> Authorization
+    fn authorize<T>(&mut self, prompt: T) -> PasswordFuture
     where
         T: Serialize,
     {
