@@ -1,0 +1,67 @@
+\documentclass[a4paper]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[margin=0.8in]{geometry}
+\usepackage[
+    colorlinks=true,
+    linkcolor=blue,
+    filecolor=blue,
+    urlcolor=blue,
+    pdfpagemode=FullScreen,
+]{hyperref}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\usepackage{amsfonts}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amsthm}
+\usepackage{commath}
+\usepackage{float}
+\usepackage{parskip}
+\usepackage{tikz-cd}
+\usepackage{wrapfig}
+
+\tikzcdset{row sep/normal = 3.5em}
+
+\begin{document}
+
+\begin{center}
+    \Large{\textbf{Manta Signer State Machine}}
+\end{center}
+
+\vspace{2em}
+
+\begin{center}
+% https://tikzcd.yichuanshen.de/#N4Igdg9gJgpgziAXAbVABwnAlgFyxMJZABgBoBGAXVJADcBDAGwFcYkQAdDnGADxzgAzYAGUAogCUAapIC+IWaXSZc+QigDMpAEzU6TVuy49+wAIIBjCxGZgcAAjG8scAQH55i5djwEiWjT0GFjZETm4+AWEAGQgAcywwTyUQDB81IgBWUkCaYMMw40ihYABhACcYeh57S2tbHGTvVT9NCiCDUPCTKOAAVQBJJtSVX3VkLQAWDpCjCP4SkRgwKHsABXo4OAB3CHKoYbSW8bJpvM65uABHZnpKhRSjsaIyTJmC7uKYiHpVpZgDg9ms82gAOd5dLjXW73LwjdKtEikABsELmPUWMHKtBgh1GGRQZAA7GjCvMcOZmDgABZ7LAALxgHiB8OORHIpHB51mZIxwjMVNp5QZuJZTwJSPIVG5HyKC2EIiwcSSYvxiI55GIpPC0LubDh4sRWk12rlvSWK3Wmx2e0BBrV4y0AE5TeSSmtyhAALZoRqqhEnCi6GWQjgWLDlCz+tltKWu8OR6MgpFakPoyIAIwVABUzBJs3iA-5SG807yvsAABJYWCePQAuLwIigQSer1IDkgHAQJDaGiMegZmCMNYO9iJbCwEBlz7y4AATTEImGre9HZo3aQWn0PNnvQAcgB5eT9wfD0dFsITmv6lKr9uISYbnuIchw++95+fkCMCAQNBENoRJkIITBwDAegDkOI5jleYCTmwM5miU2z0LgJ4-okXRQJs1IAiyH6INum5Ef2f4ASg5CgmQODlKwkFnjBl4gNeU5IW6wioeh06YWA2G4fh75tt+JGZEJa6kV2L5iXewmINkUlIMi7F8sA4ErBhUHnrBLHwTePGMFh7BQDYGaMIhIB4b8SBgMwjCMBuaGMOwkB8QRclkIpiDKbx-FwHhUAGYxF4xrpCE8fkoaqZUFi0BhVmBYgtn2Y5WDOWErm3i2ck+SRRLiQ+RJfogToFUgTrFZqZWvp5JFSqe0EhSCYX6SpFaLsu7kSZqlV9jusoccAR6acFOmsVlICERVXnTb+-5EE6IFgRBDXacx40RRc5Zzlxfr9kZYQ4f5gmyd1nYkaCq1MaFG1tXOaBtr6mkHSAcAQIZgWpelXZOV1D71V55DboZbmHQJn0-qN616Wx-VRRWMVxX9HZPoDwNQzdMMWZF6ZzupgL7aDIAmcwZkWQlNl2Q5P1pS5BATYRl2AwpWnXc1t1w7jvT+RA2wrnJ5AKXVkzVYLlUs+RgHAaQoGMOBDGNWNWMGS9R0BZtu7IZxaF+qLxEvuQ2ii31dXIqLuUvtNQ4rEgkylad-2o3V+UO0gtUvqjrNNQSLWwzj23c7SfM8Tgv1hKHtOi0zJHENVQsG-b2XddNF2E356tXd7rS+9jW17iUhmuMs-PdUVgNW8siUALR27IlCyEAA
+\begin{tikzcd}
+\textbf{START} \arrow[d]                                                                                        &                                                                                                                    &  &                                                                                                            &  &                                                                                                                     \\
+\textsf{SERVER} \arrow[ddd, "\textsf{recv}" description, dashed] \arrow[rrr, "\textsf{show}" description, tail] &                                                                                                                    &  & \textsf{UI} \arrow[d]                                                                                      &  &                                                                                                                     \\
+                                                                                                                &                                                                                                                    &  & \text{Account Exists?} \arrow[d, "\textsf{YES}" description] \arrow[rrd, "\textsf{NO}" description]        &  &                                                                                                                     \\
+                                                                                                                &                                                                                                                    &  & \textsf{Login} \arrow["\textsf{wait}" description, dashed, loop, distance=2em, in=215, out=145] \arrow[d]  &  & \textsf{Create Account} \arrow["\textsf{wait}" description, dashed, loop, distance=2em, in=55, out=125] \arrow[lld] \\
+\square \arrow[d]                                                                                               &                                                                                                                    &  & \textsf{Send Password} \arrow[lll, "\textsf{send}" description, Rightarrow] \arrow[d]                      &  &                                                                                                                     \\
+\textsf{Load Seed} \arrow[d]                                                                                    &                                                                                                                    &  & \textsf{Hide} \arrow[ddd, "\textsf{listen}" description, dashed]                                           &  &                                                                                                                     \\
+\textsf{Serve} \arrow[d] \arrow["\textsf{wait}" description, dashed, loop, distance=2em, in=35, out=325]        &                                                                                                                    &  &                                                                                                            &  &                                                                                                                     \\
+\text{Authorize?} \arrow[rd, "\textsf{YES}" description] \arrow[dddd, "\textsf{NO}" description]                &                                                                                                                    &  &                                                                                                            &  &                                                                                                                     \\
+                                                                                                                & \textsf{Authorize} \arrow[rr, "\textsf{prompt}" description, tail] \arrow[dd, "\textsf{recv}" description, dashed] &  & \square \arrow[d, "\textsf{show}" description]                                                             &  &                                                                                                                     \\
+                                                                                                                &                                                                                                                    &  & \textsf{Prompt} \arrow[d] \arrow["\textsf{wait}" description, dashed, loop, distance=2em, in=215, out=145] &  &                                                                                                                     \\
+                                                                                                                & \square \arrow[ld]                                                                                                 &  & \textsf{Send Password} \arrow[ll, "\textsf{send}" description, Rightarrow] \arrow[d]                       &  &                                                                                                                     \\
+\textsf{Sign} \arrow[d]                                                                                         &                                                                                                                    &  & \circ \arrow[uuuuuu, bend right=49]                                                                        &  &                                                                                                                     \\
+\circ \arrow[uuuuuu, bend left=49]                                                                              &                                                                                                                    &  &                                                                                                            &  &                                                                                                                    
+\end{tikzcd}
+\end{center}
+
+\vspace{2em}
+
+\[
+    \square := \text{synchronization point}
+    \,\,\,\,\,\,\,
+    \circ := \text{loop}
+    \,\,\,\,\,\,\,
+    (\Rightarrow) := \text{channel}
+    \,\,\,\,\,\,\,
+    (\dasharrow) := \text{suspending}
+\]
+
+\end{document}
+
