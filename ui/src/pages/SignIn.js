@@ -1,13 +1,13 @@
 import React, { useState } from 'react';
 import { Button, Input, Header } from 'semantic-ui-react';
 
-const Login = ({ listen, loadPassword }) => {
+const SignIn = ({ loadPasswordToSignerServer, endInitialConnectionPhase }) => {
   const [password, setPassword] = useState('');
 
   const onClickSignIn = async () => {
-    await loadPassword(password);
+    await loadPasswordToSignerServer(password);
     setPassword('');
-    listen();
+    await endInitialConnectionPhase();
   };
 
   return (
@@ -26,4 +26,4 @@ const Login = ({ listen, loadPassword }) => {
   );
 };
 
-export default Login;
+export default SignIn;

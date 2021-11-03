@@ -160,7 +160,7 @@ enum ConnectEvent {
 
 /// Starts the first round of communication between the UI and the signer.
 #[tauri::command]
-async fn connect(window: Window, config: State<'_, Config>) -> Result<ConnectEvent, ()> {
+async fn connect(config: State<'_, Config>) -> Result<ConnectEvent, ()> {
     match account_exists(&config.root_seed_file).await {
         Ok(true) => Ok(ConnectEvent::SetupAuthorization),
         _ => Ok(ConnectEvent::CreateAccount),
@@ -180,7 +180,7 @@ async fn get_mnemonic(config: State<'_, Config>, password: String) -> Result<Str
 
 /// Ends the first round of communication between the UI and the signer.
 #[tauri::command]
-async fn end_connect(window: Window, password_store: State<'_, PasswordStore>) -> Result<(), ()> {
+async fn end_connect(password_store: State<'_, PasswordStore>) -> Result<(), ()> {
     password_store.clear().await;
     Ok(())
 }

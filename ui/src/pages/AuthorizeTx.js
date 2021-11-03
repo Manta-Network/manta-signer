@@ -1,34 +1,33 @@
 import React, { useState } from 'react';
-import { Button, Header, Input, Container } from 'semantic-ui-react';
+import { Button, Header, Input } from 'semantic-ui-react';
 
-const AuthorizeTx = ({ txSummary, disconnect, listen, loadPassword }) => {
-  let summaryMessage = '';
-
-  if (txSummary && typeof txSummary !== 'string') {
-    const { amount, currency_symbol, kind } = txSummary;
-    const kindMessage = typeof kind === 'string' ? kind : 'Transfer';
-    const recipient =
-      typeof kind === 'string'
-        ? 'your public wallet'
-        : kind.PrivateTransfer.recipient;
-    summaryMessage = `${kindMessage} ${amount} ${currency_symbol} to: ${recipient}`;
-  }
-
+const AuthorizeTx = ({
+  txSummary,
+  declineTransaction,
+  authorizeTransaction,
+}) => {
   const [password, setPassword] = useState('');
 
+  const { amount, currency_symbol, kind } = txSummary;
+  const isReclaimTx = typeof kind === 'string';
+  const txKindMessage = isReclaimTx ? 'Withdraw' : 'Transfer';
+  const recipient = isReclaimTx
+    ? 'your public wallet'
+    : kind.PrivateTransfer.recipient;
+  const summaryMessage = `${txKindMessage} ${amount} ${currency_symbol} to: ${recipient}`;
+
   const onClickAuthorize = async () => {
-    await loadPassword(password);
-    listen();
+    await authorizeTransaction(password);
   };
 
   const onClickDecline = async () => {
-    await disconnect();
+    await declineTransaction();
   };
 
   return (
     <>
       <Header> Authorize Transaction </Header>
-      <Container className="tx-summary">{summaryMessage}</Container>
+      <div className="tx-summary">{summaryMessage}</div>
       <Input
         type="password"
         label="Password"

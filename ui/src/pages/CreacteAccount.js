@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Button, Input, Header, Container } from 'semantic-ui-react';
 
-const CreateAccount = ({ listen }) => {
+const CreateAccount = ({ getRecoveryPhrase, endInitialConnectionPhase }) => {
   const [password, setPassword] = useState('');
   const [recoveryPhrase, setRecoveryPhrase] = useState('');
 
@@ -11,9 +11,7 @@ const CreateAccount = ({ listen }) => {
 
   const onClickCreateAccount = async () => {
     if (isValid(password)) {
-      let recoveryPhrase = await window.__TAURI__.invoke('get_mnemonic', {
-        password: password,
-      });
+      const recoveryPhrase = await getRecoveryPhrase(password);
       setPassword('');
       setRecoveryPhrase(recoveryPhrase);
     }
@@ -21,8 +19,7 @@ const CreateAccount = ({ listen }) => {
 
   const onClickConfirmRecoveryPhrase = () => {
     setRecoveryPhrase('');
-    window.__TAURI__.invoke('end_connect');
-    listen();
+    endInitialConnectionPhase();
   };
 
   return (
@@ -30,8 +27,7 @@ const CreateAccount = ({ listen }) => {
       {recoveryPhrase && (
         <>
           <Header className="recovery-phrase-header">
-            {' '}
-            Your recovery phrase{' '}
+            Your recovery phrase
           </Header>
           <div className="recovery-phrase-info">
             This phrase can restore your funds if you lose access to your

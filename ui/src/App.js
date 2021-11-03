@@ -1,10 +1,10 @@
-import React, { useState, useEffect } from 'react';
 import './App.css';
+import React, { useState, useEffect } from 'react';
 import CreateAccount from './pages/CreacteAccount';
 import { Container } from 'semantic-ui-react';
 import { appWindow } from '@tauri-apps/api/window';
 import AuthorizeTx from './pages/AuthorizeTx';
-import Login from './pages/Login';
+import SignIn from './pages/SignIn';
 
 const CREATE_ACCOUNT_PAGE = 1;
 const LOGIN_PAGE = 2;
@@ -17,7 +17,7 @@ function App() {
 
   useEffect(() => {
     if (isConnected) return;
-    const connect = async () => {
+    const beginInitialConnectionPhase = async () => {
       const event = await window.__TAURI__.invoke('connect');
       switch (event) {
         case 'create-account':
@@ -30,62 +30,73 @@ function App() {
           break;
       }
     };
-    connect();
+    beginInitialConnectionPhase();
   }, [isConnected]);
 
-  async function disconnect() {
-    await window.__TAURI__.invoke('clear_password');
-    setIsConnected(false);
-  }
-
-  // todo: get rid of
-  function isNonsensitiveTransaction(payload) {
-    return (
-      payload === 'recover_account' ||
-      payload === 'derive_shielded_address' ||
-      payload === 'mint' ||
-      payload === 'generate_asset'
-    );
-  }
-
-  async function listen() {
+  const listenForTxAuthorizationRequests = () => {
     setIsConnected(true);
+    setCurrentPage(null);
     appWindow.hide();
     window.__TAURI__.event.listen('authorize', (event) => {
       appWindow.show();
       appWindow.center();
       appWindow.setAlwaysOnTop(true);
-      if (isNonsensitiveTransaction(event.payload)) {
-        setCurrentPage(LOGIN_PAGE);
-      } else {
-        setTxSummary(event.payload);
-        setCurrentPage(AUTHORIZE_TX_PAGE);
-      }
+      setTxSummary(event.payload);
+      setCurrentPage(AUTHORIZE_TX_PAGE);
     });
-  }
+  };
 
-  async function loadPassword(password) {
+  const loadPasswordToSignerServer = async (password) => {
     await window.__TAURI__.invoke('load_password', {
       password: password,
     });
+  };
+
+  const getRecoveryPhrase = async (password) => {
+    const mnemonic = await window.__TAURI__.invoke('get_mnemonic', {
+      password: password,
+    });
+    await window.__TAURI__.invoke('load_password', {
+      password: password,
+    });
+    return mnemonic;
+  };
+
+  const declineTransaction = async () => {
+    await window.__TAURI__.invoke('clear_password');
+    listenForTxAuthorizationRequests();
+  };
+
+  const authorizeTransaction = async (password) => {
+    await loadPasswordToSignerServer(password);
+    listenForTxAuthorizationRequests();
+  };
+
+  const endInitialConnectionPhase = async () => {
     setIsConnected(true);
-  }
+    listenForTxAuthorizationRequests();
+  };
 
   return (
     <div className="App">
       <Container className="page">
         {currentPage === CREATE_ACCOUNT_PAGE && (
-          <CreateAccount listen={listen} loadPassword={loadPassword} />
+          <CreateAccount
+            getRecoveryPhrase={getRecoveryPhrase}
+            endInitialConnectionPhase={endInitialConnectionPhase}
+          />
         )}
         {currentPage === LOGIN_PAGE && (
-          <Login listen={listen} loadPassword={loadPassword} />
+          <SignIn
+            loadPasswordToSignerServer={loadPasswordToSignerServer}
+            endInitialConnectionPhase={endInitialConnectionPhase}
+          />
         )}
         {currentPage === AUTHORIZE_TX_PAGE && (
           <AuthorizeTx
             txSummary={txSummary}
-            disconnect={disconnect}
-            listen={listen}
-            loadPassword={loadPassword}
+            declineTransaction={declineTransaction}
+            authorizeTransaction={authorizeTransaction}
           />
         )}
       </Container>

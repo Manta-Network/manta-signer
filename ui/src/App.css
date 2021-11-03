@@ -1,6 +1,6 @@
 .App {
     position: absolute;
-    top: 45%;
+    top: 50%;
     left: 50%;
     -moz-transform: translateX(-50%) translateY(-50%);
     -webkit-transform: translateX(-50%) translateY(-50%);
@@ -25,7 +25,7 @@
 }
 
 .tx-summary {
-    max-width: 10rem;
+    max-width: 22.5rem !important;
     inline-size: 26rem;
     overflow-wrap: break-word;
     text-align: center;
@@ -33,7 +33,7 @@
 }
 
 .recovery-phrase-info {
-    min-width: 28rem;
+    min-width: 26rem;
     text-align: left;
     margin-left: 1rem !important;
 }
@@ -41,8 +41,8 @@
 .recovery-phrase {
     min-width: 10rem;
     text-align: center;
-    margin-top: 1.8rem;
-    margin-bottom: 1.2rem;
+    margin-top: 1.2rem;
+    margin-bottom: 0.6rem;
     margin-left: 4.5rem;
     margin-right: 4.5rem;
     padding-bottom: 0.5rem;
@@ -54,5 +54,4 @@
 
 .recovery-phrase-header {
     margin-bottom: 0.5rem !important;
-    margin-top: 0.5rem !important;
 }
