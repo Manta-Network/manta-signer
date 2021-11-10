@@ -2676,7 +2676,7 @@ dependencies = [
 [[package]]
 name = "manta-api"
 version = "0.3.3"
-source = "git+https://github.com/Manta-Network/manta-api?branch=manta#722cff6cc4a07971af37c9790f047e71f2ce543c"
+source = "git+https://github.com/Manta-Network/manta-api?branch=manta#49af461241c9049b6f347f560be7cead7f70b9de"
 dependencies = [
  "ark-bls12-381",
  "ark-crypto-primitives",
@@ -2707,7 +2707,7 @@ dependencies = [
 [[package]]
 name = "manta-asset"
 version = "0.3.2"
-source = "git+https://github.com/Manta-Network/manta-types?branch=manta#ce6164b80cff89388a12963034e04dba9bfc3dbd"
+source = "git+https://github.com/Manta-Network/manta-types?branch=manta#d4c14964217c0e598085913fa84bbe17a263ed94"
 dependencies = [
  "ark-crypto-primitives",
  "ark-ed-on-bls12-381",
@@ -2750,7 +2750,7 @@ dependencies = [
 [[package]]
 name = "manta-data"
 version = "0.3.2"
-source = "git+https://github.com/Manta-Network/manta-types?branch=manta#ce6164b80cff89388a12963034e04dba9bfc3dbd"
+source = "git+https://github.com/Manta-Network/manta-types?branch=manta#d4c14964217c0e598085913fa84bbe17a263ed94"
 dependencies = [
  "ark-ed-on-bls12-381",
  "ark-groth16",
