@@ -117,7 +117,7 @@ impl From<&GenerateReclaimBatchParams> for TransactionSummary {
         Self {
             kind: TransactionKind::Reclaim,
             amount: params.reclaim_params.reclaim_value.to_string(),
-            currency_symbol: get_currency_symbol_by_asset_id(params.asset_id),
+            currency_symbol: get_currency_symbol_by_asset_id(params.reclaim_params.asset_id),
         }
     }
 }

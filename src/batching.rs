@@ -25,7 +25,7 @@ use manta_api::{
     GeneratePrivateTransferParams, GenerateReclaimBatchParams, GenerateReclaimParams,
     MantaRootSeed, PrivateTransferBatch, ReclaimBatch,
 };
-use manta_asset::{AssetId, MantaAsset, MantaAssetShieldedAddress, Process, Sampling};
+use manta_asset::{AssetId, MantaAsset, MantaAssetShieldedAddress, Process};
 use manta_crypto::{commitment_parameters, leaf_parameters, two_to_one_parameters, Groth16Pk};
 use manta_data::{BuildMetadata, PrivateTransferData, ReclaimData};
 use rand::{CryptoRng, RngCore};
@@ -100,7 +100,7 @@ where
 {
     let private_transfer_pk = load_proving_key(private_transfer_pk_path).await;
     let reclaim_pk = load_proving_key(reclaim_pk_path).await;
-    let asset_id = params.asset_id;
+    let asset_id = params.reclaim_params.asset_id;
     ReclaimBatch {
         reclaim_data: generate_reclaim_data(
             params.reclaim_params,
@@ -177,23 +177,21 @@ where
         None => manta_api::derive_shielded_address(
             DeriveShieldedAddressParams {
                 keypath: params.non_change_output_keypath.unwrap(),
-                asset_id,
             },
             root_seed,
         ),
     };
     let non_change_processed_receiver = non_change_receiving_address
-        .process(&params.non_change_output_value, rng)
+        .process(asset_id, params.non_change_output_value, rng)
         .expect("Failed to process receiver 1 shielded address");
     let change_address = manta_api::derive_shielded_address(
         DeriveShieldedAddressParams {
             keypath: params.change_output_keypath,
-            asset_id,
         },
         root_seed,
     );
     let change_processed_receiver = change_address
-        .process(&params.change_output_value, rng)
+        .process(asset_id, params.change_output_value, rng)
         .expect("Failed to process receiver 2 shielded address");
     manta_api::generate_private_transfer_struct(
         commit_params,
@@ -256,14 +254,13 @@ where
     let change_address = manta_api::derive_shielded_address(
         DeriveShieldedAddressParams {
             keypath: params.change_keypath,
-            asset_id,
         },
         root_seed,
     );
     let change_value =
         params.input_asset_1_value + params.input_asset_2_value - params.reclaim_value;
     let change_processed_receiver = change_address
-        .process(&change_value, rng)
+        .process(asset_id, change_value, rng)
         .expect("Failed to build processed receiver");
     manta_api::generate_reclaim_struct(
         commit_params,
@@ -290,11 +287,11 @@ pub fn generate_asset(params: GenerateAssetParams, root_seed: &MantaRootSeed) ->
     .to_bytes()
     .try_into()
     .unwrap();
-    MantaAsset::sample(
+    MantaAsset::new(
+        asset_secret_key,
         &commitment_parameters(),
-        &asset_secret_key,
-        &params.asset_id,
-        &params.value,
+        params.asset_id,
+        params.value,
     )
     .expect("Failed to sample asset")
 }
