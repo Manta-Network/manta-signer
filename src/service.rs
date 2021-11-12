@@ -16,14 +16,17 @@
 
 //! Manta Signer Service
 
-// TODO: Add logging.
+// TODO: Add better logging.
 
 use crate::{
     batching::{batch_generate_private_transfer_data, batch_generate_reclaim_data},
     config::Config,
     secret::{Authorizer, Password, RootSeed},
 };
-use async_std::{io, sync::Mutex};
+use async_std::{
+    io::{self, WriteExt},
+    sync::Mutex,
+};
 use codec::{Decode, Encode};
 use http_types::headers::HeaderValue;
 use manta_api::{
@@ -316,6 +319,7 @@ where
     /// Sends a heartbeat to the client.
     #[inline]
     async fn heartbeat(request: Request<A>) -> ServerResult<String> {
+        Self::log(String::from("HEARTBEAT")).await?;
         let _ = request;
         Ok(String::from("heartbeat"))
     }
@@ -325,9 +329,11 @@ where
     async fn recover_account(mut request: Request<A>) -> ServerResult {
         let (body, state) = Self::process(&mut request).await?;
         let params = ensure!(RecoverAccountParams::decode(&mut body.as_slice()))?;
+        Self::log(format!("REQUEST: {:?}", params)).await?;
         let root_seed = ensure!(state.get_root_seed("recover_account").await.ok_or(()))?;
         let recovered_account =
             manta_api::recover_account(params, root_seed.expose_secret()).encode();
+        Self::log(format!("RESPONSE: {:?}", recovered_account)).await?;
         Ok(Body::from_json(&RecoverAccountMessage::new(recovered_account))?.into())
     }
 
@@ -336,6 +342,7 @@ where
     async fn derive_shielded_address(mut request: Request<A>) -> ServerResult {
         let (body, state) = Self::process(&mut request).await?;
         let params = ensure!(DeriveShieldedAddressParams::decode(&mut body.as_slice(),))?;
+        Self::log(format!("REQUEST: {:?}", params)).await?;
         let root_seed = ensure!(state
             .get_root_seed("derive_shielded_address")
             .await
@@ -345,6 +352,7 @@ where
             manta_api::derive_shielded_address(params, root_seed.expose_secret())
                 .serialize(&mut address)
         )?;
+        Self::log(format!("RESPONSE: {:?}", address)).await?;
         Ok(Body::from_json(&ShieldedAddressMessage::new(address))?.into())
     }
 
@@ -353,9 +361,11 @@ where
     async fn generate_asset(mut request: Request<A>) -> ServerResult {
         let (body, state) = Self::process(&mut request).await?;
         let params = ensure!(GenerateAssetParams::decode(&mut body.as_slice()))?;
+        Self::log(format!("REQUEST: {:?}", params)).await?;
         let root_seed = ensure!(state.get_root_seed("generate_asset").await.ok_or(()))?;
         let asset =
             manta_api::generate_signer_input_asset(params, root_seed.expose_secret()).encode();
+        Self::log(format!("RESPONSE: {:?}", asset)).await?;
         Ok(Body::from_json(&AssetMessage::new(asset))?.into())
     }
 
@@ -364,12 +374,14 @@ where
     async fn mint(mut request: Request<A>) -> ServerResult {
         let (body, state) = Self::process(&mut request).await?;
         let params = ensure!(GenerateAssetParams::decode(&mut body.as_slice()))?;
+        Self::log(format!("REQUEST: {:?}", params)).await?;
         let root_seed = ensure!(state.get_root_seed("mint").await.ok_or(()))?;
         let mut mint_data = Vec::new();
         ensure!(
             manta_api::generate_mint_data(params, root_seed.expose_secret())
                 .serialize(&mut mint_data)
         )?;
+        Self::log(format!("RESPONSE: {:?}", mint_data)).await?;
         Ok(Body::from_json(&MintMessage::new(mint_data))?.into())
     }
 
@@ -380,6 +392,7 @@ where
         let params = ensure!(GeneratePrivateTransferBatchParams::decode(
             &mut body.as_slice()
         ))?;
+        Self::log(format!("REQUEST: {:?}", params)).await?;
         let root_seed = ensure!(state
             .check_root_seed(TransactionSummary::from(&params))
             .await
@@ -392,6 +405,7 @@ where
         )
         .await
         .encode();
+        Self::log(format!("RESPONSE: {:?}", private_transfer_data)).await?;
         Ok(Body::from_json(&PrivateTransferMessage::new(private_transfer_data))?.into())
     }
 
@@ -400,6 +414,7 @@ where
     async fn reclaim(mut request: Request<A>) -> ServerResult {
         let (body, state) = Self::process(&mut request).await?;
         let params = ensure!(GenerateReclaimBatchParams::decode(&mut body.as_slice()))?;
+        Self::log(format!("REQUEST: {:?}", params)).await?;
         let root_seed = ensure!(state
             .check_root_seed(TransactionSummary::from(&params))
             .await
@@ -414,6 +429,7 @@ where
         )
         .await
         .encode();
+        Self::log(format!("RESPONSE: {:?}", reclaim_data)).await?;
         Ok(Body::from_json(&ReclaimMessage::new(reclaim_data))?.into())
     }
 
@@ -422,6 +438,12 @@ where
     #[inline]
     async fn process(request: &mut Request<A>) -> ServerResult<(Vec<u8>, &State<A>)> {
         Ok((request.body_bytes().await?, request.state()))
+    }
+
+    /// Logs the string to the console.
+    #[inline]
+    async fn log(string: String) -> io::Result<()> {
+        io::stdout().write_all(string.as_bytes()).await
     }
 
     /// Samples a new RNG for generating ZKPs.
