@@ -31,8 +31,8 @@ const CreateAccount = ({ getRecoveryPhrase, endInitialConnectionPhase }) => {
           </Header>
           <div className="recovery-phrase-info">
             This phrase can restore your funds if you lose access to your
-            account. Write it down on paper and store it somewhere secure. ⚠️
-            Never share your recovery phrase with anyone!
+            account. Write it down on paper and store it somewhere secure. 
+            ⚠️ Never share your recovery phrase with anyone!
           </div>
           <Container className="recovery-phrase-warning"></Container>
           <div className="recovery-phrase">
