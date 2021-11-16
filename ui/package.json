@@ -16,7 +16,7 @@
     },
     "scripts": {
         "tauri": "tauri",
-        "bundle": "tauri build",
+        "bundle": "react-scripts build && tauri build",
         "start": "react-scripts start",
         "build": "react-scripts build",
         "test": "react-scripts test",
