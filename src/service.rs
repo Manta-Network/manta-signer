@@ -443,7 +443,9 @@ where
     /// Logs the string to the console.
     #[inline]
     async fn log(string: String) -> io::Result<()> {
-        io::stdout().write_all(string.as_bytes()).await
+        let mut stdout = io::stdout();
+        stdout.write_all(string.as_bytes()).await?;
+        stdout.write_all(b"\n\n").await
     }
 
     /// Samples a new RNG for generating ZKPs.
