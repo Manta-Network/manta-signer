@@ -1,6 +1,6 @@
 {
-  "short_name": "React App",
-  "name": "Create React App Sample",
+  "short_name": "Manta Signer",
+  "name": "Manta Signer App for Generating Zero-Knowledge-Proof",
   "icons": [
     {
       "src": "favicon.ico",
