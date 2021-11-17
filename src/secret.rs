@@ -83,21 +83,19 @@ impl Default for Password {
     }
 }
 
-/// Authorizer Setup Future
+/// Password Future
 ///
-/// This `type` is returned by the [`setup`](Authorizer::setup) method on [`Authorizer`].
-/// See its documentation for more.
-pub type AuthorizerSetup<'t> = BoxFuture<'t, ()>;
-
-/// Authorization Future
+/// This `type` is returned by the [`authorize`] and [`setup`] methods on [`Authorizer`].
+/// See their documentation for more.
 ///
-/// This `type` is returned by the [`authorize`](Authorizer::authorize) method on [`Authorizer`].
-/// See its documentation for more.
-pub type Authorization<'t> = BoxFuture<'t, Password>;
+/// [`authorize`]: Authorizer::authorize
+/// [`setup`]: Authorizer::setup
+pub type PasswordFuture<'t> = BoxFuture<'t, Password>;
 
 /// Authorizer
 pub trait Authorizer {
-    /// Runs some setup for the authorizer using the `config`.
+    /// Runs some setup for the authorizer using the `config`, returning a [`Password`] if already
+    /// known during setup.
     ///
     /// # Implementation Note
     ///
@@ -107,13 +105,13 @@ pub trait Authorizer {
     /// [`Service`]: crate::service::Service
     /// [`Service::serve`]: crate::service::Service::serve
     #[inline]
-    fn setup<'s>(&'s mut self, config: &'s Config) -> AuthorizerSetup<'s> {
+    fn setup<'s>(&'s mut self, config: &'s Config) -> PasswordFuture<'s> {
         let _ = config;
-        Box::pin(async move {})
+        Box::pin(async move { Password::from_unknown() })
     }
 
     /// Shows the given `prompt` to the authorizer, requesting their password.
-    fn authorize<T>(&mut self, prompt: T) -> Authorization
+    fn authorize<T>(&mut self, prompt: T) -> PasswordFuture
     where
         T: Serialize;
 }

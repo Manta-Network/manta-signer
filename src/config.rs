@@ -68,7 +68,7 @@ impl Config {
         Some(Self {
             root_seed_file: file(dirs_next::config_dir(), "root_seed.aes")?,
             proving_key_directory: directory(dirs_next::data_local_dir())?,
-            service_url: String::from("http://localhost:29987"),
+            service_url: String::from("http://127.0.0.1:29987"),
             origin_url: String::from("http://localhost:8000"),
         })
     }
@@ -78,7 +78,7 @@ impl Config {
     #[inline]
     pub async fn setup(&self) -> io::Result<()> {
         // FIXME: Use logging instead of `println!`.
-        println!("Manta Signer {:#?}", self);
+        println!("Manta Signer {:#?}\n", self);
         if let Some(parent) = self.root_seed_file.parent() {
             fs::create_dir_all(parent).await?;
         }
