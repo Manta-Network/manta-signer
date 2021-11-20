@@ -16,7 +16,6 @@
 
 //! Manta Signer UI
 
-// TODO: Should we change from a channel model to shared data?
 // TODO: Check what the `windows_subsystem` attributes do, and if we need them.
 
 #![cfg_attr(doc_cfg, feature(doc_cfg))]
@@ -192,12 +191,20 @@ fn main() {
 
     let mut app = tauri::Builder::default()
         .system_tray(
-            SystemTray::new()
-                .with_menu(SystemTrayMenu::new().add_item(CustomMenuItem::new("exit", "Quit"))),
+            SystemTray::new().with_menu(
+                SystemTrayMenu::new()
+                    .add_item(CustomMenuItem::new("about", "About"))
+                    .add_item(CustomMenuItem::new("exit", "Quit")),
+            ),
         )
-        .on_system_tray_event(move |app, event| match event {
-            SystemTrayEvent::MenuItemClick { id, .. } if id == "exit" => app.exit(0),
-            _ => {}
+        .on_system_tray_event(move |app, event| {
+            if let SystemTrayEvent::MenuItemClick { id, .. } = event {
+                match id.as_str() {
+                    "about" => app.get_window("about").unwrap().show().unwrap(),
+                    "exit" => app.exit(0),
+                    _ => {}
+                }
+            }
         })
         .manage(PasswordStore::default())
         .manage(config)

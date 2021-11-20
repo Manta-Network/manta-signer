@@ -50,15 +50,29 @@
             "active": false
         },
         "allowlist": {},
-        "windows": [{
-            "label": "main",
-            "title": "Manta Signer",
-            "width": 500,
-            "height": 300,
-            "decorations": true,
-            "visible": true,
-            "transparent": false
-        }],
+        "windows": [
+            {
+                "label": "main",
+                "title": "Manta Signer",
+                "width": 500,
+                "height": 300,
+                "decorations": true,
+                "visible": true,
+                "transparent": false
+            },
+            {
+                "label": "about",
+                "url": "about.html",
+                "width": 350,
+                "height": 350,
+                "alwaysOnTop": true,
+                "center": true,
+                "decorations": false,
+                "resizable": false,
+                "transparent": false,
+                "visible": false
+            }
+        ],
         "security": {
             "csp": "default-src blob: data: filesystem: ws: wss: http: https: tauri: 'unsafe-eval' 'unsafe-inline' 'self' img-src: 'self'"
         },
