@@ -1,6 +1,6 @@
 import './App.css';
 import React, { useState, useEffect } from 'react';
-import CreateAccount from './pages/CreacteAccount';
+import CreateAccount from './pages/CreateAccount';
 import { Container } from 'semantic-ui-react';
 import { appWindow } from '@tauri-apps/api/window';
 import AuthorizeTx from './pages/AuthorizeTx';
