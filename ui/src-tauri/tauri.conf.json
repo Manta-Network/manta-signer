@@ -50,8 +50,7 @@
             "active": false
         },
         "allowlist": {},
-        "windows": [
-            {
+        "windows": [{
                 "label": "main",
                 "title": "Manta Signer",
                 "width": 500,
@@ -62,12 +61,13 @@
             },
             {
                 "label": "about",
+                "title": "Manta Signer",
                 "url": "about.html",
                 "width": 350,
                 "height": 350,
                 "alwaysOnTop": true,
                 "center": true,
-                "decorations": false,
+                "decorations": true,
                 "resizable": false,
                 "transparent": false,
                 "visible": false
