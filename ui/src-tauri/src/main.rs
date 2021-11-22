@@ -56,18 +56,22 @@ impl User {
     pub fn new(window: Window, password: Receiver<Password>) -> Self {
         Self { window, password }
     }
+
+    /// Requests password from user.
+    #[inline]
+    async fn request_password(&mut self) -> Password {
+        self.password
+            .recv()
+            .await
+            .unwrap_or_else(Password::from_unknown)
+    }
 }
 
 impl Authorizer for User {
     #[inline]
     fn setup<'s>(&'s mut self, config: &'s Config) -> PasswordFuture<'s> {
         let _ = config;
-        Box::pin(async move {
-            self.password
-                .recv()
-                .await
-                .unwrap_or_else(Password::from_unknown)
-        })
+        Box::pin(async move { self.request_password().await })
     }
 
     #[inline]
@@ -76,12 +80,7 @@ impl Authorizer for User {
         T: Serialize,
     {
         self.window.emit("authorize", prompt).unwrap();
-        Box::pin(async move {
-            self.password
-                .recv()
-                .await
-                .unwrap_or_else(Password::from_unknown)
-        })
+        Box::pin(async move { self.request_password().await })
     }
 }
 

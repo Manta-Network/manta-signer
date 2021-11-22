@@ -21,13 +21,15 @@
 use crate::{
     batching::{batch_generate_private_transfer_data, batch_generate_reclaim_data},
     config::Config,
-    secret::{Authorizer, Password, RootSeed},
+    secret::{Authorizer, Password, RootSeed, SecretString},
 };
 use async_std::{
     io::{self, WriteExt},
     sync::Mutex,
+    task::sleep,
 };
 use codec::{Decode, Encode};
+use core::time::Duration;
 use http_types::headers::HeaderValue;
 use manta_api::{
     DeriveShieldedAddressParams, GenerateAssetParams, GeneratePrivateTransferBatchParams,
@@ -68,6 +70,12 @@ pub fn get_currency_symbol_by_asset_id(asset_id: AssetId) -> Option<&'static str
         2 => "KSM",
         _ => return None,
     })
+}
+
+/// Sets the task to sleep to delay password retry.
+#[inline]
+async fn delay_password_retry() {
+    sleep(Duration::from_millis(1000)).await;
 }
 
 /// Transaction Kind
@@ -158,14 +166,27 @@ where
         }
     }
 
+    /// Loads the root seed from `root_seed_file` with `password`.
+    #[inline]
+    async fn load_seed(&self, password: &SecretString) -> Option<RootSeed> {
+        RootSeed::load(&self.config.root_seed_file, password)
+            .await
+            .ok()
+    }
+
     /// Sets the inner seed from a given `password`.
     #[inline]
-    async fn set_seed_from_password(&mut self, password: Password) {
+    async fn set_seed(&mut self, password: &SecretString) {
+        self.root_seed = self.load_seed(password).await;
+    }
+
+    /// Sets the inner seed from a given `password`.
+    #[inline]
+    async fn set_seed_from_password(&mut self, password: Password) -> Option<RootSeed> {
         if let Some(password) = password.known() {
-            self.root_seed = RootSeed::load(&self.config.root_seed_file, &password)
-                .await
-                .ok();
+            self.set_seed(&password).await;
         }
+        self.root_seed.clone()
     }
 
     /// Sets the inner seed from the output of a call to [`Self::authorize`] using the given
@@ -176,8 +197,7 @@ where
         T: Serialize,
     {
         let password = self.authorizer.authorize(prompt).await;
-        self.set_seed_from_password(password).await;
-        self.root_seed.clone()
+        self.set_seed_from_password(password).await
     }
 
     /// Returns the stored root seed if it exists, otherwise, gets the password from the user
@@ -205,15 +225,13 @@ where
             Some(current_root_seed) => {
                 // TODO: Leverage constant time equality checking for root seeds to return a
                 //       `CtOption` instead of an option.
-                let password = self.authorizer.authorize(prompt).await.known()?;
-                if current_root_seed
-                    == &RootSeed::load(&self.config.root_seed_file, &password)
-                        .await
-                        .ok()?
-                {
-                    Some(current_root_seed.clone())
-                } else {
-                    None
+                let mut password = self.authorizer.authorize(prompt).await.known()?;
+                loop {
+                    if current_root_seed == &self.load_seed(&password).await? {
+                        return Some(current_root_seed.clone());
+                    }
+                    delay_password_retry().await;
+                    password = self.authorizer.authorize("authorize-retry").await.known()?;
                 }
             }
             _ => self.set_seed_from_authorization(prompt).await,
@@ -276,7 +294,7 @@ where
 
 impl<A> Service<A>
 where
-    A: 'static + Authorizer + Send,
+    A: 'static + Authorizer + Send + Sync,
 {
     /// Builds a new [`Service`] from `config` and `authorizer`.
     #[inline]
@@ -307,8 +325,15 @@ where
         let service_url = {
             let state = &mut *self.0.state().0.lock().await;
             state.config.setup().await?;
-            let password = state.authorizer.setup(&state.config).await;
-            state.set_seed_from_password(password).await;
+            let mut password = state.authorizer.setup(&state.config).await;
+            loop {
+                if state.set_seed_from_password(password).await.is_none() {
+                    delay_password_retry().await;
+                    password = state.authorizer.authorize("setup-retry").await;
+                } else {
+                    break;
+                }
+            }
             state.config.service_url.clone()
         };
         self.0.listen(service_url).await
