@@ -36,7 +36,7 @@ derivative = { version = "2.2.0", default-features = false, features = ["use_cor
 dirs-next = { version = "2.0.0" }
 futures = { version = "0.3.17", default-features = false }
 http-types = { version = "2.12.0", default-features = false }
-manta-api = { git = "https://github.com/Manta-Network/manta-api", branch = "manta", default-features = false, features = ["signer", "testnet"] }
+manta-api = { git = "https://github.com/Manta-Network/manta-api", branch = "signer_tx_summary_testnet", default-features = false, features = ["signer", "testnet"] }
 manta-asset = { git = "https://github.com/Manta-Network/manta-types", branch = "manta" }
 manta-crypto = { git = "https://github.com/Manta-Network/manta-crypto", branch = "manta" }
 manta-data = { git = "https://github.com/Manta-Network/manta-types", branch = "manta" }

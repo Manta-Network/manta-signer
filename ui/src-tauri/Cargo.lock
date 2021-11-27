@@ -2676,7 +2676,7 @@ dependencies = [
 [[package]]
 name = "manta-api"
 version = "0.3.3"
-source = "git+https://github.com/Manta-Network/manta-api?branch=manta#49af461241c9049b6f347f560be7cead7f70b9de"
+source = "git+https://github.com/Manta-Network/manta-api?branch=signer_tx_summary_testnet#15129844f2e328f293a9b19409aa27a361f846a9"
 dependencies = [
  "ark-bls12-381",
  "ark-crypto-primitives",
