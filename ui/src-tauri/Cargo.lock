@@ -2676,7 +2676,7 @@ dependencies = [
 [[package]]
 name = "manta-api"
 version = "0.3.3"
-source = "git+https://github.com/Manta-Network/manta-api?branch=signer_tx_summary_testnet#15129844f2e328f293a9b19409aa27a361f846a9"
+source = "git+https://github.com/Manta-Network/manta-api?branch=manta#bb37de4b7a72c267eaefe458b1060107e46bbf9c"
 dependencies = [
  "ark-bls12-381",
  "ark-crypto-primitives",
@@ -2778,7 +2778,7 @@ dependencies = [
 
 [[package]]
 name = "manta-signer"
-version = "0.3.0"
+version = "0.4.0"
 dependencies = [
  "ark-serialize",
  "async-std",
