@@ -30,8 +30,10 @@ use async_std::{
 use codec::{Decode, Encode};
 use http_types::headers::HeaderValue;
 use manta_api::{
-    DeriveShieldedAddressParams, GenerateAssetParams, GeneratePrivateTransferBatchParams,
-    GenerateReclaimBatchParams, RecoverAccountParams,
+    get_private_transfer_batch_params_currency_symbol, get_private_transfer_batch_params_recipient,
+    get_private_transfer_batch_params_value, get_reclaim_batch_params_currency_symbol,
+    get_reclaim_batch_params_value, DeriveShieldedAddressParams, GenerateAssetParams,
+    GeneratePrivateTransferBatchParams, GenerateReclaimBatchParams, RecoverAccountParams,
 };
 use manta_asset::AssetId;
 use manta_crypto::MantaSerDes;
@@ -101,15 +103,10 @@ impl From<&GeneratePrivateTransferBatchParams> for TransactionSummary {
     fn from(params: &GeneratePrivateTransferBatchParams) -> Self {
         Self {
             kind: TransactionKind::PrivateTransfer {
-                recipient: bs58::encode(params.receiving_address.encode()).into_string(),
+                recipient: get_private_transfer_batch_params_recipient(params),
             },
-            amount: params
-                .private_transfer_params_list
-                .last()
-                .unwrap()
-                .non_change_output_value
-                .to_string(),
-            currency_symbol: get_currency_symbol_by_asset_id(params.asset_id),
+            amount: get_private_transfer_batch_params_value(params),
+            currency_symbol: get_private_transfer_batch_params_currency_symbol(params),
         }
     }
 }
@@ -119,8 +116,8 @@ impl From<&GenerateReclaimBatchParams> for TransactionSummary {
     fn from(params: &GenerateReclaimBatchParams) -> Self {
         Self {
             kind: TransactionKind::Reclaim,
-            amount: params.reclaim_params.reclaim_value.to_string(),
-            currency_symbol: get_currency_symbol_by_asset_id(params.reclaim_params.asset_id),
+            amount: get_reclaim_batch_params_value(params),
+            currency_symbol: get_reclaim_batch_params_currency_symbol(params),
         }
     }
 }
