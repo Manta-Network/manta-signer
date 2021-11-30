@@ -1,13 +1,13 @@
 {
     "package": {
         "productName": "Manta Signer",
-        "version": "0.1.0"
+        "version": "0.4.1"
     },
     "build": {
         "distDir": "../build",
         "devPath": "http://localhost:3000",
         "beforeDevCommand": "",
-        "beforeBuildCommand": "",
+        "beforeBuildCommand": "yarn install && yarn build",
         "withGlobalTauri": true
     },
     "tauri": {
@@ -22,11 +22,11 @@
                 "icons/icon.icns",
                 "icons/icon.ico"
             ],
-            "resources": [],
+            "resources": ["*.bin"],
             "externalBin": [],
-            "copyright": "",
+            "copyright": "Copyright 2019-2021 Manta Network",
             "category": "DeveloperTool",
-            "shortDescription": "",
+            "shortDescription": "Manta Network Signer",
             "longDescription": "",
             "deb": {
                 "depends": [],
@@ -47,10 +47,14 @@
             }
         },
         "updater": {
-            "active": false
+            "active": false,
+            "endpoints": [],
+            "dialog": true,
+            "pubkey": ""
         },
         "allowlist": {},
-        "windows": [{
+        "windows": [
+            {
                 "label": "main",
                 "title": "Manta Signer",
                 "width": 500,

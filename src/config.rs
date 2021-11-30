@@ -78,6 +78,7 @@ impl Config {
     #[inline]
     pub async fn setup(&self) -> io::Result<()> {
         // FIXME: Use logging instead of `println!`.
+        // FIXME: Not using asynchronous `println!` because it interferes with `Send` requirements.
         println!("Manta Signer {:#?}\n", self);
         if let Some(parent) = self.root_seed_file.parent() {
             fs::create_dir_all(parent).await?;
