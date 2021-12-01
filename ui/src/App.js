@@ -24,9 +24,6 @@ function App() {
           setCurrentPage(CREATE_ACCOUNT_PAGE);
           break;
         case 'setup-authorization':
-          window.__TAURI__.event.listen('setup-retry', (event) => {
-            setRetrySetup(true);
-          });
           setCurrentPage(LOGIN_PAGE);
           break;
         default:
@@ -82,8 +79,6 @@ function App() {
         )}
         {currentPage === LOGIN_PAGE && (
           <SignIn
-            retrySetup={retrySetup}
-            setRetrySetup={setRetrySetup}
             loadPasswordToSignerServer={loadPasswordToSignerServer}
             endInitialConnectionPhase={endInitialConnectionPhase}
           />
