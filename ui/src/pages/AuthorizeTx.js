@@ -3,10 +3,11 @@ import { Button, Header, Input } from 'semantic-ui-react';
 
 const AuthorizeTx = ({
   txSummary,
-  declineTransaction,
-  authorizeTransaction,
+  loadPasswordToSignerServer,
+  hideWindow,
 }) => {
   const [password, setPassword] = useState('');
+  const [retry, setRetry] = useState(false);
 
   const { amount, currency_symbol, kind } = txSummary;
   const isReclaimTx = typeof kind === 'string';
@@ -17,11 +18,18 @@ const AuthorizeTx = ({
   const summaryMessage = `${txKindMessage} ${amount} ${currency_symbol} to: ${recipient}`;
 
   const onClickAuthorize = async () => {
-    await authorizeTransaction(password);
+    const shouldRetry = await loadPasswordToSignerServer(password);
+    setPassword('');
+    setRetry(shouldRetry);
+    if (!retry) {
+      hideWindow();
+    }
   };
 
   const onClickDecline = async () => {
-    await declineTransaction();
+    await window.__TAURI__.invoke('clear_password');
+    setPassword('');
+    hideWindow();
   };
 
   return (

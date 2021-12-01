@@ -30,14 +30,14 @@ use manta_signer::{
     config::Config,
     secret::{
         account_exists, create_account, Authorizer, ExposeSecret, Password, PasswordFuture,
-        SecretString,
+        SecretString, UnitFuture,
     },
     service::Service,
 };
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 use tauri::{
-    async_runtime::{channel, spawn, Receiver, RwLock, Sender},
+    async_runtime::{channel, spawn, Mutex, Receiver, Sender},
     CustomMenuItem, Manager, State, SystemTray, SystemTrayEvent, SystemTrayMenu, Window,
 };
 
@@ -47,57 +47,105 @@ pub struct User {
     window: Window,
 
     /// Password Receiver
-    password: Receiver<Password>,
+    password: Receiver<Option<Password>>,
+
+    /// Password Retry Sender
+    retry: Sender<bool>,
+
+    /// Waiting Flag
+    waiting: bool,
 }
 
 impl User {
-    /// Builds a new [`User`] from `window` and `password`.
+    /// Builds a new [`User`] from `window`, `password`, and `retry`.
     #[inline]
-    pub fn new(window: Window, password: Receiver<Password>) -> Self {
-        Self { window, password }
+    pub fn new(window: Window, password: Receiver<Option<Password>>, retry: Sender<bool>) -> Self {
+        Self {
+            window,
+            password,
+            retry,
+            waiting: false,
+        }
+    }
+
+    /// Requests password from user, sending a retry message if the previous password did not match
+    /// correctly.
+    #[inline]
+    async fn request_password(&mut self) -> Password {
+        if self.waiting {
+            self.retry.send(true).await.expect("");
+        }
+        match self.password.recv().await {
+            Some(None) => {
+                if !self.waiting {
+                    self.retry.send(false).await.expect("");
+                }
+                self.waiting = false;
+                Password::from_unknown()
+            }
+            Some(Some(password)) => {
+                self.waiting = true;
+                password
+            }
+            _ => {
+                self.waiting = true;
+                Password::from_unknown()
+            }
+        }
+    }
+
+    /// Sends validation message when password was correctly matched.
+    #[inline]
+    async fn validate_password(&mut self) {
+        self.waiting = false;
+        self.retry.send(false).await.expect("")
     }
 }
 
 impl Authorizer for User {
     #[inline]
-    fn setup<'s>(&'s mut self, config: &'s Config) -> PasswordFuture<'s> {
-        let _ = config;
-        Box::pin(async move {
-            self.password
-                .recv()
-                .await
-                .unwrap_or_else(Password::from_unknown)
-        })
+    fn password(&mut self) -> PasswordFuture {
+        Box::pin(async move { self.request_password().await })
     }
 
     #[inline]
-    fn authorize<T>(&mut self, prompt: T) -> PasswordFuture
+    fn wake<T>(&mut self, prompt: T) -> UnitFuture
     where
         T: Serialize,
     {
         self.window.emit("authorize", prompt).unwrap();
-        Box::pin(async move {
-            self.password
-                .recv()
-                .await
-                .unwrap_or_else(Password::from_unknown)
-        })
+        Box::pin(async move {})
+    }
+
+    #[inline]
+    fn success(&mut self) -> UnitFuture {
+        Box::pin(async move { self.validate_password().await })
     }
 }
 
+/// Password Storage Channel
+struct PasswordStoreChannel {
+    /// Password Sender
+    password: Sender<Option<Password>>,
+
+    /// Retry Receiver
+    retry: Receiver<bool>,
+}
+
 /// Password Storage Type
-type PasswordStoreType = Arc<RwLock<Option<Sender<Password>>>>;
+type PasswordStoreType = Arc<Mutex<Option<PasswordStoreChannel>>>;
 
 /// Password Storage Handle
 pub struct PasswordStoreHandle(PasswordStoreType);
 
 impl PasswordStoreHandle {
-    /// Returns the receiver side of the password store.
+    /// Constructs the opposite end of `self` for the password storage handle.
     #[inline]
-    pub async fn into_receiver(self) -> Receiver<Password> {
-        let (sender, receiver) = channel(1);
-        *self.0.write().await = Some(sender);
-        receiver
+    pub async fn into_channel(self) -> (Receiver<Option<Password>>, Sender<bool>) {
+        let (password, receiver) = channel(1);
+        let (sender, retry) = channel(1);
+        *self.0.lock().await = Some(PasswordStoreChannel { password, retry });
+        (receiver, sender)
     }
 }
 
@@ -112,19 +160,37 @@ impl PasswordStore {
         PasswordStoreHandle(self.0.clone())
     }
 
-    /// Loads a new password into the state.
+    /// Loads the password store with `password`, returning `true` if the password was correct.
     #[inline]
-    pub async fn load(&self, password: SecretString) {
-        if let Some(state) = &*self.0.read().await {
-            let _ = state.send(Password::from_known(password)).await;
+    pub async fn load(&self, password: SecretString) -> bool {
+        if let Some(store) = &mut *self.0.lock().await {
+            let _ = store
+                .password
+                .send(Some(Password::from_known(password)))
+                .await;
+            store.retry.recv().await.unwrap()
+        } else {
+            false
         }
     }
 
-    /// Clears the password state.
+    /// Loads the password with `password`, not requesting a retry.
+    #[inline]
+    pub async fn load_exact(&self, password: SecretString) {
+        if let Some(store) = &mut *self.0.lock().await {
+            let _ = store
+                .password
+                .send(Some(Password::from_known(password)))
+                .await;
+        }
+    }
+
+    /// Clears the password from the store.
     #[inline]
     pub async fn clear(&self) {
-        if let Some(state) = &*self.0.read().await {
-            let _ = state.send(Password::from_unknown()).await;
+        if let Some(store) = &mut *self.0.lock().await {
+            let _ = store.password.send(None).await;
+            let _ = store.retry.recv().await;
         }
     }
 }
@@ -134,9 +200,8 @@ impl PasswordStore {
 async fn load_password(
     password_store: State<'_, PasswordStore>,
     password: String,
-) -> Result<(), ()> {
-    password_store.load(password.into()).await;
-    Ok(())
+) -> Result<bool, ()> {
+    Ok(password_store.load(password.into()).await)
 }
 
 /// Removes the current password from storage.
@@ -168,21 +233,30 @@ async fn connect(config: State<'_, Config>) -> Result<ConnectEvent, ()> {
 
 /// Sends the mnemonic to the UI for the user to memorize.
 #[tauri::command]
-async fn get_mnemonic(config: State<'_, Config>, password: String) -> Result<String, ()> {
-    Ok(create_account(&config.root_seed_file, &password.into())
+async fn get_mnemonic(
+    config: State<'_, Config>,
+    password_store: State<'_, PasswordStore>,
+    password: String,
+) -> Result<String, ()> {
+    let password = password.into();
+    let mnemonic = create_account(&config.root_seed_file, &password)
         .await
         .map_err(move |_| ())?
         .expose_secret()
         .clone()
-        .into_phrase())
+        .into_phrase();
+    password_store.load_exact(password).await;
+    Ok(mnemonic)
 }
 
+/* TODO[remove]:
 /// Ends the first round of communication between the UI and the signer.
 #[tauri::command]
 async fn end_connect(password_store: State<'_, PasswordStore>) -> Result<(), ()> {
     password_store.clear().await;
     Ok(())
 }
+*/
 
 /// Runs the main Tauri application.
 fn main() {
@@ -213,20 +287,18 @@ fn main() {
             let config = app.state::<Config>().inner().clone();
             let password_store = app.state::<PasswordStore>().handle();
             spawn(async move {
-                Service::build(
-                    config,
-                    User::new(window, password_store.into_receiver().await),
-                )
-                .serve()
-                .await
-                .expect("Unable to build manta-signer service.");
+                let (password, retry) = password_store.into_channel().await;
+                Service::build(config, User::new(window, password, retry))
+                    .serve()
+                    .await
+                    .expect("Unable to build manta-signer service.");
             });
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
             connect,
             get_mnemonic,
-            end_connect,
+            // TODO[remove]: end_connect,
             clear_password,
             load_password,
         ])

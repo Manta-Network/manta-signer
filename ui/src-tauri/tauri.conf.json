@@ -22,7 +22,7 @@
                 "icons/icon.icns",
                 "icons/icon.ico"
             ],
-            "resources": ["*.bin"],
+            "resources": ["../*.bin"],
             "externalBin": [],
             "copyright": "Copyright 2019-2021 Manta Network",
             "category": "DeveloperTool",

@@ -21,13 +21,15 @@
 use crate::{
     batching::{batch_generate_private_transfer_data, batch_generate_reclaim_data},
     config::Config,
-    secret::{Authorizer, Password, RootSeed},
+    secret::{Authorizer, Password, RootSeed, SecretString},
 };
 use async_std::{
     io::{self, WriteExt},
     sync::Mutex,
+    task::sleep,
 };
 use codec::{Decode, Encode};
+use core::time::Duration;
 use http_types::headers::HeaderValue;
 use manta_api::{
     get_private_transfer_batch_params_currency_symbol, get_private_transfer_batch_params_recipient,
@@ -70,6 +72,12 @@ pub fn get_currency_symbol_by_asset_id(asset_id: AssetId) -> Option<&'static str
         2 => "KSM",
         _ => return None,
     })
+}
+
+/// Sets the task to sleep to delay password retry.
+#[inline]
+async fn delay_password_retry() {
+    sleep(Duration::from_millis(1000)).await;
 }
 
 /// Transaction Kind
@@ -155,65 +163,90 @@ where
         }
     }
 
-    /// Sets the inner seed from a given `password`.
+    /// Loads the root seed from `root_seed_file` with `password`.
     #[inline]
-    async fn set_seed_from_password(&mut self, password: Password) {
-        if let Some(password) = password.known() {
-            self.root_seed = RootSeed::load(&self.config.root_seed_file, &password)
-                .await
-                .ok();
-        }
+    async fn load_seed(&self, password: &SecretString) -> Option<RootSeed> {
+        RootSeed::load(&self.config.root_seed_file, password)
+            .await
+            .ok()
     }
 
-    /// Sets the inner seed from the output of a call to [`Self::authorize`] using the given
-    /// `prompt`.
+    /// Sets the inner seed from a given `password`.
     #[inline]
-    async fn set_seed_from_authorization<T>(&mut self, prompt: T) -> Option<RootSeed>
-    where
-        T: Serialize,
-    {
-        let password = self.authorizer.authorize(prompt).await;
-        self.set_seed_from_password(password).await;
+    async fn set_seed(&mut self, password: &SecretString) {
+        self.root_seed = self.load_seed(password).await;
+    }
+
+    /// Sets the inner seed from a given `password`.
+    #[inline]
+    async fn set_seed_from_password(&mut self, password: Password) -> Option<RootSeed> {
+        if let Some(password) = password.known() {
+            self.set_seed(&password).await;
+        }
         self.root_seed.clone()
+    }
+
+    /// Sets the inner seed from the output of a call to [`Authorizer::password`].
+    #[inline]
+    async fn set_seed_from_authorization(&mut self) -> Option<RootSeed> {
+        let password = self.authorizer.password().await;
+        self.set_seed_from_password(password).await
+    }
+
+    /// Checks that the starting password can decrypt the root seed file.
+    #[inline]
+    async fn check_starting_password(&mut self) -> bool {
+        if let Some(password) = self.authorizer.password().await.known() {
+            self.load_seed(&password).await.is_some()
+        } else {
+            false
+        }
     }
 
     /// Returns the stored root seed if it exists, otherwise, gets the password from the user
     /// and tries to decrypt the root seed.
     #[inline]
-    async fn get_root_seed<T>(&mut self, prompt: T) -> Option<RootSeed>
+    async fn get_root_seed<T>(&mut self, prompt: T) -> RootSeed
     where
         T: Serialize,
     {
         if self.root_seed.is_none() {
-            self.set_seed_from_authorization(prompt).await
+            self.authorizer.wake(prompt).await;
+            loop {
+                if let Some(root_seed) = self.set_seed_from_authorization().await {
+                    self.authorizer.success().await;
+                    return root_seed;
+                }
+                delay_password_retry().await;
+            }
         } else {
-            self.root_seed.clone()
+            self.root_seed.clone().unwrap()
         }
     }
 
     /// Returns the currently stored root seed if it matches the one returned by the user after
     /// prompting.
     #[inline]
-    async fn check_root_seed<T>(&mut self, prompt: T) -> Option<RootSeed>
+    async fn check_root_seed<T>(&mut self, prompt: T) -> RootSeed
     where
         T: Serialize,
     {
         match &self.root_seed {
             Some(current_root_seed) => {
-                // TODO: Leverage constant time equality checking for root seeds to return a
-                //       `CtOption` instead of an option.
-                let password = self.authorizer.authorize(prompt).await.known()?;
-                if current_root_seed
-                    == &RootSeed::load(&self.config.root_seed_file, &password)
-                        .await
-                        .ok()?
-                {
-                    Some(current_root_seed.clone())
-                } else {
-                    None
+                self.authorizer.wake(prompt).await;
+                loop {
+                    if let Some(password) = self.authorizer.password().await.known() {
+                        if let Some(root_seed) = self.load_seed(&password).await {
+                            if current_root_seed == &root_seed {
+                                self.authorizer.success().await;
+                                return root_seed;
+                            }
+                        }
+                    }
+                    delay_password_retry().await;
                 }
             }
-            _ => self.set_seed_from_authorization(prompt).await,
+            _ => self.get_root_seed(prompt).await,
         }
     }
 }
@@ -245,7 +278,7 @@ where
     /// Returns the stored root seed if it exists, otherwise, gets the password from the user
     /// and tries to decrypt the root seed.
     #[inline]
-    async fn get_root_seed<T>(&self, prompt: T) -> Option<RootSeed>
+    async fn get_root_seed<T>(&self, prompt: T) -> RootSeed
     where
         T: Serialize,
     {
@@ -255,7 +288,7 @@ where
     /// Returns the currently stored root seed if it matches the one returned by the user after
     /// prompting.
     #[inline]
-    async fn check_root_seed<T>(&self, prompt: T) -> Option<RootSeed>
+    async fn check_root_seed<T>(&self, prompt: T) -> RootSeed
     where
         T: Serialize,
     {
@@ -273,7 +306,7 @@ where
 
 impl<A> Service<A>
 where
-    A: 'static + Authorizer + Send,
+    A: 'static + Authorizer + Send + Sync,
 {
     /// Builds a new [`Service`] from `config` and `authorizer`.
     #[inline]
@@ -304,8 +337,16 @@ where
         let service_url = {
             let state = &mut *self.0.state().0.lock().await;
             state.config.setup().await?;
-            let password = state.authorizer.setup(&state.config).await;
-            state.set_seed_from_password(password).await;
+            state.authorizer.setup(&state.config).await;
+
+            loop {
+                if state.check_starting_password().await {
+                    state.authorizer.success().await;
+                    break;
+                }
+                delay_password_retry().await;
+            }
+
             state.config.service_url.clone()
         };
         self.0.listen(service_url).await
@@ -331,7 +372,7 @@ where
         let (body, state) = Self::process(&mut request).await?;
         let params = ensure!(RecoverAccountParams::decode(&mut body.as_slice()))?;
         Self::log(format!("REQUEST: {:?}", params)).await?;
-        let root_seed = ensure!(state.get_root_seed("recover_account").await.ok_or(()))?;
+        let root_seed = state.get_root_seed("recover_account").await;
         let recovered_account =
             manta_api::recover_account(params, root_seed.expose_secret()).encode();
         Self::log(format!("RESPONSE: {:?}", recovered_account)).await?;
@@ -344,10 +385,7 @@ where
         let (body, state) = Self::process(&mut request).await?;
         let params = ensure!(DeriveShieldedAddressParams::decode(&mut body.as_slice(),))?;
         Self::log(format!("REQUEST: {:?}", params)).await?;
-        let root_seed = ensure!(state
-            .get_root_seed("derive_shielded_address")
-            .await
-            .ok_or(()))?;
+        let root_seed = state.get_root_seed("derive_shielded_address").await;
         let mut address = Vec::new();
         ensure!(
             manta_api::derive_shielded_address(params, root_seed.expose_secret())
@@ -363,7 +401,7 @@ where
         let (body, state) = Self::process(&mut request).await?;
         let params = ensure!(GenerateAssetParams::decode(&mut body.as_slice()))?;
         Self::log(format!("REQUEST: {:?}", params)).await?;
-        let root_seed = ensure!(state.get_root_seed("generate_asset").await.ok_or(()))?;
+        let root_seed = state.get_root_seed("generate_asset").await;
         let asset =
             manta_api::generate_signer_input_asset(params, root_seed.expose_secret()).encode();
         Self::log(format!("RESPONSE: {:?}", asset)).await?;
@@ -376,7 +414,7 @@ where
         let (body, state) = Self::process(&mut request).await?;
         let params = ensure!(GenerateAssetParams::decode(&mut body.as_slice()))?;
         Self::log(format!("REQUEST: {:?}", params)).await?;
-        let root_seed = ensure!(state.get_root_seed("mint").await.ok_or(()))?;
+        let root_seed = state.get_root_seed("mint").await;
         let mut mint_data = Vec::new();
         ensure!(
             manta_api::generate_mint_data(params, root_seed.expose_secret())
@@ -394,10 +432,9 @@ where
             &mut body.as_slice()
         ))?;
         Self::log(format!("REQUEST: {:?}", params)).await?;
-        let root_seed = ensure!(state
+        let root_seed = state
             .check_root_seed(TransactionSummary::from(&params))
-            .await
-            .ok_or(()))?;
+            .await;
         let private_transfer_data = batch_generate_private_transfer_data(
             params,
             root_seed.expose_secret(),
@@ -416,10 +453,9 @@ where
         let (body, state) = Self::process(&mut request).await?;
         let params = ensure!(GenerateReclaimBatchParams::decode(&mut body.as_slice()))?;
         Self::log(format!("REQUEST: {:?}", params)).await?;
-        let root_seed = ensure!(state
+        let root_seed = state
             .check_root_seed(TransactionSummary::from(&params))
-            .await
-            .ok_or(()))?;
+            .await;
         let config = state.config().await;
         let reclaim_data = batch_generate_reclaim_data(
             params,

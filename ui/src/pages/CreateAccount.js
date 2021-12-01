@@ -24,6 +24,19 @@ const CreateAccount = ({ getRecoveryPhrase, endInitialConnectionPhase }) => {
 
   return (
     <>
+      {!recoveryPhrase && (
+        <>
+          <Header> Create Account </Header>
+          <Input
+            type="password"
+            label="Password"
+            onChange={(e) => setPassword(e.target.value)}
+          />
+          <Button className="button" onClick={onClickCreateAccount}>
+            Create Account
+          </Button>
+        </>
+      )}
       {recoveryPhrase && (
         <>
           <Header className="recovery-phrase-header">
@@ -40,19 +53,6 @@ const CreateAccount = ({ getRecoveryPhrase, endInitialConnectionPhase }) => {
           </div>
           <Button className="button" onClick={onClickConfirmRecoveryPhrase}>
             I have written down my recovery phrase
-          </Button>
-        </>
-      )}
-      {!recoveryPhrase && (
-        <>
-          <Header> Create Account </Header>
-          <Input
-            type="password"
-            label="Password"
-            onChange={(e) => setPassword(e.target.value)}
-          />
-          <Button className="button" onClick={onClickCreateAccount}>
-            Create Account
           </Button>
         </>
       )}

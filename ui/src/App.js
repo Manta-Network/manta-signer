@@ -24,6 +24,9 @@ function App() {
           setCurrentPage(CREATE_ACCOUNT_PAGE);
           break;
         case 'setup-authorization':
+          window.__TAURI__.event.listen('setup-retry', (event) => {
+            setRetrySetup(true);
+          });
           setCurrentPage(LOGIN_PAGE);
           break;
         default:
@@ -33,10 +36,12 @@ function App() {
     beginInitialConnectionPhase();
   }, [isConnected]);
 
-  const listenForTxAuthorizationRequests = () => {
-    setIsConnected(true);
+  const hideWindow = () => {
     setCurrentPage(null);
     appWindow.hide();
+  };
+
+  const listenForTxAuthorizationRequests = () => {
     window.__TAURI__.event.listen('authorize', (event) => {
       appWindow.show();
       appWindow.center();
@@ -47,33 +52,22 @@ function App() {
   };
 
   const loadPasswordToSignerServer = async (password) => {
-    await window.__TAURI__.invoke('load_password', {
+    const should_retry = await window.__TAURI__.invoke('load_password', {
       password: password,
     });
+    return should_retry;
   };
 
   const getRecoveryPhrase = async (password) => {
     const mnemonic = await window.__TAURI__.invoke('get_mnemonic', {
       password: password,
     });
-    await window.__TAURI__.invoke('load_password', {
-      password: password,
-    });
     return mnemonic;
-  };
-
-  const declineTransaction = async () => {
-    await window.__TAURI__.invoke('clear_password');
-    listenForTxAuthorizationRequests();
-  };
-
-  const authorizeTransaction = async (password) => {
-    await loadPasswordToSignerServer(password);
-    listenForTxAuthorizationRequests();
   };
 
   const endInitialConnectionPhase = async () => {
     setIsConnected(true);
+    hideWindow();
     listenForTxAuthorizationRequests();
   };
 
@@ -88,6 +82,8 @@ function App() {
         )}
         {currentPage === LOGIN_PAGE && (
           <SignIn
+            retrySetup={retrySetup}
+            setRetrySetup={setRetrySetup}
             loadPasswordToSignerServer={loadPasswordToSignerServer}
             endInitialConnectionPhase={endInitialConnectionPhase}
           />
@@ -95,8 +91,8 @@ function App() {
         {currentPage === AUTHORIZE_TX_PAGE && (
           <AuthorizeTx
             txSummary={txSummary}
-            declineTransaction={declineTransaction}
-            authorizeTransaction={authorizeTransaction}
+            loadPasswordToSignerServer={loadPasswordToSignerServer}
+            hideWindow={hideWindow}
           />
         )}
       </Container>

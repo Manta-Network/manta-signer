@@ -83,19 +83,25 @@ impl Default for Password {
     }
 }
 
+/// Unit Future
+///
+///
+pub type UnitFuture<'t> = BoxFuture<'t, ()>;
+
 /// Password Future
 ///
-/// This `type` is returned by the [`authorize`] and [`setup`] methods on [`Authorizer`].
-/// See their documentation for more.
 ///
-/// [`authorize`]: Authorizer::authorize
-/// [`setup`]: Authorizer::setup
 pub type PasswordFuture<'t> = BoxFuture<'t, Password>;
 
 /// Authorizer
 pub trait Authorizer {
-    /// Runs some setup for the authorizer using the `config`, returning a [`Password`] if already
-    /// known during setup.
+    ///
+    fn password(&mut self) -> PasswordFuture;
+
+    ///
+    fn success(&mut self) -> UnitFuture;
+
+    /// Runs some setup for the authorizer using the `config`.
     ///
     /// # Implementation Note
     ///
@@ -105,15 +111,20 @@ pub trait Authorizer {
     /// [`Service`]: crate::service::Service
     /// [`Service::serve`]: crate::service::Service::serve
     #[inline]
-    fn setup<'s>(&'s mut self, config: &'s Config) -> PasswordFuture<'s> {
+    fn setup<'s>(&'s mut self, config: &'s Config) -> UnitFuture<'s> {
         let _ = config;
-        Box::pin(async move { Password::from_unknown() })
+        Box::pin(async move {})
     }
 
-    /// Shows the given `prompt` to the authorizer, requesting their password.
-    fn authorize<T>(&mut self, prompt: T) -> PasswordFuture
+    ///
+    #[inline]
+    fn wake<T>(&mut self, prompt: T) -> UnitFuture
     where
-        T: Serialize;
+        T: Serialize,
+    {
+        let _ = prompt;
+        Box::pin(async move {})
+    }
 }
 
 /// Root Seed

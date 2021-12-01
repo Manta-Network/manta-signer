@@ -3,11 +3,15 @@ import { Button, Input, Header } from 'semantic-ui-react';
 
 const SignIn = ({ loadPasswordToSignerServer, endInitialConnectionPhase }) => {
   const [password, setPassword] = useState('');
+  const [retry, setRetry] = useState(false);
 
   const onClickSignIn = async () => {
-    await loadPasswordToSignerServer(password);
+    const shouldRetry = await loadPasswordToSignerServer(password);
     setPassword('');
-    await endInitialConnectionPhase();
+    setRetry(shouldRetry);
+    if (!retry) {
+      await endInitialConnectionPhase();
+    }
   };
 
   return (
