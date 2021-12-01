@@ -7,7 +7,6 @@ const AuthorizeTx = ({
   hideWindow,
 }) => {
   const [password, setPassword] = useState('');
-  const [retry, setRetry] = useState(false);
 
   const { amount, currency_symbol, kind } = txSummary;
   const isReclaimTx = typeof kind === 'string';
@@ -20,8 +19,7 @@ const AuthorizeTx = ({
   const onClickAuthorize = async () => {
     const shouldRetry = await loadPasswordToSignerServer(password);
     setPassword('');
-    setRetry(shouldRetry);
-    if (!retry) {
+    if (!shouldRetry) {
       hideWindow();
     }
   };
