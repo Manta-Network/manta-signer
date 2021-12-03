@@ -437,9 +437,9 @@ where
             .await;
         let private_transfer_data = batch_generate_private_transfer_data(
             params,
-            root_seed.expose_secret(),
+            *root_seed.expose_secret(),
             state.config().await.private_transfer_proving_key_path(),
-            &mut Self::rng(),
+            Self::rng,
         )
         .await
         .encode();
@@ -459,10 +459,10 @@ where
         let config = state.config().await;
         let reclaim_data = batch_generate_reclaim_data(
             params,
-            root_seed.expose_secret(),
+            *root_seed.expose_secret(),
             config.private_transfer_proving_key_path(),
             config.reclaim_proving_key_path(),
-            &mut Self::rng(),
+            Self::rng,
         )
         .await
         .encode();
