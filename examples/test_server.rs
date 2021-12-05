@@ -23,7 +23,7 @@ use manta_signer::{
         create_account, sample_password, Authorizer, Password, PasswordFuture, SecretString,
         UnitFuture,
     },
-    service::Service,
+    service::{Prompt, Service},
 };
 use rand::thread_rng;
 
@@ -42,14 +42,15 @@ impl MockUser {
 }
 
 impl Authorizer for MockUser {
+    type Prompt = Prompt;
+
+    type Message = ();
+
+    type Error = ();
+
     #[inline]
     fn password(&mut self) -> PasswordFuture {
         Box::pin(async move { Password::from_known(self.password.clone()) })
-    }
-
-    #[inline]
-    fn success(&mut self) -> UnitFuture {
-        Box::pin(async move {})
     }
 
     #[inline]

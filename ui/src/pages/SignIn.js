@@ -1,14 +1,19 @@
 import React, { useState } from 'react';
 import { Button, Input, Header } from 'semantic-ui-react';
 
-const SignIn = ({ loadPasswordToSignerServer, endInitialConnectionPhase }) => {
+const SignIn = ({ sendPassword, endInitialConnectionPhase }) => {
   const [password, setPassword] = useState('');
 
   const onClickSignIn = async () => {
-    const shouldRetry = await loadPasswordToSignerServer(password);
+    console.log("[INFO]: Sign In.");
+    const shouldRetry = await sendPassword(password);
     setPassword('');
-    if (shouldRetry) {
+    // FIXME: Clear the input element too.
+    if (!shouldRetry) {
+      console.log("[INFO]: End Initial Connection Phase");
       await endInitialConnectionPhase();
+    } else {
+      console.log("RETRY!");
     }
   };
 

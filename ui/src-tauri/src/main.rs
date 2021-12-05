@@ -32,7 +32,7 @@ use manta_signer::{
         account_exists, create_account, Authorizer, ExposeSecret, Password, PasswordFuture,
         SecretString, UnitFuture,
     },
-    service::Service,
+    service::{Prompt, Service},
 };
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
@@ -47,7 +47,7 @@ pub struct User {
     window: Window,
 
     /// Password Receiver
-    password: Receiver<Option<Password>>,
+    password: Receiver<Password>,
 
     /// Password Retry Sender
     retry: Sender<bool>,
@@ -59,7 +59,7 @@ pub struct User {
 impl User {
     /// Builds a new [`User`] from `window`, `password`, and `retry`.
     #[inline]
-    pub fn new(window: Window, password: Receiver<Option<Password>>, retry: Sender<bool>) -> Self {
+    pub fn new(window: Window, password: Receiver<Password>, retry: Sender<bool>) -> Self {
         Self {
             window,
             password,
@@ -68,57 +68,69 @@ impl User {
         }
     }
 
+    /// Emits a `message` of the given `kind` to the window.
+    #[inline]
+    fn emit<T>(&self, kind: &'static str, message: T)
+    where
+        T: Serialize,
+    {
+        self.window.emit(kind, message).unwrap()
+    }
+
+    /// Sends a the `retry` message to have the user retry the password.
+    #[inline]
+    async fn should_retry(&mut self, retry: bool) {
+        self.retry
+            .send(retry)
+            .await
+            .expect("Failed to send retry message.");
+    }
+
     /// Requests password from user, sending a retry message if the previous password did not match
     /// correctly.
     #[inline]
     async fn request_password(&mut self) -> Password {
         if self.waiting {
-            self.retry.send(true).await.expect("");
+            self.should_retry(true).await;
         }
-        match self.password.recv().await {
-            Some(None) => {
-                if !self.waiting {
-                    self.retry.send(false).await.expect("");
-                }
-                self.waiting = false;
-                Password::from_unknown()
-            }
-            Some(Some(password)) => {
-                self.waiting = true;
-                password
-            }
-            _ => {
-                self.waiting = true;
-                Password::from_unknown()
-            }
-        }
+        let password = self
+            .password
+            .recv()
+            .await
+            .expect("Failed to receive retry message.");
+        self.waiting = password.is_known();
+        password
     }
 
     /// Sends validation message when password was correctly matched.
     #[inline]
     async fn validate_password(&mut self) {
         self.waiting = false;
-        self.retry.send(false).await.expect("")
+        self.should_retry(false).await;
     }
 }
 
 impl Authorizer for User {
+    type Prompt = Prompt;
+
+    type Message = ();
+
+    type Error = ();
+
     #[inline]
     fn password(&mut self) -> PasswordFuture {
         Box::pin(async move { self.request_password().await })
     }
 
     #[inline]
-    fn wake<T>(&mut self, prompt: T) -> UnitFuture
-    where
-        T: Serialize,
-    {
-        self.window.emit("authorize", prompt).unwrap();
+    fn wake(&mut self, prompt: Self::Prompt) -> UnitFuture {
+        self.emit("authorize", prompt);
         Box::pin(async move {})
     }
 
     #[inline]
-    fn success(&mut self) -> UnitFuture {
+    fn sleep(&mut self, message: Result<Self::Message, Self::Error>) -> UnitFuture {
+        let _ = message;
         Box::pin(async move { self.validate_password().await })
     }
 }
@@ -126,7 +138,7 @@ impl Authorizer for User {
 /// Password Storage Channel
 struct PasswordStoreChannel {
     /// Password Sender
-    password: Sender<Option<Password>>,
+    password: Sender<Password>,
 
     /// Retry Receiver
     retry: Receiver<bool>,
@@ -141,7 +153,7 @@ pub struct PasswordStoreHandle(PasswordStoreType);
 impl PasswordStoreHandle {
     /// Constructs the opposite end of `self` for the password storage handle.
     #[inline]
-    pub async fn into_channel(self) -> (Receiver<Option<Password>>, Sender<bool>) {
+    pub async fn into_channel(self) -> (Receiver<Password>, Sender<bool>) {
         let (password, receiver) = channel(1);
         let (sender, retry) = channel(1);
         *self.0.lock().await = Some(PasswordStoreChannel { password, retry });
@@ -164,10 +176,7 @@ impl PasswordStore {
     #[inline]
     pub async fn load(&self, password: SecretString) -> bool {
         if let Some(store) = &mut *self.0.lock().await {
-            let _ = store
-                .password
-                .send(Some(Password::from_known(password)))
-                .await;
+            let _ = store.password.send(Password::from_known(password)).await;
             store.retry.recv().await.unwrap()
         } else {
             false
@@ -178,10 +187,7 @@ impl PasswordStore {
     #[inline]
     pub async fn load_exact(&self, password: SecretString) {
         if let Some(store) = &mut *self.0.lock().await {
-            let _ = store
-                .password
-                .send(Some(Password::from_known(password)))
-                .await;
+            let _ = store.password.send(Password::from_known(password)).await;
         }
     }
 
@@ -189,24 +195,23 @@ impl PasswordStore {
     #[inline]
     pub async fn clear(&self) {
         if let Some(store) = &mut *self.0.lock().await {
-            let _ = store.password.send(None).await;
-            let _ = store.retry.recv().await;
+            let _ = store.password.send(Password::from_unknown()).await;
         }
     }
 }
 
-/// Loads the current `password` into storage from the UI.
+/// Sends the current `password` into storage from the UI.
 #[tauri::command]
-async fn load_password(
+async fn send_password(
     password_store: State<'_, PasswordStore>,
     password: String,
 ) -> Result<bool, ()> {
     Ok(password_store.load(password.into()).await)
 }
 
-/// Removes the current password from storage.
+/// Stops the server from prompting for the password.
 #[tauri::command]
-async fn clear_password(password_store: State<'_, PasswordStore>) -> Result<(), ()> {
+async fn stop_password_prompt(password_store: State<'_, PasswordStore>) -> Result<(), ()> {
     password_store.clear().await;
     Ok(())
 }
@@ -249,15 +254,6 @@ async fn get_mnemonic(
     Ok(mnemonic)
 }
 
-/* TODO[remove]:
-/// Ends the first round of communication between the UI and the signer.
-#[tauri::command]
-async fn end_connect(password_store: State<'_, PasswordStore>) -> Result<(), ()> {
-    password_store.clear().await;
-    Ok(())
-}
-*/
-
 /// Runs the main Tauri application.
 fn main() {
     let config =
@@ -298,9 +294,8 @@ fn main() {
         .invoke_handler(tauri::generate_handler![
             connect,
             get_mnemonic,
-            // TODO[remove]: end_connect,
-            clear_password,
-            load_password,
+            send_password,
+            stop_password_prompt,
         ])
         .build(tauri::generate_context!())
         .expect("Error while building UI.");

@@ -80,50 +80,59 @@ async fn delay_password_retry() {
     sleep(Duration::from_millis(1000)).await;
 }
 
-/// Transaction Kind
+/// Prompt
 #[derive(Clone, Debug, Deserialize, Eq, Hash, PartialEq, Serialize)]
-pub enum TransactionKind {
+#[serde(deny_unknown_fields, tag = "type")]
+pub enum Prompt {
+    /// Recover Account
+    RecoverAccount,
+
+    /// Derive Shielded Address
+    DeriveShieldedAddress,
+
+    /// Generate Asset
+    GenerateAsset,
+
+    /// Mint
+    Mint,
+
     /// Private Transfer
     PrivateTransfer {
-        /// Recipient Address
+        /// Transaction Recipient
         recipient: String,
+
+        /// Transaction Amount
+        amount: String,
+
+        /// Currency Symbol
+        currency_symbol: Option<&'static str>,
     },
 
     /// Reclaim
-    Reclaim,
+    Reclaim {
+        /// Transaction Amount
+        amount: String,
+
+        /// Currency Symbol
+        currency_symbol: Option<&'static str>,
+    },
 }
 
-/// Transaction Summary
-#[derive(Clone, Debug, Deserialize, Eq, Hash, PartialEq, Serialize)]
-pub struct TransactionSummary {
-    /// Transaction Kind
-    pub kind: TransactionKind,
-
-    /// Transaction Amount
-    pub amount: String,
-
-    /// Currency Symbol
-    pub currency_symbol: Option<&'static str>,
-}
-
-impl From<&GeneratePrivateTransferBatchParams> for TransactionSummary {
+impl From<&GeneratePrivateTransferBatchParams> for Prompt {
     #[inline]
     fn from(params: &GeneratePrivateTransferBatchParams) -> Self {
-        Self {
-            kind: TransactionKind::PrivateTransfer {
-                recipient: get_private_transfer_batch_params_recipient(params),
-            },
+        Self::PrivateTransfer {
+            recipient: get_private_transfer_batch_params_recipient(params),
             amount: get_private_transfer_batch_params_value(params),
             currency_symbol: get_private_transfer_batch_params_currency_symbol(params),
         }
     }
 }
 
-impl From<&GenerateReclaimBatchParams> for TransactionSummary {
+impl From<&GenerateReclaimBatchParams> for Prompt {
     #[inline]
     fn from(params: &GenerateReclaimBatchParams) -> Self {
-        Self {
-            kind: TransactionKind::Reclaim,
+        Self::Reclaim {
             amount: get_reclaim_batch_params_value(params),
             currency_symbol: get_reclaim_batch_params_currency_symbol(params),
         }
@@ -196,41 +205,35 @@ where
     /// Checks that the starting password can decrypt the root seed file.
     #[inline]
     async fn check_starting_password(&mut self) -> bool {
-        if let Some(password) = self.authorizer.password().await.known() {
-            self.load_seed(&password).await.is_some()
-        } else {
-            false
-        }
+        self.set_seed_from_authorization().await.is_some()
     }
 
     /// Returns the stored root seed if it exists, otherwise, gets the password from the user
     /// and tries to decrypt the root seed.
     #[inline]
-    async fn get_root_seed<T>(&mut self, prompt: T) -> RootSeed
-    where
-        T: Serialize,
-    {
+    async fn get_root_seed(&mut self, prompt: A::Prompt) -> Option<RootSeed> {
         if self.root_seed.is_none() {
             self.authorizer.wake(prompt).await;
             loop {
-                if let Some(root_seed) = self.set_seed_from_authorization().await {
-                    self.authorizer.success().await;
-                    return root_seed;
+                if let Some(password) = self.authorizer.password().await.known() {
+                    if let Some(root_seed) = self.load_seed(&password).await {
+                        self.root_seed = Some(root_seed);
+                        self.authorizer.success(Default::default()).await;
+                        break;
+                    }
+                } else {
+                    return None;
                 }
                 delay_password_retry().await;
             }
-        } else {
-            self.root_seed.clone().unwrap()
         }
+        self.root_seed.clone()
     }
 
     /// Returns the currently stored root seed if it matches the one returned by the user after
     /// prompting.
     #[inline]
-    async fn check_root_seed<T>(&mut self, prompt: T) -> RootSeed
-    where
-        T: Serialize,
-    {
+    async fn check_root_seed(&mut self, prompt: A::Prompt) -> Option<RootSeed> {
         match &self.root_seed {
             Some(current_root_seed) => {
                 self.authorizer.wake(prompt).await;
@@ -238,10 +241,12 @@ where
                     if let Some(password) = self.authorizer.password().await.known() {
                         if let Some(root_seed) = self.load_seed(&password).await {
                             if current_root_seed == &root_seed {
-                                self.authorizer.success().await;
-                                return root_seed;
+                                self.authorizer.success(Default::default()).await;
+                                return Some(root_seed);
                             }
                         }
+                    } else {
+                        return None;
                     }
                     delay_password_retry().await;
                 }
@@ -278,20 +283,14 @@ where
     /// Returns the stored root seed if it exists, otherwise, gets the password from the user
     /// and tries to decrypt the root seed.
     #[inline]
-    async fn get_root_seed<T>(&self, prompt: T) -> RootSeed
-    where
-        T: Serialize,
-    {
+    async fn get_root_seed(&self, prompt: A::Prompt) -> Option<RootSeed> {
         self.0.lock().await.get_root_seed(prompt).await
     }
 
     /// Returns the currently stored root seed if it matches the one returned by the user after
     /// prompting.
     #[inline]
-    async fn check_root_seed<T>(&self, prompt: T) -> RootSeed
-    where
-        T: Serialize,
-    {
+    async fn check_root_seed(&self, prompt: A::Prompt) -> Option<RootSeed> {
         self.0.lock().await.check_root_seed(prompt).await
     }
 }
@@ -306,7 +305,9 @@ where
 
 impl<A> Service<A>
 where
-    A: 'static + Authorizer + Send + Sync,
+    A: 'static + Authorizer<Prompt = Prompt> + Send + Sync,
+    A::Message: Send,
+    A::Error: Send,
 {
     /// Builds a new [`Service`] from `config` and `authorizer`.
     #[inline]
@@ -334,14 +335,20 @@ where
     /// Starts the service.
     #[inline]
     pub async fn serve(self) -> io::Result<()> {
+        Self::log(String::from("[INFO]: Starting Service ...")).await?;
         let service_url = {
             let state = &mut *self.0.state().0.lock().await;
+
+            Self::log(String::from("Setting up configuration: ")).await?;
             state.config.setup().await?;
+
+            Self::log(String::from("Setting up authorizer: ")).await?;
             state.authorizer.setup(&state.config).await;
 
+            Self::log(String::from("Checking password: ")).await?;
             loop {
                 if state.check_starting_password().await {
-                    state.authorizer.success().await;
+                    state.authorizer.success(Default::default()).await;
                     break;
                 }
                 delay_password_retry().await;
@@ -349,6 +356,7 @@ where
 
             state.config.service_url.clone()
         };
+        Self::log(String::from("DONE. Listening ...")).await?;
         self.0.listen(service_url).await
     }
 
@@ -371,8 +379,8 @@ where
     async fn recover_account(mut request: Request<A>) -> ServerResult {
         let (body, state) = Self::process(&mut request).await?;
         let params = ensure!(RecoverAccountParams::decode(&mut body.as_slice()))?;
-        Self::log(format!("REQUEST: {:?}", params)).await?;
-        let root_seed = state.get_root_seed("recover_account").await;
+        Self::log(String::from("REQUEST: RecoverAccountParams { ... }")).await?;
+        let root_seed = ensure!(state.get_root_seed(Prompt::RecoverAccount).await.ok_or(()))?;
         let recovered_account =
             manta_api::recover_account(params, root_seed.expose_secret()).encode();
         Self::log(format!("RESPONSE: {:?}", recovered_account)).await?;
@@ -385,7 +393,10 @@ where
         let (body, state) = Self::process(&mut request).await?;
         let params = ensure!(DeriveShieldedAddressParams::decode(&mut body.as_slice(),))?;
         Self::log(format!("REQUEST: {:?}", params)).await?;
-        let root_seed = state.get_root_seed("derive_shielded_address").await;
+        let root_seed = ensure!(state
+            .get_root_seed(Prompt::DeriveShieldedAddress)
+            .await
+            .ok_or(()))?;
         let mut address = Vec::new();
         ensure!(
             manta_api::derive_shielded_address(params, root_seed.expose_secret())
@@ -401,7 +412,7 @@ where
         let (body, state) = Self::process(&mut request).await?;
         let params = ensure!(GenerateAssetParams::decode(&mut body.as_slice()))?;
         Self::log(format!("REQUEST: {:?}", params)).await?;
-        let root_seed = state.get_root_seed("generate_asset").await;
+        let root_seed = ensure!(state.get_root_seed(Prompt::GenerateAsset).await.ok_or(()))?;
         let asset =
             manta_api::generate_signer_input_asset(params, root_seed.expose_secret()).encode();
         Self::log(format!("RESPONSE: {:?}", asset)).await?;
@@ -414,7 +425,7 @@ where
         let (body, state) = Self::process(&mut request).await?;
         let params = ensure!(GenerateAssetParams::decode(&mut body.as_slice()))?;
         Self::log(format!("REQUEST: {:?}", params)).await?;
-        let root_seed = state.get_root_seed("mint").await;
+        let root_seed = ensure!(state.get_root_seed(Prompt::Mint).await.ok_or(()))?;
         let mut mint_data = Vec::new();
         ensure!(
             manta_api::generate_mint_data(params, root_seed.expose_secret())
@@ -432,9 +443,7 @@ where
             &mut body.as_slice()
         ))?;
         Self::log(format!("REQUEST: {:?}", params)).await?;
-        let root_seed = state
-            .check_root_seed(TransactionSummary::from(&params))
-            .await;
+        let root_seed = ensure!(state.check_root_seed(Prompt::from(&params)).await.ok_or(()))?;
         let private_transfer_data = batch_generate_private_transfer_data(
             params,
             *root_seed.expose_secret(),
@@ -453,9 +462,7 @@ where
         let (body, state) = Self::process(&mut request).await?;
         let params = ensure!(GenerateReclaimBatchParams::decode(&mut body.as_slice()))?;
         Self::log(format!("REQUEST: {:?}", params)).await?;
-        let root_seed = state
-            .check_root_seed(TransactionSummary::from(&params))
-            .await;
+        let root_seed = ensure!(state.check_root_seed(Prompt::from(&params)).await.ok_or(()))?;
         let config = state.config().await;
         let reclaim_data = batch_generate_reclaim_data(
             params,

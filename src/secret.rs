@@ -16,6 +16,8 @@
 
 //! Manta Signer Secrets
 
+// FIXME: Use `Choice` and `CtOption` for constant time operations or get rid of them.
+
 use crate::config::Config;
 use async_std::{
     fs::{self, File},
@@ -31,7 +33,6 @@ use rand::{
     distributions::{DistString, Standard},
     CryptoRng, Rng, RngCore,
 };
-use serde::Serialize;
 
 pub use cocoon::Error as RootSeedError;
 pub use secrecy::{ExposeSecret, Secret, SecretString};
@@ -74,6 +75,12 @@ impl Password {
     pub fn known(self) -> Option<SecretString> {
         self.0.into()
     }
+
+    ///
+    #[inline]
+    pub fn is_known(&self) -> bool {
+        self.0.is_some().into()
+    }
 }
 
 impl Default for Password {
@@ -85,21 +92,33 @@ impl Default for Password {
 
 /// Unit Future
 ///
+/// This `type` is used by the [`setup`], [`wake`], and [`sleep`] methods of [`Authorizer`].
+/// See their documentation for more.
 ///
+/// [`setup`]: Authorizer::setup
+/// [`wake`]: Authorizer::wake
+/// [`sleep`]: Authorizer::sleep
 pub type UnitFuture<'t> = BoxFuture<'t, ()>;
 
 /// Password Future
 ///
-///
+/// This `type` is used by the [`password`](Authorizer::password) method of [`Authorizer`].
+/// See its documentation for more.
 pub type PasswordFuture<'t> = BoxFuture<'t, Password>;
 
 /// Authorizer
 pub trait Authorizer {
-    ///
-    fn password(&mut self) -> PasswordFuture;
+    /// Prompt Type
+    type Prompt;
 
-    ///
-    fn success(&mut self) -> UnitFuture;
+    /// Message Type
+    type Message: Default;
+
+    /// Communication Error Type
+    type Error: Default;
+
+    /// Retrieves the password from the authorizer.
+    fn password(&mut self) -> PasswordFuture;
 
     /// Runs some setup for the authorizer using the `config`.
     ///
@@ -116,14 +135,40 @@ pub trait Authorizer {
         Box::pin(async move {})
     }
 
+    /// Prompts the authorizer with `prompt` so that they can be notified that their password is
+    /// requested.
     ///
+    /// # Implementation Note
+    ///
+    /// After [`wake`] is called, [`password`] should be called to retrieve the password. These are
+    /// implemented as two separate methods so that [`password`] can be called multiple times for
+    /// password retries.
+    ///
+    /// [`wake`]: Self::wake
+    /// [`password`]: Self::password
     #[inline]
-    fn wake<T>(&mut self, prompt: T) -> UnitFuture
-    where
-        T: Serialize,
-    {
+    fn wake(&mut self, prompt: Self::Prompt) -> UnitFuture {
         let _ = prompt;
         Box::pin(async move {})
+    }
+
+    /// Sends a message to the authorizer to end communication.
+    #[inline]
+    fn sleep(&mut self, message: Result<Self::Message, Self::Error>) -> UnitFuture {
+        let _ = message;
+        Box::pin(async move {})
+    }
+
+    /// Sends a success message to the authorizer to end communication.
+    #[inline]
+    fn success(&mut self, message: Self::Message) -> UnitFuture {
+        self.sleep(Ok(message))
+    }
+
+    /// Sends a failure message to the authorizer to end communication.
+    #[inline]
+    fn failure(&mut self, error: Self::Error) -> UnitFuture {
+        self.sleep(Err(error))
     }
 }
 

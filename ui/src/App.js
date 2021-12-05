@@ -3,17 +3,17 @@ import React, { useState, useEffect } from 'react';
 import CreateAccount from './pages/CreateAccount';
 import { Container } from 'semantic-ui-react';
 import { appWindow } from '@tauri-apps/api/window';
-import AuthorizeTx from './pages/AuthorizeTx';
+import Authorize from './pages/Authorize';
 import SignIn from './pages/SignIn';
 
 const CREATE_ACCOUNT_PAGE = 1;
 const LOGIN_PAGE = 2;
-const AUTHORIZE_TX_PAGE = 3;
+const AUTHORIZE_PAGE = 3;
 
 function App() {
   const [currentPage, setCurrentPage] = useState(null);
   const [isConnected, setIsConnected] = useState(false);
-  const [txSummary, setTxSummary] = useState(null);
+  const [authorizationSummary, setAuthorizationSummary] = useState(null);
 
   useEffect(() => {
     if (isConnected) return;
@@ -34,28 +34,38 @@ function App() {
   }, [isConnected]);
 
   const hideWindow = () => {
+    console.log("[INFO]: HIDE.");
     setCurrentPage(null);
     appWindow.hide();
   };
 
   const listenForTxAuthorizationRequests = () => {
+    console.log("[INFO]: Setup listener.");
     window.__TAURI__.event.listen('authorize', (event) => {
+      console.log("[INFO]: WAKE: ", event);
       appWindow.show();
       appWindow.center();
       appWindow.setAlwaysOnTop(true);
-      setTxSummary(event.payload);
-      setCurrentPage(AUTHORIZE_TX_PAGE);
+      setAuthorizationSummary(event.payload);
+      setCurrentPage(AUTHORIZE_PAGE);
     });
   };
 
-  const loadPasswordToSignerServer = async (password) => {
-    const should_retry = await window.__TAURI__.invoke('load_password', {
+  const sendPassword = async (password) => {
+    console.log("[INFO]: Send password to signer server.");
+    const should_retry = await window.__TAURI__.invoke('send_password', {
       password: password,
     });
     return should_retry;
   };
 
+  const stopPasswordPrompt = async () => {
+    console.log("[INFO]: Stop password prompt.");
+    await window.__TAURI__.invoke('stop_password_prompt');
+  };
+
   const getRecoveryPhrase = async (password) => {
+    console.log("[INFO]: Get recovery phase.");
     const mnemonic = await window.__TAURI__.invoke('get_mnemonic', {
       password: password,
     });
@@ -63,6 +73,7 @@ function App() {
   };
 
   const endInitialConnectionPhase = async () => {
+    console.log("[INFO]: End Initial Connection Phase");
     setIsConnected(true);
     hideWindow();
     listenForTxAuthorizationRequests();
@@ -79,14 +90,15 @@ function App() {
         )}
         {currentPage === LOGIN_PAGE && (
           <SignIn
-            loadPasswordToSignerServer={loadPasswordToSignerServer}
+            sendPassword={sendPassword}
             endInitialConnectionPhase={endInitialConnectionPhase}
           />
         )}
-        {currentPage === AUTHORIZE_TX_PAGE && (
-          <AuthorizeTx
-            txSummary={txSummary}
-            loadPasswordToSignerServer={loadPasswordToSignerServer}
+        {currentPage === AUTHORIZE_PAGE && (
+          <Authorize
+            summary={authorizationSummary}
+            sendPassword={sendPassword}
+            stopPasswordPrompt={stopPasswordPrompt}
             hideWindow={hideWindow}
           />
         )}
