@@ -22,7 +22,7 @@
                 "icons/icon.icns",
                 "icons/icon.ico"
             ],
-            "resources": ["../*.bin"],
+            "resources": [],
             "externalBin": [],
             "copyright": "Copyright 2019-2021 Manta Network",
             "category": "DeveloperTool",
@@ -53,8 +53,7 @@
             "pubkey": ""
         },
         "allowlist": {},
-        "windows": [
-            {
+        "windows": [{
                 "label": "main",
                 "title": "Manta Signer",
                 "width": 500,

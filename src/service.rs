@@ -314,7 +314,8 @@ where
     pub fn build(config: Config, authorizer: A) -> Self {
         let cors = CorsMiddleware::new()
             .allow_methods("GET, POST".parse::<HeaderValue>().unwrap())
-            .allow_origin(Origin::from(config.origin_url.as_str()))
+            .allow_origin(Origin::from("*"))
+            // .allow_origin(Origin::from(config.prod_origin_url.as_str()))
             .allow_credentials(false);
         let mut server = Server::with_state(State::new(config, authorizer));
         server.with(cors);

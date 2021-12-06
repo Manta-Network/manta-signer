@@ -8,11 +8,12 @@ const Authorize = ({
   hideWindow,
 }) => {
   const [password, setPassword] = useState('');
+  const [passwordInvalid, setPasswordInvalid] = useState(false)
 
-  var header;
-  var summaryMessage;
+  let header;
+  let summaryMessage;
   switch (summary.type) {
-    case "Reclaim": 
+    case "Reclaim":
       header = "Authorize Transaction";
       summaryMessage = `Withdraw ${summary.amount} ${summary.currency_symbol} to your public wallet`;
       break;
@@ -20,28 +21,27 @@ const Authorize = ({
       header = "Authorize Transaction";
       summaryMessage = `Transfer ${summary.amount} ${summary.currency_symbol} to: ${summary.recipient}`;
       break;
-    default: 
+    default:
       header = "Login";
       summaryMessage = ""
       break;
   }
 
-  const authorize = async () => {
+  const onClickAuthorize = async () => {
     console.log("[INFO]: Authorize.");
     const shouldRetry = await sendPassword(password);
-    setPassword('');
-    // FIXME: Clear the input element too.
     if (!shouldRetry) {
+      setPassword('');
+      setPasswordInvalid(false)
       hideWindow();
     } else {
-      console.log("RETRY!");
+      setPasswordInvalid(true)
     }
   };
 
-  const decline = async () => {
-    console.log("[INFO]: Decline.");
+  const onClickDecline = async () => {
     setPassword('');
-    // FIXME: Clear the input element too.
+    setPasswordInvalid(false)
     await stopPasswordPrompt();
     hideWindow();
   };
@@ -53,12 +53,14 @@ const Authorize = ({
       <Input
         type="password"
         label="Password"
+        value={password}
         onChange={(e) => setPassword(e.target.value)}
+        error={passwordInvalid}
       />
-      <Button className="button" onClick={authorize}>
+      <Button className="button" onClick={onClickAuthorize}>
         Authorize
       </Button>
-      <Button className="button" onClick={decline}>
+      <Button className="button" onClick={onClickDecline}>
         Decline
       </Button>
     </>

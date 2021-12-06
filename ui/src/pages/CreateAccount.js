@@ -10,20 +10,19 @@ const CreateAccount = ({ getRecoveryPhrase, endInitialConnectionPhase }) => {
     return password.length >= 8;
   };
 
-  const createAccount = async () => {
+  const onClickCreateAccount = async () => {
     console.log("[INFO]: On click create account.")
     if (isValid(password)) {
       const recoveryPhrase = await getRecoveryPhrase(password);
       setPassword('');
-      // FIXME: Clear the input element too.
       setRecoveryPhrase(recoveryPhrase);
     }
   };
 
-  const confirmRecoveryPhrase = () => {
+  const onClickConfirmRecoveryPhrase = async () => {
     console.log("[INFO]: On click confirm recovery phrase.")
     setRecoveryPhrase('');
-    endInitialConnectionPhase();
+    await endInitialConnectionPhase();
   };
 
   return (
@@ -36,7 +35,7 @@ const CreateAccount = ({ getRecoveryPhrase, endInitialConnectionPhase }) => {
             label="Password"
             onChange={(e) => setPassword(e.target.value)}
           />
-          <Button className="button" onClick={createAccount}>
+          <Button className="button" onClick={onClickCreateAccount}>
             Create Account
           </Button>
         </>
@@ -48,14 +47,14 @@ const CreateAccount = ({ getRecoveryPhrase, endInitialConnectionPhase }) => {
           </Header>
           <div className="recovery-phrase-info">
             This phrase can restore your funds if you lose access to your
-            account. Write it down on paper and store it somewhere secure.
-            ⚠️  Never share your recovery phrase with anyone!
+            account. Write it down on paper and store it somewhere secure. ⚠️
+            Never share your recovery phrase with anyone!
           </div>
           <Container className="recovery-phrase-warning"></Container>
           <div className="recovery-phrase">
             <b>{recoveryPhrase}</b>
           </div>
-          <Button className="button" onClick={confirmRecoveryPhrase}>
+          <Button className="button" onClick={onClickConfirmRecoveryPhrase}>
             I have written down my recovery phrase.
           </Button>
         </>
