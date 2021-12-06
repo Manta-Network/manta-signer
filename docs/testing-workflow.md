@@ -57,16 +57,16 @@ To test these machines, we want to enter every cycle at least once to visit ever
 
 ## Tests
 
-For all of these tests make sure to have the signer ready:
+For all of these tests make sure to have the signer ready by running one of the following in the `ui/` directory:
 
 - Development mode: `cargo tauri dev`
 - Production mode: `cargo tauri build`
 
 No need to run `yarn` commands, they are run automatically. Also, make sure to have a tab open in your browser to the frontend.
 
-For development builds, you have access to the SERVER logs and the UI console which will detail step-by-step each state transition for each machine.
+For development builds, you have access to the `SERVER` logs and the `UI` console which will detail step-by-step each state transition for each machine.
 
-Below, when you are asked to QUIT the signer, simply go to the toolbar and click on the dolphin logo and press "Quit".
+Below, when you are asked to `QUIT` the signer, simply go to the toolbar and click on the dolphin logo and press "Quit".
 
 ### Full Create Account Test
 
@@ -115,6 +115,7 @@ To quickly test the account creation mechanism, do the following:
 
 After running one of the tests above, do the following:
 
+```text
 1. OPEN signer.
 2. ENSURE that the UI prompts you with a "LOGIN" screen.
 3. INPUT incorrect password.
@@ -124,4 +125,4 @@ After running one of the tests above, do the following:
 7. ENSURE that the UI becomes hidden.
 8. CONTINUE as in step 9 of the first test.
 9. STOP
-
+```
