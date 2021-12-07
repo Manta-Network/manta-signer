@@ -26,6 +26,7 @@
     windows_subsystem = "windows"
 )]
 
+use async_std::{fs, path::PathBuf, stream::StreamExt, sync::Arc};
 use manta_signer::{
     config::Config,
     secret::{
@@ -35,11 +36,9 @@ use manta_signer::{
     service::{Prompt, Service},
 };
 use serde::{Deserialize, Serialize};
-use std::sync::Arc;
 use tauri::{
-    Event,
     async_runtime::{channel, spawn, Mutex, Receiver, Sender},
-    CustomMenuItem, Manager, State, SystemTray, SystemTrayEvent, SystemTrayMenu, Window,
+    CustomMenuItem, Event, Manager, State, SystemTray, SystemTrayEvent, SystemTrayMenu, Window,
 };
 
 /// User
@@ -55,17 +54,55 @@ pub struct User {
 
     /// Waiting Flag
     waiting: bool,
+
+    /// Resource Directory
+    resource_directory: PathBuf,
 }
 
 impl User {
-    /// Builds a new [`User`] from `window`, `password`, and `retry`.
+    /// Builds a new [`User`] from `window`, `password`, `retry`, and `resource_directory`.
     #[inline]
-    pub fn new(window: Window, password: Receiver<Password>, retry: Sender<bool>) -> Self {
+    pub fn new(
+        window: Window,
+        password: Receiver<Password>,
+        retry: Sender<bool>,
+        resource_directory: PathBuf,
+    ) -> Self {
         Self {
             window,
             password,
             retry,
             waiting: false,
+            resource_directory,
+        }
+    }
+
+    /// Pulls resources from `self.resource_directory` and moves them to the proving key directory.
+    #[inline]
+    async fn setup_resources(&self, config: &Config) {
+        // FIXME: Make sure this function will work on all platforms.
+        if !self.resource_directory.exists().await {
+            // NOTE: If this file does not exist, then we are in development mode.
+            return;
+        }
+        let mut entries = fs::read_dir(&self.resource_directory)
+            .await
+            .expect("The resource directory should be a directory.");
+        while let Some(entry) = entries.next().await {
+            let entry = entry.expect("Unable to get directory entry.");
+            if entry.file_type().await.unwrap().is_file() {
+                let path = entry.path();
+                if matches!(path.extension(), Some(ext) if ext == "bin") {
+                    fs::copy(
+                        &path,
+                        &config
+                            .proving_key_directory
+                            .join(&path.file_name().expect("Path should point to a real file.")),
+                    )
+                    .await
+                    .expect("Copy should have succeeded.");
+                }
+            }
         }
     }
 
@@ -121,6 +158,11 @@ impl Authorizer for User {
     #[inline]
     fn password(&mut self) -> PasswordFuture {
         Box::pin(async move { self.request_password().await })
+    }
+
+    #[inline]
+    fn setup<'s>(&'s mut self, config: &'s Config) -> UnitFuture<'s> {
+        Box::pin(async move { self.setup_resources(config).await })
     }
 
     #[inline]
@@ -280,15 +322,19 @@ fn main() {
         .manage(PasswordStore::default())
         .manage(config)
         .setup(|app| {
+            let resource_directory = app.path_resolver().resource_dir().unwrap();
             let window = app.get_window("main").unwrap();
             let config = app.state::<Config>().inner().clone();
             let password_store = app.state::<PasswordStore>().handle();
             spawn(async move {
                 let (password, retry) = password_store.into_channel().await;
-                Service::build(config, User::new(window, password, retry))
-                    .serve()
-                    .await
-                    .expect("Unable to build manta-signer service.");
+                Service::build(
+                    config,
+                    User::new(window, password, retry, resource_directory.into()),
+                )
+                .serve()
+                .await
+                .expect("Unable to build manta-signer service.");
             });
             Ok(())
         })
@@ -304,16 +350,16 @@ fn main() {
     #[cfg(target_os = "macos")]
     app.set_activation_policy(tauri::ActivationPolicy::Accessory);
 
-
-  app.run(|app_handle, e| match e {
-    Event::CloseRequested { label, api, .. } => {
-      if label == "about" {
-        let app_handle = app_handle.clone();
-        let window = app_handle.get_window(&label).unwrap();
-        window.hide().unwrap();
-      }
-      api.prevent_close();
-    }
-    _ => {}
-  })
+    app.run(|app, event| {
+        if let Event::CloseRequested { label, api, .. } = event {
+            api.prevent_close();
+            match label.as_str() {
+                "about" => app.get_window(&label).unwrap().hide().unwrap(),
+                "main" => {
+                    // TODO: For the create account / login page, run `app.exit(0)`.
+                }
+                _ => unreachable!("There are no other windows."),
+            }
+        }
+    })
 }

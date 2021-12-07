@@ -44,8 +44,6 @@ function App() {
     window.__TAURI__.event.listen('authorize', (event) => {
       console.log("[INFO]: WAKE: ", event);
       appWindow.show();
-      appWindow.center();
-      appWindow.setAlwaysOnTop(true);
       setAuthorizationSummary(event.payload);
       setCurrentPage(AUTHORIZE_PAGE);
     });

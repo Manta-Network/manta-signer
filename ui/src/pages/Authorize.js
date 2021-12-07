@@ -28,7 +28,7 @@ const Authorize = ({
   }
 
   const onClickAuthorize = async () => {
-    console.log("[INFO]: Authorize.");
+    console.log("[INFO]: Authorizing.");
     const shouldRetry = await sendPassword(password);
     if (!shouldRetry) {
       setPassword('');
@@ -40,6 +40,7 @@ const Authorize = ({
   };
 
   const onClickDecline = async () => {
+    console.log("[INFO]: Declining Transaction.");
     setPassword('');
     setPasswordInvalid(false)
     await stopPasswordPrompt();

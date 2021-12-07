@@ -11,7 +11,7 @@ const CreateAccount = ({ getRecoveryPhrase, endInitialConnectionPhase }) => {
   };
 
   const onClickCreateAccount = async () => {
-    console.log("[INFO]: On click create account.")
+    console.log("[INFO]: Creating account.")
     if (isValid(password)) {
       const recoveryPhrase = await getRecoveryPhrase(password);
       setPassword('');
@@ -20,7 +20,7 @@ const CreateAccount = ({ getRecoveryPhrase, endInitialConnectionPhase }) => {
   };
 
   const onClickConfirmRecoveryPhrase = async () => {
-    console.log("[INFO]: On click confirm recovery phrase.")
+    console.log("[INFO]: Confirming recovery phrase.")
     setRecoveryPhrase('');
     await endInitialConnectionPhase();
   };

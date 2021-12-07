@@ -61,7 +61,7 @@ pub struct Config {
     pub dev_origin_url: String,
 
     /// Prod origin URL
-    pub prod_origin_url: String
+    pub prod_origin_url: String,
 }
 
 impl Config {
@@ -73,7 +73,7 @@ impl Config {
             proving_key_directory: directory(dirs_next::data_local_dir())?,
             service_url: String::from("http://127.0.0.1:29987"),
             dev_origin_url: String::from("http://localhost:8000"),
-            prod_origin_url: String::from("https://dapp-alpha.manta.network")
+            prod_origin_url: String::from("https://app.dolphin.manta.network"),
         })
     }
 

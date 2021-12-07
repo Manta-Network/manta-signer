@@ -76,7 +76,7 @@ impl Password {
         self.0.into()
     }
 
-    ///
+    /// Returns `true` if `self` represents a known password.
     #[inline]
     pub fn is_known(&self) -> bool {
         self.0.is_some().into()

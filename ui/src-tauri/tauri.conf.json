@@ -22,7 +22,7 @@
                 "icons/icon.icns",
                 "icons/icon.ico"
             ],
-            "resources": [],
+            "resources": ["*.bin"],
             "externalBin": [],
             "copyright": "Copyright 2019-2021 Manta Network",
             "category": "DeveloperTool",
@@ -58,9 +58,12 @@
                 "title": "Manta Signer",
                 "width": 500,
                 "height": 300,
+                "alwaysOnTop": true,
+                "center": true,
                 "decorations": true,
-                "visible": true,
-                "transparent": false
+                "resizable": false,
+                "transparent": false,
+                "visible": true
             },
             {
                 "label": "about",
