@@ -310,7 +310,7 @@ fn main() {
       if label == "about" {
         let app_handle = app_handle.clone();
         let window = app_handle.get_window(&label).unwrap();
-        let res = window.hide().unwrap();
+        window.hide().unwrap();
       }
       api.prevent_close();
     }
