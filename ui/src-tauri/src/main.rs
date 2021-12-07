@@ -37,6 +37,7 @@ use manta_signer::{
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 use tauri::{
+    Event,
     async_runtime::{channel, spawn, Mutex, Receiver, Sender},
     CustomMenuItem, Manager, State, SystemTray, SystemTrayEvent, SystemTrayMenu, Window,
 };
@@ -303,5 +304,16 @@ fn main() {
     #[cfg(target_os = "macos")]
     app.set_activation_policy(tauri::ActivationPolicy::Accessory);
 
-    app.run(move |_, _| {})
+
+  app.run(|app_handle, e| match e {
+    Event::CloseRequested { label, api, .. } => {
+      if label == "about" {
+        let app_handle = app_handle.clone();
+        let window = app_handle.get_window(&label).unwrap();
+        let res = window.hide().unwrap();
+      }
+      api.prevent_close();
+    }
+    _ => {}
+  })
 }
