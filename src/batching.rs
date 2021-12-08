@@ -17,7 +17,7 @@
 //! Transaction Batching
 
 use ark_serialize::CanonicalDeserialize;
-use async_std::{fs, path::Path};
+use async_std::{fs, path::Path, task};
 use bip32::XPrv;
 use core::convert::TryInto;
 use manta_api::{
@@ -47,82 +47,96 @@ where
 
 /// Generates batched private transfer data.
 #[inline]
-pub async fn batch_generate_private_transfer_data<P, R>(
+pub async fn batch_generate_private_transfer_data<P, R, F>(
     params: GeneratePrivateTransferBatchParams,
-    root_seed: &MantaRootSeed,
+    root_seed: MantaRootSeed,
     private_transfer_pk_path: P,
-    rng: &mut R,
+    rng_source: F,
 ) -> PrivateTransferBatch
 where
     P: AsRef<Path>,
     R: CryptoRng + RngCore,
+    F: 'static + Copy + Send + Sync + Fn() -> R,
 {
     let private_transfer_pk = load_proving_key(private_transfer_pk_path).await;
     let asset_id = params.asset_id;
     let receiving_address = params.receiving_address;
     let last_private_transfer_index = params.private_transfer_params_list.len() - 1;
     PrivateTransferBatch {
-        private_transfer_data_list: params
-            .private_transfer_params_list
-            .into_iter()
-            .enumerate()
-            .map(|(i, p)| {
-                let receiving_address = if i == last_private_transfer_index {
-                    Some(receiving_address)
-                } else {
-                    None
-                };
-                generate_private_transfer_data(
-                    p,
-                    asset_id,
-                    receiving_address,
-                    root_seed,
-                    &private_transfer_pk,
-                    rng,
-                )
-            })
-            .collect(),
+        private_transfer_data_list: futures::future::join_all(
+            params
+                .private_transfer_params_list
+                .into_iter()
+                .enumerate()
+                .map(|(i, p)| {
+                    let receiving_address = if i == last_private_transfer_index {
+                        Some(receiving_address)
+                    } else {
+                        None
+                    };
+                    let private_transfer_pk = private_transfer_pk.clone();
+                    task::spawn_blocking(move || {
+                        generate_private_transfer_data(
+                            p,
+                            asset_id,
+                            receiving_address,
+                            root_seed,
+                            private_transfer_pk,
+                            &mut rng_source(),
+                        )
+                    })
+                }),
+        )
+        .await,
     }
 }
 
 /// Generates batched reclaim data.
 #[inline]
-pub async fn batch_generate_reclaim_data<P, R>(
+pub async fn batch_generate_reclaim_data<P, R, F>(
     params: GenerateReclaimBatchParams,
-    root_seed: &MantaRootSeed,
+    root_seed: MantaRootSeed,
     private_transfer_pk_path: P,
     reclaim_pk_path: P,
-    rng: &mut R,
+    rng_source: F,
 ) -> ReclaimBatch
 where
     P: AsRef<Path>,
     R: CryptoRng + RngCore,
+    F: 'static + Copy + Send + Sync + Fn() -> R,
 {
+    // FIXME: Have the reclaim proof happen at the same time as the transfer proofs.
     let private_transfer_pk = load_proving_key(private_transfer_pk_path).await;
     let reclaim_pk = load_proving_key(reclaim_pk_path).await;
-    let asset_id = params.reclaim_params.asset_id;
+    let reclaim_params = params.reclaim_params;
+    let asset_id = reclaim_params.asset_id;
     ReclaimBatch {
-        reclaim_data: generate_reclaim_data(
-            params.reclaim_params,
-            asset_id,
-            root_seed,
-            &reclaim_pk,
-            rng,
-        ),
-        private_transfer_data_list: params
-            .private_transfer_params_list
-            .into_iter()
-            .map(|p| {
-                generate_private_transfer_data(
-                    p,
-                    asset_id,
-                    None,
-                    root_seed,
-                    &private_transfer_pk,
-                    rng,
-                )
-            })
-            .collect(),
+        reclaim_data: task::spawn_blocking(move || {
+            generate_reclaim_data(
+                reclaim_params,
+                asset_id,
+                root_seed,
+                reclaim_pk,
+                &mut rng_source(),
+            )
+        })
+        .await,
+        private_transfer_data_list: futures::future::join_all(
+            params.private_transfer_params_list.into_iter().map(|p| {
+                let private_transfer_pk = private_transfer_pk.clone();
+                task::spawn_blocking(move || {
+                    generate_private_transfer_data(
+                        p,
+                        asset_id,
+                        None,
+                        root_seed,
+                        private_transfer_pk,
+                        &mut rng_source(),
+                    )
+                })
+            }),
+        )
+        .await,
     }
 }
 
@@ -132,8 +146,8 @@ pub fn generate_private_transfer_data<R>(
     params: GeneratePrivateTransferParams,
     asset_id: AssetId,
     receiving_address: Option<MantaAssetShieldedAddress>,
-    root_seed: &MantaRootSeed,
-    transfer_pk: &Groth16Pk,
+    root_seed: MantaRootSeed,
+    transfer_pk: Groth16Pk,
     rng: &mut R,
 ) -> PrivateTransferData
 where
@@ -148,7 +162,7 @@ where
             value: params.sender_asset_1_value,
             keypath: params.sender_asset_1_keypath,
         },
-        root_seed,
+        &root_seed,
     );
     let sender_asset_2 = generate_asset(
         GenerateAssetParams {
@@ -156,7 +170,7 @@ where
             value: params.sender_asset_2_value,
             keypath: params.sender_asset_2_keypath,
         },
-        root_seed,
+        &root_seed,
     );
     let sender_metadata_1 = sender_asset_1
         .build(
@@ -178,7 +192,7 @@ where
             DeriveShieldedAddressParams {
                 keypath: params.non_change_output_keypath.unwrap(),
             },
-            root_seed,
+            &root_seed,
         ),
     };
     let non_change_processed_receiver = non_change_receiving_address
@@ -188,7 +202,7 @@ where
         DeriveShieldedAddressParams {
             keypath: params.change_output_keypath,
         },
-        root_seed,
+        &root_seed,
     );
     let change_processed_receiver = change_address
         .process(asset_id, params.change_output_value, rng)
@@ -197,7 +211,7 @@ where
         commit_params,
         leaf_params,
         two_to_one_params,
-        transfer_pk,
+        &transfer_pk,
         [sender_metadata_1, sender_metadata_2],
         [non_change_processed_receiver, change_processed_receiver],
         rng,
@@ -210,8 +224,8 @@ where
 pub fn generate_reclaim_data<R>(
     params: GenerateReclaimParams,
     asset_id: AssetId,
-    root_seed: &MantaRootSeed,
-    reclaim_pk: &Groth16Pk,
+    root_seed: MantaRootSeed,
+    reclaim_pk: Groth16Pk,
     rng: &mut R,
 ) -> ReclaimData
 where
@@ -226,7 +240,7 @@ where
             value: params.input_asset_1_value,
             keypath: params.input_asset_1_keypath,
         },
-        root_seed,
+        &root_seed,
     );
     let input_asset_2 = generate_asset(
         GenerateAssetParams {
@@ -234,7 +248,7 @@ where
             value: params.input_asset_2_value,
             keypath: params.input_asset_2_keypath,
         },
-        root_seed,
+        &root_seed,
     );
     let sender_metadata_1 = input_asset_1
         .build(
@@ -255,7 +269,7 @@ where
         DeriveShieldedAddressParams {
             keypath: params.change_keypath,
         },
-        root_seed,
+        &root_seed,
     );
     let change_value =
         params.input_asset_1_value + params.input_asset_2_value - params.reclaim_value;
@@ -266,7 +280,7 @@ where
         commit_params,
         leaf_params,
         two_to_one_params,
-        reclaim_pk,
+        &reclaim_pk,
         [sender_metadata_1, sender_metadata_2],
         change_processed_receiver,
         params.reclaim_value,

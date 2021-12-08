@@ -57,8 +57,11 @@ pub struct Config {
     /// Service URL
     pub service_url: String,
 
-    /// Origin URL
-    pub origin_url: String,
+    /// Dev origin URL
+    pub dev_origin_url: String,
+
+    /// Prod origin URL
+    pub prod_origin_url: String,
 }
 
 impl Config {
@@ -69,7 +72,8 @@ impl Config {
             root_seed_file: file(dirs_next::config_dir(), "root_seed.aes")?,
             proving_key_directory: directory(dirs_next::data_local_dir())?,
             service_url: String::from("http://127.0.0.1:29987"),
-            origin_url: String::from("http://localhost:8000"),
+            dev_origin_url: String::from("http://localhost:8000"),
+            prod_origin_url: String::from("https://app.dolphin.manta.network"),
         })
     }
 
@@ -78,6 +82,7 @@ impl Config {
     #[inline]
     pub async fn setup(&self) -> io::Result<()> {
         // FIXME: Use logging instead of `println!`.
+        // FIXME: Not using asynchronous `println!` because it interferes with `Send` requirements.
         println!("Manta Signer {:#?}\n", self);
         if let Some(parent) = self.root_seed_file.parent() {
             fs::create_dir_all(parent).await?;

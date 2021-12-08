@@ -1,13 +1,13 @@
 {
     "package": {
         "productName": "Manta Signer",
-        "version": "0.1.0"
+        "version": "0.4.1"
     },
     "build": {
         "distDir": "../build",
         "devPath": "http://localhost:3000",
-        "beforeDevCommand": "",
-        "beforeBuildCommand": "",
+        "beforeDevCommand": "yarn install && yarn start",
+        "beforeBuildCommand": "yarn install && yarn build",
         "withGlobalTauri": true
     },
     "tauri": {
@@ -22,11 +22,11 @@
                 "icons/icon.icns",
                 "icons/icon.ico"
             ],
-            "resources": [],
+            "resources": ["*.bin"],
             "externalBin": [],
-            "copyright": "",
+            "copyright": "Copyright 2019-2021 Manta Network",
             "category": "DeveloperTool",
-            "shortDescription": "",
+            "shortDescription": "Manta Network Signer",
             "longDescription": "",
             "deb": {
                 "depends": [],
@@ -47,7 +47,10 @@
             }
         },
         "updater": {
-            "active": false
+            "active": false,
+            "endpoints": [],
+            "dialog": true,
+            "pubkey": ""
         },
         "allowlist": {},
         "windows": [{
@@ -55,16 +58,19 @@
                 "title": "Manta Signer",
                 "width": 500,
                 "height": 300,
+                "alwaysOnTop": true,
+                "center": true,
                 "decorations": true,
-                "visible": true,
-                "transparent": false
+                "resizable": false,
+                "transparent": false,
+                "visible": true
             },
             {
                 "label": "about",
                 "title": "Manta Signer",
                 "url": "about.html",
                 "width": 350,
-                "height": 350,
+                "height": 270,
                 "alwaysOnTop": true,
                 "center": true,
                 "decorations": true,
@@ -77,7 +83,7 @@
             "csp": "default-src blob: data: filesystem: ws: wss: http: https: tauri: 'unsafe-eval' 'unsafe-inline' 'self' img-src: 'self'"
         },
         "systemTray": {
-            "iconPath": "icons/icon.png",
+            "iconPath": "icons/tray.png",
             "iconAsTemplate": true
         }
     }

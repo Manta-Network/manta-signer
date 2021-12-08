@@ -26,19 +26,19 @@
     windows_subsystem = "windows"
 )]
 
+use async_std::{fs, path::PathBuf, stream::StreamExt, sync::Arc};
 use manta_signer::{
     config::Config,
     secret::{
         account_exists, create_account, Authorizer, ExposeSecret, Password, PasswordFuture,
-        SecretString,
+        SecretString, UnitFuture,
     },
-    service::Service,
+    service::{Prompt, Service},
 };
 use serde::{Deserialize, Serialize};
-use std::sync::Arc;
 use tauri::{
-    async_runtime::{channel, spawn, Receiver, RwLock, Sender},
-    CustomMenuItem, Manager, State, SystemTray, SystemTrayEvent, SystemTrayMenu, Window,
+    async_runtime::{channel, spawn, Mutex, Receiver, Sender},
+    CustomMenuItem, Event, Manager, State, SystemTray, SystemTrayEvent, SystemTrayMenu, Window,
 };
 
 /// User
@@ -48,56 +48,159 @@ pub struct User {
 
     /// Password Receiver
     password: Receiver<Password>,
+
+    /// Password Retry Sender
+    retry: Sender<bool>,
+
+    /// Waiting Flag
+    waiting: bool,
+
+    /// Resource Directory
+    resource_directory: PathBuf,
 }
 
 impl User {
-    /// Builds a new [`User`] from `window` and `password`.
+    /// Builds a new [`User`] from `window`, `password`, `retry`, and `resource_directory`.
     #[inline]
-    pub fn new(window: Window, password: Receiver<Password>) -> Self {
-        Self { window, password }
+    pub fn new(
+        window: Window,
+        password: Receiver<Password>,
+        retry: Sender<bool>,
+        resource_directory: PathBuf,
+    ) -> Self {
+        Self {
+            window,
+            password,
+            retry,
+            waiting: false,
+            resource_directory,
+        }
+    }
+
+    /// Pulls resources from `self.resource_directory` and moves them to the proving key directory.
+    #[inline]
+    async fn setup_resources(&self, config: &Config) {
+        // FIXME: Make sure this function will work on all platforms.
+        if !self.resource_directory.exists().await {
+            // NOTE: If this file does not exist, then we are in development mode.
+            return;
+        }
+        let mut entries = fs::read_dir(&self.resource_directory)
+            .await
+            .expect("The resource directory should be a directory.");
+        while let Some(entry) = entries.next().await {
+            let entry = entry.expect("Unable to get directory entry.");
+            if entry.file_type().await.unwrap().is_file() {
+                let path = entry.path();
+                if matches!(path.extension(), Some(ext) if ext == "bin") {
+                    fs::copy(
+                        &path,
+                        &config
+                            .proving_key_directory
+                            .join(&path.file_name().expect("Path should point to a real file.")),
+                    )
+                    .await
+                    .expect("Copy should have succeeded.");
+                }
+            }
+        }
+    }
+
+    /// Emits a `message` of the given `kind` to the window.
+    #[inline]
+    fn emit<T>(&self, kind: &'static str, message: T)
+    where
+        T: Serialize,
+    {
+        self.window.emit(kind, message).unwrap()
+    }
+
+    /// Sends a the `retry` message to have the user retry the password.
+    #[inline]
+    async fn should_retry(&mut self, retry: bool) {
+        self.retry
+            .send(retry)
+            .await
+            .expect("Failed to send retry message.");
+    }
+
+    /// Requests password from user, sending a retry message if the previous password did not match
+    /// correctly.
+    #[inline]
+    async fn request_password(&mut self) -> Password {
+        if self.waiting {
+            self.should_retry(true).await;
+        }
+        let password = self
+            .password
+            .recv()
+            .await
+            .expect("Failed to receive retry message.");
+        self.waiting = password.is_known();
+        password
+    }
+
+    /// Sends validation message when password was correctly matched.
+    #[inline]
+    async fn validate_password(&mut self) {
+        self.waiting = false;
+        self.should_retry(false).await;
     }
 }
 
 impl Authorizer for User {
+    type Prompt = Prompt;
+
+    type Message = ();
+
+    type Error = ();
+
     #[inline]
-    fn setup<'s>(&'s mut self, config: &'s Config) -> PasswordFuture<'s> {
-        let _ = config;
-        Box::pin(async move {
-            self.password
-                .recv()
-                .await
-                .unwrap_or_else(Password::from_unknown)
-        })
+    fn password(&mut self) -> PasswordFuture {
+        Box::pin(async move { self.request_password().await })
     }
 
     #[inline]
-    fn authorize<T>(&mut self, prompt: T) -> PasswordFuture
-    where
-        T: Serialize,
-    {
-        self.window.emit("authorize", prompt).unwrap();
-        Box::pin(async move {
-            self.password
-                .recv()
-                .await
-                .unwrap_or_else(Password::from_unknown)
-        })
+    fn setup<'s>(&'s mut self, config: &'s Config) -> UnitFuture<'s> {
+        Box::pin(async move { self.setup_resources(config).await })
+    }
+
+    #[inline]
+    fn wake(&mut self, prompt: Self::Prompt) -> UnitFuture {
+        self.emit("authorize", prompt);
+        Box::pin(async move {})
+    }
+
+    #[inline]
+    fn sleep(&mut self, message: Result<Self::Message, Self::Error>) -> UnitFuture {
+        let _ = message;
+        Box::pin(async move { self.validate_password().await })
     }
 }
 
+/// Password Storage Channel
+struct PasswordStoreChannel {
+    /// Password Sender
+    password: Sender<Password>,
+
+    /// Retry Receiver
+    retry: Receiver<bool>,
+}
+
 /// Password Storage Type
-type PasswordStoreType = Arc<RwLock<Option<Sender<Password>>>>;
+type PasswordStoreType = Arc<Mutex<Option<PasswordStoreChannel>>>;
 
 /// Password Storage Handle
 pub struct PasswordStoreHandle(PasswordStoreType);
 
 impl PasswordStoreHandle {
-    /// Returns the receiver side of the password store.
+    /// Constructs the opposite end of `self` for the password storage handle.
     #[inline]
-    pub async fn into_receiver(self) -> Receiver<Password> {
-        let (sender, receiver) = channel(1);
-        *self.0.write().await = Some(sender);
-        receiver
+    pub async fn into_channel(self) -> (Receiver<Password>, Sender<bool>) {
+        let (password, receiver) = channel(1);
+        let (sender, retry) = channel(1);
+        *self.0.lock().await = Some(PasswordStoreChannel { password, retry });
+        (receiver, sender)
     }
 }
 
@@ -112,36 +215,46 @@ impl PasswordStore {
         PasswordStoreHandle(self.0.clone())
     }
 
-    /// Loads a new password into the state.
+    /// Loads the password store with `password`, returning `true` if the password was correct.
     #[inline]
-    pub async fn load(&self, password: SecretString) {
-        if let Some(state) = &*self.0.read().await {
-            let _ = state.send(Password::from_known(password)).await;
+    pub async fn load(&self, password: SecretString) -> bool {
+        if let Some(store) = &mut *self.0.lock().await {
+            let _ = store.password.send(Password::from_known(password)).await;
+            store.retry.recv().await.unwrap()
+        } else {
+            false
         }
     }
 
-    /// Clears the password state.
+    /// Loads the password with `password`, not requesting a retry.
+    #[inline]
+    pub async fn load_exact(&self, password: SecretString) {
+        if let Some(store) = &mut *self.0.lock().await {
+            let _ = store.password.send(Password::from_known(password)).await;
+        }
+    }
+
+    /// Clears the password from the store.
     #[inline]
     pub async fn clear(&self) {
-        if let Some(state) = &*self.0.read().await {
-            let _ = state.send(Password::from_unknown()).await;
+        if let Some(store) = &mut *self.0.lock().await {
+            let _ = store.password.send(Password::from_unknown()).await;
         }
     }
 }
 
-/// Loads the current `password` into storage from the UI.
+/// Sends the current `password` into storage from the UI.
 #[tauri::command]
-async fn load_password(
+async fn send_password(
     password_store: State<'_, PasswordStore>,
     password: String,
-) -> Result<(), ()> {
-    password_store.load(password.into()).await;
-    Ok(())
+) -> Result<bool, ()> {
+    Ok(password_store.load(password.into()).await)
 }
 
-/// Removes the current password from storage.
+/// Stops the server from prompting for the password.
 #[tauri::command]
-async fn clear_password(password_store: State<'_, PasswordStore>) -> Result<(), ()> {
+async fn stop_password_prompt(password_store: State<'_, PasswordStore>) -> Result<(), ()> {
     password_store.clear().await;
     Ok(())
 }
@@ -168,20 +281,20 @@ async fn connect(config: State<'_, Config>) -> Result<ConnectEvent, ()> {
 
 /// Sends the mnemonic to the UI for the user to memorize.
 #[tauri::command]
-async fn get_mnemonic(config: State<'_, Config>, password: String) -> Result<String, ()> {
-    Ok(create_account(&config.root_seed_file, &password.into())
+async fn get_mnemonic(
+    config: State<'_, Config>,
+    password_store: State<'_, PasswordStore>,
+    password: String,
+) -> Result<String, ()> {
+    let password = password.into();
+    let mnemonic = create_account(&config.root_seed_file, &password)
         .await
         .map_err(move |_| ())?
         .expose_secret()
         .clone()
-        .into_phrase())
-}
-
-/// Ends the first round of communication between the UI and the signer.
-#[tauri::command]
-async fn end_connect(password_store: State<'_, PasswordStore>) -> Result<(), ()> {
-    password_store.clear().await;
-    Ok(())
+        .into_phrase();
+    password_store.load_exact(password).await;
+    Ok(mnemonic)
 }
 
 /// Runs the main Tauri application.
@@ -209,13 +322,15 @@ fn main() {
         .manage(PasswordStore::default())
         .manage(config)
         .setup(|app| {
+            let resource_directory = app.path_resolver().resource_dir().unwrap();
             let window = app.get_window("main").unwrap();
             let config = app.state::<Config>().inner().clone();
             let password_store = app.state::<PasswordStore>().handle();
             spawn(async move {
+                let (password, retry) = password_store.into_channel().await;
                 Service::build(
                     config,
-                    User::new(window, password_store.into_receiver().await),
+                    User::new(window, password, retry, resource_directory.into()),
                 )
                 .serve()
                 .await
@@ -226,9 +341,8 @@ fn main() {
         .invoke_handler(tauri::generate_handler![
             connect,
             get_mnemonic,
-            end_connect,
-            clear_password,
-            load_password,
+            send_password,
+            stop_password_prompt,
         ])
         .build(tauri::generate_context!())
         .expect("Error while building UI.");
@@ -236,5 +350,16 @@ fn main() {
     #[cfg(target_os = "macos")]
     app.set_activation_policy(tauri::ActivationPolicy::Accessory);
 
-    app.run(move |_, _| {})
+    app.run(|app, event| {
+        if let Event::CloseRequested { label, api, .. } = event {
+            api.prevent_close();
+            match label.as_str() {
+                "about" => app.get_window(&label).unwrap().hide().unwrap(),
+                "main" => {
+                    // TODO: For the create account / login page, run `app.exit(0)`.
+                }
+                _ => unreachable!("There are no other windows."),
+            }
+        }
+    })
 }
