@@ -47,6 +47,11 @@ const Authorize = ({
     hideWindow();
   };
 
+  const onChangePassword = password => {
+    setPassword(password)
+    setPasswordInvalid(false)
+  }
+
   return (
     <>
       <Header>{header}</Header>
@@ -55,7 +60,7 @@ const Authorize = ({
         type="password"
         label="Password"
         value={password}
-        onChange={(e) => setPassword(e.target.value)}
+        onChange={(e) => onChangePassword(e.target.value)}
         error={passwordInvalid}
       />
       <Button className="button" onClick={onClickAuthorize}>
