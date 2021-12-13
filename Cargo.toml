@@ -24,10 +24,14 @@ is-it-maintained-issue-resolution = { repository = "Manta-Network/manta-signer" 
 is-it-maintained-open-issues = { repository = "Manta-Network/manta-signer" }
 maintenance = { status = "actively-developed" }
 
+[features]
+# Disable CORS Check
+unsafe-disable-cors = []
+
 [dependencies]
 ark-serialize = { version = "0.3.0", default-features = false }
 async-std = { version = "1.10.0" }
-bip0039 = { version = "0.9.0" }
+bip0039 = { version = "0.10.0" }
 bip32 = { version = "0.2.2" }
 bs58 = { version = "0.4.0" }
 cocoon = { version = "0.3.0" }
@@ -43,7 +47,7 @@ manta-data = { git = "https://github.com/Manta-Network/manta-types", branch = "m
 rand = { version = "0.8.4", default-features = false }
 rand_chacha = { version = "0.3.1", default-features = false }
 secrecy = { version = "0.8.0", default-features = false, features = ["alloc"] }
-serde = { version = "1.0.130", default-features = false, features = ["derive"] }
+serde = { version = "1.0.131", default-features = false, features = ["derive"] }
 serde_json = { version = "1.0.68", default-features = false }
 subtle = { version = "2.4.1" }
 tide = { version = "0.16.0" }

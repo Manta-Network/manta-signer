@@ -312,15 +312,9 @@ where
     /// Builds a new [`Service`] from `config` and `authorizer`.
     #[inline]
     pub fn build(config: Config, authorizer: A) -> Self {
-        // FIXME: This is not the best strategy for choosing which URL we want.
-        #[cfg(debug_assertions)]
-        let url = config.dev_origin_url.as_str();
-        #[cfg(not(debug_assertions))]
-        let url = config.prod_origin_url.as_str();
-
         let cors = CorsMiddleware::new()
             .allow_methods("GET, POST".parse::<HeaderValue>().unwrap())
-            .allow_origin(Origin::from(url))
+            .allow_origin(Origin::from(config.origin_url.as_str()))
             .allow_credentials(false);
         let mut server = Server::with_state(State::new(config, authorizer));
         server.with(cors);
