@@ -355,8 +355,6 @@ fn main() {
             api.prevent_close();
             match label.as_str() {
                 "about" => app.get_window(&label).unwrap().hide().unwrap(),
-                // TODO: close app on login or create account page, otherwise
-                // cancel transaction and close window
                 "main" => app.exit(0),
                 _ => unreachable!("There are no other windows."),
             }
