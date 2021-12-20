@@ -31,10 +31,13 @@ default = ["custom-protocol"]
 # Tauri Custom Protocol Building Feature
 custom-protocol = ["tauri/custom-protocol"]
 
+# Disable CORS Check
+unsafe-disable-cors = ["manta-signer/unsafe-disable-cors"]
+
 [dependencies]
 async-std = { version = "1.10.0" }
 manta-signer = { path = "../../" }
-serde = { version = "1.0.130", features = ["derive"] }
+serde = { version = "1.0.131", features = ["derive"] }
 tauri = { version = "1.0.0-beta.8", features = ["reqwest-client", "system-tray"] }
 
 [build-dependencies]

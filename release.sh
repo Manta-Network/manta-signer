@@ -41,8 +41,8 @@ EOF
 
 # curl ...
 # mv *.bin ui
-# cd ui
-# cargo tauri build --bundle dmg deb msi
+cd ui
+cargo tauri build
 
 echo "release"
 
