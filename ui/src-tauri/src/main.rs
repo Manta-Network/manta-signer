@@ -355,9 +355,7 @@ fn main() {
             api.prevent_close();
             match label.as_str() {
                 "about" => app.get_window(&label).unwrap().hide().unwrap(),
-                "main" => {
-                    // TODO: For the create account / login page, run `app.exit(0)`.
-                }
+                "main" => app.exit(0),
                 _ => unreachable!("There are no other windows."),
             }
         }
