@@ -318,7 +318,7 @@ where
             .allow_credentials(false);
         let mut server = Server::with_state(State::new(config, authorizer));
         server.with(cors);
-        server.at("/heartbeat").get(Self::heartbeat);
+        server.at("/version").get(Self::version);
         server.at("/recoverAccount").post(Self::recover_account);
         server
             .at("/deriveShieldedAddress")
@@ -366,12 +366,12 @@ where
         self.0.state()
     }
 
-    /// Sends a heartbeat to the client.
+    /// Sends version to the client.
     #[inline]
-    async fn heartbeat(request: Request<A>) -> ServerResult<String> {
-        Self::log(String::from("HEARTBEAT")).await?;
+    async fn version(request: Request<A>) -> ServerResult {
+        Self::log(String::from("VERSION")).await?;
         let _ = request;
-        Ok(String::from("heartbeat"))
+        Ok(Body::from_json(&VersionMessage::default())?.into())
     }
 
     /// Runs an account recovery for the given `request`.
@@ -499,6 +499,20 @@ where
     }
 }
 
+/// Version Message
+#[derive(Clone, Debug, Deserialize, Serialize)]
+pub struct VersionMessage {
+    /// Version
+    pub version: &'static str,
+}
+
+impl Default for VersionMessage {
+    /// Builds a default [`VersionMessage`].
+    fn default() -> Self {
+        Self { version: VERSION }
+    }
+}
+
 /// Shielded Address Message
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct ShieldedAddressMessage {
@@ -506,7 +520,7 @@ pub struct ShieldedAddressMessage {
     pub address: Vec<u8>,
 
     /// Version
-    pub version: String,
+    pub version: &'static str,
 }
 
 impl ShieldedAddressMessage {
@@ -515,11 +529,10 @@ impl ShieldedAddressMessage {
     pub fn new(address: Vec<u8>) -> Self {
         Self {
             address,
-            version: "0.0.0".into(),
+            version: VERSION,
         }
     }
 }
-
 /// Recover Account Message
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct RecoverAccountMessage {
