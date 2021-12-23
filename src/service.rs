@@ -369,8 +369,9 @@ where
     /// Sends version to the client.
     #[inline]
     async fn version(request: Request<A>) -> ServerResult {
-        Self::log(String::from("VERSION")).await?;
+        Self::log(String::from("REQUEST: version")).await?;
         let _ = request;
+        Self::log(format!("RESPONSE: {:?}", VERSION)).await?;
         Ok(Body::from_json(&VersionMessage::default())?.into())
     }
 
