@@ -28,7 +28,8 @@ The version numbers in the following files must be updated:
   2. ui/src-tauri/Cargo.toml
   3. ui/src-tauri/tauri.conf.json
   4. ui/public/about.html
- 
+  5. ui/package.json
+
 EOF
 prompt "Did you update the version numbers?"
 
