@@ -26,4 +26,6 @@ jobs:
       - name: Build
         run: cargo build --release --locked
       - name: Upload
-        run: echo "TODO: upload here"; ls target/release
+        run: echo "TODO: upload here"
+      - name: Check
+        run: ls target/release
