@@ -1,0 +1,28 @@
+name: Tag & Release Binaries
+
+on:
+  workflow_dispatch:
+
+jobs:
+  bump_version:
+    name: Version bump
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+    - name: Bump version
+      id: bump_version
+      uses: anothrNick/github-tag-action@1.17.2
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        DRY_RUN: true
+        WITH_V: true
+    - name: Print version
+      run: echo "Hello ${{ steps.bump_version.outputs.new_tag }}"
+    - name: Dispatch tag created event
+      uses: peter-evans/repository-dispatch@v1
+      with:
+        token: ${{ secrets.REPO_ACCESS_TOKEN }}
+        event-type: tag-created
+        client-payload: '{"new_version": "${{ steps.bump_version.outputs.new_tag }}"}'
