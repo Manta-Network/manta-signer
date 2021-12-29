@@ -1,0 +1,29 @@
+name: Build and upload binaries
+
+on:
+  repository_dispatch:
+    types: [tag-created]
+
+jobs:
+  release:
+    name: Build and release
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            artifact_name: manta-signer
+            asset_name: manta-signer-linux-amd64
+          - os: macos-latest
+            artifact_name: manta-signer
+            asset_name: manta-signer-macos-amd64
+          - os: windows-2019
+            artifact_name: manta-signer
+            asset_name: manta-signer-windows-10
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+      - name: Build
+        run: cargo build --release --locked
+      - name: Upload
+        run: echo "TODO: upload here"; ls target/release
