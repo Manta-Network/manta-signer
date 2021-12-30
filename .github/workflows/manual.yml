@@ -2,6 +2,11 @@ name: Tag & Release Binaries
 
 on:
   workflow_dispatch:
+    inputs:
+      tag:
+        description: tag
+        default: meh
+        required: false
 
 jobs:
   bump_version:
