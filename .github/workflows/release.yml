@@ -26,4 +26,4 @@ jobs:
       - name: Build
         run: cargo build --release --locked
       - name: Check
-        run: ls target/release
+        run: ls
