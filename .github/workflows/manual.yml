@@ -3,10 +3,17 @@ name: Tag & Release Binaries
 on:
   workflow_dispatch:
     inputs:
-      tag:
-        description: tag
-        default: meh
-        required: false
+      release-version:
+        description: Version number of the release
+        default: v0.5.0
+        required: true
+#on:
+#  workflow_dispatch:
+#    inputs:
+#      tag:
+#        description: tag
+#        default: meh
+#        required: false
 
 jobs:
   bump_version:
