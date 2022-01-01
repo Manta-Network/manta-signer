@@ -23,7 +23,9 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
+      - name: Install Tauri CLI
+        run: cargo install tauri-cli --git 'https://github.com/tauri-apps/tauri' --branch next
       - name: Build
-        run: cargo build --release --locked
+        run: cd ui;cargo tauri build
       - name: Check
         run: ls
