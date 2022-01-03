@@ -80,7 +80,6 @@ impl User {
     /// Pulls resources from `self.resource_directory` and moves them to the proving key directory.
     #[inline]
     async fn setup_resources(&self, config: &Config) {
-        // FIXME: Make sure this function will work on all platforms.
         if !self.resource_directory.exists().await {
             // NOTE: If this file does not exist, then we are in development mode.
             return;
@@ -93,6 +92,21 @@ impl User {
             if entry.file_type().await.unwrap().is_file() {
                 let path = entry.path();
                 if matches!(path.extension(), Some(ext) if ext == "bin") {
+                    fs::copy(
+                        &path,
+                        &config
+                            .proving_key_directory
+                            .join(&path.file_name().expect("Path should point to a real file.")),
+                    )
+                    .await
+                    .expect("Copy should have succeeded.");
+                }
+            } else if entry.path().to_str().unwrap().ends_with(".bin") {
+                let mut bins = fs::read_dir(&entry.path())
+                    .await
+                    .expect("The resource directory should be a directory.");
+                while let Some(entry) = bins.next().await {
+                    let path = entry.expect("Unable to get directory entry.").path();
                     fs::copy(
                         &path,
                         &config
