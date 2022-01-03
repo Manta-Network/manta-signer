@@ -3,17 +3,10 @@ name: Tag & Release Binaries
 on:
   workflow_dispatch:
     inputs:
-      release-version:
+      releaseVersion:
         description: Version number of the release
-        default: v0.5.0
+        default: 0.5.0
         required: true
-#on:
-#  workflow_dispatch:
-#    inputs:
-#      tag:
-#        description: tag
-#        default: meh
-#        required: false
 
 jobs:
   bump_version:
@@ -23,18 +16,19 @@ jobs:
     steps:
     - name: Checkout
       uses: actions/checkout@v2
-    - name: Bump version
-      id: bump_version
-      uses: anothrNick/github-tag-action@1.17.2
+    - name: Tag a Release
+      uses: actions/create-release@latest
+      id: create_release
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        DRY_RUN: true
-        WITH_V: true
-    - name: Print version
-      run: echo "Hello ${{ steps.bump_version.outputs.new_tag }}"
+      with:
+        tag_name: ${{ github.event.inputs.releaseVersion }}
+        release_name: Release ${{ github.event.inputs.releaseVersion }}
+        body: "TODO: edit release notes before publishing"
+        draft: true
     - name: Dispatch tag created event
       uses: peter-evans/repository-dispatch@v1
       with:
-        token: ${{ secrets.GITHUB_TOKEN }}
+        token: ${{ secrets.REPO_ACCESS_TOKEN }}
         event-type: tag-created
-        client-payload: '{"new_version": "${{ steps.bump_version.outputs.new_tag }}"}'
+        client-payload: '{"upload_url": "${{ steps.create_release.outputs.upload_url }}", "new_version": "${{ github.event.inputs.releaseVersion }}"}'

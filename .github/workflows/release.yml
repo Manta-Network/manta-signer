@@ -14,18 +14,91 @@ jobs:
           - os: ubuntu-latest
             artifact_name: manta-signer
             asset_name: manta-signer-linux-amd64
+          - os: windows-2019
+            artifact_name: manta-signer
+            asset_name: manta-signer-windows
           - os: macos-latest
             artifact_name: manta-signer
             asset_name: manta-signer-macos-amd64
-          - os: windows-2019
-            artifact_name: manta-signer
-            asset_name: manta-signer-windows-10
+    #      - os: macos-10.15
+    #        artifact_name: manta-signer
+    #        asset_name: manta-signer-macos-amd64
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
+      - name: Cache Cargo build dir
+        uses: actions/cache@v2
+        env:
+          cache-name: cache-cargo
+        with:
+          path: ~/.cargo
+          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('./ui/src-tauri/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-build-${{ env.cache-name }}-
+            ${{ runner.os }}-build-
+            ${{ runner.os }}-
+      - name: Cache target dir
+        uses: actions/cache@v2
+        env:
+          cache-name: cache-target
+        with:
+          path: ui/src-tauri/target
+          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('./ui/src-tauri/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-build-${{ env.cache-name }}-
+            ${{ runner.os }}-build-
+            ${{ runner.os }}-
       - name: Install Tauri CLI
         run: cargo install tauri-cli --git 'https://github.com/tauri-apps/tauri' --branch next
+      - name: Fetch reclaim_pk.bin
+        run: cd ui/src-tauri;curl -O 'https://github.com/Manta-Network/manta-api/releases/download/0.3.1/reclaim_pk.bin'
+      - name: Fetch transfer_pk.bin
+        run: cd ui/src-tauri;curl -O 'https://github.com/Manta-Network/manta-api/releases/download/0.3.1/transfer_pk.bin'
+      - name: Hack For Ubuntu Builds
+        run: cd ui/src-tauri; sed -i /icns/d tauri.conf.json
+        if: matrix.os == 'ubuntu-latest'
+      - name: Ubuntu Build Dependencies
+        run: sudo apt-get -y install libwebkit2gtk-4.0-dev libgtk-3-dev libappindicator3-dev patchelf librsvg2-dev
+        if: matrix.os == 'ubuntu-latest'
       - name: Build
         run: cd ui;cargo tauri build
-      - name: Check
-        run: ls
+      - name: Upload .deb Package
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ github.event.client_payload.upload_url }}
+          asset_path: ui/src-tauri/target/release/bundle/deb/manta-signer_${{ github.event.client_payload.new_version }}_amd64.deb
+          asset_name: manta-signer_${{ github.event.client_payload.new_version }}_amd64.deb
+          asset_content_type: application/binary
+        if: matrix.os == 'ubuntu-latest'
+      - name: Upload AppImage Package
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ github.event.client_payload.upload_url }}
+          asset_path: ui/src-tauri/target/release/bundle/appimage/manta-signer_${{ github.event.client_payload.new_version }}_amd64.AppImage
+          asset_name: manta-signer_${{ github.event.client_payload.new_version }}_amd64.AppImage
+          asset_content_type: application/binary
+        if: matrix.os == 'ubuntu-latest'
+      - name: Upload MS Installer
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ github.event.client_payload.upload_url }}
+          asset_path: "ui/src-tauri/target/release/bundle/msi/Manta Signer_${{ github.event.client_payload.new_version }}_x64.msi"
+          asset_name: "Manta Signer_${{ github.event.client_payload.new_version }}_x64.msi" 
+          asset_content_type: application/binary
+        if: matrix.os == 'windows-2019'
+      - name: Upload Mac Image
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ github.event.client_payload.upload_url }}
+          asset_path: "ui/src-tauri/target/release/bundle/dmg/Manta Signer_${{ github.event.client_payload.new_version }}_x64.dmg"
+          asset_name: "Manta Signer_${{ github.event.client_payload.new_version }}_x64.dmg" 
+          asset_content_type: application/binary
+        if: matrix.os == 'macos-latest'
