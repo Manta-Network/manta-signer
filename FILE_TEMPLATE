@@ -1,4 +1,4 @@
-// Copyright 2019-2021 Manta Network.
+// Copyright 2019-2022 Manta Network.
 // This file is part of manta-signer.
 //
 // manta-signer is free software: you can redistribute it and/or modify
