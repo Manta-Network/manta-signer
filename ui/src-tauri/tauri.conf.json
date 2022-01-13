@@ -23,7 +23,7 @@
             ],
             "resources": ["*.bin"],
             "externalBin": [],
-            "copyright": "Copyright 2019-2021 Manta Network",
+            "copyright": "Copyright 2019-2022 Manta Network",
             "category": "DeveloperTool",
             "shortDescription": "Manta Network Signer",
             "longDescription": "",
