@@ -12,3 +12,4 @@ Disclaimer: `manta-signer` is experimental software, use it at your own risk.
 -src: manta-signer zkp generation
 -ui: manta-signer desktop UI
 ```
+
