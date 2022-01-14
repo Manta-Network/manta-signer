@@ -64,10 +64,14 @@ jobs:
             ${{ runner.os }}-build-${{ env.cache-name }}-
             ${{ runner.os }}-build-
             ${{ runner.os }}-
-      - name: Fetch reclaim_pk.bin
-        run: cd ui/src-tauri;curl -OL 'https://github.com/Manta-Network/sdk/raw/main/zkp/reclaim_pk.bin'
-      - name: Fetch transfer_pk.bin
-        run: cd ui/src-tauri;curl -OL 'https://github.com/Manta-Network/sdk/raw/main/zkp/transfer_pk.bin'
+      - name: Fetch Proving Keys
+        uses: actions/checkout@v2
+        with:
+          repository: 'https://github.com/Manta-Network/sdk'
+          path: 'sdk'
+          fetch-depth: '1'
+          lfs: 'true'
+        run: mv ${{ GITHUB_WORKSPACE }}/sdk/zkp/* ui/src-tauri/
       - name: Hack For Ubuntu Builds
         run: cd ui/src-tauri; sed -i /icns/d tauri.conf.json
         if: matrix.os_type == 'ubuntu'
