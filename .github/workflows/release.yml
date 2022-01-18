@@ -71,6 +71,7 @@ jobs:
           path: 'sdk'
           fetch-depth: '1'
           lfs: 'true'
+      - name: Move Proving Keys
         run: mv ${{ GITHUB_WORKSPACE }}/sdk/zkp/* ui/src-tauri/
       - name: Hack For Ubuntu Builds
         run: cd ui/src-tauri; sed -i /icns/d tauri.conf.json
