@@ -67,10 +67,10 @@ jobs:
       - name: Fetch Proving Keys
         uses: actions/checkout@v2
         with:
-          repository: 'https://github.com/Manta-Network/sdk'
-          path: 'sdk'
-          fetch-depth: '1'
-          lfs: 'true'
+          repository: Manta-Network/sdk
+          path: sdk
+          fetch-depth: 1
+          lfs: true
       - name: Move Proving Keys
         run: mv ./sdk/zkp/* ui/src-tauri/
       - name: Hack For Ubuntu Builds
