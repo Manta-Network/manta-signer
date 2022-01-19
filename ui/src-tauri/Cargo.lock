@@ -2796,7 +2796,7 @@ dependencies = [
 
 [[package]]
 name = "manta-signer"
-version = "0.5.0"
+version = "0.5.1"
 dependencies = [
  "ark-serialize",
  "async-std",
@@ -2824,7 +2824,7 @@ dependencies = [
 
 [[package]]
 name = "manta-signer-ui"
-version = "0.5.0"
+version = "0.5.1"
 dependencies = [
  "async-std",
  "manta-signer",
