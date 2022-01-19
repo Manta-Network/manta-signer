@@ -364,20 +364,16 @@ fn main() {
     #[cfg(target_os = "macos")]
     app.set_activation_policy(tauri::ActivationPolicy::Accessory);
 
-    app.run(|app, event| {
-        match event {
-            Event::Ready => {
-                app.get_window("about").unwrap().hide().unwrap();
+    app.run(|app, event| match event {
+        Event::Ready => app.get_window("about").unwrap().hide().unwrap(),
+        Event::CloseRequested { label, api, .. } => {
+            api.prevent_close();
+            match label.as_str() {
+                "about" => app.get_window(&label).unwrap().hide().unwrap(),
+                "main" => app.exit(0),
+                _ => unreachable!("There are no other windows."),
             }
-            Event::CloseRequested { label, api, .. } => {
-                api.prevent_close();
-                match label.as_str() {
-                    "about" => app.get_window(&label).unwrap().hide().unwrap(),
-                    "main" => app.exit(0),
-                    _ => unreachable!("There are no other windows."),
-                }
-            }
-            _ => ()
         }
+        _ => (),
     })
 }
