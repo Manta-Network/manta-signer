@@ -37,19 +37,22 @@
                 "useBootstrapper": false,
                 "exceptionDomain": "",
                 "signingIdentity": null,
-                "entitlements": null
+                "entitlements": "../entitlements.plist"
             },
             "windows": {
                 "certificateThumbprint": null,
                 "digestAlgorithm": "sha256",
-                "timestampUrl": ""
+                "timestampUrl": "",
+                "wix": {
+                    "enableElevatedUpdateTask": true
+                }
             }
         },
         "updater": {
-            "active": false,
-            "endpoints": [],
+            "active": true,
+            "endpoints": ["http://my.host.internal:9999/updates/{{target}}/{{current_version}}"],
             "dialog": true,
-            "pubkey": ""
+            "pubkey": null
         },
         "allowlist": {},
         "windows": [{
