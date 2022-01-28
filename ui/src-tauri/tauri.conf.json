@@ -52,7 +52,7 @@
             "active": true,
             "endpoints": ["http://my.host.internal:9999/updates/{{target}}/{{current_version}}"],
             "dialog": true,
-            "pubkey": null
+            "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDk3M0QzNEU2MEM0OTExNEEKUldSS0VVa001alE5bHc3M3RmTXdLWThjaDJyeURLUnFhb0dXOS9HZ0l6eTF4MUs5Y2xPSGh2OXQK"
         },
         "allowlist": {},
         "windows": [{
