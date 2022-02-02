@@ -17,4 +17,5 @@ cargo run --example test_server --release --features=unsafe-disable-cors -- http
 --rpc-methods=Unsafe &
 
 # Run test
+cd js
 yarn test
