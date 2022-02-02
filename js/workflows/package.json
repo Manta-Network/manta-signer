@@ -1,0 +1,20 @@
+{
+    "name": "workflows",
+    "version": "0.2.0",
+    "description": "A library of workflows using Manta extrinsics",
+    "main": "./dist/index.js",
+    "repository": "git@github.com:Manta-Network/manta-js",
+    "author": "Gabriela Brown <gabcbrown@gmail.com>",
+    "scripts": {
+        "build": "rm -rf workflows/dist; tsc"
+    },
+    "license": "GPL-3.0-only",
+    "resolutions": {
+        "@polkadot/api": "^6.5.2",
+        "@polkadot/types": "^6.5.2"
+    },
+    "dependencies": {
+        "signer-interface": "^0.1.0",
+        "coin-selection": "^0.1.0"
+    }
+}

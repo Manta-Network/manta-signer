@@ -1,0 +1,18 @@
+# Typescript Output
+./coin-selection/dist
+dev-cli/dist
+dolphin-api/dist
+e2e/dist
+signer-interface/dist
+workflows/dist
+*/tsconfig.tsbuildinfo
+
+# Node Modules
+node_modules
+**/node_modules
+
+
+e2e/*store.json
+simulation/out.json
+
+.DS_Store

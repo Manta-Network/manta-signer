@@ -1,0 +1,42 @@
+{
+  "exclude": ["node_modules"],
+  "references": [
+    {
+      "path": "./e2e"
+    },
+    {
+      "path": "./dev-cli"
+    },
+    {
+      "path": "./workflows"
+    },
+    {
+      "path": "./signer-interface"
+    }
+  ],
+  "files": [],
+  "include": [],
+  "compilerOptions": {
+    "target": "es5",
+    "lib": ["es2019"],
+    "module": "umd",
+    "outDir": "./bin",
+    "esModuleInterop": false,
+    "forceConsistentCasingInFileNames": true,
+    "strict": true,
+    "noImplicitAny": true,
+    "strictNullChecks": true,
+    "strictFunctionTypes": true,
+    "strictBindCallApply": true,
+    "strictPropertyInitialization": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "exactOptionalPropertyTypes": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
+    "noUncheckedIndexedAccess": true,
+    "noImplicitOverride": true,
+    "noPropertyAccessFromIndexSignature": true,
+    "skipLibCheck": true
+  }
+}
