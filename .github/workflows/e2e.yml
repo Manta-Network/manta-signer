@@ -60,7 +60,7 @@ jobs:
         env:
           cache-name: proving-keys
         with:
-          path: /home/runner/sdk/zkp/
+          path: ~/.local/share/manta-signer
           key: ${{ env.cache-name }}-${{ env.LATEST_SDK_VERSION }}
       - name: Get proving keys
         if: steps.load-cache-proving-keys.outputs.cache-hit != 'true'
