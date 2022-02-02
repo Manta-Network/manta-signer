@@ -60,7 +60,7 @@ jobs:
         env:
           cache-name: proving-keys
         with:
-          path: ~/.local/share/manta-signer
+          path: /home/runner/sdk/zkp/
           key: ${{ env.cache-name }}-${{ env.LATEST_SDK_VERSION }}
       - name: Get proving keys
         if: steps.load-cache-proving-keys.outputs.cache-hit != 'true'
@@ -85,7 +85,7 @@ jobs:
         env:
           cache-name: cache-manta-node
         with:
-          path: ~/Manta
+          path: /home/runner/Manta
           key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ env.LATEST_NODE_VERSION }}
       - name: Build Manta node
         if: steps.load-cache-manta-node.outputs.cache-hit != 'true'
