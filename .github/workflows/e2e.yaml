@@ -1,0 +1,95 @@
+name: End to end test
+on:
+  push:
+    branches:
+      - main
+    paths-ignore:
+      - '**.md'
+  pull_request:
+    branches:
+      - main
+    paths-ignore:
+      - '**.md'
+
+jobs:
+  build_code:
+    name: End to end test
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    strategy:
+      matrix:
+        node-version: [16.x]
+    env:
+      MANTA_NODE_BRANCH: "dolphin"
+      MANTA_SDK_BRANCH: "main"
+
+    steps:
+      - name: Cancel previous runs
+        uses: styfle/cancel-workflow-action@0.9.1
+        with:
+          access_token: ${{ github.token }}
+      - uses: actions/checkout@v1
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v1
+        with:
+          node-version: ${{ matrix.node-version }}
+      - name: Build manta-signer test server
+        run: cargo build --example test_server --release --features=unsafe-disable-cors
+      - name: Build manta-js
+        run: |
+          cd js
+          yarn install --immutable | grep -v 'YN0013'
+          yarn build
+
+      - name: Enable test scripts
+        run: |
+          chmod +x "${GITHUB_WORKSPACE}/.github/workflows/e2e/get_latest_node_version.sh"
+          chmod +x "${GITHUB_WORKSPACE}/.github/workflows/e2e/get_latest_sdk_version.sh"
+          chmod +x "${GITHUB_WORKSPACE}/.github/workflows/e2e/build_node.sh"
+          chmod +x "${GITHUB_WORKSPACE}/.github/workflows/e2e/move_proving_keys.sh"
+          chmod +x "${GITHUB_WORKSPACE}/.github/workflows/e2e/run_test.sh"
+
+      - name: Get latest Manta sdk version
+        run: |
+          LATEST_SDK_VERSION=`"${GITHUB_WORKSPACE}/.github/workflows/e2e/get_latest_sdk_version.sh" ${{ env.MANTA_SDK_BRANCH }}`
+          echo $LATEST_SDK_VERSION
+          echo "LATEST_SDK_VERSION=$LATEST_SDK_VERSION" >> $GITHUB_ENV
+      - name: Load proving keys from cache
+        id: load-cache-proving-keys
+        uses: actions/cache@v2
+        env:
+          cache-name: proving-keys
+        with:
+          path: ~/.local/share/manta-signer
+          key: ${{ env.cache-name }}-${{ env.LATEST_SDK_VERSION }}
+      - name: Get proving keys
+        if: steps.load-cache-proving-keys.outputs.cache-hit != 'true'
+        uses: actions/checkout@v2
+        with:
+          repository: Manta-Network/sdk
+          path: sdk
+          fetch-depth: 1
+          lfs: true
+      - name: Move proving keys
+        if: steps.load-cache-proving-keys.outputs.cache-hit != 'true'
+        run: "${GITHUB_WORKSPACE}/.github/workflows/e2e/move_proving_keys.sh"
+
+      - name: Get latest Manta node version
+        run: |
+          LATEST_NODE_VERSION=`"${GITHUB_WORKSPACE}/.github/workflows/e2e/get_latest_node_version.sh" ${{ env.MANTA_NODE_BRANCH }}`
+          echo $LATEST_NODE_VERSION
+          echo "LATEST_NODE_VERSION=$LATEST_NODE_VERSION" >> $GITHUB_ENV
+      - name: Load Manta node from cache
+        id: load-cache-manta-node
+        uses: actions/cache@v2
+        env:
+          cache-name: cache-manta-node
+        with:
+          path: ~/Manta
+          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ env.LATEST_NODE_VERSION }}
+      - name: Build Manta node
+        if: steps.load-cache-manta-node.outputs.cache-hit != 'true'
+        run: "${GITHUB_WORKSPACE}/.github/workflows/e2e/build_node.sh ${{ env.LATEST_NODE_VERSION }}"
+
+      - name: Run test
+        run: "${GITHUB_WORKSPACE}/.github/workflows/e2e/run_test.sh"
