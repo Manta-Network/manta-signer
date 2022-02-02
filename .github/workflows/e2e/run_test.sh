@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Create 10-round simulation instructions and save output
-cd simulation
+cd js/e2e/simulation
 cargo run 10 | tail -n +2 > out.json
 cat out.json
 
@@ -16,5 +16,4 @@ cargo run --example test_server --release --features=unsafe-disable-cors -- http
 --rpc-methods=Unsafe &
 
 # Run test
-cd /home/runner/work/manta-js/manta-js
 yarn test

@@ -474,11 +474,14 @@ impl Simulator {
                     });
                 }
                 Action::PrivateTransfer => {
-                    updates.push(Update::PrivateTransfer {
-                        sender_index: i,
-                        receiver_index: rng.gen_range(0..self.accounts.len()),
-                        asset: self.config.sample_withdraw(&account.secret, rng),
-                    });
+                    let asset = self.config.sample_withdraw(&account.secret, rng);
+                    if asset.value > 0 {
+                        updates.push(Update::PrivateTransfer {
+                            sender_index: i,
+                            receiver_index: rng.gen_range(0..self.accounts.len()),
+                            asset
+                        });
+                    };
                 }
                 Action::Reclaim => {
                     updates.push(Update::Reclaim {
