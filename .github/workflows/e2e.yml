@@ -83,7 +83,7 @@ jobs:
         id: load-cache-manta-node
         uses: actions/cache@v2
         env:
-          cache-name: cache-manta-node
+          cache-name: manta-node
         with:
           path: ~/Manta
           key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ env.LATEST_NODE_VERSION }}
