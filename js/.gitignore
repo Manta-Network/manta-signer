@@ -1,5 +1,5 @@
 # Typescript Output
-./coin-selection/dist
+coin-selection/dist
 dev-cli/dist
 dolphin-api/dist
 e2e/dist
@@ -13,6 +13,6 @@ node_modules
 
 
 e2e/*store.json
-simulation/out.json
+e2e/simulation/out.json
 
 .DS_Store
