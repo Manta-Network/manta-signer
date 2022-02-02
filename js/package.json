@@ -14,7 +14,7 @@
         "build": "yarn workspace coin-selection build; yarn workspace signer-interface build; yarn workspace dolphin-api build;  yarn workspace workflows build;",
         "lint:check": "eslint . --ext .ts,.tsx",
         "lint": "npm run lint:check -- --fix",
-        "test": "yarn run e2e test"
+        "test": "yarn workspace e2e test"
     },
     "dependencies": {
         "@polkadot/api": "^6.5.2",
