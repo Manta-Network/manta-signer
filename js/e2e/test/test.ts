@@ -189,7 +189,7 @@ describe('Manta e2e test suite', async () => {
 
   describe('simulation', () => {
     it('runs', async () => {
-      const simulation = loadSimulation('../simulation/out.json');
+      const simulation = loadSimulation('./simulation/out.json');
       assert.notEqual(simulation, null, 'Unable to load simulation file.');
       assert.equal(simulation.config.starting_account_count, 3);
       assert.equal(simulation.config.new_account_sampling_cycle, 0);
