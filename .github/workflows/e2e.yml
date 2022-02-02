@@ -91,5 +91,5 @@ jobs:
       #   if: steps.load-cache-manta-node.outputs.cache-hit != 'true'
       #   run: "${GITHUB_WORKSPACE}/.github/workflows/e2e/build_node.sh ${{ env.LATEST_NODE_VERSION }}"
 
-      - name: Run test
-        run: "${GITHUB_WORKSPACE}/.github/workflows/e2e/run_test.sh"
+      # - name: Run test
+      #   run: "${GITHUB_WORKSPACE}/.github/workflows/e2e/run_test.sh"
