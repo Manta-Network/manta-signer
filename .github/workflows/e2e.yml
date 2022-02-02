@@ -85,7 +85,7 @@ jobs:
         env:
           cache-name: cache-manta-node
         with:
-          path: /home/runner/Manta
+          path: ~/Manta
           key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ env.LATEST_NODE_VERSION }}
       - name: Build Manta node
         if: steps.load-cache-manta-node.outputs.cache-hit != 'true'
