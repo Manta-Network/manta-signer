@@ -1,4 +1,4 @@
-# Manta JS
+# Signer JS Libraries
 
 This workspace includes the following packages:
 
@@ -8,6 +8,8 @@ This workspace includes the following packages:
 | workflows        | `./workflows`       |  logical workflows with extrinsics.     |  experimental |
 | e2e              | `./e2e`             |  end-to-end test suites.                |  experimental |
 | singer-interface | `/signer-interface` |  typescript interface for manta-signer. |  experimental |
+| coin-selection   | `/coin-selection`   |  simple coin selection logic            |  experimental |
+
 
 ## Build
 Tested environment:
@@ -16,7 +18,7 @@ Tested environment:
 
 ```yarn install && yarn build```
 
-## Set up
+## Test Setup
 
 1. Make sure you have a node running that you want to connect to.
 

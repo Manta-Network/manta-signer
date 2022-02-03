@@ -1,8 +1,8 @@
-name: Build and upload binaries
+name: Build and upload release binaries
 
 on:
   pull_request:
-    branches: 
+    branches:
       - master
   release:
     types: [published]
@@ -118,7 +118,7 @@ jobs:
         with:
           upload_url: ${{ steps.get_release.outputs.upload_url }}
           asset_path: "ui/src-tauri/target/release/bundle/msi/manta-signer_${{ needs.setup.outputs.release_version }}_x64.msi"
-          asset_name: "manta-signer-${{ matrix.os }}_${{ needs.setup.outputs.release_version }}_x64.msi" 
+          asset_name: "manta-signer-${{ matrix.os }}_${{ needs.setup.outputs.release_version }}_x64.msi"
           asset_content_type: application/binary
         if: matrix.os_type == 'windows' && github.event_name == 'release' && github.event.action == 'published'
       - name: Upload Mac Image
@@ -128,6 +128,6 @@ jobs:
         with:
           upload_url: ${{ steps.get_release.outputs.upload_url }}
           asset_path: "ui/src-tauri/target/release/bundle/dmg/manta-signer_${{ needs.setup.outputs.release_version }}_x64.dmg"
-          asset_name: "manta-signer-${{ matrix.os }}_${{ needs.setup.outputs.release_version }}_x64.dmg" 
+          asset_name: "manta-signer-${{ matrix.os }}_${{ needs.setup.outputs.release_version }}_x64.dmg"
           asset_content_type: application/binary
         if: matrix.os_type == 'macos' && github.event_name == 'release' && github.event.action == 'published'
