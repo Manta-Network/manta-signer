@@ -79,14 +79,6 @@ jobs:
           LATEST_NODE_VERSION=`"${GITHUB_WORKSPACE}/.github/workflows/e2e/get_latest_node_version.sh" ${{ env.MANTA_NODE_BRANCH }}`
           echo $LATEST_NODE_VERSION
           echo "LATEST_NODE_VERSION=$LATEST_NODE_VERSION" >> $GITHUB_ENV
-      - name: Load Manta node from cache
-        id: load-cache-manta-node
-        uses: actions/cache@v2
-        env:
-          cache-name: manta-node
-        with:
-          path: ~/Manta
-          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ env.LATEST_NODE_VERSION }}
       - name: Build Manta node
         if: steps.load-cache-manta-node.outputs.cache-hit != 'true'
         run: "${GITHUB_WORKSPACE}/.github/workflows/e2e/build_node.sh ${{ env.LATEST_NODE_VERSION }}"
