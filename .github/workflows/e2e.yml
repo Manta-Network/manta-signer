@@ -20,7 +20,6 @@ jobs:
       matrix:
         node-version: [16.x]
     env:
-      MANTA_NODE_BRANCH: "dolphin"
       MANTA_SDK_BRANCH: "main"
 
     steps:
@@ -43,10 +42,9 @@ jobs:
 
       - name: Enable test scripts
         run: |
-          chmod +x "${GITHUB_WORKSPACE}/.github/workflows/e2e/get_latest_node_version.sh"
           chmod +x "${GITHUB_WORKSPACE}/.github/workflows/e2e/get_latest_sdk_version.sh"
-          chmod +x "${GITHUB_WORKSPACE}/.github/workflows/e2e/build_node.sh"
           chmod +x "${GITHUB_WORKSPACE}/.github/workflows/e2e/move_proving_keys.sh"
+          chmod +x "${GITHUB_WORKSPACE}/.github/workflows/e2e/get_node.sh"
           chmod +x "${GITHUB_WORKSPACE}/.github/workflows/e2e/run_test.sh"
 
       - name: Get latest Manta sdk version
@@ -74,14 +72,8 @@ jobs:
         if: steps.load-cache-proving-keys.outputs.cache-hit != 'true'
         run: "${GITHUB_WORKSPACE}/.github/workflows/e2e/move_proving_keys.sh"
 
-      - name: Get latest Manta node version
-        run: |
-          LATEST_NODE_VERSION=`"${GITHUB_WORKSPACE}/.github/workflows/e2e/get_latest_node_version.sh" ${{ env.MANTA_NODE_BRANCH }}`
-          echo $LATEST_NODE_VERSION
-          echo "LATEST_NODE_VERSION=$LATEST_NODE_VERSION" >> $GITHUB_ENV
-      - name: Build Manta node
-        if: steps.load-cache-manta-node.outputs.cache-hit != 'true'
-        run: "${GITHUB_WORKSPACE}/.github/workflows/e2e/build_node.sh ${{ env.LATEST_NODE_VERSION }}"
+      - name: Get Dolphin node
+        run: "${GITHUB_WORKSPACE}/.github/workflows/e2e/get_node.sh"
 
       - name: Run test
         run: "${GITHUB_WORKSPACE}/.github/workflows/e2e/run_test.sh"

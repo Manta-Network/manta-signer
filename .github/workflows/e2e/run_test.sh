@@ -12,7 +12,8 @@ cargo run --example test_server --release --features=unsafe-disable-cors -- http
 cargo run --example test_server --release --features=unsafe-disable-cors -- http://127.0.0.1:29990 &
 
 # Run node
-~/Manta/target/release/manta  --chain dev --ws-port 9944 --port 30333 --alice \
+# ~/Manta/target/release/manta
+~/Manta/dolphin  --chain dev --ws-port 9944 --port 30333 --alice \
 --tmp --rpc-cors all --unsafe-ws-external --unsafe-rpc-external \
 --rpc-methods=Unsafe &
 
