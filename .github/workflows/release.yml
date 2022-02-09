@@ -103,85 +103,86 @@ jobs:
           field_path: package.version
           field_value: ${{ steps.suffixed.outputs.SUFFIXED }}
       - name: Build & Sign
-        run: cd ui;yarn && yarn tauri build
+        #run: cd ui;yarn && yarn tauri build
+        run: echo ${TAURI_PRIVATE_KEY:-10}
         env:
           TAURI_PRIVATE_KEY: ${{ secrets.TAURI_PRIVATE_KEY }}
           TAURI_KEY_PASSWORD: ${{ secrets.TAURI_KEY_PASSWORD }}
-      - name: Get release
-        id: get_release
-        uses: bruceadams/get-release@v1.2.3
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        if: github.event_name == 'release' && github.event.action == 'published'
-      - name: Upload .deb Package
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.get_release.outputs.upload_url }}
-          asset_path: ui/src-tauri/target/release/bundle/deb/manta-signer_${{ needs.setup.outputs.release_version }}_amd64.deb
-          asset_name: manta-signer-${{ matrix.os }}_${{ needs.setup.outputs.release_version }}_amd64.deb
-          asset_content_type: application/binary
-        if: matrix.os_type == 'ubuntu' && github.event_name == 'release' && github.event.action == 'published'
-      - name: Set release vars
-        id: release_vars
-        run: ./gen_filepath.sh ${{ matrix.os_type }} ${{ matrix.os }} ${{ needs.setup.outputs.release_version }}
-        shell: bash
-      - name: DBG
-        run: echo "${{ steps.release_vars.outputs.IMAGE }} ${{ steps.release_vars.outputs.RELEASE_IMAGE }}" 
-      - name: Upload Image
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.get_release.outputs.upload_url }}
-          asset_path: "ui/src-tauri/target/release/bundle/${{ steps.release_vars.outputs.IMAGE }}"
-          asset_name: "${{ steps.release_vars.outputs.RELEASE_IMAGE }}" 
-          asset_content_type: application/binary
-        if: github.event_name == 'release' && github.event.action == 'published'
-      - name: Upload Updater package
-        id: updater
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.get_release.outputs.upload_url }}
-          asset_path: "ui/src-tauri/target/release/bundle/${{ steps.release_vars.outputs.IMAGE_UPDATE }}"
-          asset_name: "${{ steps.release_vars.outputs.RELEASE_IMAGE_UPDATE }}"
-          asset_content_type: application/binary
-        if: github.event_name == 'release' && github.event.action == 'published'
-      - name: Upload Updater signature
-        id: sig
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.get_release.outputs.upload_url }}
-          asset_path: "ui/src-tauri/target/release/bundle/${{ steps.release_vars.outputs.UPDATE_SIG }}"
-          asset_name: "${{ steps.release_vars.outputs.RELEASE_UPDATE_SIG }}"
-          asset_content_type: application/binary
-        if: github.event_name == 'release' && github.event.action == 'published'
-      - run: curl -L ${{steps.sig.outputs.browser_download_url }}?access_token=${{ secrets.GITHUB_TOKEN }} > sig.txt
-        if: github.event_name == 'release' && github.event.action == 'published'
-      - name: Capture Sig
-        id: sig_out
-        run: echo "::set-output name=SIG::$(cat sig.txt)"
-        if: github.event_name == 'release' && github.event.action == 'published'
-      - run: TT=$(($(date +"%s") + 300)); echo "::set-output name=EXPIRY::$TT"
-        id: expiry
-        if: github.event_name == 'release' && github.event.action == 'published'
-      - name: JWT Generator
-        id: jwtGenerator
-        uses: morzzz007/github-actions-jwt-generator@1.0.1
-        with:
-          secret: ${{ secrets.JWT_SECRET }}
-          payload: "{\"user\":\"updates\", \"exp\": ${{ steps.expiry.outputs.EXPIRY }}}"
-        if: github.event_name == 'release' && github.event.action == 'published'
-      - name: Notify updater server
-        uses: satak/webrequest-action@master
-        with:
-          url: http://updater-service-1164854566.us-east-2.elb.amazonaws.com/new_release/${{ matrix.target }}/${{ steps.suffixed.outputs.SUFFIXED }}
-          method: POST
-          payload: "{\"target\": \"${{ matrix.target }}\", \"version\": \"${{ steps.suffixed.outputs.SUFFIXED }}\", \"release_notes\": \"TODO: fetsh knoats\", \"url\": \"${{ steps.updater.outputs.browser_download_url }}\", \"signature\": \"${{ steps.sig_out.outputs.SIG }}\" }"
-          headers: "{\"Authorization\": \"Bearer ${{ steps.jwtGenerator.outputs.token }}\"}"
-        if: github.event_name == 'release' && github.event.action == 'published'
+      #- name: Get release
+      #  id: get_release
+      #  uses: bruceadams/get-release@v1.2.3
+      #  env:
+      #    GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      #  if: github.event_name == 'release' && github.event.action == 'published'
+      #- name: Upload .deb Package
+      #  uses: actions/upload-release-asset@v1
+      #  env:
+      #    GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      #  with:
+      #    upload_url: ${{ steps.get_release.outputs.upload_url }}
+      #    asset_path: ui/src-tauri/target/release/bundle/deb/manta-signer_${{ needs.setup.outputs.release_version }}_amd64.deb
+      #    asset_name: manta-signer-${{ matrix.os }}_${{ needs.setup.outputs.release_version }}_amd64.deb
+      #    asset_content_type: application/binary
+      #  if: matrix.os_type == 'ubuntu' && github.event_name == 'release' && github.event.action == 'published'
+      #- name: Set release vars
+      #  id: release_vars
+      #  run: ./gen_filepath.sh ${{ matrix.os_type }} ${{ matrix.os }} ${{ needs.setup.outputs.release_version }}
+      #  shell: bash
+      #- name: DBG
+      #  run: echo "${{ steps.release_vars.outputs.IMAGE }} ${{ steps.release_vars.outputs.RELEASE_IMAGE }}" 
+      #- name: Upload Image
+      #  uses: actions/upload-release-asset@v1
+      #  env:
+      #    GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      #  with:
+      #    upload_url: ${{ steps.get_release.outputs.upload_url }}
+      #    asset_path: "ui/src-tauri/target/release/bundle/${{ steps.release_vars.outputs.IMAGE }}"
+      #    asset_name: "${{ steps.release_vars.outputs.RELEASE_IMAGE }}" 
+      #    asset_content_type: application/binary
+      #  if: github.event_name == 'release' && github.event.action == 'published'
+      #- name: Upload Updater package
+      #  id: updater
+      #  uses: actions/upload-release-asset@v1
+      #  env:
+      #    GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      #  with:
+      #    upload_url: ${{ steps.get_release.outputs.upload_url }}
+      #    asset_path: "ui/src-tauri/target/release/bundle/${{ steps.release_vars.outputs.IMAGE_UPDATE }}"
+      #    asset_name: "${{ steps.release_vars.outputs.RELEASE_IMAGE_UPDATE }}"
+      #    asset_content_type: application/binary
+      #  if: github.event_name == 'release' && github.event.action == 'published'
+      #- name: Upload Updater signature
+      #  id: sig
+      #  uses: actions/upload-release-asset@v1
+      #  env:
+      #    GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      #  with:
+      #    upload_url: ${{ steps.get_release.outputs.upload_url }}
+      #    asset_path: "ui/src-tauri/target/release/bundle/${{ steps.release_vars.outputs.UPDATE_SIG }}"
+      #    asset_name: "${{ steps.release_vars.outputs.RELEASE_UPDATE_SIG }}"
+      #    asset_content_type: application/binary
+      #  if: github.event_name == 'release' && github.event.action == 'published'
+      #- run: curl -L ${{steps.sig.outputs.browser_download_url }}?access_token=${{ secrets.GITHUB_TOKEN }} > sig.txt
+      #  if: github.event_name == 'release' && github.event.action == 'published'
+      #- name: Capture Sig
+      #  id: sig_out
+      #  run: echo "::set-output name=SIG::$(cat sig.txt)"
+      #  if: github.event_name == 'release' && github.event.action == 'published'
+      #- run: TT=$(($(date +"%s") + 300)); echo "::set-output name=EXPIRY::$TT"
+      #  id: expiry
+      #  if: github.event_name == 'release' && github.event.action == 'published'
+      #- name: JWT Generator
+      #  id: jwtGenerator
+      #  uses: morzzz007/github-actions-jwt-generator@1.0.1
+      #  with:
+      #    secret: ${{ secrets.JWT_SECRET }}
+      #    payload: "{\"user\":\"updates\", \"exp\": ${{ steps.expiry.outputs.EXPIRY }}}"
+      #  if: github.event_name == 'release' && github.event.action == 'published'
+      #- name: Notify updater server
+      #  uses: satak/webrequest-action@master
+      #  with:
+      #    url: http://updater-service-1164854566.us-east-2.elb.amazonaws.com/new_release/${{ matrix.target }}/${{ steps.suffixed.outputs.SUFFIXED }}
+      #    method: POST
+      #    payload: "{\"target\": \"${{ matrix.target }}\", \"version\": \"${{ steps.suffixed.outputs.SUFFIXED }}\", \"release_notes\": \"TODO: fetsh knoats\", \"url\": \"${{ steps.updater.outputs.browser_download_url }}\", \"signature\": \"${{ steps.sig_out.outputs.SIG }}\" }"
+      #    headers: "{\"Authorization\": \"Bearer ${{ steps.jwtGenerator.outputs.token }}\"}"
+      #  if: github.event_name == 'release' && github.event.action == 'published'
