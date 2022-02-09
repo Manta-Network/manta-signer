@@ -33,17 +33,5 @@ The version numbers in the following files must be updated:
 EOF
 prompt "Did you update the version numbers?"
 
-cat << EOF
-ZKP PROVING KEYS
-================
-
-Downloading the latest proving keys ...
-EOF
-
-# curl ...
-# mv *.bin ui
-cd ui
-cargo tauri build
-
 echo "release"
 
