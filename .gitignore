@@ -2,3 +2,11 @@
 Cargo.lock
 .DS_Store
 WixTools
+
+# js
+/js/**/dist
+/js/e2e/*store.json
+/js/e2e/simulation/out.json
+/js/*/tsconfig.tsbuildinfo
+/js/node_modules
+/js/**/node_modules
