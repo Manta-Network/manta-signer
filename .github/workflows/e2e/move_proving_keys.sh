@@ -11,5 +11,5 @@ echo parent
 cd ..
 pwd
 ls
-cp ./sdk/zkp/reclaim_pk.bin ~/.local/share/manta-signer
-cp ./sdk/zkp/transfer_pk.bin ~/.local/share/manta-signer
+cp ./sdk/legacy/proving/private-transfer.dat ~/.local/share/manta-signer/transfer_pk.bin
+cp ./sdk/legacy/proving/reclaim.dat ~/.local/share/manta-signer/reclaim_pk.bin
