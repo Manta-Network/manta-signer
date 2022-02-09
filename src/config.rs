@@ -106,12 +106,12 @@ impl Config {
     /// Returns the path to the `PrivateTransfer` proving key.
     #[inline]
     pub fn private_transfer_proving_key_path(&self) -> PathBuf {
-        self.proving_key_path("transfer_pk.bin")
+        self.proving_key_path("private-transfer.dat")
     }
 
     /// Returns the path to the `Reclaim` proving key.
     #[inline]
     pub fn reclaim_proving_key_path(&self) -> PathBuf {
-        self.proving_key_path("reclaim_pk.bin")
+        self.proving_key_path("reclaim.dat")
     }
 }
