@@ -1,0 +1,16 @@
+{
+    "name": "dolphin-api",
+    "version": "0.2.0",
+    "description": "api for manta/calamari/dolphin",
+    "main": "./dist/index.js",
+    "scripts": {
+        "test": "echo \"Error: no test specified\" && exit 1",
+        "build": "rm -rf dolphin-api/dist; tsc"
+    },
+    "keywords": [],
+    "author": "",
+    "license": "ISC",
+    "devDependencies": {
+        "typescript": "^4.4.4"
+    }
+}
