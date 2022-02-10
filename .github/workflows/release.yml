@@ -139,6 +139,11 @@ jobs:
           asset_name: "${{ steps.release_vars.outputs.RELEASE_IMAGE }}" 
           asset_content_type: application/binary
         if: github.event_name == 'release' && github.event.action == 'published'
+      - name: Content Hash
+        id: content_hash
+        run: echo "::set-output name=HASH::${{ hashFiles( env.FILE ) }}"
+        env:
+          FILE: 'ui/src-tauri/target/release/bundle/${{ steps.release_vars.outputs.IMAGE }}'
       - name: Upload Updater package
         id: updater
         uses: actions/upload-release-asset@v1
@@ -161,7 +166,7 @@ jobs:
           asset_name: "${{ steps.release_vars.outputs.RELEASE_UPDATE_SIG }}"
           asset_content_type: application/binary
         if: github.event_name == 'release' && github.event.action == 'published'
-      - run: curl -L ${{steps.sig.outputs.browser_download_url }}?access_token=${{ secrets.GITHUB_TOKEN }} > sig.txt
+      - run: curl -L ${{ steps.sig.outputs.browser_download_url }} > sig.txt
         if: github.event_name == 'release' && github.event.action == 'published'
       - name: Capture Sig
         id: sig_out
@@ -182,6 +187,6 @@ jobs:
         with:
           url: http://updater-service-1164854566.us-east-2.elb.amazonaws.com/new_release/${{ matrix.target }}/${{ steps.suffixed.outputs.SUFFIXED }}
           method: POST
-          payload: "{\"target\": \"${{ matrix.target }}\", \"version\": \"${{ steps.suffixed.outputs.SUFFIXED }}\", \"release_notes\": \"TODO: fetsh knoats\", \"url\": \"${{ steps.updater.outputs.browser_download_url }}\", \"signature\": \"${{ steps.sig_out.outputs.SIG }}\" }"
+          payload: "{\"target\": \"${{ matrix.target }}\", \"version\": \"${{ steps.suffixed.outputs.SUFFIXED }}\", \"release_notes\": \"Release page: ${{ github.event.release.html_url }}\n SHA-256: ${{ steps.content_hash.outputs.HASH }}\n Description:\n${{ github.event.release.body }}\", \"url\": \"${{ steps.updater.outputs.browser_download_url }}\", \"signature\": \"${{ steps.sig_out.outputs.SIG }}\" }"
           headers: "{\"Authorization\": \"Bearer ${{ steps.jwtGenerator.outputs.token }}\"}"
         if: github.event_name == 'release' && github.event.action == 'published'
