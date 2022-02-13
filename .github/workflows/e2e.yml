@@ -67,7 +67,7 @@ jobs:
           repository: Manta-Network/sdk
           path: sdk
           # fetch-depth: 1
-          # lfs: true
+          lfs: true
       - name: Move proving keys
         # if: steps.load-cache-proving-keys.outputs.cache-hit != 'true'
         run: "${GITHUB_WORKSPACE}/.github/workflows/e2e/move_proving_keys.sh"

@@ -9,7 +9,7 @@ ls ./sdk
 echo legacy
 ls ./sdk/legacy
 echo proving
-ls ./sdk/legacy/proving
+ls -l ./sdk/legacy/proving
 
 cp ./sdk/legacy/proving/private-transfer.dat ~/.local/share/manta-signer
 cp ./sdk/legacy/proving/reclaim.dat ~/.local/share/manta-signer
