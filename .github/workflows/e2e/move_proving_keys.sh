@@ -3,5 +3,5 @@
 mkdir ~/.local
 mkdir ~/.local/share
 mkdir ~/.local/share/manta-signer
-cp ./sdk/zkp/reclaim_pk.bin ~/.local/share/manta-signer
-cp ./sdk/zkp/transfer_pk.bin ~/.local/share/manta-signer
+cp ./sdk/legacy/proving/private-transfer.dat ~/.local/share/manta-signer
+cp ./sdk/legacy/proving/reclaim.dat ~/.local/share/manta-signer
