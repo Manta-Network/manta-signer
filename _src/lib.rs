@@ -20,9 +20,7 @@
 #![forbid(rustdoc::broken_intra_doc_links)]
 #![forbid(missing_docs)]
 
-pub mod config;
-pub mod secret;
-pub mod signer;
-
-/// Manta Signer Server Version
-pub const VERSION: &str = env!("CARGO_PKG_VERSION");
+// TODO:
+// pub mod config;
+// pub mod secret;
+// pub mod service;

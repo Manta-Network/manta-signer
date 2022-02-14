@@ -14,15 +14,4 @@
 // You should have received a copy of the GNU General Public License
 // along with manta-signer. If not, see <http://www.gnu.org/licenses/>.
 
-//! Manta Signer
-
-#![cfg_attr(doc_cfg, feature(doc_cfg))]
-#![forbid(rustdoc::broken_intra_doc_links)]
-#![forbid(missing_docs)]
-
-pub mod config;
-pub mod secret;
-pub mod signer;
-
-/// Manta Signer Server Version
-pub const VERSION: &str = env!("CARGO_PKG_VERSION");
+//! Manta Signer Implementation

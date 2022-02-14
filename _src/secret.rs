@@ -14,42 +14,65 @@
 // You should have received a copy of the GNU General Public License
 // along with manta-signer. If not, see <http://www.gnu.org/licenses/>.
 
-//! Signer Secrets
+//! Manta Signer Secrets
+
+// FIXME: Use `Choice` and `CtOption` for constant time operations or get rid of them.
 
 use crate::config::Config;
+use async_std::{
+    fs::{self, File},
+    io::{self, ReadExt, WriteExt},
+    path::Path,
+};
+use bip0039::{Count, Mnemonic};
+use cocoon::Cocoon;
+use core::convert::TryInto;
 use futures::future::BoxFuture;
+use manta_api::MantaRootSeed;
+use rand::{
+    distributions::{DistString, Standard},
+    CryptoRng, Rng, RngCore,
+};
 
-pub use secrecy::{ExposeSecret, Secret};
+pub use cocoon::Error as RootSeedError;
+pub use secrecy::{ExposeSecret, Secret, SecretString};
 pub use subtle::{Choice, ConstantTimeEq, CtOption};
 
-/// Secret Bytes Container
-pub type SecretBytes = Secret<Vec<u8>>;
+/// Samples a random password string from `rng`.
+#[inline]
+pub fn sample_password<R>(rng: &mut R) -> SecretString
+where
+    R: CryptoRng + RngCore + ?Sized,
+{
+    let length = rng.gen_range(1..65);
+    Secret::new(Standard.sample_string(rng, length))
+}
 
 /// Password Secret Wrapper
-pub struct Password(CtOption<SecretBytes>);
+pub struct Password(CtOption<SecretString>);
 
 impl Password {
     /// Builds a new [`Password`] from `password` if `is_known` evaluates to `true`.
     #[inline]
-    pub fn new(password: SecretBytes, is_known: Choice) -> Self {
+    pub fn new(password: SecretString, is_known: Choice) -> Self {
         Self(CtOption::new(password, is_known))
     }
 
     /// Builds a new [`Password`] from `password`.
     #[inline]
-    pub fn from_known(password: SecretBytes) -> Self {
+    pub fn from_known(password: SecretString) -> Self {
         Self::new(password, 1.into())
     }
 
     /// Builds a new [`Password`] with a no known value.
     #[inline]
     pub fn from_unknown() -> Self {
-        Self::new(Secret::new(Vec::with_capacity(64)), 0.into())
+        Self::new(Secret::new(String::with_capacity(64)), 0.into())
     }
 
     /// Returns [`Some`] if `self` represents a known password.
     #[inline]
-    pub fn known(self) -> Option<SecretBytes> {
+    pub fn known(self) -> Option<SecretString> {
         self.0.into()
     }
 
@@ -147,4 +170,106 @@ pub trait Authorizer {
     fn failure(&mut self, error: Self::Error) -> UnitFuture {
         self.sleep(Err(error))
     }
+}
+
+/// Root Seed
+#[derive(Clone)]
+pub struct RootSeed(Secret<MantaRootSeed>);
+
+impl RootSeed {
+    /// Builds a new [`RootSeed`], converting the `seed` into a [`Secret`].
+    #[inline]
+    fn new_secret(seed: MantaRootSeed) -> Self {
+        Self(Secret::new(seed))
+    }
+
+    /// Builds a new [`RootSeed`] from a `mnemonic`.
+    #[inline]
+    pub fn new(mnemonic: &Secret<Mnemonic>) -> Self {
+        Self::new_secret(mnemonic.expose_secret().to_seed(""))
+    }
+
+    /// Saves `self` to the standard root seed file, encrypting it with `password`.
+    #[inline]
+    pub async fn save<P>(self, path: P, password: &SecretString) -> Result<(), RootSeedError>
+    where
+        P: AsRef<Path>,
+    {
+        let mut data = Vec::new();
+        Cocoon::new(password.expose_secret().as_bytes())
+            .dump(self.0.expose_secret().to_vec(), &mut data)?;
+        File::create(path)
+            .await
+            .map_err(RootSeedError::Io)?
+            .write_all(&data)
+            .await
+            .map_err(RootSeedError::Io)
+    }
+
+    /// Loads `self` from the standard root seed file, decrypting it with `password`.
+    #[inline]
+    pub async fn load<P>(path: P, password: &SecretString) -> Result<Self, RootSeedError>
+    where
+        P: AsRef<Path>,
+    {
+        let mut data = Vec::new();
+        File::open(path)
+            .await
+            .map_err(RootSeedError::Io)?
+            .read_to_end(&mut data)
+            .await
+            .map_err(RootSeedError::Io)?;
+        Ok(Self::new_secret(
+            Cocoon::new(password.expose_secret().as_bytes())
+                .parse(&mut data.as_slice())?
+                .try_into()
+                .expect("Failed to convert root seed file contents to root seed."),
+        ))
+    }
+}
+
+impl ConstantTimeEq for RootSeed {
+    #[inline]
+    fn ct_eq(&self, rhs: &Self) -> Choice {
+        self.expose_secret().ct_eq(rhs.expose_secret())
+    }
+}
+
+impl ExposeSecret<MantaRootSeed> for RootSeed {
+    #[inline]
+    fn expose_secret(&self) -> &MantaRootSeed {
+        self.0.expose_secret()
+    }
+}
+
+impl Eq for RootSeed {}
+
+impl PartialEq for RootSeed {
+    #[inline]
+    fn eq(&self, rhs: &Self) -> bool {
+        self.ct_eq(rhs).into()
+    }
+}
+
+/// Checks if a root seed exists at the canonical file path.
+#[inline]
+pub async fn account_exists<P>(path: P) -> io::Result<bool>
+where
+    P: AsRef<Path>,
+{
+    Ok(fs::metadata(path).await?.is_file())
+}
+
+/// Creates a new account by building and saving a new root seed from the given `password`.
+#[inline]
+pub async fn create_account<P>(
+    path: P,
+    password: &SecretString,
+) -> Result<Secret<Mnemonic>, RootSeedError>
+where
+    P: AsRef<Path>,
+{
+    let mnemonic = Secret::new(Mnemonic::generate(Count::Words12));
+    RootSeed::new(&mnemonic).save(path, password).await?;
+    Ok(mnemonic)
 }

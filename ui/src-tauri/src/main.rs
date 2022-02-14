@@ -16,8 +16,6 @@
 
 //! Manta Signer UI
 
-// TODO: Check what the `windows_subsystem` attributes do, and if we need them.
-
 #![cfg_attr(doc_cfg, feature(doc_cfg))]
 #![forbid(rustdoc::broken_intra_doc_links)]
 #![forbid(missing_docs)]
@@ -26,7 +24,6 @@
     windows_subsystem = "windows"
 )]
 
-use async_std::{fs, path::PathBuf, stream::StreamExt, sync::Arc};
 use manta_signer::{
     config::Config,
     secret::{
@@ -36,6 +33,7 @@ use manta_signer::{
     service::{Prompt, Service},
 };
 use serde::{Deserialize, Serialize};
+use std::{path::PathBuf, sync::Arc};
 use tauri::{
     async_runtime::{channel, spawn, Mutex, Receiver, Sender},
     CustomMenuItem, Event, Manager, State, SystemTray, SystemTrayEvent, SystemTrayMenu, Window,
@@ -54,69 +52,17 @@ pub struct User {
 
     /// Waiting Flag
     waiting: bool,
-
-    /// Resource Directory
-    resource_directory: PathBuf,
 }
 
 impl User {
-    /// Builds a new [`User`] from `window`, `password`, `retry`, and `resource_directory`.
+    /// Builds a new [`User`] from `window`, `password`, and `retry`.
     #[inline]
-    pub fn new(
-        window: Window,
-        password: Receiver<Password>,
-        retry: Sender<bool>,
-        resource_directory: PathBuf,
-    ) -> Self {
+    pub fn new(window: Window, password: Receiver<Password>, retry: Sender<bool>) -> Self {
         Self {
             window,
             password,
             retry,
             waiting: false,
-            resource_directory,
-        }
-    }
-
-    /// Pulls resources from `self.resource_directory` and moves them to the proving key directory.
-    #[inline]
-    async fn setup_resources(&self, config: &Config) {
-        if !self.resource_directory.exists().await {
-            // NOTE: If this file does not exist, then we are in development mode.
-            return;
-        }
-        let mut entries = fs::read_dir(&self.resource_directory)
-            .await
-            .expect("The resource directory should be a directory.");
-        while let Some(entry) = entries.next().await {
-            let entry = entry.expect("Unable to get directory entry.");
-            if entry.file_type().await.unwrap().is_file() {
-                let path = entry.path();
-                if matches!(path.extension(), Some(ext) if ext == "bin") {
-                    fs::copy(
-                        &path,
-                        &config
-                            .proving_key_directory
-                            .join(&path.file_name().expect("Path should point to a real file.")),
-                    )
-                    .await
-                    .expect("Copy should have succeeded.");
-                }
-            } else if entry.path().to_str().unwrap().ends_with(".bin") {
-                let mut bins = fs::read_dir(&entry.path())
-                    .await
-                    .expect("The resource directory should be a directory.");
-                while let Some(entry) = bins.next().await {
-                    let path = entry.expect("Unable to get directory entry.").path();
-                    fs::copy(
-                        &path,
-                        &config
-                            .proving_key_directory
-                            .join(&path.file_name().expect("Path should point to a real file.")),
-                    )
-                    .await
-                    .expect("Copy should have succeeded.");
-                }
-            }
         }
     }
 
@@ -164,9 +110,7 @@ impl User {
 
 impl Authorizer for User {
     type Prompt = Prompt;
-
     type Message = ();
-
     type Error = ();
 
     #[inline]
@@ -176,7 +120,8 @@ impl Authorizer for User {
 
     #[inline]
     fn setup<'s>(&'s mut self, config: &'s Config) -> UnitFuture<'s> {
-        Box::pin(async move { self.setup_resources(config).await })
+        let _ = config;
+        Box::pin(async move {})
     }
 
     #[inline]
@@ -336,19 +281,15 @@ fn main() {
         .manage(PasswordStore::default())
         .manage(config)
         .setup(|app| {
-            let resource_directory = app.path_resolver().resource_dir().unwrap();
             let window = app.get_window("main").unwrap();
             let config = app.state::<Config>().inner().clone();
             let password_store = app.state::<PasswordStore>().handle();
             spawn(async move {
                 let (password, retry) = password_store.into_channel().await;
-                Service::build(
-                    config,
-                    User::new(window, password, retry, resource_directory.into()),
-                )
-                .serve()
-                .await
-                .expect("Unable to build manta-signer service.");
+                Service::build(config, User::new(window, password, retry))
+                    .serve()
+                    .await
+                    .expect("Unable to build manta-signer service.");
             });
             Ok(())
         })

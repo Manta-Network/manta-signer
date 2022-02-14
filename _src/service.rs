@@ -28,7 +28,6 @@ use async_std::{
     sync::Mutex,
     task::sleep,
 };
-use codec::{Decode, Encode};
 use core::time::Duration;
 use http_types::headers::HeaderValue;
 use manta_api::{

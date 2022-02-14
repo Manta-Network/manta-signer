@@ -16,7 +16,7 @@
 
 //! Test Signer Server
 
-use async_std::io;
+/*
 use manta_signer::{
     config::Config,
     secret::{
@@ -85,6 +85,7 @@ impl TestService {
 
 #[async_std::main]
 async fn main() -> io::Result<()> {
+    /*
     let test_dir = tempfile::tempdir()?;
     let mut config =
         Config::try_default().expect("Unable to generate the default server configuration.");
@@ -93,4 +94,9 @@ async fn main() -> io::Result<()> {
         config.service_url = url;
     }
     TestService::build(config).serve().await
+    */
+    todo!()
 }
+*/
+
+fn main() {}
