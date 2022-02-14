@@ -52,14 +52,14 @@ jobs:
           LATEST_SDK_VERSION=`"${GITHUB_WORKSPACE}/.github/workflows/e2e/get_latest_sdk_version.sh" ${{ env.MANTA_SDK_BRANCH }}`
           echo $LATEST_SDK_VERSION
           echo "LATEST_SDK_VERSION=$LATEST_SDK_VERSION" >> $GITHUB_ENV
-      # - name: Load proving keys from cache
-      #   id: load-cache-proving-keys
-      #   uses: actions/cache@v2
-      #   env:
-      #     cache-name: proving-keys
-      #   with:
-      #     path: ~/.local/share/manta-signer
-      #     key: ${{ env.cache-name }}-${{ env.LATEST_SDK_VERSION }}
+      - name: Load proving keys from cache
+        id: load-cache-proving-keys
+        uses: actions/cache@v2
+        env:
+          cache-name: proving-keys
+        with:
+          path: ~/.local/share/manta-signer
+          key: ${{ env.cache-name }}-${{ env.LATEST_SDK_VERSION }}
       - name: Get proving keys
         if: steps.load-cache-proving-keys.outputs.cache-hit != 'true'
         uses: actions/checkout@v2
