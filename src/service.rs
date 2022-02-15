@@ -20,13 +20,14 @@ use crate::{
     config::Config,
     secret::{Argon2, Authorizer, ExposeSecret, PasswordHash},
 };
-use core::future::{self, Future};
+use core::future::Future;
 use core::time::Duration;
+use manta_accounting::fs::{cocoon::File, File as _, SaveError};
 use manta_pay::{
-    config::{MultiProvingContext, Parameters, ProvingContext, ReceivingKey, Transaction},
+    config::{ReceivingKey, Transaction},
     signer::{
-        base::{Signer, SignerParameters, SignerState},
-        ReceivingKeyRequest, SignError, SignResponse, SyncError, SyncRequest, SyncResponse,
+        base::Signer, ReceivingKeyRequest, SignError, SignResponse, SyncError, SyncRequest,
+        SyncResponse,
     },
 };
 use manta_util::{
@@ -35,10 +36,14 @@ use manta_util::{
 };
 use parking_lot::Mutex;
 use std::{
+    io,
     net::{AddrParseError, SocketAddr},
     sync::Arc,
 };
-use tokio::task::{self, JoinError};
+use tokio::{
+    fs,
+    task::{self, JoinError},
+};
 use warp::{
     http::{Method, StatusCode},
     reply::{self, Json, Reply},
@@ -65,10 +70,18 @@ pub enum Error {
 
     /// Failed to Load SDK Parameters
     ParameterLoadingError,
+
+    /// Save Error
+    SaveError(SaveError<File>),
+
+    /// Generic I/O Error
+    Io(io::Error),
 }
 
 from_variant_impl!(Error, AddrParseError, AddrParseError);
 from_variant_impl!(Error, JoinError, JoinError);
+from_variant_impl!(Error, SaveError, SaveError<File>);
+from_variant_impl!(Error, Io, io::Error);
 
 /// Inner State
 struct InnerState<A>
@@ -149,11 +162,11 @@ where
 #[derivative(Clone(bound = ""))]
 pub struct State<A>(Arc<Mutex<InnerState<A>>>)
 where
-    A: Authorizer + Send;
+    A: Authorizer;
 
 impl<A> State<A>
 where
-    A: Authorizer + Send,
+    A: Authorizer,
 {
     /// Builds a new [`State`] from `config` and `authorizer`.
     #[inline]
@@ -166,7 +179,7 @@ where
             if let Some(password) = authorizer.password().await.known() {
                 let password = password.expose_secret();
                 if let Ok(password_hash) = PasswordHash::from_default(password) {
-                    if let Ok(state) = SignerState::load(&config.data_path, password) {
+                    if let Ok(state) = File::load(&config.data_path, &password_hash.as_bytes()) {
                         authorizer.sleep().await;
                         break (password_hash, Signer::from_parts(parameters, state));
                     }
@@ -205,6 +218,21 @@ where
             })
     }
 
+    ///
+    #[inline]
+    async fn save(self) -> Result<(), Error> {
+        let path = { self.0.lock().config.data_path.clone() };
+        let backup = path.with_extension("backup");
+        fs::rename(&path, &backup).await?;
+        task::spawn_blocking(move || {
+            let lock = self.0.lock();
+            File::save(path, &lock.password_hash.as_bytes(), lock.signer.state())
+        })
+        .await??;
+        fs::remove_file(backup).await?;
+        Ok(())
+    }
+
     /// Returns the [`crate::VERSION`] string to the client.
     #[inline]
     async fn version(self, request: ()) -> Option<&'static str> {
@@ -215,7 +243,7 @@ where
     ///
     #[inline]
     async fn sync(self, request: SyncRequest) -> Option<Result<SyncResponse, SyncError>> {
-        future::ready({ Some(self.0.lock().sync(request)) }).await
+        Some(self.0.lock().sync(request))
     }
 
     ///
@@ -229,7 +257,7 @@ where
     ///
     #[inline]
     async fn receiving_keys(self, request: ReceivingKeyRequest) -> Option<Vec<ReceivingKey>> {
-        future::ready({ Some(self.0.lock().receiving_keys(request)) }).await
+        Some(self.0.lock().receiving_keys(request))
     }
 }
 
@@ -251,7 +279,7 @@ impl From<Response> for reply::Response {
 #[inline]
 pub async fn serve<A>(config: Config, authorizer: A) -> Result<(), Error>
 where
-    A: 'static + Authorizer + Send,
+    A: Authorizer,
 {
     let socket_address = config.service_url.parse::<SocketAddr>()?;
     let cors = warp::cors()

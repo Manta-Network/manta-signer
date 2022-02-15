@@ -87,7 +87,7 @@ pub type UnitFuture<'t> = BoxFuture<'t, ()>;
 pub type PasswordFuture<'t> = BoxFuture<'t, Password>;
 
 /// Authorizer
-pub trait Authorizer {
+pub trait Authorizer: 'static + Send {
     /// Prompt Type
     type Prompt;
 
@@ -182,5 +182,15 @@ where
     pub fn verify(&self, password: &[u8]) -> Result<(), PasswordHashError> {
         self.hasher
             .verify_password(password, &self.hash.password_hash())
+    }
+
+    /// Returns the hash output as a byte vector.
+    #[inline]
+    pub fn as_bytes(&self) -> Vec<u8> {
+        self.hash
+            .hash()
+            .expect("This is guaranteed to contain the hash it was built with.")
+            .as_bytes()
+            .to_owned()
     }
 }
