@@ -38,8 +38,8 @@ where
 /// Configuration
 #[derive(Clone, Debug, Eq, Hash, PartialEq)]
 pub struct Config {
-    /// Data File
-    pub data_file: PathBuf,
+    /// Data File Path
+    pub data_path: PathBuf,
 
     /// Service URL
     pub service_url: String,
@@ -53,7 +53,7 @@ impl Config {
     #[inline]
     pub fn try_default() -> Option<Self> {
         Some(Self {
-            data_file: file(dirs_next::config_dir(), "storage.dat")?,
+            data_path: file(dirs_next::config_dir(), "storage.dat")?,
             service_url: String::from("http://127.0.0.1:29987"),
             #[cfg(feature = "unsafe-disable-cors")]
             origin_url: String::from("*"),

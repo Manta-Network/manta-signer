@@ -18,7 +18,10 @@
 
 use crate::config::Config;
 use futures::future::BoxFuture;
+use manta_crypto::rand::OsRng;
+use password_hash::{PasswordHashString, SaltString};
 
+pub use password_hash::{Error as PasswordHashError, PasswordHasher, PasswordVerifier};
 pub use secrecy::{ExposeSecret, Secret};
 pub use subtle::{Choice, ConstantTimeEq, CtOption};
 
@@ -88,12 +91,6 @@ pub trait Authorizer {
     /// Prompt Type
     type Prompt;
 
-    /// Message Type
-    type Message: Default;
-
-    /// Communication Error Type
-    type Error: Default;
-
     /// Retrieves the password from the authorizer.
     fn password(&mut self) -> PasswordFuture;
 
@@ -119,7 +116,7 @@ pub trait Authorizer {
     ///
     /// After [`wake`] is called, [`password`] should be called to retrieve the password. These are
     /// implemented as two separate methods so that [`password`] can be called multiple times for
-    /// password retries.
+    /// password retries. By default, [`wake`] does nothing.
     ///
     /// [`wake`]: Self::wake
     /// [`password`]: Self::password
@@ -130,21 +127,60 @@ pub trait Authorizer {
     }
 
     /// Sends a message to the authorizer to end communication.
+    ///
+    /// # Implementation Note
+    ///
+    /// By default, [`sleep`] does nothing.
     #[inline]
-    fn sleep(&mut self, message: Result<Self::Message, Self::Error>) -> UnitFuture {
-        let _ = message;
+    fn sleep(&mut self) -> UnitFuture {
         Box::pin(async move {})
     }
+}
 
-    /// Sends a success message to the authorizer to end communication.
+/// Argon2 Hasher Type
+pub type Argon2 = argon2::Argon2<'static>;
+
+/// Password Hash
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct PasswordHash<H>
+where
+    H: PasswordHasher,
+{
+    /// Hash String
+    hash: PasswordHashString,
+
+    /// Hasher
+    hasher: H,
+}
+
+impl<H> PasswordHash<H>
+where
+    H: PasswordHasher,
+{
+    /// Builds a new [`PasswordHash`] from `hasher` and `password`.
     #[inline]
-    fn success(&mut self, message: Self::Message) -> UnitFuture {
-        self.sleep(Ok(message))
+    pub fn new(hasher: H, password: &[u8]) -> Result<Self, PasswordHashError> {
+        Ok(Self {
+            hash: hasher
+                .hash_password(password, &SaltString::generate(&mut OsRng))?
+                .serialize(),
+            hasher,
+        })
     }
 
-    /// Sends a failure message to the authorizer to end communication.
+    /// Builds a new [`PasswordHash`] from `password` using the default [`PasswordHasher`].
     #[inline]
-    fn failure(&mut self, error: Self::Error) -> UnitFuture {
-        self.sleep(Err(error))
+    pub fn from_default(password: &[u8]) -> Result<Self, PasswordHashError>
+    where
+        H: Default,
+    {
+        Self::new(Default::default(), password)
+    }
+
+    /// Verifies that the hash of `password` matches the known password hash.
+    #[inline]
+    pub fn verify(&self, password: &[u8]) -> Result<(), PasswordHashError> {
+        self.hasher
+            .verify_password(password, &self.hash.password_hash())
     }
 }

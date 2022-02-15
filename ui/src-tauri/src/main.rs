@@ -110,8 +110,6 @@ impl User {
 
 impl Authorizer for User {
     type Prompt = Prompt;
-    type Message = ();
-    type Error = ();
 
     #[inline]
     fn password(&mut self) -> PasswordFuture {
@@ -131,8 +129,7 @@ impl Authorizer for User {
     }
 
     #[inline]
-    fn sleep(&mut self, message: Result<Self::Message, Self::Error>) -> UnitFuture {
-        let _ = message;
+    fn sleep(&mut self) -> UnitFuture {
         Box::pin(async move { self.validate_password().await })
     }
 }

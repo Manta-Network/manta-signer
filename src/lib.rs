@@ -21,8 +21,9 @@
 #![forbid(missing_docs)]
 
 pub mod config;
+pub mod parameters;
 pub mod secret;
-pub mod signer;
+pub mod service;
 
 /// Manta Signer Server Version
 pub const VERSION: &str = env!("CARGO_PKG_VERSION");

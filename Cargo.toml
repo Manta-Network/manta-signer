@@ -29,18 +29,22 @@ maintenance = { status = "actively-developed" }
 unsafe-disable-cors = []
 
 [dependencies]
+argon2 = { version = "0.3.3", default-features = false, features = ["alloc", "password-hash"] }
 derivative = { version = "2.2.0", default-features = false, features = ["use_core"] }
 dirs-next = { version = "2.0.0" }
 futures = { version = "0.3.17", default-features = false, features = ["alloc"] }
 http-types = { version = "2.12.0", default-features = false }
-manta-accounting = { path = "../manta-rs/manta-accounting" }
-manta-crypto = { path = "../manta-rs/manta-crypto" }
-manta-pay = { path = "../manta-rs/manta-pay", features = ["groth16", "wallet"] }
-manta-sdk = { path = "../sdk" }
+manta-accounting = { path = "../manta-rs/manta-accounting", features = ["cocoon-fs"] }
+manta-crypto = { path = "../manta-rs/manta-crypto", features = ["getrandom"] }
+manta-pay = { path = "../manta-rs/manta-pay", features = ["groth16", "serde", "wallet"] }
+manta-sdk = { path = "../sdk", features = ["download"] }
 manta-util = { path = "../manta-rs/manta-util" }
+parking_lot = { version = "0.12.0", default-features = false }
+password-hash = { version = "0.3.2", default-features = false, features = ["alloc", "rand_core"] }
 secrecy = { version = "0.8.0", default-features = false, features = ["alloc"] }
 serde_json = { version = "1.0.68", default-features = false }
 subtle = { version = "2.4.1", default-features = false }
-tokio = { version = "1.15.0", default-features = false }
+tempfile = { version = "3.3.0", default-features = false }
+tokio = { version = "1.16.1", default-features = false, features = ["rt", "time"] }
 warp = { version = "0.3.2", default-features = false }
 

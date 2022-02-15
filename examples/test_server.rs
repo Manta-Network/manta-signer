@@ -44,10 +44,6 @@ impl MockUser {
 impl Authorizer for MockUser {
     type Prompt = Prompt;
 
-    type Message = ();
-
-    type Error = ();
-
     #[inline]
     fn password(&mut self) -> PasswordFuture {
         Box::pin(async move { Password::from_known(self.password.clone()) })
