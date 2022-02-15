@@ -185,7 +185,7 @@ jobs:
       - name: Notify updater server
         uses: satak/webrequest-action@master
         with:
-          url: http://updater-service-1164854566.us-east-2.elb.amazonaws.com/new_release/${{ matrix.target }}/${{ steps.suffixed.outputs.SUFFIXED }}
+          url: https://updates.signer.manta.systems/new_release/${{ matrix.target }}/${{ steps.suffixed.outputs.SUFFIXED }}
           method: POST
           payload: "{\"target\": \"${{ matrix.target }}\", \"version\": \"${{ steps.suffixed.outputs.SUFFIXED }}\", \"release_notes\": \"Release page: ${{ github.event.release.html_url }}\n SHA-256: ${{ steps.content_hash.outputs.HASH }}\n Description:\n${{ github.event.release.body }}\", \"url\": \"${{ steps.updater.outputs.browser_download_url }}\", \"signature\": \"${{ steps.sig_out.outputs.SIG }}\" }"
           headers: "{\"Authorization\": \"Bearer ${{ steps.jwtGenerator.outputs.token }}\"}"
