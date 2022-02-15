@@ -1,8 +1,8 @@
-name: Build and upload binaries
+name: Build and upload release binaries
 
 on:
   pull_request:
-    branches: 
+    branches:
       - master
   release:
     types: [published]
@@ -62,22 +62,22 @@ jobs:
           cache-name: cache-cargo
         with:
           path: ~/.cargo
-          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('./ui/src-tauri/Cargo.lock') }}
+          key: ${{ matrix.os }}-build-${{ env.cache-name }}-${{ hashFiles('./ui/src-tauri/Cargo.lock') }}
           restore-keys: |
-            ${{ runner.os }}-build-${{ env.cache-name }}-
-            ${{ runner.os }}-build-
-            ${{ runner.os }}-
+            ${{ matrix.os }}-build-${{ env.cache-name }}-
+            ${{ matrix.os }}-build-
+            ${{ matrix.os }}-
       - name: Cache target dir
         uses: actions/cache@v2
         env:
           cache-name: cache-target
         with:
           path: ui/src-tauri/target
-          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('./ui/src-tauri/Cargo.lock') }}
+          key: ${{ matrix.os }}-build-${{ env.cache-name }}-${{ hashFiles('./ui/src-tauri/Cargo.lock') }}
           restore-keys: |
-            ${{ runner.os }}-build-${{ env.cache-name }}-
-            ${{ runner.os }}-build-
-            ${{ runner.os }}-
+            ${{ matrix.os }}-build-${{ env.cache-name }}-
+            ${{ matrix.os }}-build-
+            ${{ matrix.os }}-
       - name: Fetch Proving Keys
         uses: actions/checkout@v2
         with:

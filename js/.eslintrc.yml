@@ -1,0 +1,30 @@
+env:
+  commonjs: true
+  es2021: true
+extends:
+  - standard
+parser: '@typescript-eslint/parser'
+parserOptions:
+  ecmaVersion: 12
+plugins:
+  - '@typescript-eslint'
+ignorePatterns: ['types.d.ts']
+rules:
+  {
+    'indent': ['error', 2],
+    'linebreak-style': ['error', 'unix'],
+    'quotes': ['error', 'single'],
+    'semi': ['error', 'always'],
+    'space-before-function-paren': ['error', 'never'],
+    'comma-dangle':
+      [
+        'error',
+        {
+          'arrays': 'never',
+          'objects': 'never',
+          'imports': 'never',
+          'exports': 'never',
+          'functions': 'never'
+        }
+      ]
+  }

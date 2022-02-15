@@ -1,0 +1,36 @@
+{
+    "repository": "git@github.com:Manta-Network/manta-signer",
+    "license": "GPL-3.0-only",
+    "workspaces": [
+        "dolphin-api",
+        "e2e",
+        "workflows",
+        "coin-selection",
+        "signer-interface"
+    ],
+    "name": "manta-js",
+    "private": true,
+    "scripts": {
+        "build": "yarn workspace coin-selection build; yarn workspace signer-interface build; yarn workspace dolphin-api build;  yarn workspace workflows build;",
+        "lint:check": "eslint . --ext .ts,.tsx",
+        "lint": "npm run lint:check -- --fix",
+        "test": "yarn workspace e2e test"
+    },
+    "dependencies": {
+        "@polkadot/api": "^6.5.2",
+        "@polkadot/types": "^6.5.2",
+        "@types/node": "^16.7.10",
+        "typescript": "^4.4.2"
+    },
+    "devDependencies": {
+        "@typescript-eslint/eslint-plugin": "^5.3.1",
+        "@typescript-eslint/parser": "^5.3.1",
+        "eslint": "^7.32.0",
+        "eslint-config-prettier": "^8.3.0",
+        "eslint-config-standard": "^16.0.3",
+        "eslint-plugin-import": "^2.25.3",
+        "eslint-plugin-node": "^11.1.0",
+        "eslint-plugin-promise": "^5.1.1",
+        "ts-node": "^10.2.1"
+    }
+}
