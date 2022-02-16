@@ -45,6 +45,6 @@ secrecy = { version = "0.7.0", default-features = false, features = ["alloc"] }
 serde_json = { version = "1.0.68", default-features = false }
 subtle = { version = "2.4.1", default-features = false }
 tempfile = { version = "3.3.0", default-features = false }
-tokio = { version = "1.16.1", default-features = false, features = ["rt", "time"] }
+tokio = { version = "1.17.0", default-features = false, features = ["rt", "time"] }
 warp = { version = "0.3.2", default-features = false }
 

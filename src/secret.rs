@@ -19,6 +19,7 @@
 use crate::config::Config;
 use futures::future::BoxFuture;
 use manta_crypto::rand::OsRng;
+use manta_util::serde::Serialize;
 use password_hash::{PasswordHashString, SaltString};
 
 pub use password_hash::{Error as PasswordHashError, PasswordHasher, PasswordVerifier};
@@ -88,9 +89,6 @@ pub type PasswordFuture<'t> = BoxFuture<'t, Password>;
 
 /// Authorizer
 pub trait Authorizer: 'static + Send {
-    /// Prompt Type
-    type Prompt;
-
     /// Retrieves the password from the authorizer.
     fn password(&mut self) -> PasswordFuture;
 
@@ -121,7 +119,10 @@ pub trait Authorizer: 'static + Send {
     /// [`wake`]: Self::wake
     /// [`password`]: Self::password
     #[inline]
-    fn wake(&mut self, prompt: Self::Prompt) -> UnitFuture {
+    fn wake<T>(&mut self, prompt: &T) -> UnitFuture
+    where
+        T: Serialize,
+    {
         let _ = prompt;
         Box::pin(async move {})
     }

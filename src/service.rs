@@ -105,7 +105,7 @@ impl<A> InnerState<A>
 where
     A: Authorizer,
 {
-    ///
+    /// Builds a new [`InnerState`] from `config`, `authorizer`, `password_hash`, and `signer`.
     #[inline]
     fn new(
         config: Config,
@@ -121,9 +121,12 @@ where
         }
     }
 
-    ///
+    /// Checks that the authorizer's password matches the known password by sending the `prompt`.
     #[inline]
-    async fn check_password(&mut self, prompt: A::Prompt) -> bool {
+    async fn check_password<T>(&mut self, prompt: &T) -> bool
+    where
+        T: Serialize,
+    {
         self.authorizer.wake(prompt).await;
         loop {
             if let Some(password) = self.authorizer.password().await.known() {
@@ -136,24 +139,6 @@ where
             }
             delay_password_retry().await;
         }
-    }
-
-    ///
-    #[inline]
-    fn sync(&mut self, request: SyncRequest) -> Result<SyncResponse, SyncError> {
-        self.signer.sync(request)
-    }
-
-    ///
-    #[inline]
-    fn sign(&mut self, transaction: Transaction) -> Result<SignResponse, SignError> {
-        self.signer.sign(transaction)
-    }
-
-    ///
-    #[inline]
-    fn receiving_keys(&mut self, request: ReceivingKeyRequest) -> Vec<ReceivingKey> {
-        self.signer.receiving_keys(request)
     }
 }
 
@@ -218,7 +203,7 @@ where
             })
     }
 
-    ///
+    /// Saves the signer state to disk.
     #[inline]
     async fn save(self) -> Result<(), Error> {
         let path = { self.0.lock().config.data_path.clone() };
@@ -240,13 +225,13 @@ where
         Some(crate::VERSION)
     }
 
-    ///
+    /// Runs the synchronization protocol on the signer.
     #[inline]
     async fn sync(self, request: SyncRequest) -> Option<Result<SyncResponse, SyncError>> {
-        Some(self.0.lock().sync(request))
+        Some(self.0.lock().signer.sync(request))
     }
 
-    ///
+    /// Runs the transaction signing protocol on the signer.
     #[inline]
     async fn sign(self, transaction: Transaction) -> Option<Result<SignResponse, SignError>> {
         // TODO: authorizer.prompt(transaction)
@@ -254,10 +239,10 @@ where
         todo!()
     }
 
-    ///
+    /// Runs the receiving key sampling protocol on the signer.
     #[inline]
     async fn receiving_keys(self, request: ReceivingKeyRequest) -> Option<Vec<ReceivingKey>> {
-        Some(self.0.lock().receiving_keys(request))
+        Some(self.0.lock().signer.receiving_keys(request))
     }
 }
 
@@ -275,7 +260,7 @@ impl From<Response> for reply::Response {
     }
 }
 
-///
+/// Serves the signer server with `config` and `authorizer`.
 #[inline]
 pub async fn serve<A>(config: Config, authorizer: A) -> Result<(), Error>
 where
