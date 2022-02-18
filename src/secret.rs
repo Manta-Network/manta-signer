@@ -16,6 +16,8 @@
 
 //! Signer Secrets
 
+// TODO: Use password hashing abstractions from `manta-rs`.
+
 use crate::config::Config;
 use futures::future::BoxFuture;
 use manta_crypto::rand::OsRng;
@@ -97,10 +99,9 @@ pub trait Authorizer: 'static + Send {
     /// # Implementation Note
     ///
     /// For custom service implementations, this method should be called before any service is run.
-    /// [`Service`] already calls this method internally when running [`Service::serve`].
+    /// The [`service::start`] function already calls this method internally.
     ///
-    /// [`Service`]: crate::service::Service
-    /// [`Service::serve`]: crate::service::Service::serve
+    /// [`service::start`]: crate::service::start
     #[inline]
     fn setup<'s>(&'s mut self, config: &'s Config) -> UnitFuture<'s> {
         let _ = config;
@@ -131,7 +132,7 @@ pub trait Authorizer: 'static + Send {
     ///
     /// # Implementation Note
     ///
-    /// By default, [`sleep`] does nothing.
+    /// By default, [`sleep`](Self::sleep) does nothing.
     #[inline]
     fn sleep(&mut self) -> UnitFuture {
         Box::pin(async move {})

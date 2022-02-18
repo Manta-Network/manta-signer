@@ -24,15 +24,16 @@
     windows_subsystem = "windows"
 )]
 
+use manta_crypto::rand::OsRng;
 use manta_signer::{
     config::Config,
     secret::{
-        account_exists, create_account, Authorizer, ExposeSecret, Password, PasswordFuture,
-        SecretString, UnitFuture,
+        create_account, Authorizer, ExposeSecret, Password, PasswordFuture, SecretString,
+        UnitFuture,
     },
-    service::{Prompt, Service},
+    service,
 };
-use serde::{Deserialize, Serialize};
+use manta_util::serde::{Deserialize, Serialize};
 use std::{path::PathBuf, sync::Arc};
 use tauri::{
     async_runtime::{channel, spawn, Mutex, Receiver, Sender},
@@ -109,8 +110,6 @@ impl User {
 }
 
 impl Authorizer for User {
-    type Prompt = Prompt;
-
     #[inline]
     fn password(&mut self) -> PasswordFuture {
         Box::pin(async move { self.request_password().await })
@@ -123,7 +122,10 @@ impl Authorizer for User {
     }
 
     #[inline]
-    fn wake(&mut self, prompt: Self::Prompt) -> UnitFuture {
+    fn wake<T>(&mut self, prompt: &T) -> UnitFuture
+    where
+        T: Serialize,
+    {
         self.emit("authorize", prompt);
         Box::pin(async move {})
     }
@@ -229,26 +231,23 @@ enum ConnectEvent {
 /// Starts the first round of communication between the UI and the signer.
 #[tauri::command]
 async fn connect(config: State<'_, Config>) -> Result<ConnectEvent, ()> {
-    match account_exists(&config.root_seed_file).await {
+    match config.account_exists().await {
         Ok(true) => Ok(ConnectEvent::SetupAuthorization),
         _ => Ok(ConnectEvent::CreateAccount),
     }
 }
 
-/// Sends the mnemonic to the UI for the user to memorize.
+/// Creates a new mnemonic and sends it to the UI for the user to memorize.
 #[tauri::command]
-async fn get_mnemonic(
+async fn create_mnemonic(
     config: State<'_, Config>,
     password_store: State<'_, PasswordStore>,
     password: String,
 ) -> Result<String, ()> {
     let password = password.into();
-    let mnemonic = create_account(&config.root_seed_file, &password)
-        .await
-        .map_err(move |_| ())?
-        .expose_secret()
-        .clone()
-        .into_phrase();
+    let mnemonic = Mnemonic::random(&mut OsRng, Default::default())
+        .phrase()
+        .to_owned();
     password_store.load_exact(password).await;
     Ok(mnemonic)
 }
@@ -283,8 +282,7 @@ fn main() {
             let password_store = app.state::<PasswordStore>().handle();
             spawn(async move {
                 let (password, retry) = password_store.into_channel().await;
-                Service::build(config, User::new(window, password, retry))
-                    .serve()
+                service::start(config, User::new(window, password, retry))
                     .await
                     .expect("Unable to build manta-signer service.");
             });
@@ -292,7 +290,7 @@ fn main() {
         })
         .invoke_handler(tauri::generate_handler![
             connect,
-            get_mnemonic,
+            create_mnemonic,
             send_password,
             stop_password_prompt,
         ])

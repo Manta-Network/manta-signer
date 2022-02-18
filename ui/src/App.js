@@ -62,9 +62,9 @@ function App() {
     await window.__TAURI__.invoke('stop_password_prompt');
   };
 
-  const getRecoveryPhrase = async (password) => {
+  const createRecoveryPhrase = async (password) => {
     console.log("[INFO]: Get recovery phase.");
-    const mnemonic = await window.__TAURI__.invoke('get_mnemonic', {
+    const mnemonic = await window.__TAURI__.invoke('create_mnemonic', {
       password: password,
     });
     return mnemonic;
@@ -82,7 +82,7 @@ function App() {
       <Container className="page">
         {currentPage === CREATE_ACCOUNT_PAGE && (
           <CreateAccount
-            getRecoveryPhrase={getRecoveryPhrase}
+            createRecoveryPhrase={createRecoveryPhrase}
             endInitialConnectionPhase={endInitialConnectionPhase}
           />
         )}

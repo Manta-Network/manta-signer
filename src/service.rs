@@ -22,7 +22,10 @@ use crate::{
 };
 use core::future::Future;
 use core::time::Duration;
-use manta_accounting::fs::{cocoon::File, File as _, SaveError};
+use manta_accounting::{
+    fs::{cocoon::File, File as _, SaveError},
+    transfer::canonical::TransferShape,
+};
 use manta_pay::{
     config::{ReceivingKey, Transaction},
     signer::{
@@ -102,7 +105,7 @@ where
 {
     /// Checks that the authorizer's password matches the known password by sending the `prompt`.
     #[inline]
-    async fn check<T>(&mut self, prompt: &T) -> bool
+    async fn check<T>(&mut self, prompt: &T) -> Option<()>
     where
         T: Serialize,
     {
@@ -111,10 +114,10 @@ where
             if let Some(password) = self.authorizer.password().await.known() {
                 if self.password_hash.verify(password.expose_secret()).is_ok() {
                     self.authorizer.sleep().await;
-                    return true;
+                    return Some(());
                 }
             } else {
-                return false;
+                return None;
             }
             delay_password_retry().await;
         }
@@ -236,11 +239,15 @@ where
     /// Runs the transaction signing protocol on the signer.
     #[inline]
     async fn sign(self, transaction: Transaction) -> Option<Result<SignResponse, SignError>> {
-        if self.authorizer.lock().await.check(&transaction).await {
-            Some(self.state.lock().signer.sign(transaction))
-        } else {
-            None
+        match transaction.shape() {
+            TransferShape::Mint => {
+                // NOTE: We skip authorization on mint transactions because they are deposits not
+                //       withdrawals from the point of view of the signer. Everything else, by
+                //       default, requests authorization.
+            }
+            _ => self.authorizer.lock().await.check(&transaction).await?,
         }
+        Some(self.state.lock().signer.sign(transaction))
     }
 
     /// Runs the receiving key sampling protocol on the signer.

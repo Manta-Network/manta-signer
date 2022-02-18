@@ -13,13 +13,15 @@ const Authorize = ({
   let header;
   let summaryMessage;
   switch (summary.type) {
-    case "Reclaim":
-      header = "Authorize Transaction";
-      summaryMessage = `Withdraw ${summary.amount} ${summary.currency_symbol} to your public wallet`;
-      break;
     case "PrivateTransfer":
       header = "Authorize Transaction";
-      summaryMessage = `Transfer ${summary.amount} ${summary.currency_symbol} to: ${summary.recipient}`;
+      // TODO: summaryMessage = `Transfer ${summary.amount} ${summary.currency_symbol} to ${summary.recipient}`;
+      summaryMessage = ""
+      break;
+    case "Reclaim":
+      header = "Authorize Transaction";
+      // TODO: summaryMessage = `Withdraw ${summary.amount} ${summary.currency_symbol} to your public wallet`;
+      summaryMessage = ""
       break;
     default:
       header = "Login";

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Button, Input, Header, Container } from 'semantic-ui-react';
 
-const CreateAccount = ({ getRecoveryPhrase, endInitialConnectionPhase }) => {
+const CreateAccount = ({ createRecoveryPhrase, endInitialConnectionPhase }) => {
   const [password, setPassword] = useState('');
   const [recoveryPhrase, setRecoveryPhrase] = useState('');
 
@@ -13,7 +13,7 @@ const CreateAccount = ({ getRecoveryPhrase, endInitialConnectionPhase }) => {
   const onClickCreateAccount = async () => {
     console.log("[INFO]: Creating account.")
     if (isValid(password)) {
-      const recoveryPhrase = await getRecoveryPhrase(password);
+      const recoveryPhrase = await createRecoveryPhrase(password);
       setPassword('');
       setRecoveryPhrase(recoveryPhrase);
     }

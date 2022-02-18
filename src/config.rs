@@ -16,7 +16,11 @@
 
 //! Manta Signer Configuration
 
-use std::path::{Path, PathBuf};
+use std::{
+    io,
+    path::{Path, PathBuf},
+};
+use tokio::fs;
 
 /// Manta Path Identifier
 pub const PATH_IDENTIFIER: &str = "manta-signer";
@@ -60,5 +64,11 @@ impl Config {
             #[cfg(not(feature = "unsafe-disable-cors"))]
             origin_url: String::from("https://app.dolphin.manta.network"),
         })
+    }
+
+    /// Checks if the data file associated to this configuration exists.
+    #[inline]
+    pub async fn account_exists(&self) -> io::Result<bool> {
+        Ok(fs::metadata(&self.data_path).await?.is_file())
     }
 }
