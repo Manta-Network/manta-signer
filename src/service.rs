@@ -40,6 +40,7 @@ use std::{
     net::{AddrParseError, SocketAddr},
     sync::Arc,
 };
+use tokio::sync::Mutex as AsyncMutex;
 use tokio::{
     fs,
     task::{self, JoinError},
@@ -83,47 +84,25 @@ from_variant_impl!(Error, JoinError, JoinError);
 from_variant_impl!(Error, SaveError, SaveError<File>);
 from_variant_impl!(Error, Io, io::Error);
 
-/// Inner State
-struct InnerState<A>
+/// Checked Authorizer
+struct CheckedAuthorizer<A>
 where
     A: Authorizer,
 {
-    /// Configuration
-    config: Config,
-
-    /// Authorizer
-    authorizer: A,
-
     /// Password Hash
     password_hash: PasswordHash<Argon2>,
 
-    /// Signer
-    signer: Signer,
+    /// Authorizer
+    authorizer: A,
 }
 
-impl<A> InnerState<A>
+impl<A> CheckedAuthorizer<A>
 where
     A: Authorizer,
 {
-    /// Builds a new [`InnerState`] from `config`, `authorizer`, `password_hash`, and `signer`.
-    #[inline]
-    fn new(
-        config: Config,
-        authorizer: A,
-        password_hash: PasswordHash<Argon2>,
-        signer: Signer,
-    ) -> Self {
-        Self {
-            config,
-            authorizer,
-            password_hash,
-            signer,
-        }
-    }
-
     /// Checks that the authorizer's password matches the known password by sending the `prompt`.
     #[inline]
-    async fn check_password<T>(&mut self, prompt: &T) -> bool
+    async fn check<T>(&mut self, prompt: &T) -> bool
     where
         T: Serialize,
     {
@@ -142,18 +121,34 @@ where
     }
 }
 
-/// Signer Server State
+/// State
+struct State {
+    /// Configuration
+    config: Config,
+
+    /// Signer
+    signer: Signer,
+}
+
+/// Signer Server
 #[derive(derivative::Derivative)]
 #[derivative(Clone(bound = ""))]
-pub struct State<A>(Arc<Mutex<InnerState<A>>>)
-where
-    A: Authorizer;
-
-impl<A> State<A>
+struct Server<A>
 where
     A: Authorizer,
 {
-    /// Builds a new [`State`] from `config` and `authorizer`.
+    /// Server State
+    state: Arc<Mutex<State>>,
+
+    /// Authorizer
+    authorizer: Arc<AsyncMutex<CheckedAuthorizer<A>>>,
+}
+
+impl<A> Server<A>
+where
+    A: Authorizer,
+{
+    /// Builds a new [`Server`] from `config` and `authorizer`.
     #[inline]
     async fn build(config: Config, mut authorizer: A) -> Result<Self, Error> {
         let parameters = task::spawn_blocking(crate::parameters::load)
@@ -172,12 +167,13 @@ where
             }
             delay_password_retry().await;
         };
-        Ok(Self(Arc::new(Mutex::new(InnerState::new(
-            config,
-            authorizer,
-            password_hash,
-            signer,
-        )))))
+        Ok(Self {
+            state: Arc::new(Mutex::new(State { config, signer })),
+            authorizer: Arc::new(AsyncMutex::new(CheckedAuthorizer {
+                password_hash,
+                authorizer,
+            })),
+        })
     }
 
     /// Builds an endpoint for `command` to run `f` as the action.
@@ -206,12 +202,13 @@ where
     /// Saves the signer state to disk.
     #[inline]
     async fn save(self) -> Result<(), Error> {
-        let path = { self.0.lock().config.data_path.clone() };
+        let path = self.state.lock().config.data_path.clone();
         let backup = path.with_extension("backup");
         fs::rename(&path, &backup).await?;
+        let password_hash = self.authorizer.lock().await.password_hash.as_bytes();
         task::spawn_blocking(move || {
-            let lock = self.0.lock();
-            File::save(path, &lock.password_hash.as_bytes(), lock.signer.state())
+            let lock = self.state.lock();
+            File::save(path, &password_hash, lock.signer.state())
         })
         .await??;
         fs::remove_file(backup).await?;
@@ -228,21 +225,28 @@ where
     /// Runs the synchronization protocol on the signer.
     #[inline]
     async fn sync(self, request: SyncRequest) -> Option<Result<SyncResponse, SyncError>> {
-        Some(self.0.lock().signer.sync(request))
+        let result = self.state.lock().signer.sync(request);
+        task::spawn(async {
+            // FIXME: What to do about this error?
+            let _ = self.save().await;
+        });
+        Some(result)
     }
 
     /// Runs the transaction signing protocol on the signer.
     #[inline]
     async fn sign(self, transaction: Transaction) -> Option<Result<SignResponse, SignError>> {
-        // TODO: authorizer.prompt(transaction)
-        // let _ = self.signer.sign(transaction);
-        todo!()
+        if self.authorizer.lock().await.check(&transaction).await {
+            Some(self.state.lock().signer.sign(transaction))
+        } else {
+            None
+        }
     }
 
     /// Runs the receiving key sampling protocol on the signer.
     #[inline]
     async fn receiving_keys(self, request: ReceivingKeyRequest) -> Option<Vec<ReceivingKey>> {
-        Some(self.0.lock().signer.receiving_keys(request))
+        Some(self.state.lock().signer.receiving_keys(request))
     }
 }
 
@@ -260,9 +264,9 @@ impl From<Response> for reply::Response {
     }
 }
 
-/// Serves the signer server with `config` and `authorizer`.
+/// Starts the signer server with `config` and `authorizer`.
 #[inline]
-pub async fn serve<A>(config: Config, authorizer: A) -> Result<(), Error>
+pub async fn start<A>(config: Config, authorizer: A) -> Result<(), Error>
 where
     A: Authorizer,
 {
@@ -272,15 +276,15 @@ where
         .allow_methods(&[Method::GET, Method::POST])
         .allow_credentials(false)
         .build();
-    let state = State::build(config, authorizer).await?;
+    let state = Server::build(config, authorizer).await?;
     let api = warp::get()
-        .and(state.clone().endpoint("version", State::version))
-        .or(warp::post().and(state.clone().endpoint("sync", State::sync)))
-        .or(warp::get().and(state.clone().endpoint("sign", State::sign)))
+        .and(state.clone().endpoint("version", Server::version))
+        .or(warp::post().and(state.clone().endpoint("sync", Server::sync)))
+        .or(warp::get().and(state.clone().endpoint("sign", Server::sign)))
         .or(warp::post().and(
             state
                 .clone()
-                .endpoint("receivingKeys", State::receiving_keys),
+                .endpoint("receivingKeys", Server::receiving_keys),
         ))
         .with(cors);
     warp::serve(api).run(socket_address).await;

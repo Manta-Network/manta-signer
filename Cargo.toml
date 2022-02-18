@@ -29,7 +29,7 @@ maintenance = { status = "actively-developed" }
 unsafe-disable-cors = []
 
 [dependencies]
-argon2 = { version = "0.3.3", default-features = false, features = ["alloc", "password-hash"] }
+argon2 = { version = "0.3.4", default-features = false, features = ["alloc", "password-hash"] }
 derivative = { version = "2.2.0", default-features = false, features = ["use_core"] }
 dirs-next = { version = "2.0.0" }
 futures = { version = "0.3.17", default-features = false, features = ["alloc"] }
