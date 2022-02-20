@@ -16,6 +16,9 @@
 
 //! Manta Signer Configuration
 
+use manta_crypto::rand::OsRng;
+use manta_pay::key::Mnemonic;
+use manta_util::serde::{Deserialize, Serialize};
 use std::{
     io,
     path::{Path, PathBuf},
@@ -40,7 +43,8 @@ where
 }
 
 /// Configuration
-#[derive(Clone, Debug, Eq, Hash, PartialEq)]
+#[derive(Clone, Debug, Deserialize, Eq, Hash, PartialEq, Serialize)]
+#[serde(crate = "manta_util::serde", deny_unknown_fields)]
 pub struct Config {
     /// Data File Path
     pub data_path: PathBuf,
@@ -66,9 +70,25 @@ impl Config {
         })
     }
 
-    /// Checks if the data file associated to this configuration exists.
+    ///
     #[inline]
-    pub async fn account_exists(&self) -> io::Result<bool> {
-        Ok(fs::metadata(&self.data_path).await?.is_file())
+    pub async fn setup(&self) -> io::Result<Setup> {
+        match fs::metadata(&self.data_path).await {
+            Ok(metadata) if metadata.is_file() => Ok(Setup::Login),
+            Ok(metadata) => todo!(),
+            _ => Ok(Setup::CreateAccount(Mnemonic::random(
+                &mut OsRng,
+                Default::default(),
+            ))),
+        }
     }
+}
+
+/// Setup Phase
+pub enum Setup {
+    /// Create Account
+    CreateAccount(Mnemonic),
+
+    /// Login
+    Login,
 }

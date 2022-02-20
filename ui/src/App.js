@@ -23,7 +23,7 @@ function App() {
         case 'create-account':
           setCurrentPage(CREATE_ACCOUNT_PAGE);
           break;
-        case 'setup-authorization':
+        case 'login':
           setCurrentPage(LOGIN_PAGE);
           break;
         default:

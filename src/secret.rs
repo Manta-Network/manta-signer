@@ -18,44 +18,41 @@
 
 // TODO: Use password hashing abstractions from `manta-rs`.
 
-use crate::config::Config;
+use crate::config::Setup;
 use futures::future::BoxFuture;
 use manta_crypto::rand::OsRng;
 use manta_util::serde::Serialize;
 use password_hash::{PasswordHashString, SaltString};
 
 pub use password_hash::{Error as PasswordHashError, PasswordHasher, PasswordVerifier};
-pub use secrecy::{ExposeSecret, Secret};
+pub use secrecy::{ExposeSecret, Secret, SecretString};
 pub use subtle::{Choice, ConstantTimeEq, CtOption};
 
-/// Secret Bytes Container
-pub type SecretBytes = Secret<Vec<u8>>;
-
 /// Password Secret Wrapper
-pub struct Password(CtOption<SecretBytes>);
+pub struct Password(CtOption<SecretString>);
 
 impl Password {
     /// Builds a new [`Password`] from `password` if `is_known` evaluates to `true`.
     #[inline]
-    pub fn new(password: SecretBytes, is_known: Choice) -> Self {
+    pub fn new(password: SecretString, is_known: Choice) -> Self {
         Self(CtOption::new(password, is_known))
     }
 
     /// Builds a new [`Password`] from `password`.
     #[inline]
-    pub fn from_known(password: SecretBytes) -> Self {
+    pub fn from_known(password: SecretString) -> Self {
         Self::new(password, 1.into())
     }
 
     /// Builds a new [`Password`] with a no known value.
     #[inline]
     pub fn from_unknown() -> Self {
-        Self::new(Secret::new(Vec::with_capacity(64)), 0.into())
+        Self::new(Secret::new(String::with_capacity(64)), 0.into())
     }
 
     /// Returns [`Some`] if `self` represents a known password.
     #[inline]
-    pub fn known(self) -> Option<SecretBytes> {
+    pub fn known(self) -> Option<SecretString> {
         self.0.into()
     }
 
@@ -94,7 +91,7 @@ pub trait Authorizer: 'static + Send {
     /// Retrieves the password from the authorizer.
     fn password(&mut self) -> PasswordFuture;
 
-    /// Runs some setup for the authorizer using the `config`.
+    /// Runs some setup for the authorizer using the `setup`.
     ///
     /// # Implementation Note
     ///
@@ -102,11 +99,7 @@ pub trait Authorizer: 'static + Send {
     /// The [`service::start`] function already calls this method internally.
     ///
     /// [`service::start`]: crate::service::start
-    #[inline]
-    fn setup<'s>(&'s mut self, config: &'s Config) -> UnitFuture<'s> {
-        let _ = config;
-        Box::pin(async move {})
-    }
+    fn setup<'s>(&'s mut self, setup: &'s Setup) -> UnitFuture<'s>;
 
     /// Prompts the authorizer with `prompt` so that they can be notified that their password is
     /// requested.

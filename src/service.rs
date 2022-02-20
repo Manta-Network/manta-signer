@@ -17,20 +17,21 @@
 //! Manta Signer Service Implementation
 
 use crate::{
-    config::Config,
+    config::{Config, Setup},
     secret::{Argon2, Authorizer, ExposeSecret, PasswordHash},
 };
-use core::future::Future;
-use core::time::Duration;
+use core::{future::Future, time::Duration};
 use manta_accounting::{
     fs::{cocoon::File, File as _, SaveError},
+    key::HierarchicalKeyDerivationScheme,
     transfer::canonical::TransferShape,
 };
 use manta_pay::{
     config::{ReceivingKey, Transaction},
+    key::{Mnemonic, TestnetKeySecret},
     signer::{
-        base::Signer, ReceivingKeyRequest, SignError, SignResponse, SyncError, SyncRequest,
-        SyncResponse,
+        base::{Signer, SignerParameters, SignerState, UtxoSet},
+        ReceivingKeyRequest, SignError, SignResponse, SyncError, SyncRequest, SyncResponse,
     },
 };
 use manta_util::{
@@ -43,9 +44,9 @@ use std::{
     net::{AddrParseError, SocketAddr},
     sync::Arc,
 };
-use tokio::sync::Mutex as AsyncMutex;
 use tokio::{
     fs,
+    sync::Mutex as AsyncMutex,
     task::{self, JoinError},
 };
 use warp::{
@@ -112,7 +113,11 @@ where
         self.authorizer.wake(prompt).await;
         loop {
             if let Some(password) = self.authorizer.password().await.known() {
-                if self.password_hash.verify(password.expose_secret()).is_ok() {
+                if self
+                    .password_hash
+                    .verify(password.expose_secret().as_bytes())
+                    .is_ok()
+                {
                     self.authorizer.sleep().await;
                     return Some(());
                 }
@@ -157,19 +162,46 @@ where
         let parameters = task::spawn_blocking(crate::parameters::load)
             .await?
             .ok_or(Error::ParameterLoadingError)?;
-        authorizer.setup(&config).await;
-        let (password_hash, signer) = loop {
-            if let Some(password) = authorizer.password().await.known() {
-                let password = password.expose_secret();
-                if let Ok(password_hash) = PasswordHash::from_default(password) {
-                    if let Ok(state) = File::load(&config.data_path, &password_hash.as_bytes()) {
-                        authorizer.sleep().await;
-                        break (password_hash, Signer::from_parts(parameters, state));
+
+        let setup = config.setup().await?;
+
+        authorizer.setup(&setup).await;
+
+        let (password_hash, signer) = match setup {
+            Setup::CreateAccount(mnemonic) => loop {
+                if let Some(password) = authorizer.password().await.known() {
+                    let password = password.expose_secret();
+                    if let Ok(password_hash) = PasswordHash::from_default(password.as_bytes()) {
+                        break (
+                            password_hash,
+                            Self::create_account(password, mnemonic, parameters).await?,
+                        );
                     }
                 }
-            }
-            delay_password_retry().await;
+                delay_password_retry().await;
+            },
+            Setup::Login => loop {
+                if let Some(password) = authorizer.password().await.known() {
+                    if let Ok(password_hash) =
+                        PasswordHash::from_default(password.expose_secret().as_bytes())
+                    {
+                        let data_path = config.data_path.clone();
+                        let password_hash_bytes = password_hash.as_bytes();
+                        if let Ok(state) = task::spawn_blocking(move || {
+                            File::load(&data_path, &password_hash_bytes)
+                        })
+                        .await?
+                        {
+                            break (password_hash, Signer::from_parts(parameters, state));
+                        }
+                    }
+                }
+                delay_password_retry().await;
+            },
         };
+
+        authorizer.sleep().await;
+
         Ok(Self {
             state: Arc::new(Mutex::new(State { config, signer })),
             authorizer: Arc::new(AsyncMutex::new(CheckedAuthorizer {
@@ -177,6 +209,26 @@ where
                 authorizer,
             })),
         })
+    }
+
+    ///
+    #[inline]
+    async fn create_account(
+        password: &str,
+        mnemonic: Mnemonic,
+        parameters: SignerParameters,
+    ) -> Result<Signer, Error> {
+        Ok(Signer::from_parts(
+            parameters,
+            SignerState::new(
+                TestnetKeySecret::new(mnemonic, password).map(),
+                UtxoSet::new(
+                    task::spawn_blocking(crate::parameters::load_utxo_set_model)
+                        .await?
+                        .ok_or(Error::ParameterLoadingError)?,
+                ),
+            ),
+        ))
     }
 
     /// Builds an endpoint for `command` to run `f` as the action.

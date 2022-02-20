@@ -25,6 +25,7 @@
 )]
 
 use manta_crypto::rand::OsRng;
+use manta_pay::key::TestnetKeySecret;
 use manta_signer::{
     config::Config,
     secret::{
@@ -118,6 +119,9 @@ impl Authorizer for User {
     #[inline]
     fn setup<'s>(&'s mut self, config: &'s Config) -> UnitFuture<'s> {
         let _ = config;
+
+        // self.emit("mnemonic", Mnemonic::random(&mut OsRng, Default::default()));
+
         Box::pin(async move {})
     }
 
@@ -222,17 +226,17 @@ async fn stop_password_prompt(password_store: State<'_, PasswordStore>) -> Resul
 #[serde(rename_all = "kebab-case")]
 enum ConnectEvent {
     /// Create Account
-    CreateAccount,
+    CreateAccount(Mnemonic),
 
-    /// Setup Authorization
-    SetupAuthorization,
+    /// Login
+    Login,
 }
 
 /// Starts the first round of communication between the UI and the signer.
 #[tauri::command]
 async fn connect(config: State<'_, Config>) -> Result<ConnectEvent, ()> {
     match config.account_exists().await {
-        Ok(true) => Ok(ConnectEvent::SetupAuthorization),
+        Ok(true) => Ok(ConnectEvent::Login),
         _ => Ok(ConnectEvent::CreateAccount),
     }
 }
@@ -245,11 +249,10 @@ async fn create_mnemonic(
     password: String,
 ) -> Result<String, ()> {
     let password = password.into();
-    let mnemonic = Mnemonic::random(&mut OsRng, Default::default())
-        .phrase()
-        .to_owned();
+    let mnemonic = Mnemonic::random(&mut OsRng, Default::default());
+    let testnet_secret_seed = TestnetKeySecret::new(mnemonic, password);
     password_store.load_exact(password).await;
-    Ok(mnemonic)
+    Ok(mnemonic.phrase().to_owned())
 }
 
 /// Runs the main Tauri application.
