@@ -18,7 +18,7 @@
 
 use crate::{
     config::{Config, Setup},
-    secret::{Argon2, Authorizer, ExposeSecret, PasswordHash},
+    secret::{Argon2, Authorizer, ExposeSecret, PasswordHash, SecretString},
 };
 use core::{future::Future, time::Duration};
 use manta_accounting::{
@@ -42,6 +42,7 @@ use parking_lot::Mutex;
 use std::{
     io,
     net::{AddrParseError, SocketAddr},
+    path::Path,
     sync::Arc,
 };
 use tokio::{
@@ -162,46 +163,35 @@ where
         let parameters = task::spawn_blocking(crate::parameters::load)
             .await?
             .ok_or(Error::ParameterLoadingError)?;
-
         let setup = config.setup().await?;
-
         authorizer.setup(&setup).await;
-
         let (password_hash, signer) = match setup {
             Setup::CreateAccount(mnemonic) => loop {
-                if let Some(password) = authorizer.password().await.known() {
-                    let password = password.expose_secret();
-                    if let Ok(password_hash) = PasswordHash::from_default(password.as_bytes()) {
-                        break (
-                            password_hash,
-                            Self::create_account(password, mnemonic, parameters).await?,
-                        );
-                    }
+                if let Some((password, password_hash)) = Self::load_password(&mut authorizer).await
+                {
+                    let state = Self::create_state(
+                        &config.data_path,
+                        &password,
+                        &password_hash,
+                        mnemonic,
+                        parameters,
+                    )
+                    .await?;
+                    break (password_hash, state);
                 }
                 delay_password_retry().await;
             },
             Setup::Login => loop {
-                if let Some(password) = authorizer.password().await.known() {
-                    if let Ok(password_hash) =
-                        PasswordHash::from_default(password.expose_secret().as_bytes())
+                if let Some((_, password_hash)) = Self::load_password(&mut authorizer).await {
+                    if let Some(state) = Self::load_state(&config.data_path, &password_hash).await?
                     {
-                        let data_path = config.data_path.clone();
-                        let password_hash_bytes = password_hash.as_bytes();
-                        if let Ok(state) = task::spawn_blocking(move || {
-                            File::load(&data_path, &password_hash_bytes)
-                        })
-                        .await?
-                        {
-                            break (password_hash, Signer::from_parts(parameters, state));
-                        }
+                        break (password_hash, Signer::from_parts(parameters, state));
                     }
                 }
                 delay_password_retry().await;
             },
         };
-
         authorizer.sleep().await;
-
         Ok(Self {
             state: Arc::new(Mutex::new(State { config, signer })),
             authorizer: Arc::new(AsyncMutex::new(CheckedAuthorizer {
@@ -211,24 +201,54 @@ where
         })
     }
 
-    ///
+    /// Loads the password from the `authorizer` and compute the password hash.
     #[inline]
-    async fn create_account(
-        password: &str,
+    async fn load_password(authorizer: &mut A) -> Option<(SecretString, PasswordHash<Argon2>)> {
+        let password = authorizer.password().await.known()?;
+        let password_hash = PasswordHash::from_default(password.expose_secret().as_bytes()).ok()?;
+        Some((password, password_hash))
+    }
+
+    /// Creates the initial signer state for a new account.
+    #[inline]
+    async fn create_state(
+        data_path: &Path,
+        password: &SecretString,
+        password_hash: &PasswordHash<Argon2>,
         mnemonic: Mnemonic,
         parameters: SignerParameters,
     ) -> Result<Signer, Error> {
-        Ok(Signer::from_parts(
-            parameters,
-            SignerState::new(
-                TestnetKeySecret::new(mnemonic, password).map(),
-                UtxoSet::new(
-                    task::spawn_blocking(crate::parameters::load_utxo_set_model)
-                        .await?
-                        .ok_or(Error::ParameterLoadingError)?,
-                ),
+        let state = SignerState::new(
+            TestnetKeySecret::new(mnemonic, password.expose_secret()).map(),
+            UtxoSet::new(
+                task::spawn_blocking(crate::parameters::load_utxo_set_model)
+                    .await?
+                    .ok_or(Error::ParameterLoadingError)?,
             ),
-        ))
+        );
+        let data_path = data_path.to_owned();
+        let password_hash_bytes = password_hash.as_bytes();
+        let cloned_state = state.clone();
+        task::spawn_blocking(move || File::save(&data_path, &password_hash_bytes, cloned_state))
+            .await??;
+        Ok(Signer::from_parts(parameters, state))
+    }
+
+    /// Loads the signer state from the data path.
+    #[inline]
+    async fn load_state(
+        data_path: &Path,
+        password_hash: &PasswordHash<Argon2>,
+    ) -> Result<Option<SignerState>, Error> {
+        let data_path = data_path.to_owned();
+        let password_hash_bytes = password_hash.as_bytes();
+        if let Ok(state) =
+            task::spawn_blocking(move || File::load(&data_path, &password_hash_bytes)).await?
+        {
+            Ok(Some(state))
+        } else {
+            Ok(None)
+        }
     }
 
     /// Builds an endpoint for `command` to run `f` as the action.
@@ -260,10 +280,10 @@ where
         let path = self.state.lock().config.data_path.clone();
         let backup = path.with_extension("backup");
         fs::rename(&path, &backup).await?;
-        let password_hash = self.authorizer.lock().await.password_hash.as_bytes();
+        let password_hash_bytes = self.authorizer.lock().await.password_hash.as_bytes();
         task::spawn_blocking(move || {
             let lock = self.state.lock();
-            File::save(path, &password_hash, lock.signer.state())
+            File::save(path, &password_hash_bytes, lock.signer.state())
         })
         .await??;
         fs::remove_file(backup).await?;

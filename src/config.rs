@@ -16,7 +16,7 @@
 
 //! Manta Signer Configuration
 
-use manta_crypto::rand::OsRng;
+use manta_crypto::rand::{OsRng, Sample};
 use manta_pay::key::Mnemonic;
 use manta_util::serde::{Deserialize, Serialize};
 use std::{
@@ -70,21 +70,23 @@ impl Config {
         })
     }
 
-    ///
+    /// Builds the [`Setup`] for the given configuration depending on the filesystem resources.
     #[inline]
     pub async fn setup(&self) -> io::Result<Setup> {
         match fs::metadata(&self.data_path).await {
             Ok(metadata) if metadata.is_file() => Ok(Setup::Login),
-            Ok(metadata) => todo!(),
-            _ => Ok(Setup::CreateAccount(Mnemonic::random(
-                &mut OsRng,
-                Default::default(),
-            ))),
+            Ok(metadata) => Err(io::Error::new(
+                io::ErrorKind::Other,
+                format!("Invalid file format: {:?}.", metadata),
+            )),
+            _ => Ok(Setup::CreateAccount(Mnemonic::gen(&mut OsRng))),
         }
     }
 }
 
 /// Setup Phase
+#[derive(Clone, Deserialize, Serialize)]
+#[serde(crate = "manta_util::serde", deny_unknown_fields)]
 pub enum Setup {
     /// Create Account
     CreateAccount(Mnemonic),
