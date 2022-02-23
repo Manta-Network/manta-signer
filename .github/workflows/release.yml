@@ -175,7 +175,7 @@ jobs:
         id: sig_out
         run: echo "::set-output name=SIG::$(cat sig.txt)"
         if: github.event_name == 'release' && github.event.action == 'published'
-      - run: echo "::set-output name=EXPIRY::$(node -e 'console.log(Math.floor(Date.now()/1000))')"
+      - run: echo "::set-output name=EXPIRY::$(node -e 'console.log(Math.floor(Date.now()/1000) + 300)')"
         id: expiry
         if: github.event_name == 'release' && github.event.action == 'published'
       - name: JWT Generator
