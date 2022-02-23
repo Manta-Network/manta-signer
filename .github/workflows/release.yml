@@ -18,6 +18,7 @@ jobs:
         run: ./check_ref.sh "${{github.head_ref}}"
     outputs:
       release_version: ${{ env.VERSION }}
+      beta_ref: ${{ steps.beta_ref.outputs.BETA_PREFIX }}
   build:
     name: Build
     needs: setup
@@ -97,7 +98,7 @@ jobs:
         if: matrix.os_type == 'ubuntu'
       - name: Suffix version
         id: suffixed
-        run: echo "::set-output name=SUFFIXED::${{ needs.setup.outputs.release_version }}-${{ needs.setup.outputs.beta_ref}}${{ matrix.version_suffix }}"
+        run: echo "::set-output name=SUFFIXED::${{ needs.setup.outputs.release_version }}-${{ needs.setup.outputs.beta_ref }}${{ matrix.version_suffix }}"
       - name: Append version suffix
         uses: 898anil/github-actions-json-edit@v0.2
         with:
