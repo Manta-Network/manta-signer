@@ -44,7 +44,7 @@
                 "digestAlgorithm": "sha256",
                 "timestampUrl": "",
                 "wix": {
-                    "enableElevatedUpdateTask": true
+                    "enableElevatedUpdateTask": false
                 }
             }
         },

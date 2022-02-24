@@ -91,7 +91,7 @@ impl User {
             let entry = entry.expect("Unable to get directory entry.");
             if entry.file_type().await.unwrap().is_file() {
                 let path = entry.path();
-                if matches!(path.extension(), Some(ext) if ext == "bin") {
+                if matches!(path.extension(), Some(ext) if ext == "dat") {
                     fs::copy(
                         &path,
                         &config
@@ -101,7 +101,7 @@ impl User {
                     .await
                     .expect("Copy should have succeeded.");
                 }
-            } else if entry.path().to_str().unwrap().ends_with(".bin") {
+            } else if entry.path().to_str().unwrap().ends_with(".dat") {
                 let mut bins = fs::read_dir(&entry.path())
                     .await
                     .expect("The resource directory should be a directory.");
