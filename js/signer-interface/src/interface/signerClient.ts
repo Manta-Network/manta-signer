@@ -10,7 +10,7 @@ export class SignerClient {
 
   async getSignerVersion() {
     try {
-      const res = await axios.get('version', { timeout: 200 });
+      const res = await axios.get('version', { timeout: 500 });
       return res.data.version;
     } catch (timeoutError) {
       return null;

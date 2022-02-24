@@ -1,6 +1,6 @@
 {
     "name": "signer-interface",
-    "version": "0.2.0",
+    "version": "0.2.1",
     "main": "dist/index.js",
     "description": "JS interface for interacting with Manta Signer",
     "types": "dist/index.d.ts",
