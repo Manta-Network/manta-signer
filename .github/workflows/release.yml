@@ -100,11 +100,7 @@ jobs:
         id: suffixed
         run: echo "::set-output name=SUFFIXED::${{ needs.setup.outputs.release_version }}-${{ needs.setup.outputs.beta_ref }}${{ matrix.version_suffix }}"
       - name: Append version suffix
-        uses: 898anil/github-actions-json-edit@v0.2
-        with:
-          file_path: ui/src-tauri/tauri.conf.json
-          field_path: package.version
-          field_value: ${{ steps.suffixed.outputs.SUFFIXED }}
+        run: node suffix.js ${{ steps.suffixed.outputs.SUFFIXED }}
       - name: Build & Sign
         run: cd ui;yarn && yarn tauri build
         env:
