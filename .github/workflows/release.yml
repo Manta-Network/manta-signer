@@ -14,11 +14,8 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - run: echo "VERSION=$(cat Cargo.toml | grep ^version | awk -F'=' '{print $2}' | tr -d '\" ')" >> $GITHUB_ENV
-      - id: beta_ref
-        run: ./check_ref.sh "${{github.head_ref}}"
     outputs:
       release_version: ${{ env.VERSION }}
-      beta_ref: ${{ steps.beta_ref.outputs.BETA_PREFIX }}
   build:
     name: Build
     needs: setup
@@ -98,7 +95,14 @@ jobs:
         if: matrix.os_type == 'ubuntu'
       - name: Suffix version
         id: suffixed
-        run: echo "::set-output name=SUFFIXED::${{ needs.setup.outputs.release_version }}-${{ needs.setup.outputs.beta_ref }}${{ matrix.version_suffix }}"
+        run: ./check_ref.sh
+        shell: bash
+        env:
+          BRANCH: ${{ github.head_ref }}
+          TARGET: ${{ matrix.target }}
+          VERSION: ${{ needs.setup.outputs.release_version }}
+          SUFFIX: ${{ matrix.version_suffix }}
+      - run: echo "SUFFIX ${{ steps.suffixed.outputs.SUFFIXED }}"
       - name: Append version suffix
         run: node suffix.js ${{ steps.suffixed.outputs.SUFFIXED }}
       - name: Build & Sign
