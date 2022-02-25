@@ -13,17 +13,19 @@ const AUTHORIZE_PAGE = 3;
 function App() {
   const [currentPage, setCurrentPage] = useState(null);
   const [isConnected, setIsConnected] = useState(false);
+  const [recoveryPhrase, setRecoveryPhrase] = useState(null);
   const [authorizationSummary, setAuthorizationSummary] = useState(null);
 
   useEffect(() => {
     if (isConnected) return;
     const beginInitialConnectionPhase = async () => {
-      const event = await window.__TAURI__.invoke('connect');
-      switch (event) {
-        case 'create-account':
+      const event = await window.__TAURI__.once('connect');
+      switch (event.type) {
+        case 'CreateAccount':
+          setRecoveryPhrase(event.payload);
           setCurrentPage(CREATE_ACCOUNT_PAGE);
           break;
-        case 'login':
+        case 'Login':
           setCurrentPage(LOGIN_PAGE);
           break;
         default:
@@ -62,14 +64,6 @@ function App() {
     await window.__TAURI__.invoke('stop_password_prompt');
   };
 
-  const createRecoveryPhrase = async (password) => {
-    console.log("[INFO]: Get recovery phase.");
-    const mnemonic = await window.__TAURI__.invoke('create_mnemonic', {
-      password: password,
-    });
-    return mnemonic;
-  };
-
   const endInitialConnectionPhase = async () => {
     console.log("[INFO]: End Initial Connection Phase");
     setIsConnected(true);
@@ -82,7 +76,8 @@ function App() {
       <Container className="page">
         {currentPage === CREATE_ACCOUNT_PAGE && (
           <CreateAccount
-            createRecoveryPhrase={createRecoveryPhrase}
+            recoveryPhrase={recoveryPhrase}
+            sendPassword={sendPassword}
             endInitialConnectionPhase={endInitialConnectionPhase}
           />
         )}

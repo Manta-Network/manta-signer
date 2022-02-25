@@ -25,5 +25,8 @@ pub mod parameters;
 pub mod secret;
 pub mod service;
 
+#[doc(inline)]
+pub use manta_util::serde;
+
 /// Manta Signer Server Version
 pub const VERSION: &str = env!("CARGO_PKG_VERSION");

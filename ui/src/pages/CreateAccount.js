@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { Button, Input, Header, Container } from 'semantic-ui-react';
 
-const CreateAccount = ({ createRecoveryPhrase, endInitialConnectionPhase }) => {
+const CreateAccount = ({ recoveryPhrase, sendPassword, endInitialConnectionPhase }) => {
   const [password, setPassword] = useState('');
-  const [recoveryPhrase, setRecoveryPhrase] = useState('');
+  const [createdAccount, setCreatedAccount] = useState(false);
 
   const isValid = (password) => {
     console.log("[INFO]: Check password validity.")
@@ -13,21 +13,20 @@ const CreateAccount = ({ createRecoveryPhrase, endInitialConnectionPhase }) => {
   const onClickCreateAccount = async () => {
     console.log("[INFO]: Creating account.")
     if (isValid(password)) {
-      const recoveryPhrase = await createRecoveryPhrase(password);
+      await sendPassword(password);
       setPassword('');
-      setRecoveryPhrase(recoveryPhrase);
+      setCreatedAccount(true);
     }
   };
 
   const onClickConfirmRecoveryPhrase = async () => {
     console.log("[INFO]: Confirming recovery phrase.")
-    setRecoveryPhrase('');
     await endInitialConnectionPhase();
   };
 
   return (
     <>
-      {!recoveryPhrase && (
+      {!createdAccount && (
         <>
           <Header> Create Account </Header>
           <Input
@@ -40,7 +39,7 @@ const CreateAccount = ({ createRecoveryPhrase, endInitialConnectionPhase }) => {
           </Button>
         </>
       )}
-      {recoveryPhrase && (
+      {createdAccount && (
         <>
           <Header className="recovery-phrase-header">
             Your recovery phrase

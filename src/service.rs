@@ -331,7 +331,7 @@ where
 
 /// HTTP Response
 #[derive(Default)]
-pub struct Response(Option<Json>);
+struct Response(Option<Json>);
 
 impl From<Response> for reply::Response {
     #[inline]

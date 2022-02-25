@@ -24,18 +24,13 @@
     windows_subsystem = "windows"
 )]
 
-use manta_crypto::rand::OsRng;
-use manta_pay::key::TestnetKeySecret;
 use manta_signer::{
-    config::Config,
-    secret::{
-        create_account, Authorizer, ExposeSecret, Password, PasswordFuture, SecretString,
-        UnitFuture,
-    },
+    config::{Config, Setup},
+    secret::{Authorizer, Password, PasswordFuture, SecretString, UnitFuture},
+    serde::Serialize,
     service,
 };
-use manta_util::serde::{Deserialize, Serialize};
-use std::{path::PathBuf, sync::Arc};
+use std::sync::Arc;
 use tauri::{
     async_runtime::{channel, spawn, Mutex, Receiver, Sender},
     CustomMenuItem, Event, Manager, State, SystemTray, SystemTrayEvent, SystemTrayMenu, Window,
@@ -117,11 +112,8 @@ impl Authorizer for User {
     }
 
     #[inline]
-    fn setup<'s>(&'s mut self, config: &'s Config) -> UnitFuture<'s> {
-        let _ = config;
-
-        // self.emit("mnemonic", Mnemonic::random(&mut OsRng, Default::default()));
-
+    fn setup<'s>(&'s mut self, setup: &'s Setup) -> UnitFuture<'s> {
+        self.emit("connect", setup);
         Box::pin(async move {})
     }
 
@@ -221,17 +213,7 @@ async fn stop_password_prompt(password_store: State<'_, PasswordStore>) -> Resul
     Ok(())
 }
 
-/// Connection Event
-#[derive(Clone, Copy, Debug, Deserialize, Eq, Hash, PartialEq, Serialize)]
-#[serde(rename_all = "kebab-case")]
-enum ConnectEvent {
-    /// Create Account
-    CreateAccount(Mnemonic),
-
-    /// Login
-    Login,
-}
-
+/*
 /// Starts the first round of communication between the UI and the signer.
 #[tauri::command]
 async fn connect(config: State<'_, Config>) -> Result<ConnectEvent, ()> {
@@ -254,6 +236,7 @@ async fn create_mnemonic(
     password_store.load_exact(password).await;
     Ok(mnemonic.phrase().to_owned())
 }
+*/
 
 /// Runs the main Tauri application.
 fn main() {
@@ -292,8 +275,6 @@ fn main() {
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
-            connect,
-            create_mnemonic,
             send_password,
             stop_password_prompt,
         ])
