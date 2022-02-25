@@ -128,7 +128,7 @@ jobs:
         if: matrix.os_type == 'ubuntu' && github.event_name == 'release' && github.event.action == 'published'
       - name: Set release vars
         id: release_vars
-        run: ./gen_filepath.sh ${{ matrix.os_type }} ${{ matrix.os }} ${{ needs.setup.outputs.release_version }}
+        run: ./gen_filepath.sh ${{ matrix.os_type }} ${{ matrix.os }} ${{ steps.suffixed.outputs.SUFFIXED}}
         shell: bash
       - name: DBG
         run: echo "${{ steps.release_vars.outputs.IMAGE }} ${{ steps.release_vars.outputs.RELEASE_IMAGE }}" 
