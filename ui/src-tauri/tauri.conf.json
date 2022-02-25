@@ -42,10 +42,7 @@
             "windows": {
                 "certificateThumbprint": null,
                 "digestAlgorithm": "sha256",
-                "timestampUrl": "",
-                "wix": {
-                    "enableElevatedUpdateTask": false
-                }
+                "timestampUrl": ""
             }
         },
         "updater": {
