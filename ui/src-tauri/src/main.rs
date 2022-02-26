@@ -26,14 +26,14 @@
 
 use manta_signer::{
     config::{Config, Setup},
-    secret::{Authorizer, Password, PasswordFuture, SecretString, UnitFuture},
+    secret::{Authorizer, Password, PasswordFuture, Secret, SecretString, UnitFuture},
     serde::Serialize,
     service,
 };
 use std::sync::Arc;
 use tauri::{
     async_runtime::{channel, spawn, Mutex, Receiver, Sender},
-    CustomMenuItem, Event, Manager, State, SystemTray, SystemTrayEvent, SystemTrayMenu, Window,
+    CustomMenuItem, Manager, RunEvent, State, SystemTray, SystemTrayEvent, SystemTrayMenu, Window,
 };
 
 /// User
@@ -65,7 +65,7 @@ impl User {
 
     /// Emits a `message` of the given `kind` to the window.
     #[inline]
-    fn emit<T>(&self, kind: &'static str, message: T)
+    fn emit<T>(&self, kind: &'static str, message: &T)
     where
         T: Serialize,
     {
@@ -203,7 +203,7 @@ async fn send_password(
     password_store: State<'_, PasswordStore>,
     password: String,
 ) -> Result<bool, ()> {
-    Ok(password_store.load(password.into()).await)
+    Ok(password_store.load(Secret::new(password)).await)
 }
 
 /// Stops the server from prompting for the password.
@@ -285,8 +285,8 @@ fn main() {
     app.set_activation_policy(tauri::ActivationPolicy::Accessory);
 
     app.run(|app, event| match event {
-        Event::Ready => app.get_window("about").unwrap().hide().unwrap(),
-        Event::CloseRequested { label, api, .. } => {
+        RunEvent::Ready => app.get_window("about").unwrap().hide().unwrap(),
+        RunEvent::CloseRequested { label, api, .. } => {
             api.prevent_close();
             match label.as_str() {
                 "about" => app.get_window(&label).unwrap().hide().unwrap(),
