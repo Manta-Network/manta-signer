@@ -39,5 +39,5 @@ manta-signer = { path = "../../" }
 tauri = { version = "1.0.0-rc.3", features = ["reqwest-client", "system-tray"] }
 
 [build-dependencies]
-tauri-build = { version = "1.0.0-rc.3" }
+tauri-build = { version = "1.0.0-rc.3", features = [] }
 
