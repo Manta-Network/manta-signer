@@ -24,7 +24,7 @@ write a little note why.
 - [ ] Re-reviewed `Files changed` in the Github PR explorer.
 - [ ] Update the version numbers properly:
    * Cargo.toml
+   * ui/package.json
+   * ui/public/about.html
    * ui/src-tauri/Cargo.toml
    * ui/src-tauri/tauri.conf.json
-   * ui/public/about.html
-   * ui/package.json

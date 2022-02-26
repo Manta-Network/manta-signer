@@ -213,31 +213,6 @@ async fn stop_password_prompt(password_store: State<'_, PasswordStore>) -> Resul
     Ok(())
 }
 
-/*
-/// Starts the first round of communication between the UI and the signer.
-#[tauri::command]
-async fn connect(config: State<'_, Config>) -> Result<ConnectEvent, ()> {
-    match config.account_exists().await {
-        Ok(true) => Ok(ConnectEvent::Login),
-        _ => Ok(ConnectEvent::CreateAccount),
-    }
-}
-
-/// Creates a new mnemonic and sends it to the UI for the user to memorize.
-#[tauri::command]
-async fn create_mnemonic(
-    config: State<'_, Config>,
-    password_store: State<'_, PasswordStore>,
-    password: String,
-) -> Result<String, ()> {
-    let password = password.into();
-    let mnemonic = Mnemonic::random(&mut OsRng, Default::default());
-    let testnet_secret_seed = TestnetKeySecret::new(mnemonic, password);
-    password_store.load_exact(password).await;
-    Ok(mnemonic.phrase().to_owned())
-}
-*/
-
 /// Runs the main Tauri application.
 fn main() {
     let config =

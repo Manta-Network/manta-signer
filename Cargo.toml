@@ -41,7 +41,7 @@ manta-sdk = { path = "../sdk", features = ["download"] }
 manta-util = { path = "../manta-rs/manta-util" }
 parking_lot = { version = "0.12.0", default-features = false }
 password-hash = { version = "0.3.2", default-features = false, features = ["alloc", "rand_core"] }
-secrecy = { version = "0.7.0", default-features = false, features = ["alloc"] }
+secrecy = { version = "0.8.0", default-features = false, features = ["alloc"] }
 serde_json = { version = "1.0.68", default-features = false }
 subtle = { version = "2.4.1", default-features = false }
 tempfile = { version = "3.3.0", default-features = false }
