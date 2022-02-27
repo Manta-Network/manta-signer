@@ -28,6 +28,9 @@ maintenance = { status = "actively-developed" }
 # Disable CORS Check
 unsafe-disable-cors = []
 
+# Enable Logging
+log = []
+
 [dependencies]
 argon2 = { version = "0.3.4", default-features = false, features = ["alloc", "password-hash"] }
 chrono = { version = "0.4.19", default-features = false, features = ["clock"] }

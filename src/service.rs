@@ -20,7 +20,7 @@ use crate::{
     config::{Config, Setup},
     secret::{Argon2, Authorizer, ExposeSecret, PasswordHash, SecretString},
 };
-use core::{fmt::Debug, future::Future, time::Duration};
+use core::{fmt, future::Future, time::Duration};
 use manta_accounting::{
     fs::{cocoon::File, File as _, SaveError},
     key::HierarchicalKeyDerivationScheme,
@@ -47,7 +47,6 @@ use std::{
 };
 use tokio::{
     fs,
-    io::AsyncWriteExt,
     sync::Mutex as AsyncMutex,
     task::{self, JoinError},
 };
@@ -66,12 +65,62 @@ async fn delay_password_retry() {
     tokio::time::sleep(PASSWORD_RETRY_INTERVAL).await;
 }
 
+/// Log Level
+#[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
+enum LogLevel {
+    /// Information
+    Info,
+
+    /// Warning
+    Warn,
+}
+
+impl fmt::Display for LogLevel {
+    #[inline]
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            Self::Info => write!(f, "INFO"),
+            Self::Warn => write!(f, "WARN"),
+        }
+    }
+}
+
 /// Logs `string` to STDOUT with the current time.
+#[cfg(feature = "log")]
 #[inline]
-async fn log(string: impl Into<String>) -> io::Result<()> {
+async fn log(level: LogLevel, string: impl Into<String>) -> io::Result<()> {
+    use tokio::io::AsyncWriteExt;
     tokio::io::stdout()
-        .write_all(format!("INFO [{}]: {}\n", chrono::offset::Utc::now(), string.into()).as_bytes())
+        .write_all(
+            format!(
+                "{} [{}]: {}\n",
+                level,
+                chrono::offset::Utc::now(),
+                string.into()
+            )
+            .as_bytes(),
+        )
         .await
+}
+
+/// Does not log to STDOUT when logging is not enabled.
+#[cfg(not(feature = "log"))]
+#[inline]
+async fn log(level: LogLevel, string: impl Into<String>) -> io::Result<()> {
+    let _ = (level, string);
+    Ok(())
+}
+
+/// Prints an INFO-level log to STDOUT.
+#[inline]
+async fn info(string: impl Into<String>) -> io::Result<()> {
+    log(LogLevel::Info, string).await
+}
+
+/// Prints an WARN-level log to STDOUT.
+#[inline]
+async fn warn(string: impl Into<String>) -> io::Result<()> {
+    log(LogLevel::Warn, string).await
 }
 
 /// Service Error
@@ -91,12 +140,18 @@ pub enum Error {
 
     /// Generic I/O Error
     Io(io::Error),
+
+    /// Authorization Error
+    AuthorizationError,
 }
 
 from_variant_impl!(Error, AddrParseError, AddrParseError);
 from_variant_impl!(Error, JoinError, JoinError);
 from_variant_impl!(Error, SaveError, SaveError<File>);
 from_variant_impl!(Error, Io, io::Error);
+
+/// Result Type
+pub type Result<T, E = Error> = core::result::Result<T, E>;
 
 /// Checked Authorizer
 struct CheckedAuthorizer<A>
@@ -116,7 +171,7 @@ where
 {
     /// Checks that the authorizer's password matches the known password by sending the `prompt`.
     #[inline]
-    async fn check<T>(&mut self, prompt: &T) -> Option<()>
+    async fn check<T>(&mut self, prompt: &T) -> Result<()>
     where
         T: Serialize,
     {
@@ -129,10 +184,10 @@ where
                     .is_ok()
                 {
                     self.authorizer.sleep().await;
-                    return Some(());
+                    return Ok(());
                 }
             } else {
-                return None;
+                return Err(Error::AuthorizationError);
             }
             delay_password_retry().await;
         }
@@ -168,14 +223,14 @@ where
 {
     /// Builds a new [`Server`] from `config` and `authorizer`.
     #[inline]
-    async fn build(config: Config, mut authorizer: A) -> Result<Self, Error> {
-        log("building signer server").await?;
-        log("loading latest parameters from Manta SDK").await?;
+    async fn build(config: Config, mut authorizer: A) -> Result<Self> {
+        info("building signer server").await?;
+        info("loading latest parameters from Manta SDK").await?;
         let data_path = config.data_directory().to_owned();
         let parameters = task::spawn_blocking(move || crate::parameters::load(data_path))
             .await?
             .ok_or(Error::ParameterLoadingError)?;
-        log("setting up configuration").await?;
+        info("setting up configuration").await?;
         let setup = config.setup().await?;
         authorizer.setup(&setup).await;
         let (password_hash, signer) = match setup {
@@ -204,7 +259,7 @@ where
                 delay_password_retry().await;
             },
         };
-        log("telling authorizer to sleep").await?;
+        info("telling authorizer to sleep").await?;
         authorizer.sleep().await;
         Ok(Self {
             state: Arc::new(Mutex::new(State { config, signer })),
@@ -218,7 +273,7 @@ where
     /// Loads the password from the `authorizer` and compute the password hash.
     #[inline]
     async fn load_password(authorizer: &mut A) -> Option<(SecretString, PasswordHash<Argon2>)> {
-        log("loading password from authorizer").await.ok()?;
+        info("loading password from authorizer").await.ok()?;
         let password = authorizer.password().await.known()?;
         let password_hash = PasswordHash::from_default(password.expose_secret().as_bytes());
         Some((password, password_hash))
@@ -232,8 +287,8 @@ where
         password_hash: &PasswordHash<Argon2>,
         mnemonic: Mnemonic,
         parameters: SignerParameters,
-    ) -> Result<Signer, Error> {
-        log("creating signer state").await?;
+    ) -> Result<Signer> {
+        info("creating signer state").await?;
         let state = SignerState::new(
             TestnetKeySecret::new(mnemonic, password.expose_secret()).map(),
             UtxoSet::new(
@@ -242,10 +297,10 @@ where
                     .ok_or(Error::ParameterLoadingError)?,
             ),
         );
+        info("saving signer state").await?;
         let data_path = data_path.to_owned();
         let password_hash_bytes = password_hash.as_bytes();
         let cloned_state = state.clone();
-        log("saving signer state").await?;
         task::spawn_blocking(move || File::save(&data_path, &password_hash_bytes, cloned_state))
             .await??;
         Ok(Signer::from_parts(parameters, state))
@@ -256,8 +311,8 @@ where
     async fn load_state(
         data_path: &Path,
         password_hash: &PasswordHash<Argon2>,
-    ) -> Result<Option<SignerState>, Error> {
-        log("loading signer state from disk").await?;
+    ) -> Result<Option<SignerState>> {
+        info("loading signer state from disk").await?;
         let data_path = data_path.to_owned();
         let password_hash_bytes = password_hash.as_bytes();
         if let Ok(state) =
@@ -279,7 +334,7 @@ where
     where
         T: DeserializeOwned + Send,
         R: Serialize + Send,
-        Fut: Future<Output = Option<R>> + Send,
+        Fut: Future<Output = Result<R>> + Send,
         F: Clone + Send + Sync + Fn(Self, T) -> Fut,
     {
         warp::path(command)
@@ -287,15 +342,15 @@ where
             .and(warp::body::content_length_limit(1024 * 128))
             .and(warp::body::json())
             .then(f)
-            .then(move |response: Option<_>| async {
-                Response(response.map(|r| warp::reply::json(&r))).into()
+            .then(move |response: Result<_>| async {
+                Response(response.map(|r| warp::reply::json(&r)).ok()).into()
             })
     }
 
     /// Saves the signer state to disk.
     #[inline]
-    async fn save(self) -> Result<(), Error> {
-        log("starting signer state save to disk").await?;
+    async fn save(self) -> Result<()> {
+        info("starting signer state save to disk").await?;
         let path = self.state.lock().config.data_path.clone();
         let backup = path.with_extension("backup");
         fs::rename(&path, &backup).await?;
@@ -306,56 +361,63 @@ where
         })
         .await??;
         fs::remove_file(backup).await?;
-        log("save complete").await?;
+        info("save complete").await?;
         Ok(())
     }
 
     /// Returns the [`crate::VERSION`] string to the client.
     #[inline]
-    async fn version(self, request: ()) -> Option<&'static str> {
-        let _ = (self, request);
-        log(format!("version: {}", crate::VERSION)).await.ok()?;
-        Some(crate::VERSION)
+    async fn version(self, request: ()) -> Result<&'static str> {
+        let _ = request;
+        info(format!("version: {}", crate::VERSION)).await?;
+        Ok(crate::VERSION)
     }
 
     /// Runs the synchronization protocol on the signer.
     #[inline]
-    async fn sync(self, request: SyncRequest) -> Option<Result<SyncResponse, SyncError>> {
-        log(format!("processing `sync` request: {:?}.", request))
-            .await
-            .ok()?;
-        let result = self.state.lock().signer.sync(request);
+    async fn sync(self, request: SyncRequest) -> Result<Result<SyncResponse, SyncError>> {
+        info(format!("processing `sync` request: {:?}.", request)).await?;
+        let response = self.state.lock().signer.sync(request);
         task::spawn(async {
-            // FIXME: What to do about this error?
-            let _ = self.save().await;
+            if self.save().await.is_err() {
+                let _ = warn("unable to save current signer state").await;
+            }
         });
-        Some(result)
+        info(format!("responding to `sync` with: {:?}.", response)).await?;
+        Ok(response)
     }
 
     /// Runs the transaction signing protocol on the signer.
     #[inline]
-    async fn sign(self, transaction: Transaction) -> Option<Result<SignResponse, SignError>> {
-        log(format!("processing `sign` request: {:?}.", transaction))
-            .await
-            .ok()?;
+    async fn sign(self, transaction: Transaction) -> Result<Result<SignResponse, SignError>> {
+        info(format!("processing `sign` request: {:?}.", transaction)).await?;
         match transaction.shape() {
             TransferShape::Mint => {
                 // NOTE: We skip authorization on mint transactions because they are deposits not
                 //       withdrawals from the point of view of the signer. Everything else, by
                 //       default, requests authorization.
             }
-            _ => self.authorizer.lock().await.check(&transaction).await?,
+            _ => {
+                info("asking for transaction authorization").await?;
+                self.authorizer.lock().await.check(&transaction).await?
+            }
         }
-        Some(self.state.lock().signer.sign(transaction))
+        let response = self.state.lock().signer.sign(transaction);
+        info(format!("responding to `sign` with: {:?}.", response)).await?;
+        Ok(response)
     }
 
     /// Runs the receiving key sampling protocol on the signer.
     #[inline]
-    async fn receiving_keys(self, request: ReceivingKeyRequest) -> Option<Vec<ReceivingKey>> {
-        log(format!("processing `receivingKeys` request: {:?}", request))
-            .await
-            .ok()?;
-        Some(self.state.lock().signer.receiving_keys(request))
+    async fn receiving_keys(self, request: ReceivingKeyRequest) -> Result<Vec<ReceivingKey>> {
+        info(format!("processing `receivingKeys` request: {:?}", request)).await?;
+        let response = self.state.lock().signer.receiving_keys(request);
+        info(format!(
+            "responding to `receivingKeys` with: {:?}",
+            response
+        ))
+        .await?;
+        Ok(response)
     }
 }
 
@@ -379,7 +441,7 @@ pub async fn start<A>(config: Config, authorizer: A) -> Result<(), Error>
 where
     A: Authorizer,
 {
-    log("performing service setup").await?;
+    info("performing service setup").await?;
     let socket_address = config.service_url.parse::<SocketAddr>()?;
     let cors = match &config.origin_url {
         Some(origin_url) => warp::cors().allow_origin(origin_url.as_str()),
@@ -399,7 +461,7 @@ where
                 .endpoint("receivingKeys", Server::receiving_keys),
         ))
         .with(cors);
-    log("serving signer API").await?;
+    info("serving signer API").await?;
     warp::serve(api).run(socket_address).await;
     Ok(())
 }

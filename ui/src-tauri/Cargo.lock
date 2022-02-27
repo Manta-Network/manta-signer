@@ -2298,7 +2298,6 @@ dependencies = [
  "secrecy",
  "serde_json",
  "subtle",
- "tempfile",
  "tokio",
  "warp",
 ]
