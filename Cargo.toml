@@ -30,6 +30,7 @@ unsafe-disable-cors = []
 
 [dependencies]
 argon2 = { version = "0.3.4", default-features = false, features = ["alloc", "password-hash"] }
+chrono = { version = "0.4.19", default-features = false, features = ["clock"] }
 derivative = { version = "2.2.0", default-features = false, features = ["use_core"] }
 dirs-next = { version = "2.0.0" }
 futures = { version = "0.3.17", default-features = false, features = ["alloc"] }
@@ -40,11 +41,10 @@ manta-pay = { path = "../manta-rs/manta-pay", features = ["groth16", "serde", "w
 manta-sdk = { path = "../sdk", features = ["download"] }
 manta-util = { path = "../manta-rs/manta-util" }
 parking_lot = { version = "0.12.0", default-features = false }
-password-hash = { version = "0.3.2", default-features = false, features = ["alloc", "rand_core"] }
+password-hash = { version = "0.3.2", default-features = false, features = ["alloc"] }
 secrecy = { version = "0.8.0", default-features = false, features = ["alloc"] }
 serde_json = { version = "1.0.68", default-features = false }
 subtle = { version = "2.4.1", default-features = false }
-tempfile = { version = "3.3.0", default-features = false }
-tokio = { version = "1.17.0", default-features = false, features = ["rt", "time"] }
+tokio = { version = "1.17.0", default-features = false, features = ["io-std", "rt", "time"] }
 warp = { version = "0.3.2", default-features = false }
 

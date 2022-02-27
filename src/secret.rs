@@ -20,7 +20,6 @@
 
 use crate::config::Setup;
 use futures::future::BoxFuture;
-use manta_crypto::rand::OsRng;
 use manta_util::serde::Serialize;
 use password_hash::{PasswordHashString, SaltString};
 
@@ -154,18 +153,24 @@ where
 {
     /// Builds a new [`PasswordHash`] from `hasher` and `password`.
     #[inline]
-    pub fn new(hasher: H, password: &[u8]) -> Result<Self, PasswordHashError> {
-        Ok(Self {
+    pub fn new(hasher: H, password: &[u8]) -> Self {
+        // TODO: Use a randomized salt which is saved into the signer state.
+        Self {
             hash: hasher
-                .hash_password(password, &SaltString::generate(&mut OsRng))?
+                .hash_password(
+                    password,
+                    &SaltString::b64_encode(b"default password salt")
+                        .expect("Unable to construct password salt."),
+                )
+                .expect("Unable to hash password.")
                 .serialize(),
             hasher,
-        })
+        }
     }
 
     /// Builds a new [`PasswordHash`] from `password` using the default [`PasswordHasher`].
     #[inline]
-    pub fn from_default(password: &[u8]) -> Result<Self, PasswordHashError>
+    pub fn from_default(password: &[u8]) -> Self
     where
         H: Default,
     {

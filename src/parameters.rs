@@ -26,27 +26,37 @@ use manta_pay::{
     signer::base::SignerParameters,
 };
 use manta_util::codec::{Decode, IoReader};
-use std::fs::File;
+use std::{
+    fs::{self, File},
+    path::Path,
+};
 
 /// Loads the [`SignerParameters`] from the Manta SDK.
 #[inline]
-pub fn load() -> Option<SignerParameters> {
-    let directory = tempfile::tempdir().ok()?;
-    let path = directory.path();
-    let mint_path = path.join("mint.dat");
-    manta_sdk::pay::testnet::proving::Mint::download(&mint_path).ok()?;
-    let private_transfer_path = path.join("private-transfer.dat");
-    manta_sdk::pay::testnet::proving::PrivateTransfer::download(&private_transfer_path).ok()?;
-    let reclaim_path = path.join("reclaim.dat");
-    manta_sdk::pay::testnet::proving::Reclaim::download(&reclaim_path).ok()?;
-    let parameters = SignerParameters {
+pub fn load<P>(directory: P) -> Option<SignerParameters>
+where
+    P: AsRef<Path>,
+{
+    let mut directory = directory.as_ref().to_owned();
+    directory.push("sdk");
+    directory.push("data");
+    directory.push("pay");
+    directory.push("testnet");
+    directory.push("proving");
+    fs::create_dir_all(&directory).ok()?;
+    let mint = directory.join("mint.dat");
+    manta_sdk::pay::testnet::proving::Mint::download_if_invalid(&mint).ok()?;
+    let private_transfer = directory.join("private-transfer.dat");
+    manta_sdk::pay::testnet::proving::PrivateTransfer::download_if_invalid(&private_transfer)
+        .ok()?;
+    let reclaim = directory.join("reclaim.dat");
+    manta_sdk::pay::testnet::proving::Reclaim::download_if_invalid(&reclaim).ok()?;
+    Some(SignerParameters {
         proving_context: MultiProvingContext {
-            mint: ProvingContext::decode(IoReader(File::open(mint_path).ok()?)).ok()?,
-            private_transfer: ProvingContext::decode(IoReader(
-                File::open(private_transfer_path).ok()?,
-            ))
-            .ok()?,
-            reclaim: ProvingContext::decode(IoReader(File::open(reclaim_path).ok()?)).ok()?,
+            mint: ProvingContext::decode(IoReader(File::open(mint).ok()?)).ok()?,
+            private_transfer: ProvingContext::decode(IoReader(File::open(private_transfer).ok()?))
+                .ok()?,
+            reclaim: ProvingContext::decode(IoReader(File::open(reclaim).ok()?)).ok()?,
         },
         parameters: Parameters {
             key_agreement: KeyAgreementScheme::decode(
@@ -62,9 +72,7 @@ pub fn load() -> Option<SignerParameters> {
             )
             .ok()?,
         },
-    };
-    directory.close().ok()?;
-    Some(parameters)
+    })
 }
 
 /// Loads the [`UtxoSetModel`] from the Manta SDK.

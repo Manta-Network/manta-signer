@@ -7,8 +7,7 @@
         "distDir": "../build",
         "devPath": "http://localhost:3000",
         "beforeDevCommand": "yarn install && yarn start",
-        "beforeBuildCommand": "yarn install && yarn build",
-        "withGlobalTauri": true
+        "beforeBuildCommand": "yarn install && yarn build"
     },
     "tauri": {
         "bundle": {
@@ -51,12 +50,17 @@
             "dialog": true,
             "pubkey": ""
         },
-        "allowlist": {},
+        "allowlist": {
+            "window": {
+                "hide": true,
+                "show": true
+            }
+        },
         "windows": [{
                 "label": "main",
                 "title": "Manta Signer",
-                "width": 500,
-                "height": 300,
+                "width": 600,
+                "height": 360,
                 "alwaysOnTop": true,
                 "center": true,
                 "decorations": true,
@@ -70,7 +74,7 @@
                 "url": "about.html",
                 "width": 350,
                 "height": 270,
-                "alwaysOnTop": false,
+                "alwaysOnTop": true,
                 "center": true,
                 "decorations": true,
                 "resizable": false,

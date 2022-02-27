@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Button, Input, Header, Container } from 'semantic-ui-react';
+import { useState } from 'react';
+import { Button, Input, Header } from 'semantic-ui-react';
 
 const CreateAccount = ({ recoveryPhrase, sendPassword, endInitialConnectionPhase }) => {
   const [password, setPassword] = useState('');
@@ -42,14 +42,15 @@ const CreateAccount = ({ recoveryPhrase, sendPassword, endInitialConnectionPhase
       {createdAccount && (
         <>
           <Header className="recovery-phrase-header">
-            Your recovery phrase
+            Recovery Phrase
           </Header>
           <div className="recovery-phrase-info">
-            This phrase can restore your funds if you lose access to your
-            account. Write it down on paper and store it somewhere secure. ⚠️
-            Never share your recovery phrase with anyone!
+            <p>This phrase can restore your funds if you lose access to your account.</p>
+            <p>Write it down on paper and store it somewhere secure.</p>
           </div>
-          <Container className="recovery-phrase-warning"></Container>
+          <div className="recovery-phrase-warning">
+            ⚠️  Never share your recovery phrase with anyone! ⚠️ 
+          </div>
           <div className="recovery-phrase">
             <b>{recoveryPhrase}</b>
           </div>

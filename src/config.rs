@@ -53,7 +53,7 @@ pub struct Config {
     pub service_url: String,
 
     /// Origin URL
-    pub origin_url: String,
+    pub origin_url: Option<String>,
 }
 
 impl Config {
@@ -62,17 +62,26 @@ impl Config {
     pub fn try_default() -> Option<Self> {
         Some(Self {
             data_path: file(dirs_next::config_dir(), "storage.dat")?,
-            service_url: String::from("http://127.0.0.1:29987"),
+            service_url: "127.0.0.1:29987".into(),
             #[cfg(feature = "unsafe-disable-cors")]
-            origin_url: String::from("*"),
+            origin_url: None,
             #[cfg(not(feature = "unsafe-disable-cors"))]
-            origin_url: String::from("https://app.dolphin.manta.network"),
+            origin_url: Some("https://app.dolphin.manta.network".into()),
         })
+    }
+
+    /// Returns the data directory path.
+    #[inline]
+    pub fn data_directory(&self) -> &Path {
+        self.data_path
+            .parent()
+            .expect("The data path file must always have a parent.")
     }
 
     /// Builds the [`Setup`] for the given configuration depending on the filesystem resources.
     #[inline]
     pub async fn setup(&self) -> io::Result<Setup> {
+        fs::create_dir_all(self.data_directory()).await?;
         match fs::metadata(&self.data_path).await {
             Ok(metadata) if metadata.is_file() => Ok(Setup::Login),
             Ok(metadata) => Err(io::Error::new(
@@ -86,7 +95,12 @@ impl Config {
 
 /// Setup Phase
 #[derive(Clone, Deserialize, Serialize)]
-#[serde(crate = "manta_util::serde", deny_unknown_fields)]
+#[serde(
+    content = "content",
+    crate = "manta_util::serde",
+    deny_unknown_fields,
+    tag = "type"
+)]
 pub enum Setup {
     /// Create Account
     CreateAccount(Mnemonic),
