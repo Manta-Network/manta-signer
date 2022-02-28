@@ -27,11 +27,12 @@ use manta_accounting::{
     transfer::canonical::TransferShape,
 };
 use manta_pay::{
-    config::{ReceivingKey, Transaction},
+    config::{receiving_key_to_base58, ReceivingKey},
     key::{Mnemonic, TestnetKeySecret},
     signer::{
         base::{Signer, SignerParameters, SignerState, UtxoSet},
-        ReceivingKeyRequest, SignError, SignResponse, SyncError, SyncRequest, SyncResponse,
+        ReceivingKeyRequest, SignError, SignRequest, SignResponse, SyncError, SyncRequest,
+        SyncResponse,
     },
 };
 use manta_util::{
@@ -389,8 +390,12 @@ where
 
     /// Runs the transaction signing protocol on the signer.
     #[inline]
-    async fn sign(self, transaction: Transaction) -> Result<Result<SignResponse, SignError>> {
-        info(format!("processing `sign` request: {:?}.", transaction)).await?;
+    async fn sign(self, request: SignRequest) -> Result<Result<SignResponse, SignError>> {
+        info(format!("processing `sign` request: {:?}.", request)).await?;
+        let SignRequest {
+            transaction,
+            metadata,
+        } = request;
         match transaction.shape() {
             TransferShape::Mint => {
                 // NOTE: We skip authorization on mint transactions because they are deposits not
@@ -399,7 +404,10 @@ where
             }
             _ => {
                 info("asking for transaction authorization").await?;
-                self.authorizer.lock().await.check(&transaction).await?
+                let summary = metadata
+                    .map(|m| transaction.display(&m, receiving_key_to_base58))
+                    .unwrap_or_default();
+                self.authorizer.lock().await.check(&summary).await?
             }
         }
         let response = self.state.lock().signer.sign(transaction);
