@@ -2260,11 +2260,13 @@ dependencies = [
  "ark-std",
  "bip32",
  "blake2 0.10.4",
+ "bs58",
  "derivative",
  "manta-accounting",
  "manta-crypto",
  "manta-util",
  "rand_chacha 0.3.1",
+ "serde_json",
 ]
 
 [[package]]
