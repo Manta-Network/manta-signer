@@ -30,7 +30,7 @@ use manta_pay::{
     config::{receiving_key_to_base58, ReceivingKey},
     key::{Mnemonic, TestnetKeySecret},
     signer::{
-        base::{Signer, SignerParameters, SignerState, UtxoSet},
+        base::{Signer, SignerParameters, SignerState, UtxoAccumulator},
         ReceivingKeyRequest, SignError, SignRequest, SignResponse, SyncError, SyncRequest,
         SyncResponse,
     },
@@ -292,8 +292,8 @@ where
         info("creating signer state").await?;
         let state = SignerState::new(
             TestnetKeySecret::new(mnemonic, password.expose_secret()).map(),
-            UtxoSet::new(
-                task::spawn_blocking(crate::parameters::load_utxo_set_model)
+            UtxoAccumulator::new(
+                task::spawn_blocking(crate::parameters::load_utxo_accumulator_model)
                     .await?
                     .ok_or(Error::ParameterLoadingError)?,
             ),

@@ -20,8 +20,8 @@
 
 use manta_pay::{
     config::{
-        KeyAgreementScheme, MultiProvingContext, Parameters, ProvingContext, UtxoCommitmentScheme,
-        UtxoSetModel, VoidNumberHashFunction,
+        KeyAgreementScheme, MultiProvingContext, Parameters, ProvingContext, UtxoAccumulatorModel,
+        UtxoCommitmentScheme, VoidNumberHashFunction,
     },
     signer::base::SignerParameters,
 };
@@ -75,8 +75,9 @@ where
     })
 }
 
-/// Loads the [`UtxoSetModel`] from the Manta SDK.
+/// Loads the [`UtxoAccumulatorModel`] from the Manta SDK.
 #[inline]
-pub fn load_utxo_set_model() -> Option<UtxoSetModel> {
-    UtxoSetModel::decode(manta_sdk::pay::testnet::parameters::UtxoSetParameters::get()?).ok()
+pub fn load_utxo_accumulator_model() -> Option<UtxoAccumulatorModel> {
+    UtxoAccumulatorModel::decode(manta_sdk::pay::testnet::parameters::UtxoAccumulatorModel::get()?)
+        .ok()
 }
