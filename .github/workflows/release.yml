@@ -27,22 +27,32 @@ jobs:
             os_type: ubuntu
             artifact_name: manta-signer
             asset_name: manta-signer-linux-amd64
+            version_suffix: 0
+            target: linux
           - os: ubuntu-18.04
             os_type: ubuntu
             artifact_name: manta-signer
             asset_name: manta-signer-linux-amd64
+            version_suffix: 1
+            target: linux
           - os: windows-2019
             os_type: windows
             artifact_name: manta-signer
             asset_name: manta-signer-windows
+            version_suffix: 2
+            target: win64
           - os: macos-latest
             os_type: macos
             artifact_name: manta-signer
             asset_name: manta-signer-macos-amd64
+            version_suffix: 3
+            target: darwin
           - os: macos-10.15
             os_type: macos
             artifact_name: manta-signer
             asset_name: manta-signer-macos-amd64
+            version_suffix: 4
+            target: darwin
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
@@ -74,7 +84,7 @@ jobs:
           repository: Manta-Network/sdk
           path: sdk
           fetch-depth: 1
-          lfs: true
+          lfs: false
       - name: Move Proving Keys
         run: mv ./sdk/legacy/proving/* ui/src-tauri/
       - name: Hack For Ubuntu Builds
@@ -83,8 +93,23 @@ jobs:
       - name: Ubuntu Build Dependencies
         run: sudo apt-get update && sudo apt-get -y install libwebkit2gtk-4.0-dev libgtk-3-dev libappindicator3-dev patchelf librsvg2-dev
         if: matrix.os_type == 'ubuntu'
-      - name: Build
+      - name: Suffix version
+        id: suffixed
+        run: ./scripts/check_ref.sh
+        shell: bash
+        env:
+          BRANCH: ${{ github.head_ref }}
+          TARGET: ${{ matrix.target }}
+          VERSION: ${{ needs.setup.outputs.release_version }}
+          SUFFIX: ${{ matrix.version_suffix }}
+      - run: echo "SUFFIX ${{ steps.suffixed.outputs.SUFFIXED }}"
+      - name: Append version suffix
+        run: node ./scripts/suffix.js ${{ steps.suffixed.outputs.SUFFIXED }}
+      - name: Build & Sign
         run: cd ui;yarn && yarn tauri build
+        env:
+          TAURI_PRIVATE_KEY: ${{ secrets.TAURI_PRIVATE_KEY }}
+          TAURI_KEY_PASSWORD: ${{ secrets.TAURI_KEY_PASSWORD }}
       - name: Get release
         id: get_release
         uses: bruceadams/get-release@v1.2.3
@@ -97,37 +122,74 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.get_release.outputs.upload_url }}
-          asset_path: ui/src-tauri/target/release/bundle/deb/manta-signer_${{ needs.setup.outputs.release_version }}_amd64.deb
+          asset_path: ui/src-tauri/target/release/bundle/deb/manta-signer_${{ steps.suffixed.outputs.SUFFIXED }}_amd64.deb
           asset_name: manta-signer-${{ matrix.os }}_${{ needs.setup.outputs.release_version }}_amd64.deb
           asset_content_type: application/binary
         if: matrix.os_type == 'ubuntu' && github.event_name == 'release' && github.event.action == 'published'
-      - name: Upload AppImage Package
+      - name: Set release vars
+        id: release_vars
+        run: ./scripts/gen_filepath.sh ${{ matrix.os_type }} ${{ matrix.os }} ${{ steps.suffixed.outputs.SUFFIXED}}
+        shell: bash
+      - name: DBG
+        run: echo "${{ steps.release_vars.outputs.IMAGE }} ${{ steps.release_vars.outputs.RELEASE_IMAGE }}" 
+      - name: Upload Image
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.get_release.outputs.upload_url }}
-          asset_path: ui/src-tauri/target/release/bundle/appimage/manta-signer_${{ needs.setup.outputs.release_version }}_amd64.AppImage
-          asset_name: manta-signer-${{ matrix.os }}_${{ needs.setup.outputs.release_version }}_amd64.AppImage
+          asset_path: "ui/src-tauri/target/release/bundle/${{ steps.release_vars.outputs.IMAGE }}"
+          asset_name: "${{ steps.release_vars.outputs.RELEASE_IMAGE }}" 
           asset_content_type: application/binary
-        if: matrix.os_type == 'ubuntu' && github.event_name == 'release' && github.event.action == 'published'
-      - name: Upload MS Installer
+        if: github.event_name == 'release' && github.event.action == 'published'
+      - name: Content Hash
+        id: content_hash
+        run: echo "::set-output name=HASH::${{ hashFiles( env.FILE ) }}"
+        env:
+          FILE: 'ui/src-tauri/target/release/bundle/${{ steps.release_vars.outputs.IMAGE }}'
+      - name: Upload Updater package
+        id: updater
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.get_release.outputs.upload_url }}
-          asset_path: "ui/src-tauri/target/release/bundle/msi/manta-signer_${{ needs.setup.outputs.release_version }}_x64.msi"
-          asset_name: "manta-signer-${{ matrix.os }}_${{ needs.setup.outputs.release_version }}_x64.msi"
+          asset_path: "ui/src-tauri/target/release/bundle/${{ steps.release_vars.outputs.IMAGE_UPDATE }}"
+          asset_name: "${{ steps.release_vars.outputs.RELEASE_IMAGE_UPDATE }}"
           asset_content_type: application/binary
-        if: matrix.os_type == 'windows' && github.event_name == 'release' && github.event.action == 'published'
-      - name: Upload Mac Image
+        if: github.event_name == 'release' && github.event.action == 'published'
+      - name: Upload Updater signature
+        id: sig
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.get_release.outputs.upload_url }}
-          asset_path: "ui/src-tauri/target/release/bundle/dmg/manta-signer_${{ needs.setup.outputs.release_version }}_x64.dmg"
-          asset_name: "manta-signer-${{ matrix.os }}_${{ needs.setup.outputs.release_version }}_x64.dmg"
+          asset_path: "ui/src-tauri/target/release/bundle/${{ steps.release_vars.outputs.UPDATE_SIG }}"
+          asset_name: "${{ steps.release_vars.outputs.RELEASE_UPDATE_SIG }}"
           asset_content_type: application/binary
-        if: matrix.os_type == 'macos' && github.event_name == 'release' && github.event.action == 'published'
+        if: github.event_name == 'release' && github.event.action == 'published'
+      - run: curl -L ${{ steps.sig.outputs.browser_download_url }} > sig.txt
+        if: github.event_name == 'release' && github.event.action == 'published'
+      - name: Capture Sig
+        id: sig_out
+        run: echo "::set-output name=SIG::$(cat sig.txt)"
+        if: github.event_name == 'release' && github.event.action == 'published'
+      - run: echo "::set-output name=EXPIRY::$(node -e 'console.log(Math.floor(Date.now()/1000) + 300)')"
+        id: expiry
+        if: github.event_name == 'release' && github.event.action == 'published'
+      - name: JWT Generator
+        id: jwtGenerator
+        uses: morzzz007/github-actions-jwt-generator@1.0.1
+        with:
+          secret: ${{ secrets.JWT_SECRET }}
+          payload: "{\"user\":\"updates\", \"exp\": ${{ steps.expiry.outputs.EXPIRY }}}"
+        if: github.event_name == 'release' && github.event.action == 'published'
+      - name: Notify updater server
+        uses: satak/webrequest-action@master
+        with:
+          url: https://updates.signer.manta.systems/new_release/${{ matrix.target }}/${{ steps.suffixed.outputs.SUFFIXED }}
+          method: POST
+          payload: "{\"target\": \"${{ matrix.target }}\", \"version\": \"${{ steps.suffixed.outputs.SUFFIXED }}\", \"release_notes\": \"Release page: ${{ github.event.release.html_url }}\\n SHA-256: ${{ steps.content_hash.outputs.HASH }}\\n Description:\\n${{ github.event.release.body }}\", \"url\": \"${{ steps.updater.outputs.browser_download_url }}\", \"signature\": \"${{ steps.sig_out.outputs.SIG }}\" }"
+          headers: "{\"Authorization\": \"Bearer ${{ steps.jwtGenerator.outputs.token }}\"}"
+        if: github.event_name == 'release' && github.event.action == 'published'

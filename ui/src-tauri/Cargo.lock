@@ -2894,6 +2894,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "minisign-verify"
+version = "0.1.8"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "db0507fe8e3c68cd62961cf9f87f6c2b21d884d3515a7150a4a3fa9d014e5c12"
+
+[[package]]
 name = "miniz_oxide"
 version = "0.3.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4518,6 +4524,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "79a0579dcc6fb883fe90dd3c66d76b8b8f4a1786e1e915e314b2017a500ede09"
 dependencies = [
  "attohttpc",
+ "base64 0.13.0",
  "bincode",
  "bytes",
  "cfg_aliases",
@@ -4531,6 +4538,7 @@ dependencies = [
  "gtk",
  "http",
  "ignore",
+ "minisign-verify",
  "once_cell",
  "percent-encoding",
  "rand 0.8.4",
