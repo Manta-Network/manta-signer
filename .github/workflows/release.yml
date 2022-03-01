@@ -78,15 +78,6 @@ jobs:
             ${{ matrix.os }}-build-${{ env.cache-name }}-
             ${{ matrix.os }}-build-
             ${{ matrix.os }}-
-      - name: Fetch Proving Keys
-        uses: actions/checkout@v2
-        with:
-          repository: Manta-Network/sdk
-          path: sdk
-          fetch-depth: 1
-          lfs: false
-      - name: Move Proving Keys
-        run: mv ./sdk/legacy/proving/* ui/src-tauri/
       - name: Hack For Ubuntu Builds
         run: cd ui/src-tauri; sed -i /icns/d tauri.conf.json
         if: matrix.os_type == 'ubuntu'

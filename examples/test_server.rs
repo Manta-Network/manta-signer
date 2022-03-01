@@ -16,83 +16,47 @@
 
 //! Test Signer Server
 
-/*
+use manta_crypto::rand::{CryptoRng, OsRng, RngCore, Sample};
 use manta_signer::{
     config::Config,
-    secret::{
-        create_account, sample_password, Authorizer, Password, PasswordFuture, SecretString,
-        UnitFuture,
-    },
-    service::{Prompt, Service},
+    secret::{Authorizer, Password, PasswordFuture, SecretString},
+    service::{self, Error},
 };
-use rand::thread_rng;
 
 /// Mock User
 pub struct MockUser {
-    /// Stored Password
+    /// User Password
     password: SecretString,
 }
 
 impl MockUser {
     /// Builds a new [`MockUser`] from `password`.
     #[inline]
-    fn new(password: SecretString) -> Self {
-        Self { password }
+    pub fn new<R>(rng: &mut R) -> Self
+    where
+        R: CryptoRng + RngCore + ?Sized,
+    {
+        Self {
+            password: SecretString::new(u128::gen(rng).to_string()),
+        }
     }
 }
 
 impl Authorizer for MockUser {
-    type Prompt = Prompt;
-
     #[inline]
     fn password(&mut self) -> PasswordFuture {
         Box::pin(async move { Password::from_known(self.password.clone()) })
     }
-
-    #[inline]
-    fn setup<'s>(&'s mut self, config: &'s Config) -> UnitFuture<'s> {
-        Box::pin(async move {
-            let _ = create_account(&config.root_seed_file, &self.password)
-                .await
-                .expect("Unable to create account for a mock user.");
-        })
-    }
 }
 
-/// Test Service
-pub struct TestService(Service<MockUser>);
-
-impl TestService {
-    /// Builds a new [`TestService`] with the given `config` and a random password.
-    #[inline]
-    pub fn build(config: Config) -> Self {
-        Self(Service::build(
-            config,
-            MockUser::new(sample_password(&mut thread_rng())),
-        ))
-    }
-
-    /// Starts the test service.
-    #[inline]
-    pub async fn serve(self) -> io::Result<()> {
-        self.0.serve().await
-    }
-}
-
-#[async_std::main]
-async fn main() -> io::Result<()> {
-    /*
+#[tokio::main]
+async fn main() -> Result<(), Error> {
     let test_dir = tempfile::tempdir()?;
     let mut config =
         Config::try_default().expect("Unable to generate the default server configuration.");
-    config.root_seed_file = test_dir.path().join("root_seed.aes");
+    config.data_path = test_dir.path().join("storage.dat");
     if let Some(url) = std::env::args().nth(1) {
         config.service_url = url;
     }
-    TestService::build(config).serve().await
-    */
-    todo!()
+    service::start(config, MockUser::new(&mut OsRng)).await
 }
-*/
-
-fn main() {}
