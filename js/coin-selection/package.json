@@ -1,0 +1,16 @@
+{
+    "name": "coin-selection",
+    "version": "0.1.1",
+    "main": "dist/index.js",
+    "description": "Coin selection logic for Manta and Calamari Netowrk",
+    "license": "GPL-3.0-only",
+    "scripts": {
+        "build": "rm -rf coin-selection/dist ; tsc"
+    },
+    "dependencies": {
+        "bn.js": "^5.2.0"
+    },
+    "devDependencies": {
+        "typescript": "^4.4.4"
+    }
+}

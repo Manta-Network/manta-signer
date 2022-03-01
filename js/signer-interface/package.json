@@ -1,0 +1,19 @@
+{
+    "name": "signer-interface",
+    "version": "0.2.0",
+    "main": "dist/index.js",
+    "description": "JS interface for interacting with Manta Signer",
+    "types": "dist/index.d.ts",
+    "license": "GPL-3.0-only",
+    "scripts": {
+        "build": "rm -rf signer-interface/dist ; tsc"
+    },
+    "dependencies": {
+        "axios": "^0.23.0",
+        "bn.js": "^5.2.0",
+        "store": "^2.0.12"
+    },
+    "devDependencies": {
+        "typescript": "^4.4.4"
+    }
+}

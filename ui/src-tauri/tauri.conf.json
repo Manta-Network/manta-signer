@@ -36,7 +36,7 @@
                 "useBootstrapper": false,
                 "exceptionDomain": "",
                 "signingIdentity": null,
-                "entitlements": null
+                "entitlements": "../entitlements.plist"
             },
             "windows": {
                 "certificateThumbprint": null,
@@ -45,10 +45,12 @@
             }
         },
         "updater": {
-            "active": false,
-            "endpoints": [],
+            "active": true,
+            "endpoints": [
+                "https://updates.signer.manta.systems/updates/{{target}}/{{current_version}}"
+            ],
             "dialog": true,
-            "pubkey": ""
+            "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDk3M0QzNEU2MEM0OTExNEEKUldSS0VVa001alE5bHc3M3RmTXdLWThjaDJyeURLUnFhb0dXOS9HZ0l6eTF4MUs5Y2xPSGh2OXQK"
         },
         "allowlist": {
             "window": {
@@ -56,7 +58,8 @@
                 "show": true
             }
         },
-        "windows": [{
+        "windows": [
+            {
                 "label": "main",
                 "title": "Manta Signer",
                 "width": 600,
