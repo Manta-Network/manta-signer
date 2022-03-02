@@ -38,11 +38,11 @@ derivative = { version = "2.2.0", default-features = false, features = ["use_cor
 dirs-next = { version = "2.0.0" }
 futures = { version = "0.3.17", default-features = false, features = ["alloc"] }
 http-types = { version = "2.12.0", default-features = false }
-manta-accounting = { path = "../manta-rs/manta-accounting", features = ["cocoon-fs"] }
-manta-crypto = { path = "../manta-rs/manta-crypto", features = ["getrandom"] }
-manta-pay = { path = "../manta-rs/manta-pay", features = ["groth16", "serde", "wallet"] }
-manta-sdk = { path = "../sdk", features = ["download"] }
-manta-util = { path = "../manta-rs/manta-util" }
+manta-accounting = { git = "https://github.com/manta-network/manta-rs", features = ["cocoon-fs"] }
+manta-crypto = { git = "https://github.com/manta-network/manta-rs", features = ["getrandom"] }
+manta-pay = { git = "https://github.com/manta-network/manta-rs", features = ["groth16", "serde", "wallet"] }
+manta-sdk = { git = "https://github.com/manta-network/sdk", features = ["download"] }
+manta-util = { git = "https://github.com/manta-network/manta-rs" }
 parking_lot = { version = "0.12.0", default-features = false }
 password-hash = { version = "0.3.2", default-features = false, features = ["alloc"] }
 secrecy = { version = "0.8.0", default-features = false, features = ["alloc"] }
