@@ -84,7 +84,7 @@ jobs:
           repository: Manta-Network/sdk
           path: sdk
           fetch-depth: 1
-          lfs: false
+          lfs: true
       - name: Move Proving Keys
         run: mv ./sdk/legacy/proving/* ui/src-tauri/
       - name: Hack For Ubuntu Builds
