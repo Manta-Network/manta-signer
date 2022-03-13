@@ -51,6 +51,7 @@ serde = { version = "1.0.131", default-features = false, features = ["derive"] }
 serde_json = { version = "1.0.68", default-features = false }
 subtle = { version = "2.4.1" }
 tide = { version = "0.16.0" }
+tide-websockets = { version = "0.4" }
 
 [dev-dependencies]
 async-std = { version = "1.10.0", features = ["attributes"] }

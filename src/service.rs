@@ -31,6 +31,7 @@ use async_std::{
 use codec::{Decode, Encode};
 use core::time::Duration;
 use http_types::headers::HeaderValue;
+use futures::StreamExt;
 use manta_api::{
     get_private_transfer_batch_params_currency_symbol, get_private_transfer_batch_params_recipient,
     get_private_transfer_batch_params_value, get_reclaim_batch_params_currency_symbol,
@@ -47,8 +48,9 @@ use std::sync::Arc;
 use std::time::Instant;
 use tide::{
     security::{CorsMiddleware, Origin},
-    Body, Error, Request as ServerRequest, Result as ServerResult, Server, StatusCode,
+    Error, Request as ServerRequest, Result as ServerResult, Server, StatusCode,
 };
+use tide_websockets::{Message, WebSocket};
 
 /// Manta Signer Server Version
 const VERSION: &str = env!("CARGO_PKG_VERSION");
@@ -314,22 +316,60 @@ where
     #[inline]
     pub fn build(config: Config, authorizer: A) -> Self {
         let cors = CorsMiddleware::new()
-            .allow_methods("GET, POST".parse::<HeaderValue>().unwrap())
+            .allow_methods("GET, POST, OPTIONS".parse::<HeaderValue>().unwrap())
             .allow_origin(Origin::from(config.origin_url.as_str()))
             .allow_credentials(false);
         let mut server = Server::with_state(State::new(config, authorizer));
         server.with(cors);
-        server.at("/version").get(Self::version);
-        server.at("/recoverAccount").post(Self::recover_account);
-        server
-            .at("/deriveShieldedAddress")
-            .post(Self::derive_shielded_address);
-        server.at("/generateAsset").post(Self::generate_asset);
-        server.at("/generateMintData").post(Self::mint);
-        server
-            .at("/generatePrivateTransferData")
-            .post(Self::private_transfer);
-        server.at("/generateReclaimData").post(Self::reclaim);
+        server.at("/ws").get(WebSocket::new(|request, mut stream| {
+            async move {
+                while let Some(Ok(Message::Text(input))) = stream.next().await {
+                    //Self::log(format!("[INFO]: Message {input}")).await?;
+                    let message: SignerMessage = match serde_json::from_str(&input) {
+                        Ok(msg) => msg,
+                        Err(e) => {
+                            Self::log(format!("[ERROR]: Bad message from client {e:?}")).await?;
+                            stream.send_json(&ServerMessage::BadJson).await?;
+                            continue;
+                        }
+                    };
+
+                    match message {
+                        SignerMessage::Version => {
+                            Self::log(String::from("REQUEST: version")).await?;
+                            stream.send_json(&VersionMessage::default()).await?;
+                        }
+                        SignerMessage::RecoverAccount(acct) => {
+                            // TODO: need a decoding of acct here?
+                            let response = Self::recover_account(acct, &request.state()).await?;
+                            stream.send_json(&response).await?;
+                        }
+                        SignerMessage::DeriveShieldedAddress(body) => {
+                            // TODO: need a decoding of acct here?
+                            let response = Self::derive_shielded_address(body, &request.state()).await?;
+                            stream.send_json(&response).await?;
+                        }
+                        SignerMessage::GenerateAsset(body) => {
+                            let response = Self::generate_asset(body, &request.state()).await?;
+                            stream.send_json(&response).await?;
+                        }
+                        SignerMessage::GenerateMintData(body) => {
+                            let response = Self::mint(body, &request.state()).await?;
+                            stream.send_json(&response).await?;
+                        }
+                        SignerMessage::GeneratePrivateTransferData(body) => {
+                            let response = Self::private_transfer(body, &request.state()).await?;
+                            stream.send_json(&response).await?;
+                        }
+                        SignerMessage::GenerateReclaimData(body) => {
+                            let response = Self::reclaim(body, &request.state()).await?;
+                            stream.send_json(&response).await?;
+                        }
+                    }
+                }
+                Ok(())
+            }
+        }));
         Self(server)
     }
 
@@ -367,35 +407,30 @@ where
         self.0.state()
     }
 
-    /// Sends version to the client.
-    #[inline]
-    async fn version(request: Request<A>) -> ServerResult {
-        let now = Instant::now();
-        Self::log(String::from("REQUEST: version")).await?;
-        let _ = request;
-        Self::log(format!("RESPONSE: {:?} ({} ms)", VERSION, now.elapsed().as_millis())).await?;
-        Ok(Body::from_json(&VersionMessage::default())?.into())
-    }
-
     /// Runs an account recovery for the given `request`.
     #[inline]
-    async fn recover_account(mut request: Request<A>) -> ServerResult {
+    async fn recover_account(body: Vec<u8>, state: &State<A>) -> ServerResult<RecoverAccountMessage> {
         let now = Instant::now();
-        let (body, state) = Self::process(&mut request).await?;
         let params = ensure!(RecoverAccountParams::decode(&mut body.as_slice()))?;
         Self::log(String::from("REQUEST: RecoverAccountParams { ... }")).await?;
         let root_seed = ensure!(state.get_root_seed(Prompt::RecoverAccount).await.ok_or(()))?;
+        println!("TJDEBUG asdf");
         let recovered_account =
             manta_api::recover_account(params, root_seed.expose_secret()).encode();
-        Self::log(format!("RESPONSE: {:?} ({} ms)", recovered_account, now.elapsed().as_millis())).await?;
-        Ok(Body::from_json(&RecoverAccountMessage::new(recovered_account))?.into())
+        println!("TJDEBUG anddere");
+        Self::log(format!(
+            "RESPONSE: {:?} ({} ms)",
+            recovered_account,
+            now.elapsed().as_millis()
+        ))
+        .await?;
+        Ok(RecoverAccountMessage::new(recovered_account))
     }
 
     /// Generates a new derived shielded address for the given `request`.
     #[inline]
-    async fn derive_shielded_address(mut request: Request<A>) -> ServerResult {
+    async fn derive_shielded_address(body: Vec<u8>, state: &State<A>) -> ServerResult<ShieldedAddressMessage> {
         let now = Instant::now();
-        let (body, state) = Self::process(&mut request).await?;
         let params = ensure!(DeriveShieldedAddressParams::decode(&mut body.as_slice(),))?;
         Self::log(format!("REQUEST: {:?}", params)).await?;
         let root_seed = ensure!(state
@@ -407,29 +442,37 @@ where
             manta_api::derive_shielded_address(params, root_seed.expose_secret())
                 .serialize(&mut address)
         )?;
-        Self::log(format!("RESPONSE: {:?} ({} ms)", address, now.elapsed().as_millis())).await?;
-        Ok(Body::from_json(&ShieldedAddressMessage::new(address))?.into())
+        Self::log(format!(
+            "RESPONSE: {:?} ({} ms)",
+            address,
+            now.elapsed().as_millis()
+        ))
+        .await?;
+        Ok(ShieldedAddressMessage::new(address))
     }
 
     /// Generates an asset for the given `request`.
     #[inline]
-    async fn generate_asset(mut request: Request<A>) -> ServerResult {
+    async fn generate_asset(body: Vec<u8>, state: &State<A>) -> ServerResult<AssetMessage> {
         let now = Instant::now();
-        let (body, state) = Self::process(&mut request).await?;
         let params = ensure!(GenerateAssetParams::decode(&mut body.as_slice()))?;
         Self::log(format!("REQUEST: {:?}", params)).await?;
         let root_seed = ensure!(state.get_root_seed(Prompt::GenerateAsset).await.ok_or(()))?;
         let asset =
             manta_api::generate_signer_input_asset(params, root_seed.expose_secret()).encode();
-        Self::log(format!("RESPONSE: {:?} ({} ms)", asset, now.elapsed().as_millis())).await?;
-        Ok(Body::from_json(&AssetMessage::new(asset))?.into())
+        Self::log(format!(
+            "RESPONSE: {:?} ({} ms)",
+            asset,
+            now.elapsed().as_millis()
+        ))
+        .await?;
+        Ok(AssetMessage::new(asset))
     }
 
     /// Generates mint data for the given `request`.
     #[inline]
-    async fn mint(mut request: Request<A>) -> ServerResult {
+    async fn mint(body: Vec<u8>, state: &State<A>) -> ServerResult<MintMessage> {
         let now = Instant::now();
-        let (body, state) = Self::process(&mut request).await?;
         let params = ensure!(GenerateAssetParams::decode(&mut body.as_slice()))?;
         Self::log(format!("REQUEST: {:?}", params)).await?;
         let root_seed = ensure!(state.get_root_seed(Prompt::Mint).await.ok_or(()))?;
@@ -438,15 +481,19 @@ where
             manta_api::generate_mint_data(params, root_seed.expose_secret())
                 .serialize(&mut mint_data)
         )?;
-        Self::log(format!("RESPONSE: {:?} ({} ms)", mint_data, now.elapsed().as_millis())).await?;
-        Ok(Body::from_json(&MintMessage::new(mint_data))?.into())
+        Self::log(format!(
+            "RESPONSE: {:?} ({} ms)",
+            mint_data,
+            now.elapsed().as_millis()
+        ))
+        .await?;
+        Ok(MintMessage::new(mint_data))
     }
 
     /// Generates private transfer data for the given `request`.
     #[inline]
-    async fn private_transfer(mut request: Request<A>) -> ServerResult {
+    async fn private_transfer(body: Vec<u8>, state: &State<A>) -> ServerResult<PrivateTransferMessage> {
         let now = Instant::now();
-        let (body, state) = Self::process(&mut request).await?;
         let params = ensure!(GeneratePrivateTransferBatchParams::decode(
             &mut body.as_slice()
         ))?;
@@ -460,15 +507,19 @@ where
         )
         .await
         .encode();
-        Self::log(format!("RESPONSE: {:?} ({} ms)", private_transfer_data, now.elapsed().as_millis())).await?;
-        Ok(Body::from_json(&PrivateTransferMessage::new(private_transfer_data))?.into())
+        Self::log(format!(
+            "RESPONSE: {:?} ({} ms)",
+            private_transfer_data,
+            now.elapsed().as_millis()
+        ))
+        .await?;
+        Ok(PrivateTransferMessage::new(private_transfer_data))
     }
 
     /// Generates reclaim data for the given `request`.
     #[inline]
-    async fn reclaim(mut request: Request<A>) -> ServerResult {
+    async fn reclaim(body: Vec<u8>, state: &State<A>) -> ServerResult<ReclaimMessage> {
         let now = Instant::now();
-        let (body, state) = Self::process(&mut request).await?;
         let params = ensure!(GenerateReclaimBatchParams::decode(&mut body.as_slice()))?;
         Self::log(format!("REQUEST: {:?}", params)).await?;
         let root_seed = ensure!(state.check_root_seed(Prompt::from(&params)).await.ok_or(()))?;
@@ -482,15 +533,13 @@ where
         )
         .await
         .encode();
-        Self::log(format!("RESPONSE: {:?} ({} ms)", reclaim_data, now.elapsed().as_millis())).await?;
-        Ok(Body::from_json(&ReclaimMessage::new(reclaim_data))?.into())
-    }
-
-    /// Preprocesses a `request`, extracting the body as a byte vector and returning the
-    /// internal state.
-    #[inline]
-    async fn process(request: &mut Request<A>) -> ServerResult<(Vec<u8>, &State<A>)> {
-        Ok((request.body_bytes().await?, request.state()))
+        Self::log(format!(
+            "RESPONSE: {:?} ({} ms)",
+            reclaim_data,
+            now.elapsed().as_millis()
+        ))
+        .await?;
+        Ok(ReclaimMessage::new(reclaim_data))
     }
 
     /// Logs the string to the console.
@@ -506,6 +555,35 @@ where
     fn rng() -> ChaCha20Rng {
         ChaCha20Rng::from_rng(thread_rng()).expect("Unable to sample RNG.")
     }
+}
+
+// TODO: check the encodings for these...
+/// Signer message
+#[derive(Clone, Debug, Deserialize, Serialize)]
+#[serde(rename_all = "kebab-case")]
+pub enum SignerMessage {
+    /// Version
+    Version,
+    /// Recover
+    RecoverAccount(Vec<u8>),
+    /// ShieldedAddress
+    DeriveShieldedAddress(Vec<u8>),
+    /// Asset
+    GenerateAsset(Vec<u8>),
+    /// MintData
+    GenerateMintData(Vec<u8>),
+    /// PrivateTransfer
+    GeneratePrivateTransferData(Vec<u8>),
+    /// Reclaim
+    GenerateReclaimData(Vec<u8>),
+}
+
+/// Server message
+#[derive(Clone, Debug, Deserialize, Serialize)]
+#[serde(rename_all = "kebab-case")]
+pub enum ServerMessage {
+    /// Bad json
+    BadJson
 }
 
 /// Version Message
