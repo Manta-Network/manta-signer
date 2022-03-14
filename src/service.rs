@@ -319,10 +319,20 @@ where
             .allow_methods("GET, POST, OPTIONS".parse::<HeaderValue>().unwrap())
             .allow_origin(Origin::from(config.origin_url.as_str()))
             .allow_credentials(false);
+        let origin_url = config.origin_url.clone();
         let mut server = Server::with_state(State::new(config, authorizer));
         server.with(cors);
-        server.at("/ws").get(WebSocket::new(|request, mut stream| {
+        server.at("/ws").get(WebSocket::new(move |request, mut stream| {
+            let url = origin_url.clone();
             async move {
+                let origin = request.header("origin");
+
+                if origin.is_none() {
+                    return Err(tide::Error::from_str(StatusCode::Unauthorized, "No origin header"));
+                } else if origin.unwrap().as_str().starts_with(url.as_str()) {
+                    return Err(tide::Error::from_str(StatusCode::Unauthorized, "CORS policy does not allow this origin"));
+                }
+
                 while let Some(Ok(Message::Text(input))) = stream.next().await {
                     //Self::log(format!("[INFO]: Message {input}")).await?;
                     let message: SignerMessage = match serde_json::from_str(&input) {
