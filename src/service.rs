@@ -53,7 +53,7 @@ use tokio::{
 };
 use warp::{
     http::{Method, StatusCode},
-    reply::{self, Json, Reply},
+    reply::{Reply, Response},
     Filter, Rejection,
 };
 
@@ -331,7 +331,7 @@ where
         self,
         command: &'static str,
         f: F,
-    ) -> impl Clone + Filter<Extract = (reply::Response,), Error = Rejection>
+    ) -> impl Clone + Filter<Extract = (Response,), Error = Rejection>
     where
         T: DeserializeOwned + Send,
         R: Serialize + Send,
@@ -343,9 +343,7 @@ where
             .and(warp::body::content_length_limit(1024 * 128))
             .and(warp::body::json())
             .then(f)
-            .then(move |response: Result<_>| async {
-                Response(response.map(|r| warp::reply::json(&r)).ok()).into()
-            })
+            .then(with_reply)
     }
 
     /// Saves the signer state to disk.
@@ -368,30 +366,33 @@ where
 
     /// Returns the [`crate::VERSION`] string to the client.
     #[inline]
-    async fn version(self, request: ()) -> Result<&'static str> {
-        let _ = request;
-        info(format!("version: {}", crate::VERSION)).await?;
+    async fn version() -> Result<&'static str> {
+        info(format!("[PING] current signer version: {}", crate::VERSION)).await?;
         Ok(crate::VERSION)
     }
 
     /// Runs the synchronization protocol on the signer.
     #[inline]
     async fn sync(self, request: SyncRequest) -> Result<Result<SyncResponse, SyncError>> {
-        info(format!("processing `sync` request: {:?}.", request)).await?;
+        info(format!("[REQUEST] processing `sync`:  {:?}.", request)).await?;
         let response = self.state.lock().signer.sync(request);
         task::spawn(async {
             if self.save().await.is_err() {
                 let _ = warn("unable to save current signer state").await;
             }
         });
-        info(format!("responding to `sync` with: {:?}.", response)).await?;
+        info(format!(
+            "[RESPONSE] responding to `sync` with: {:?}.",
+            response
+        ))
+        .await?;
         Ok(response)
     }
 
     /// Runs the transaction signing protocol on the signer.
     #[inline]
     async fn sign(self, request: SignRequest) -> Result<Result<SignResponse, SignError>> {
-        info(format!("processing `sign` request: {:?}.", request)).await?;
+        info(format!("[REQUEST] processing `sign`: {:?}.", request)).await?;
         let SignRequest {
             transaction,
             metadata,
@@ -403,7 +404,7 @@ where
                 //       default, requests authorization.
             }
             _ => {
-                info("asking for transaction authorization").await?;
+                info("[AUTH] asking for transaction authorization").await?;
                 let summary = metadata
                     .map(|m| transaction.display(&m, receiving_key_to_base58))
                     .unwrap_or_default();
@@ -411,17 +412,25 @@ where
             }
         }
         let response = self.state.lock().signer.sign(transaction);
-        info(format!("responding to `sign` with: {:?}.", response)).await?;
+        info(format!(
+            "[RESPONSE] responding to `sign` with: {:?}.",
+            response
+        ))
+        .await?;
         Ok(response)
     }
 
     /// Runs the receiving key sampling protocol on the signer.
     #[inline]
     async fn receiving_keys(self, request: ReceivingKeyRequest) -> Result<Vec<ReceivingKey>> {
-        info(format!("processing `receivingKeys` request: {:?}", request)).await?;
+        info(format!(
+            "[REQUEST] processing `receivingKeys`: {:?}",
+            request
+        ))
+        .await?;
         let response = self.state.lock().signer.receiving_keys(request);
         info(format!(
-            "responding to `receivingKeys` with: {:?}",
+            "[RESPONSE] responding to `receivingKeys` with: {:?}",
             response
         ))
         .await?;
@@ -429,17 +438,15 @@ where
     }
 }
 
-/// HTTP Response
-#[derive(Default)]
-struct Response(Option<Json>);
-
-impl From<Response> for reply::Response {
-    #[inline]
-    fn from(response: Response) -> Self {
-        match response.0 {
-            Some(json) => json.into_response(),
-            _ => StatusCode::INTERNAL_SERVER_ERROR.into_response(),
-        }
+/// Generates the JSON body for `response`, returning an HTTP reply message.
+#[inline]
+pub async fn with_reply<R>(response: Result<R>) -> Response
+where
+    R: Serialize,
+{
+    match response.map(|r| warp::reply::json(&r)) {
+        Ok(json) => json.into_response(),
+        _ => StatusCode::INTERNAL_SERVER_ERROR.into_response(),
     }
 }
 
@@ -459,16 +466,18 @@ where
     .allow_credentials(false)
     .build();
     let state = Server::build(config, authorizer).await?;
-    let api = warp::get()
-        .and(state.clone().endpoint("version", Server::version))
-        .or(warp::post().and(state.clone().endpoint("sync", Server::sync)))
-        .or(warp::get().and(state.clone().endpoint("sign", Server::sign)))
-        .or(warp::post().and(
-            state
-                .clone()
-                .endpoint("receivingKeys", Server::receiving_keys),
-        ))
-        .with(cors);
+    let api = (warp::get()
+        .and(warp::path("version"))
+        .then(Server::<A>::version)
+        .then(with_reply))
+    .or(warp::post().and(state.clone().endpoint("sync", Server::sync)))
+    .or(warp::get().and(state.clone().endpoint("sign", Server::sign)))
+    .or(warp::post().and(
+        state
+            .clone()
+            .endpoint("receivingKeys", Server::receiving_keys),
+    ))
+    .with(cors);
     info("serving signer API").await?;
     warp::serve(api).run(socket_address).await;
     Ok(())
