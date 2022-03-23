@@ -40,7 +40,7 @@ futures = { version = "0.3.17", default-features = false, features = ["alloc"] }
 http-types = { version = "2.12.0", default-features = false }
 manta-accounting = { git = "https://github.com/manta-network/manta-rs", features = ["cocoon-fs"] }
 manta-crypto = { git = "https://github.com/manta-network/manta-rs", features = ["getrandom"] }
-manta-pay = { git = "https://github.com/manta-network/manta-rs", features = ["groth16", "serde", "wallet"] }
+manta-pay = { git = "https://github.com/manta-network/manta-rs", features = ["bs58", "groth16", "serde", "wallet"] }
 manta-sdk = { git = "https://github.com/manta-network/sdk", features = ["download"] }
 manta-util = { git = "https://github.com/manta-network/manta-rs" }
 parking_lot = { version = "0.12.0", default-features = false }
