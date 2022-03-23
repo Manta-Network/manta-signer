@@ -35,7 +35,7 @@ log = []
 argon2 = { version = "0.3.4", default-features = false, features = ["alloc", "password-hash"] }
 chrono = { version = "0.4.19", default-features = false, features = ["clock"] }
 derivative = { version = "2.2.0", default-features = false, features = ["use_core"] }
-dirs-next = { version = "2.0.0" }
+dirs-next = { version = "2.0.0", default-features = false }
 futures = { version = "0.3.17", default-features = false, features = ["alloc"] }
 http-types = { version = "2.12.0", default-features = false }
 manta-accounting = { git = "https://github.com/manta-network/manta-rs", features = ["cocoon-fs"] }
@@ -48,9 +48,9 @@ password-hash = { version = "0.3.2", default-features = false, features = ["allo
 secrecy = { version = "0.8.0", default-features = false, features = ["alloc"] }
 serde_json = { version = "1.0.68", default-features = false }
 subtle = { version = "2.4.1", default-features = false }
-tokio = { version = "1.17.0", default-features = false, features = ["io-std", "rt", "time"] }
-warp = { version = "0.3.2", default-features = false }
+tide = { version = "0.16.0", default-features = false, features = ["h1-server"] }
+tokio = { version = "1.17.0", default-features = false, features = ["fs", "io-std", "io-util", "rt", "sync", "time"] }
 
 [dev-dependencies]
+async-std = { version = "1.11.0", default-features = false, features = ["attributes", "tokio1"] }
 tempfile = { version = "3.3.0", default-features = false }
-tokio = { version = "1.17.0", default-features = false, features = ["macros", "rt-multi-thread"] }

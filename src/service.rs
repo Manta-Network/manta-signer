@@ -21,6 +21,7 @@ use crate::{
     secret::{Argon2, Authorizer, ExposeSecret, PasswordHash, SecretString},
 };
 use core::{fmt, future::Future, time::Duration};
+use http_types::headers::HeaderValue;
 use manta_accounting::{
     fs::{cocoon::File, File as _, SaveError},
     key::HierarchicalKeyDerivationScheme,
@@ -46,15 +47,14 @@ use std::{
     path::Path,
     sync::Arc,
 };
+use tide::{
+    security::{CorsMiddleware, Origin},
+    Body, Request, Response, StatusCode,
+};
 use tokio::{
     fs,
     sync::Mutex as AsyncMutex,
     task::{self, JoinError},
-};
-use warp::{
-    http::{Method, StatusCode},
-    reply::{Reply, Response},
-    Filter, Rejection,
 };
 
 /// Password Retry Interval
@@ -150,6 +150,15 @@ from_variant_impl!(Error, AddrParseError, AddrParseError);
 from_variant_impl!(Error, JoinError, JoinError);
 from_variant_impl!(Error, SaveError, SaveError<File>);
 from_variant_impl!(Error, Io, io::Error);
+
+impl From<Error> for tide::Error {
+    #[inline]
+    fn from(err: Error) -> tide::Error {
+        // TODO: Convert to a more useful error;
+        let _ = err;
+        Self::from_str(StatusCode::InternalServerError, "")
+    }
+}
 
 /// Result Type
 pub type Result<T, E = Error> = core::result::Result<T, E>;
@@ -325,25 +334,21 @@ where
         }
     }
 
-    /// Builds an endpoint for `command` to run `f` as the action.
+    /// Executes `f` on the incoming `request`.
     #[inline]
-    fn endpoint<T, R, Fut, F>(
-        self,
-        command: &'static str,
+    async fn execute<T, R, F, Fut>(
+        mut request: Request<Self>,
         f: F,
-    ) -> impl Clone + Filter<Extract = (Response,), Error = Rejection>
+    ) -> Result<Response, tide::Error>
     where
-        T: DeserializeOwned + Send,
-        R: Serialize + Send,
-        Fut: Future<Output = Result<R>> + Send,
-        F: Clone + Send + Sync + Fn(Self, T) -> Fut,
+        A: Authorizer,
+        T: DeserializeOwned,
+        R: Serialize,
+        F: FnOnce(Self, T) -> Fut,
+        Fut: Future<Output = Result<R, Error>>,
     {
-        warp::path(command)
-            .map(move || self.clone())
-            .and(warp::body::content_length_limit(1024 * 128))
-            .and(warp::body::json())
-            .then(f)
-            .then(with_reply)
+        let args = request.body_json::<T>().await?;
+        with_reply(move || async move { f(request.state().clone(), args).await }).await
     }
 
     /// Saves the signer state to disk.
@@ -438,16 +443,15 @@ where
     }
 }
 
-/// Generates the JSON body for `response`, returning an HTTP reply message.
+/// Generates the JSON body for the output of `f`, returning an HTTP reponse.
 #[inline]
-pub async fn with_reply<R>(response: Result<R>) -> Response
+async fn with_reply<R, F, Fut>(f: F) -> Result<Response, tide::Error>
 where
     R: Serialize,
+    F: FnOnce() -> Fut,
+    Fut: Future<Output = Result<R, Error>>,
 {
-    match response.map(|r| warp::reply::json(&r)) {
-        Ok(json) => json.into_response(),
-        _ => StatusCode::INTERNAL_SERVER_ERROR.into_response(),
-    }
+    Ok(Body::from_json(&f().await?)?.into())
 }
 
 /// Starts the signer server with `config` and `authorizer`.
@@ -458,27 +462,21 @@ where
 {
     info("performing service setup").await?;
     let socket_address = config.service_url.parse::<SocketAddr>()?;
-    let cors = match &config.origin_url {
-        Some(origin_url) => warp::cors().allow_origin(origin_url.as_str()),
-        _ => warp::cors().allow_any_origin(),
-    }
-    .allow_methods(&[Method::GET, Method::POST])
-    .allow_credentials(false)
-    .build();
-    let state = Server::build(config, authorizer).await?;
-    let api = (warp::get()
-        .and(warp::path("version"))
-        .then(Server::<A>::version)
-        .then(with_reply))
-    .or(warp::post().and(state.clone().endpoint("sync", Server::sync)))
-    .or(warp::get().and(state.clone().endpoint("sign", Server::sign)))
-    .or(warp::post().and(
-        state
-            .clone()
-            .endpoint("receivingKeys", Server::receiving_keys),
-    ))
-    .with(cors);
+    let cors = CorsMiddleware::new()
+        .allow_methods("GET, POST".parse::<HeaderValue>().unwrap())
+        .allow_origin(match &config.origin_url {
+            Some(origin_url) => Origin::from(origin_url.as_str()),
+            _ => Origin::from("*"),
+        })
+        .allow_credentials(false);
+    let mut api = tide::Server::with_state(Server::build(config, authorizer).await?);
+    api.with(cors);
+    api.at("/version").get(|_| with_reply(Server::<A>::version));
+    api.at("/sync").post(|r| Server::execute(r, Server::sync));
+    api.at("/sign").get(|r| Server::execute(r, Server::sign));
+    api.at("/receivingKeys")
+        .post(|r| Server::execute(r, Server::receiving_keys));
     info("serving signer API").await?;
-    warp::serve(api).run(socket_address).await;
+    api.listen(socket_address).await?;
     Ok(())
 }

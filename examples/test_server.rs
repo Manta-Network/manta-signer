@@ -49,7 +49,7 @@ impl Authorizer for MockUser {
     }
 }
 
-#[tokio::main]
+#[async_std::main]
 async fn main() -> Result<(), Error> {
     let test_dir = tempfile::tempdir()?;
     let mut config =
