@@ -336,10 +336,7 @@ where
 
     /// Executes `f` on the incoming `request`.
     #[inline]
-    async fn execute<T, R, F, Fut>(
-        mut request: Request<Self>,
-        f: F,
-    ) -> Result<Response, tide::Error>
+    async fn execute<T, R, F, Fut>(request: Request<Self>, f: F) -> Result<Response, tide::Error>
     where
         A: Authorizer,
         T: DeserializeOwned,
@@ -347,7 +344,7 @@ where
         F: FnOnce(Self, T) -> Fut,
         Fut: Future<Output = Result<R, Error>>,
     {
-        let args = request.body_json::<T>().await?;
+        let args = request.query::<T>()?;
         with_reply(move || async move { f(request.state().clone(), args).await }).await
     }
 
