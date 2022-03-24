@@ -336,16 +336,18 @@ where
 
     /// Executes `f` on the incoming `request`.
     #[inline]
-    async fn execute<T, R, F, Fut>(request: Request<Self>, f: F) -> Result<Response, tide::Error>
+    async fn execute<T, R, F, Fut>(
+        mut request: Request<Self>,
+        f: F,
+    ) -> Result<Response, tide::Error>
     where
-        A: Authorizer,
         T: DeserializeOwned,
         R: Serialize,
         F: FnOnce(Self, T) -> Fut,
-        Fut: Future<Output = Result<R, Error>>,
+        Fut: Future<Output = Result<R>>,
     {
-        let args = request.query::<T>()?;
-        with_reply(move || async move { f(request.state().clone(), args).await }).await
+        let args = request.body_json::<T>().await?;
+        into_body(move || async move { f(request.state().clone(), args).await }).await
     }
 
     /// Saves the signer state to disk.
@@ -442,18 +444,18 @@ where
 
 /// Generates the JSON body for the output of `f`, returning an HTTP reponse.
 #[inline]
-async fn with_reply<R, F, Fut>(f: F) -> Result<Response, tide::Error>
+async fn into_body<R, F, Fut>(f: F) -> Result<Response, tide::Error>
 where
     R: Serialize,
     F: FnOnce() -> Fut,
-    Fut: Future<Output = Result<R, Error>>,
+    Fut: Future<Output = Result<R>>,
 {
     Ok(Body::from_json(&f().await?)?.into())
 }
 
 /// Starts the signer server with `config` and `authorizer`.
 #[inline]
-pub async fn start<A>(config: Config, authorizer: A) -> Result<(), Error>
+pub async fn start<A>(config: Config, authorizer: A) -> Result<()>
 where
     A: Authorizer,
 {
@@ -468,9 +470,9 @@ where
         .allow_credentials(false);
     let mut api = tide::Server::with_state(Server::build(config, authorizer).await?);
     api.with(cors);
-    api.at("/version").get(|_| with_reply(Server::<A>::version));
+    api.at("/version").get(|_| into_body(Server::<A>::version));
     api.at("/sync").post(|r| Server::execute(r, Server::sync));
-    api.at("/sign").get(|r| Server::execute(r, Server::sign));
+    api.at("/sign").post(|r| Server::execute(r, Server::sign));
     api.at("/receivingKeys")
         .post(|r| Server::execute(r, Server::receiving_keys));
     info("serving signer API").await?;
