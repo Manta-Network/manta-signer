@@ -14,3 +14,11 @@ Disclaimer: `manta-signer` is experimental software, use it at your own risk.
 -js: external Javascript libraries that interact with manta-signer
 ```
 
+<br/>
+To remove your private account data completely and set up a new account, you should remove these files.
+
+```
+Mac: ~/Library/Application Support/manta-signer/root_seed.aes
+Linux: ~/.config/manta-signer/root_seed.aes
+Windows: ~/AppData/Roaming/manta-signer/root_seed.aes
+```
