@@ -34,6 +34,7 @@ use std::sync::Arc;
 use tauri::{
     async_runtime::{channel, spawn, Mutex, Receiver, Sender},
     CustomMenuItem, Manager, RunEvent, State, SystemTray, SystemTrayEvent, SystemTrayMenu, Window,
+    WindowEvent,
 };
 
 /// User
@@ -261,7 +262,11 @@ fn main() {
 
     app.run(|app, event| match event {
         RunEvent::Ready => app.get_window("about").unwrap().hide().unwrap(),
-        RunEvent::CloseRequested { label, api, .. } => {
+        RunEvent::WindowEvent {
+            label,
+            event: WindowEvent::CloseRequested { api, .. },
+            ..
+        } => {
             api.prevent_close();
             match label.as_str() {
                 "about" => app.get_window(&label).unwrap().hide().unwrap(),
