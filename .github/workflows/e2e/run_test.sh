@@ -7,14 +7,21 @@ cat out.json
 
 # Run 3 headless copies of signer
 cd ../../..
-cargo run --example test_server --release --features=unsafe-disable-cors -- http://127.0.0.1:29988 &
-cargo run --example test_server --release --features=unsafe-disable-cors -- http://127.0.0.1:29989 &
-cargo run --example test_server --release --features=unsafe-disable-cors -- http://127.0.0.1:29990 &
+./target/release/examples/test_server 127.0.0.1:29988 &
+./target/release/examples/test_server 127.0.0.1:29989 &
+./target/release/examples/test_server 127.0.0.1:29990 &
 
 # Run node
-~/Manta/manta  --chain dev --ws-port 9944 --port 30333 --alice \
---tmp --rpc-cors all --unsafe-ws-external --unsafe-rpc-external \
---rpc-methods=Unsafe &
+~/Manta/manta             \
+    --chain dev           \
+    --ws-port 9944        \
+    --port 30333          \
+    --alice               \
+    --tmp                 \
+    --rpc-cors all        \
+    --unsafe-ws-external  \
+    --unsafe-rpc-external \
+    --rpc-methods=Unsafe  &
 
 # Run test
 cd js
