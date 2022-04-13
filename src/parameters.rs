@@ -20,8 +20,8 @@
 
 use manta_pay::{
     config::{
-        KeyAgreementScheme, MultiProvingContext, Parameters, ProvingContext, UtxoAccumulatorModel,
-        UtxoCommitmentScheme, VoidNumberHashFunction,
+        MultiProvingContext, NoteEncryptionScheme, Parameters, ProvingContext,
+        UtxoAccumulatorModel, UtxoCommitmentScheme, VoidNumberCommitmentScheme,
     },
     signer::base::SignerParameters,
 };
@@ -59,16 +59,16 @@ where
             reclaim: ProvingContext::decode(IoReader(File::open(reclaim).ok()?)).ok()?,
         },
         parameters: Parameters {
-            key_agreement: KeyAgreementScheme::decode(
-                manta_sdk::pay::testnet::parameters::KeyAgreement::get()?,
+            note_encryption_scheme: NoteEncryptionScheme::decode(
+                manta_sdk::pay::testnet::parameters::NoteEncryptionScheme::get()?,
             )
             .ok()?,
             utxo_commitment: UtxoCommitmentScheme::decode(
                 manta_sdk::pay::testnet::parameters::UtxoCommitmentScheme::get()?,
             )
             .ok()?,
-            void_number_hash: VoidNumberHashFunction::decode(
-                manta_sdk::pay::testnet::parameters::VoidNumberHashFunction::get()?,
+            void_number_commitment: VoidNumberCommitmentScheme::decode(
+                manta_sdk::pay::testnet::parameters::VoidNumberCommitmentScheme::get()?,
             )
             .ok()?,
         },
