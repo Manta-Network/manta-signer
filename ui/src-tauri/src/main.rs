@@ -24,13 +24,15 @@
     windows_subsystem = "windows"
 )]
 
+extern crate alloc;
+
+use alloc::sync::Arc;
 use manta_signer::{
     config::{Config, Setup},
     secret::{Authorizer, Password, PasswordFuture, Secret, SecretString, UnitFuture},
     serde::Serialize,
     service,
 };
-use std::sync::Arc;
 use tauri::{
     async_runtime::{channel, spawn, Mutex, Receiver, Sender},
     CustomMenuItem, Manager, RunEvent, State, SystemTray, SystemTrayEvent, SystemTrayMenu, Window,

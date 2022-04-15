@@ -25,11 +25,11 @@ is-it-maintained-open-issues = { repository = "Manta-Network/manta-signer" }
 maintenance = { status = "actively-developed" }
 
 [features]
-# Disable CORS Check
-unsafe-disable-cors = []
-
 # Enable Logging
 log = []
+
+# Disable CORS Check: This is UNSAFE in general and should only be used in debug builds.
+unsafe-disable-cors = []
 
 [dependencies]
 argon2 = { version = "0.3.4", default-features = false, features = ["alloc", "password-hash"] }
