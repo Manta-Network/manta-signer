@@ -10,9 +10,9 @@ then
     echo '::set-output name=RELEASE_UPDATE_SIG::manta-signer-'$2'_'$3'_amd64.AppImage.tar.gz.sig'
 elif [ "$1" == "windows" ]
 then
-    echo '::set-output name=IMAGE::msi/manta-signer_'$3'_x64.msi'
-    echo '::set-output name=IMAGE_UPDATE::msi/manta-signer_'$3'_x64.msi.zip'
-    echo '::set-output name=UPDATE_SIG::msi/manta-signer_'$3'_x64.msi.zip.sig'
+    echo '::set-output name=IMAGE::msi/manta-signer_'$3'_x64_en-US.msi'
+    echo '::set-output name=IMAGE_UPDATE::msi/manta-signer_'$3'_x64_en-US.msi.zip'
+    echo '::set-output name=UPDATE_SIG::msi/manta-signer_'$3'_x64_en-US.msi.zip.sig'
     echo '::set-output name=RELEASE_IMAGE::manta-signer-'$2'_'$3'_x64.msi'
     echo '::set-output name=RELEASE_IMAGE_UPDATE::manta-signer-'$2'_'$3'_x64.msi.zip'
     echo '::set-output name=RELEASE_UPDATE_SIG::manta-signer-'$2'_'$3'_x64.msi.zip.sig'
