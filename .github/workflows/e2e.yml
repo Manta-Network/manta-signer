@@ -35,6 +35,7 @@ jobs:
       - name: Build manta-js
         run: |
           cd js
+          echo "Checkout wallet from feature/dolphin-types. TODO: change to master when merged."
           yarn install --immutable | grep -v 'YN0013'
           yarn build
       - name: Enable test scripts

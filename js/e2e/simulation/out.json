@@ -1,0 +1,316 @@
+{
+  "config": {
+    "starting_account_count": 3,
+    "new_account_sampling_cycle": 0,
+    "account_count_growth_rate": 1.0,
+    "maximum_account_count": 0,
+    "allowed_asset_sampling": {
+      "0": 10000,
+      "1": 1000,
+      "2": 100,
+      "3": 10,
+      "4": 1
+    },
+    "action_sampling_ranges": {
+      "none": {
+        "start": 1.0,
+        "end": 100.0
+      },
+      "public_deposit": {
+        "start": 1.0,
+        "end": 25.0
+      },
+      "public_withdraw": {
+        "start": 1.0,
+        "end": 25.0
+      },
+      "mint": {
+        "start": 50.0,
+        "end": 100.0
+      },
+      "private_transfer": {
+        "start": 50.0,
+        "end": 100.0
+      },
+      "reclaim": {
+        "start": 50.0,
+        "end": 100.0
+      }
+    },
+    "maximum_updates_per_step": 2048,
+    "maximum_total_updates": 262144
+  },
+  "initial_accounts": [
+    {
+      "public": {
+        "2": 18
+      },
+      "secret": {},
+      "actions": {
+        "none": 0.28514152585613806,
+        "public_deposit": 0.0450247235902064,
+        "public_withdraw": 0.06939250870462181,
+        "mint": 0.15623438954473381,
+        "private_transfer": 0.19347600920695499,
+        "reclaim": 0.250730843097345
+      }
+    },
+    {
+      "public": {
+        "1": 1414,
+        "3": 18,
+        "4": 2,
+        "0": 27141,
+        "2": 209
+      },
+      "secret": {},
+      "actions": {
+        "none": 0.1895248461663537,
+        "public_deposit": 0.01842383468248562,
+        "public_withdraw": 0.06676529389209092,
+        "mint": 0.2914519530274639,
+        "private_transfer": 0.1753316974417846,
+        "reclaim": 0.2585023747898211
+      }
+    },
+    {
+      "public": {
+        "0": 7388
+      },
+      "secret": {},
+      "actions": {
+        "none": 0.05274096793181736,
+        "public_deposit": 0.011690546620918046,
+        "public_withdraw": 0.08810182550003949,
+        "mint": 0.2719932542299437,
+        "private_transfer": 0.3288341774564648,
+        "reclaim": 0.24663922826081658
+      }
+    }
+  ],
+  "final_accounts": [
+    {
+      "public": {
+        "2": 0,
+        "0": 0,
+        "4": 0,
+        "1": 0
+      },
+      "secret": {
+        "4": 0
+      },
+      "actions": {
+        "none": 0.28514152585613806,
+        "public_deposit": 0.0450247235902064,
+        "public_withdraw": 0.06939250870462181,
+        "mint": 0.15623438954473381,
+        "private_transfer": 0.19347600920695499,
+        "reclaim": 0.250730843097345
+      }
+    },
+    {
+      "public": {
+        "1": 1408,
+        "3": 18,
+        "4": 2,
+        "0": 27141,
+        "2": 209
+      },
+      "secret": {
+        "1": 6,
+        "0": 85,
+        "4": 1
+      },
+      "actions": {
+        "none": 0.1895248461663537,
+        "public_deposit": 0.01842383468248562,
+        "public_withdraw": 0.06676529389209092,
+        "mint": 0.2914519530274639,
+        "private_transfer": 0.1753316974417846,
+        "reclaim": 0.2585023747898211
+      }
+    },
+    {
+      "public": {
+        "0": 200
+      },
+      "secret": {
+        "0": 6099
+      },
+      "actions": {
+        "none": 0.05274096793181736,
+        "public_deposit": 0.011690546620918046,
+        "public_withdraw": 0.08810182550003949,
+        "mint": 0.2719932542299437,
+        "private_transfer": 0.3288341774564648,
+        "reclaim": 0.24663922826081658
+      }
+    }
+  ],
+  "updates": [
+    {
+      "type": "PublicWithdraw",
+      "account_index": 0,
+      "asset": {
+        "id": 2,
+        "value": 18
+      }
+    },
+    {
+      "type": "Reclaim",
+      "sender_index": 1,
+      "asset": {
+        "id": 1,
+        "value": 0
+      }
+    },
+    {
+      "type": "Mint",
+      "source_index": 1,
+      "asset": {
+        "id": 1,
+        "value": 8
+      }
+    },
+    {
+      "type": "Reclaim",
+      "sender_index": 0,
+      "asset": {
+        "id": 4,
+        "value": 0
+      }
+    },
+    {
+      "type": "Reclaim",
+      "sender_index": 1,
+      "asset": {
+        "id": 1,
+        "value": 2
+      }
+    },
+    {
+      "type": "Reclaim",
+      "sender_index": 0,
+      "asset": {
+        "id": 0,
+        "value": 0
+      }
+    },
+    {
+      "type": "Mint",
+      "source_index": 2,
+      "asset": {
+        "id": 0,
+        "value": 133
+      }
+    },
+    {
+      "type": "PrivateTransfer",
+      "sender_index": 2,
+      "receiver_index": 1,
+      "asset": {
+        "id": 0,
+        "value": 75
+      }
+    },
+    {
+      "type": "Mint",
+      "source_index": 1,
+      "asset": {
+        "id": 4,
+        "value": 1
+      }
+    },
+    {
+      "type": "Reclaim",
+      "sender_index": 2,
+      "asset": {
+        "id": 0,
+        "value": 12
+      }
+    },
+    {
+      "type": "Mint",
+      "source_index": 0,
+      "asset": {
+        "id": 4,
+        "value": 0
+      }
+    },
+    {
+      "type": "PrivateTransfer",
+      "sender_index": 2,
+      "receiver_index": 2,
+      "asset": {
+        "id": 0,
+        "value": 1
+      }
+    },
+    {
+      "type": "Reclaim",
+      "sender_index": 0,
+      "asset": {
+        "id": 2,
+        "value": 0
+      }
+    },
+    {
+      "type": "PrivateTransfer",
+      "sender_index": 2,
+      "receiver_index": 1,
+      "asset": {
+        "id": 0,
+        "value": 10
+      }
+    },
+    {
+      "type": "Mint",
+      "source_index": 2,
+      "asset": {
+        "id": 0,
+        "value": 5151
+      }
+    },
+    {
+      "type": "PrivateTransfer",
+      "sender_index": 1,
+      "receiver_index": 1,
+      "asset": {
+        "id": 0,
+        "value": 83
+      }
+    },
+    {
+      "type": "PublicDeposit",
+      "account_index": 1,
+      "asset": {
+        "id": 4,
+        "value": 1
+      }
+    },
+    {
+      "type": "Mint",
+      "source_index": 2,
+      "asset": {
+        "id": 0,
+        "value": 912
+      }
+    },
+    {
+      "type": "Reclaim",
+      "sender_index": 0,
+      "asset": {
+        "id": 1,
+        "value": 0
+      }
+    },
+    {
+      "type": "PublicWithdraw",
+      "account_index": 2,
+      "asset": {
+        "id": 0,
+        "value": 1004
+      }
+    }
+  ]
+}
