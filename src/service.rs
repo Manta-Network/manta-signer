@@ -384,11 +384,6 @@ where
     async fn sync(self, request: SyncRequest) -> Result<Result<SyncResponse, SyncError>> {
         info(format!("[REQUEST] processing `sync`:  {:?}.", request)).await?;
         let response = self.state.lock().signer.sync(request);
-        task::spawn(async {
-            if self.save().await.is_err() {
-                let _ = warn("unable to save current signer state").await;
-            }
-        });
         info(format!(
             "[RESPONSE] responding to `sync` with: {:?}.",
             response
