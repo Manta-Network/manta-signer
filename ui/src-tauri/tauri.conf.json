@@ -27,7 +27,7 @@
             "shortDescription": "Manta Network Signer",
             "longDescription": "",
             "deb": {
-                "depends": [],
+                "depends": []
             },
             "macOS": {
                 "frameworks": [],
