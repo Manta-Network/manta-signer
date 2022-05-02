@@ -29,7 +29,7 @@ export async function transferAssetWorkflow(
       }
     );
     api.tx.mantaPay
-      .transferAsset(config.receiver, config.assetId, config.valueAtomicUnits)
+      .publicTransfer({id: config.assetId, value: config.valueAtomicUnits}, config.receiver)
       // @ts-ignore FIXME
       .signAndSend(signer, txResHandler);
   });

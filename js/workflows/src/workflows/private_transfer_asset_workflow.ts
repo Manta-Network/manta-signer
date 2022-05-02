@@ -4,6 +4,8 @@ import { makeTxResHandler } from '../utils/MakeTxResHandler';
 import TxStatus from '../utils/TxStatus';
 import { selectCoins } from 'coin-selection';
 import * as BN from 'bn.js';
+import { Wallet, Transaction } from 'manta-wasm-wallet';
+import { base58Decode, base58Encode } from '@polkadot/util-crypto';
 
 export type ConfigPrivateTransferAssetWorkflow = {
   assetId: number;
@@ -13,44 +15,39 @@ export type ConfigPrivateTransferAssetWorkflow = {
   signerInterface: NodeJsSignerInterfaceConfig;
 };
 
+
+
 export async function privateTransferAssetWorkflow(
   config: ConfigPrivateTransferAssetWorkflow,
-  api: ApiPromise
+  api: ApiPromise,
+  wallet,
 ): Promise<TxStatus> {
-  const keyring = new Keyring({ type: 'sr25519' });
-  const polkadotJsSigner = keyring.addFromUri(config.polkadotJsSigner);
-  const signerInterface = new SignerInterface(api, config.signerInterface);
-
-  const assets = await signerInterface.recoverAccount();
-  const coinSelection = selectCoins(
-    new BN(config.valueAtomicUnits),
-    assets,
-    config.assetId
-  );
-
-  const privateTransferTxs =
-    await signerInterface.buildExternalPrivateTransferTxs(
-      config.receiver,
-      coinSelection
-    );
-
   const status: Promise<TxStatus> = new Promise((resolve) => {
     const txResHandler = makeTxResHandler(
       api,
       (block) => {
         console.log(TxStatus.finalized(block));
-        signerInterface.cleanupTxSuccess();
         resolve(TxStatus.finalized(block));
       },
       (block, error) => {
-        signerInterface.cleanupTxFailure();
         console.log(TxStatus.failed(block, error));
         resolve(TxStatus.failed(block, error));
       }
     );
-    api.tx.utility
-      .batch(privateTransferTxs)
-      .signAndSend(polkadotJsSigner, txResHandler);
+
+    const bytes = base58Decode(config.receiver);
+    const addressJson = JSON.stringify({
+        spend: Array.from(bytes.slice(0, 32)),
+        view: Array.from(bytes.slice(32)),
+    });
+    const value = config.valueAtomicUnits.toString();
+    const assetId = config.assetId;
+    const txJson = `{ "PrivateTransfer": [{ "id": ${assetId}, "value": "${value}" }, ${addressJson} ]}`;
+    const transaction = Transaction.from_string(txJson);
+    wallet.wasmApi.setTxResHandler(txResHandler)
+    return (async () => {
+        return await wallet.wallet.post(transaction, null);
+    })();
   });
 
   return await status;

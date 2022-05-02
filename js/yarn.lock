@@ -115,7 +115,7 @@
     "@polkadot/util-crypto" "^8.1.2"
     rxjs "^7.4.0"
 
-"@polkadot/api@6.12.1", "@polkadot/api@^6.5.2":
+"@polkadot/api@6.12.1", "@polkadot/api@^6.8.1":
   version "6.12.1"
   resolved "https://registry.yarnpkg.com/@polkadot/api/-/api-6.12.1.tgz#685a2727eb532fdacd9b86f9ddf595d58be71ee4"
   integrity sha512-RVdTiA2WaEvproM3i6E9TKS1bfXpPd9Ly9lUG/kVLaspjKoIot9DJUDTl97TJ+7xr8LXGbXqm448Ud0hsEBV8Q==
@@ -184,7 +184,7 @@
     "@polkadot/types" "6.12.1"
     "@polkadot/util" "^8.1.2"
 
-"@polkadot/types@6.12.1", "@polkadot/types@^6.5.2":
+"@polkadot/types@6.12.1", "@polkadot/types@^6.8.1":
   version "6.12.1"
   resolved "https://registry.yarnpkg.com/@polkadot/types/-/types-6.12.1.tgz#e5d6dff997740c3da947fa67abe2e1ec144c4757"
   integrity sha512-O37cAGUL0xiXTuO3ySweVh0OuFUD6asrd0TfuzGsEp3jAISWdElEHV5QDiftWq8J9Vf8BMgTcP2QLFbmSusxqA==
@@ -1670,6 +1670,14 @@ make-error@^1.1.1:
   version "1.3.6"
   resolved "https://registry.yarnpkg.com/make-error/-/make-error-1.3.6.tgz#2eb2e37ea9b67c4891f684a1394799af484cf7a2"
   integrity sha512-s8UhlNe7vPKomQhC1qFelMokr/Sc3AgNbso3n74mVPA5LTZwkB9NlXf4XPamLxJE8h0gh73rM94xvwRT2CVInw==
+
+manta-wasm-wallet-api@1.1.0-dev1:
+  version "1.1.0-dev1"
+  resolved "https://registry.yarnpkg.com/manta-wasm-wallet-api/-/manta-wasm-wallet-api-1.1.0-dev1.tgz#ca03214dc3e3e0c987cbafaf0a851535acdc004f"
+  integrity sha512-vwI11Vw5QQ62Dwbsiw1yoScUr8ZZW2E5kqA695J53UeRtTaPAkPy5jTFKy2J6yPissDgoOmMZlUp5T090LQhYw==
+
+"manta-wasm-wallet@file:../../sdk/wallet/crate/pkg":
+  version "1.0.0"
 
 merge2@^1.3.0, merge2@^1.4.1:
   version "1.4.1"

@@ -10,8 +10,8 @@
     },
     "license": "GPL-3.0-only",
     "resolutions": {
-        "@polkadot/api": "^6.5.2",
-        "@polkadot/types": "^6.5.2"
+        "@polkadot/api": "^6.8.1",
+        "@polkadot/types": "^6.8.1"
     },
     "dependencies": {
         "signer-interface": "^0.1.0",
