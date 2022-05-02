@@ -52,5 +52,5 @@ tide = { version = "0.16.0", default-features = false, features = ["h1-server"] 
 tokio = { version = "1.17.0", default-features = false, features = ["fs", "io-std", "io-util", "rt", "sync", "time"] }
 
 [dev-dependencies]
-tokio = { version = "1.11.0", default-features = false, features = ["macros", "rt-multi-thread"] }
+async-std = { version = "1.11.0", default-features = false, features = ["attributes", "tokio1"] }
 tempfile = { version = "3.3.0", default-features = false }
