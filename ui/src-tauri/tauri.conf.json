@@ -27,13 +27,11 @@
             "shortDescription": "Manta Network Signer",
             "longDescription": "",
             "deb": {
-                "depends": [],
-                "useBootstrapper": false
+                "depends": []
             },
             "macOS": {
                 "frameworks": [],
                 "minimumSystemVersion": "",
-                "useBootstrapper": false,
                 "exceptionDomain": "",
                 "signingIdentity": null,
                 "entitlements": "../entitlements.plist"
