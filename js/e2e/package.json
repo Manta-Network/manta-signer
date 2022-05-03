@@ -15,7 +15,7 @@
         "@types/mocha": "^9.0.0",
         "chai": "^4.3.4",
 	"manta-wasm-wallet-api": "1.1.0-dev1",
-	"manta-wasm-wallet": "/home/teej/sdk/wallet/crate/pkg",
+	"manta-wasm-wallet": "/Users/tjsharp/manta/sdk/wallet/crate/pkg",
         "mocha": "^9.1.1",
         "dolphin-api": "0.2.0",
         "signer-interface": "^0.2.0"

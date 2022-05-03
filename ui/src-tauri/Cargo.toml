@@ -35,7 +35,7 @@ custom-protocol = ["tauri/custom-protocol"]
 unsafe-disable-cors = ["manta-signer/unsafe-disable-cors"]
 
 [dependencies]
-manta-signer = { path = "../../" }
+manta-signer = { path = "../../", features = ["unsafe-disable-cors"] }
 tauri = { version = "1.0.0-rc.6", features = ["reqwest-client", "system-tray", "updater", "window-hide", "window-show"] }
 
 [build-dependencies]

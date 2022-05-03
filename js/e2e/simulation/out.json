@@ -5,11 +5,7 @@
     "account_count_growth_rate": 1.0,
     "maximum_account_count": 0,
     "allowed_asset_sampling": {
-      "1": 10000,
-      "8": 1000,
-      "9": 100,
-      "10": 10,
-      "11": 1
+      "1": 10000
     },
     "action_sampling_ranges": {
       "none": {
@@ -43,195 +39,104 @@
   "initial_accounts": [
     {
       "public": {
-        "1": 8444,
-        "8": 1694,
-        "9": 303,
-        "10": 8
+        "1": 200305
       },
       "secret": {},
       "actions": {
-        "none": 0.03392031569476396,
-        "public_deposit": 0.052408004362019825,
-        "public_withdraw": 0.008246603295852424,
-        "mint": 0.3412532551689829,
-        "private_transfer": 0.21200476393642706,
-        "reclaim": 0.35216705754195393
+        "none": 0.08488087754893602,
+        "public_deposit": 0.08605765199896818,
+        "public_withdraw": 0.04655835865775995,
+        "mint": 0.27971618531348613,
+        "private_transfer": 0.22762665392146023,
+        "reclaim": 0.2751602725593897
       }
     },
     {
       "public": {
-        "9": 324,
-        "8": 4587,
-        "10": 49,
-        "11": 3,
-        "1": 16301
+        "1": 166539
       },
       "secret": {},
       "actions": {
-        "none": 0.1446405630560937,
-        "public_deposit": 0.061296082216288995,
-        "public_withdraw": 0.01653138020837928,
-        "mint": 0.30769679715886195,
-        "private_transfer": 0.2354777838847423,
-        "reclaim": 0.23435739347563367
+        "none": 0.18825670011786846,
+        "public_deposit": 0.02470030780749922,
+        "public_withdraw": 0.07743685899196678,
+        "mint": 0.2468664738239033,
+        "private_transfer": 0.287560336645698,
+        "reclaim": 0.17517932261306438
       }
     },
     {
       "public": {
-        "1": 1046
+        "1": 112526
       },
       "secret": {},
       "actions": {
-        "none": 0.16170075711066048,
-        "public_deposit": 0.036337178875575284,
-        "public_withdraw": 0.053455992259346594,
-        "mint": 0.3041554884508718,
-        "private_transfer": 0.1546438589293568,
-        "reclaim": 0.289706724374189
+        "none": 0.2326371963279902,
+        "public_deposit": 0.036371892064483956,
+        "public_withdraw": 0.00768539758940283,
+        "mint": 0.24195816234762563,
+        "private_transfer": 0.2606550349829496,
+        "reclaim": 0.2206923166875477
       }
     }
   ],
   "final_accounts": [
     {
       "public": {
-        "1": 4092,
-        "8": 946,
-        "9": 303,
-        "10": 1
+        "1": 200222
       },
       "secret": {
-        "10": 7,
-        "8": 748,
-        "1": 3902
+        "1": 2378
       },
       "actions": {
-        "none": 0.03392031569476396,
-        "public_deposit": 0.052408004362019825,
-        "public_withdraw": 0.008246603295852424,
-        "mint": 0.3412532551689829,
-        "private_transfer": 0.21200476393642706,
-        "reclaim": 0.35216705754195393
+        "none": 0.08488087754893602,
+        "public_deposit": 0.08605765199896818,
+        "public_withdraw": 0.04655835865775995,
+        "mint": 0.27971618531348613,
+        "private_transfer": 0.22762665392146023,
+        "reclaim": 0.2751602725593897
       }
     },
     {
       "public": {
-        "9": 396,
-        "8": 4505,
-        "10": 49,
-        "11": 3,
-        "1": 13116
+        "1": 151537
       },
       "secret": {
-        "1": 3635,
-        "8": 82
+        "1": 87
       },
       "actions": {
-        "none": 0.1446405630560937,
-        "public_deposit": 0.061296082216288995,
-        "public_withdraw": 0.01653138020837928,
-        "mint": 0.30769679715886195,
-        "private_transfer": 0.2354777838847423,
-        "reclaim": 0.23435739347563367
+        "none": 0.18825670011786846,
+        "public_deposit": 0.02470030780749922,
+        "public_withdraw": 0.07743685899196678,
+        "mint": 0.2468664738239033,
+        "private_transfer": 0.287560336645698,
+        "reclaim": 0.17517932261306438
       }
     },
     {
       "public": {
-        "9": 0,
-        "10": 0,
-        "1": 343
+        "1": 108841
       },
       "secret": {
-        "1": 703
+        "1": 6888
       },
       "actions": {
-        "none": 0.16170075711066048,
-        "public_deposit": 0.036337178875575284,
-        "public_withdraw": 0.053455992259346594,
-        "mint": 0.3041554884508718,
-        "private_transfer": 0.1546438589293568,
-        "reclaim": 0.289706724374189
+        "none": 0.2326371963279902,
+        "public_deposit": 0.036371892064483956,
+        "public_withdraw": 0.00768539758940283,
+        "mint": 0.24195816234762563,
+        "private_transfer": 0.2606550349829496,
+        "reclaim": 0.2206923166875477
       }
     }
   ],
   "updates": [
     {
       "type": "Reclaim",
-      "sender_index": 2,
-      "asset": {
-        "id": 9,
-        "value": 0
-      }
-    },
-    {
-      "type": "Reclaim",
-      "sender_index": 1,
-      "asset": {
-        "id": 8,
-        "value": 0
-      }
-    },
-    {
-      "type": "Reclaim",
-      "sender_index": 0,
-      "asset": {
-        "id": 10,
-        "value": 0
-      }
-    },
-    {
-      "type": "Reclaim",
-      "sender_index": 2,
-      "asset": {
-        "id": 10,
-        "value": 0
-      }
-    },
-    {
-      "type": "Reclaim",
-      "sender_index": 1,
-      "asset": {
-        "id": 9,
-        "value": 0
-      }
-    },
-    {
-      "type": "Mint",
-      "source_index": 0,
-      "asset": {
-        "id": 1,
-        "value": 3897
-      }
-    },
-    {
-      "type": "PublicDeposit",
-      "account_index": 1,
-      "asset": {
-        "id": 9,
-        "value": 72
-      }
-    },
-    {
-      "type": "Reclaim",
       "sender_index": 0,
       "asset": {
         "id": 1,
-        "value": 1880
-      }
-    },
-    {
-      "type": "Mint",
-      "source_index": 2,
-      "asset": {
-        "id": 1,
-        "value": 150
-      }
-    },
-    {
-      "type": "Reclaim",
-      "sender_index": 0,
-      "asset": {
-        "id": 1,
-        "value": 1194
+        "value": 0
       }
     },
     {
@@ -247,80 +152,98 @@
       "source_index": 2,
       "asset": {
         "id": 1,
-        "value": 698
+        "value": 2962
       }
     },
     {
       "type": "Mint",
-      "source_index": 0,
+      "source_index": 2,
       "asset": {
-        "id": 10,
-        "value": 7
+        "id": 1,
+        "value": 2114
       }
     },
     {
       "type": "Mint",
       "source_index": 1,
       "asset": {
-        "id": 8,
-        "value": 186
+        "id": 1,
+        "value": 2500
+      }
+    },
+    {
+      "type": "PrivateTransfer",
+      "sender_index": 2,
+      "receiver_index": 0,
+      "asset": {
+        "id": 1,
+        "value": 3297
+      }
+    },
+    {
+      "type": "PublicWithdraw",
+      "account_index": 1,
+      "asset": {
+        "id": 1,
+        "value": 9417
+      }
+    },
+    {
+      "type": "Reclaim",
+      "sender_index": 0,
+      "asset": {
+        "id": 1,
+        "value": 2292
+      }
+    },
+    {
+      "type": "Mint",
+      "source_index": 1,
+      "asset": {
+        "id": 1,
+        "value": 3804
+      }
+    },
+    {
+      "type": "Reclaim",
+      "sender_index": 2,
+      "asset": {
+        "id": 1,
+        "value": 617
       }
     },
     {
       "type": "PrivateTransfer",
       "sender_index": 0,
+      "receiver_index": 2,
+      "asset": {
+        "id": 1,
+        "value": 1002
+      }
+    },
+    {
+      "type": "Reclaim",
+      "sender_index": 2,
+      "asset": {
+        "id": 1,
+        "value": 774
+      }
+    },
+    {
+      "type": "PrivateTransfer",
+      "sender_index": 2,
       "receiver_index": 1,
       "asset": {
         "id": 1,
-        "value": 450
-      }
-    },
-    {
-      "type": "Reclaim",
-      "sender_index": 2,
-      "asset": {
-        "id": 1,
-        "value": 358
-      }
-    },
-    {
-      "type": "Reclaim",
-      "sender_index": 2,
-      "asset": {
-        "id": 1,
-        "value": 9
-      }
-    },
-    {
-      "type": "Reclaim",
-      "sender_index": 1,
-      "asset": {
-        "id": 1,
-        "value": 20
+        "value": 681
       }
     },
     {
       "type": "Mint",
       "source_index": 0,
       "asset": {
-        "id": 8,
-        "value": 748
-      }
-    },
-    {
-      "type": "Mint",
-      "source_index": 2,
-      "asset": {
         "id": 1,
-        "value": 63
-      }
-    },
-    {
-      "type": "Reclaim",
-      "sender_index": 0,
-      "asset": {
-        "id": 1,
-        "value": 151
+        "value": 3110
       }
     },
     {
@@ -328,7 +251,49 @@
       "source_index": 1,
       "asset": {
         "id": 1,
-        "value": 3205
+        "value": 321
+      }
+    },
+    {
+      "type": "Reclaim",
+      "sender_index": 0,
+      "asset": {
+        "id": 1,
+        "value": 1478
+      }
+    },
+    {
+      "type": "PrivateTransfer",
+      "sender_index": 1,
+      "receiver_index": 2,
+      "asset": {
+        "id": 1,
+        "value": 6472
+      }
+    },
+    {
+      "type": "Reclaim",
+      "sender_index": 0,
+      "asset": {
+        "id": 1,
+        "value": 442
+      }
+    },
+    {
+      "type": "PrivateTransfer",
+      "sender_index": 2,
+      "receiver_index": 1,
+      "asset": {
+        "id": 1,
+        "value": 293
+      }
+    },
+    {
+      "type": "Reclaim",
+      "sender_index": 1,
+      "asset": {
+        "id": 1,
+        "value": 1040
       }
     },
     {
@@ -336,23 +301,7 @@
       "source_index": 0,
       "asset": {
         "id": 1,
-        "value": 3680
-      }
-    },
-    {
-      "type": "Mint",
-      "source_index": 2,
-      "asset": {
-        "id": 1,
-        "value": 159
-      }
-    },
-    {
-      "type": "Reclaim",
-      "sender_index": 1,
-      "asset": {
-        "id": 8,
-        "value": 104
+        "value": 1185
       }
     }
   ]
