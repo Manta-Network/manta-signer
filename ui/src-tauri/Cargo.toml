@@ -36,8 +36,8 @@ unsafe-disable-cors = ["manta-signer/unsafe-disable-cors"]
 
 [dependencies]
 manta-signer = { path = "../../" }
-tauri = { version = "1.0.0-rc.6", features = ["reqwest-client", "system-tray", "updater", "window-hide", "window-show"] }
+tauri = { version = "1.0.0-rc.8", features = ["reqwest-client", "system-tray", "updater", "window-hide", "window-show"] }
 
 [build-dependencies]
-tauri-build = { version = "1.0.0-rc.5", features = [] }
+tauri-build = { version = "1.0.0-rc.7", features = [] }
 
