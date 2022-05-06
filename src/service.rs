@@ -460,15 +460,15 @@ where
 {
     info("performing service setup").await?;
     let socket_address = config.service_url.parse::<SocketAddr>()?;
-    let cors = CorsMiddleware::new()
-        .allow_methods("GET, POST".parse::<HeaderValue>().unwrap())
-        .allow_origin(match &config.origin_url {
-            Some(origin_url) => Origin::from(origin_url.as_str()),
-            _ => Origin::from("*"),
-        })
-        .allow_credentials(false);
+    //let cors = CorsMiddleware::new()
+    //    .allow_methods("GET, POST".parse::<HeaderValue>().unwrap())
+    //    .allow_origin(match &config.origin_url {
+    //        Some(origin_url) => Origin::from(origin_url.as_str()),
+    //        _ => Origin::from("*"),
+    //    })
+    //    .allow_credentials(false);
     let mut api = tide::Server::with_state(Server::build(config, authorizer).await?);
-    api.with(cors);
+    //api.with(cors);
     api.at("/version").get(|_| into_body(Server::<A>::version));
     api.at("/sync").post(|r| Server::execute(r, Server::sync));
     api.at("/sign").post(|r| Server::execute(r, Server::sign));
