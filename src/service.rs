@@ -65,13 +65,13 @@ pub const PASSWORD_RETRY_INTERVAL: Duration = Duration::from_millis(1000);
 
 /// Sets the task to sleep to delay password retry.
 #[inline]
-async fn delay_password_retry() {
+pub async fn delay_password_retry() {
     tokio::time::sleep(PASSWORD_RETRY_INTERVAL).await;
 }
 
 /// Log Level
 #[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
-enum LogLevel {
+pub enum LogLevel {
     /// Information
     Info,
 
@@ -92,7 +92,7 @@ impl fmt::Display for LogLevel {
 /// Logs `string` to STDOUT with the current time.
 #[cfg(feature = "log")]
 #[inline]
-async fn log(level: LogLevel, string: impl Into<String>) -> io::Result<()> {
+pub async fn log(level: LogLevel, string: impl Into<String>) -> io::Result<()> {
     use tokio::io::AsyncWriteExt;
     tokio::io::stdout()
         .write_all(
@@ -110,20 +110,20 @@ async fn log(level: LogLevel, string: impl Into<String>) -> io::Result<()> {
 /// Does not log to STDOUT when logging is not enabled.
 #[cfg(not(feature = "log"))]
 #[inline]
-async fn log(level: LogLevel, string: impl Into<String>) -> io::Result<()> {
+pub async fn log(level: LogLevel, string: impl Into<String>) -> io::Result<()> {
     let _ = (level, string);
     Ok(())
 }
 
 /// Prints an INFO-level log to STDOUT.
 #[inline]
-async fn info(string: impl Into<String>) -> io::Result<()> {
+pub async fn info(string: impl Into<String>) -> io::Result<()> {
     log(LogLevel::Info, string).await
 }
 
 /// Prints an WARN-level log to STDOUT.
 #[inline]
-async fn warn(string: impl Into<String>) -> io::Result<()> {
+pub async fn warn(string: impl Into<String>) -> io::Result<()> {
     log(LogLevel::Warn, string).await
 }
 
@@ -383,7 +383,12 @@ where
     #[inline]
     async fn sync(self, request: SyncRequest) -> Result<Result<SyncResponse, SyncError>> {
         info(format!("[REQUEST] processing `sync`:  {:?}.", request)).await?;
-        let response = self.state.lock().signer.sync(request);
+        let response = { self.state.lock().signer.sync(request) };
+        task::spawn(async {
+            if self.save().await.is_err() {
+                let _ = warn("unable to save current signer state").await;
+            }
+        });
         info(format!(
             "[RESPONSE] responding to `sync` with: {:?}.",
             response
@@ -458,7 +463,7 @@ pub async fn start<A>(config: Config, authorizer: A) -> Result<()>
 where
     A: Authorizer,
 {
-    info("performing service setup").await?;
+    info(format!("performing service setup with: {:#?}", config)).await?;
     let socket_address = config.service_url.parse::<SocketAddr>()?;
     let cors = CorsMiddleware::new()
         .allow_methods("GET, POST".parse::<HeaderValue>().unwrap())
@@ -474,7 +479,7 @@ where
     api.at("/sign").post(|r| Server::execute(r, Server::sign));
     api.at("/receivingKeys")
         .post(|r| Server::execute(r, Server::receiving_keys));
-    info("serving signer API").await?;
+    info(format!("serving signer API at: {}", socket_address)).await?;
     api.listen(socket_address).await?;
     Ok(())
 }
