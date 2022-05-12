@@ -20,7 +20,7 @@ use crate::{
     config::{Config, Setup},
     secret::{Argon2, Authorizer, ExposeSecret, PasswordHash, SecretString},
 };
-use core::{fmt, future::Future, time::Duration};
+use core::{future::Future, time::Duration};
 use http_types::headers::HeaderValue;
 use manta_accounting::{
     fs::{cocoon::File, File as _, SaveError},
@@ -100,9 +100,15 @@ from_variant_impl!(Error, Io, io::Error);
 impl From<Error> for tide::Error {
     #[inline]
     fn from(err: Error) -> tide::Error {
-        // TODO: Convert to a more useful error;
-        let _ = err;
-        Self::from_str(StatusCode::InternalServerError, "")
+        match err {
+            Error::AuthorizationError => {
+                Self::from_str(StatusCode::Unauthorized, "request was not authorized")
+            }
+            _ => Self::from_str(
+                StatusCode::InternalServerError,
+                "unable to complete request",
+            ),
+        }
     }
 }
 
@@ -334,13 +340,11 @@ where
     async fn sync(self, request: SyncRequest) -> Result<Result<SyncResponse, SyncError>> {
         info!("[REQUEST] processing `sync`:  {:?}.", request);
         let response = self.state.lock().signer.sync(request);
-        /*
         task::spawn(async {
             if self.save().await.is_err() {
                 warn!("unable to save current signer state");
             }
         });
-        */
         info!("[RESPONSE] responding to `sync` with: {:?}.", response);
         Ok(response)
     }

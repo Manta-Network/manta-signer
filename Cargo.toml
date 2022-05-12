@@ -30,6 +30,7 @@ unsafe-disable-cors = []
 
 [dependencies]
 argon2 = { version = "0.3.4", default-features = false, features = ["alloc", "password-hash"] }
+async-std = { version = "1.11.0", default-features = false, features = ["attributes", "tokio1"] }
 chrono = { version = "0.4.19", default-features = false, features = ["clock"] }
 derivative = { version = "2.2.0", default-features = false, features = ["use_core"] }
 dirs-next = { version = "2.0.0", default-features = false }
@@ -51,5 +52,4 @@ tracing = { version = "0.1.34", default-features = false, features = ["attribute
 tracing-subscriber = { version = "0.3.11", default-features = false, features = ["ansi"] }
 
 [dev-dependencies]
-async-std = { version = "1.11.0", default-features = false, features = ["attributes", "tokio1"] }
 tempfile = { version = "3.3.0", default-features = false }
