@@ -31,13 +31,16 @@ default = ["custom-protocol"]
 # Tauri Custom Protocol Building Feature
 custom-protocol = ["tauri/custom-protocol"]
 
+# Enable Logging
+log = []
+
 # Disable CORS Check
 unsafe-disable-cors = ["manta-signer/unsafe-disable-cors"]
 
 [dependencies]
-manta-signer = { path = "../../" }
-tauri = { version = "1.0.0-rc.10", features = ["reqwest-client", "system-tray", "updater", "window-hide", "window-show"] }
+manta-signer = { path = "../../", default-features = false }
+tauri = { version = "1.0.0-rc.10", default-features = false, features = ["reqwest-client", "system-tray", "updater", "window-hide", "window-show", "wry"] }
 
 [build-dependencies]
-tauri-build = { version = "1.0.0-rc.8", features = [] }
+tauri-build = { version = "1.0.0-rc.8", default-features = false, features = [] }
 

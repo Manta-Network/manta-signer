@@ -59,6 +59,7 @@ use tokio::{
     sync::Mutex as AsyncMutex,
     task::{self, JoinError},
 };
+use tracing::{info, instrument, trace, warn};
 
 /// Password Retry Interval
 pub const PASSWORD_RETRY_INTERVAL: Duration = Duration::from_millis(1000);
@@ -67,64 +68,6 @@ pub const PASSWORD_RETRY_INTERVAL: Duration = Duration::from_millis(1000);
 #[inline]
 pub async fn delay_password_retry() {
     tokio::time::sleep(PASSWORD_RETRY_INTERVAL).await;
-}
-
-/// Log Level
-#[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
-pub enum LogLevel {
-    /// Information
-    Info,
-
-    /// Warning
-    Warn,
-}
-
-impl fmt::Display for LogLevel {
-    #[inline]
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match self {
-            Self::Info => write!(f, "INFO"),
-            Self::Warn => write!(f, "WARN"),
-        }
-    }
-}
-
-/// Logs `string` to STDOUT with the current time.
-#[cfg(feature = "log")]
-#[inline]
-pub async fn log(level: LogLevel, string: impl Into<String>) -> io::Result<()> {
-    use tokio::io::AsyncWriteExt;
-    tokio::io::stdout()
-        .write_all(
-            format!(
-                "{} [{}]: {}\n",
-                level,
-                chrono::offset::Utc::now(),
-                string.into()
-            )
-            .as_bytes(),
-        )
-        .await
-}
-
-/// Does not log to STDOUT when logging is not enabled.
-#[cfg(not(feature = "log"))]
-#[inline]
-pub async fn log(level: LogLevel, string: impl Into<String>) -> io::Result<()> {
-    let _ = (level, string);
-    Ok(())
-}
-
-/// Prints an INFO-level log to STDOUT.
-#[inline]
-pub async fn info(string: impl Into<String>) -> io::Result<()> {
-    log(LogLevel::Info, string).await
-}
-
-/// Prints an WARN-level log to STDOUT.
-#[inline]
-pub async fn warn(string: impl Into<String>) -> io::Result<()> {
-    log(LogLevel::Warn, string).await
 }
 
 /// Service Error
@@ -236,14 +179,15 @@ where
 {
     /// Builds a new [`Server`] from `config` and `authorizer`.
     #[inline]
+    #[instrument(skip_all)]
     async fn build(config: Config, mut authorizer: A) -> Result<Self> {
-        info("building signer server").await?;
-        info("loading latest parameters from Manta SDK").await?;
+        info!("building signer server");
+        info!("loading latest parameters from Manta SDK");
         let data_path = config.data_directory().to_owned();
         let parameters = task::spawn_blocking(move || crate::parameters::load(data_path))
             .await?
             .ok_or(Error::ParameterLoadingError)?;
-        info("setting up configuration").await?;
+        info!("setting up configuration");
         let setup = config.setup().await?;
         authorizer.setup(&setup).await;
         let (password_hash, signer) = match setup {
@@ -272,7 +216,7 @@ where
                 delay_password_retry().await;
             },
         };
-        info("telling authorizer to sleep").await?;
+        info!("telling authorizer to sleep");
         authorizer.sleep().await;
         Ok(Self {
             state: Arc::new(Mutex::new(State { config, signer })),
@@ -285,8 +229,9 @@ where
 
     /// Loads the password from the `authorizer` and compute the password hash.
     #[inline]
+    #[instrument(skip_all)]
     async fn load_password(authorizer: &mut A) -> Option<(SecretString, PasswordHash<Argon2>)> {
-        info("loading password from authorizer").await.ok()?;
+        info!("loading password from authorizer");
         let password = authorizer.password().await.known()?;
         let password_hash = PasswordHash::from_default(password.expose_secret().as_bytes());
         Some((password, password_hash))
@@ -294,6 +239,7 @@ where
 
     /// Creates the initial signer state for a new account.
     #[inline]
+    #[instrument(skip_all)]
     async fn create_state(
         data_path: &Path,
         password: &SecretString,
@@ -301,7 +247,7 @@ where
         mnemonic: Mnemonic,
         parameters: SignerParameters,
     ) -> Result<Signer> {
-        info("creating signer state").await?;
+        info!("creating signer state");
         let state = SignerState::new(
             TestnetKeySecret::new(mnemonic, password.expose_secret())
                 .map(HierarchicalKeyDerivationFunction::default()),
@@ -311,7 +257,7 @@ where
                     .ok_or(Error::ParameterLoadingError)?,
             ),
         );
-        info("saving signer state").await?;
+        info!("saving signer state");
         let data_path = data_path.to_owned();
         let password_hash_bytes = password_hash.as_bytes();
         let cloned_state = state.clone();
@@ -322,11 +268,12 @@ where
 
     /// Loads the signer state from the data path.
     #[inline]
+    #[instrument(skip_all)]
     async fn load_state(
         data_path: &Path,
         password_hash: &PasswordHash<Argon2>,
     ) -> Result<Option<SignerState>> {
-        info("loading signer state from disk").await?;
+        info!("loading signer state from disk");
         let data_path = data_path.to_owned();
         let password_hash_bytes = password_hash.as_bytes();
         if let Ok(state) =
@@ -356,8 +303,9 @@ where
 
     /// Saves the signer state to disk.
     #[inline]
+    #[instrument(skip_all)]
     async fn save(self) -> Result<()> {
-        info("starting signer state save to disk").await?;
+        info!("starting signer state save to disk");
         let path = self.state.lock().config.data_path.clone();
         let backup = path.with_extension("backup");
         fs::rename(&path, &backup).await?;
@@ -368,39 +316,40 @@ where
         })
         .await??;
         fs::remove_file(backup).await?;
-        info("save complete").await?;
+        info!("save complete");
         Ok(())
     }
 
     /// Returns the [`crate::VERSION`] string to the client.
     #[inline]
+    #[instrument(skip_all)]
     async fn version() -> Result<&'static str> {
-        info(format!("[PING] current signer version: {}", crate::VERSION)).await?;
+        trace!("[PING] current signer version: {}", crate::VERSION);
         Ok(crate::VERSION)
     }
 
     /// Runs the synchronization protocol on the signer.
     #[inline]
+    #[tracing::instrument(skip_all)]
     async fn sync(self, request: SyncRequest) -> Result<Result<SyncResponse, SyncError>> {
-        info(format!("[REQUEST] processing `sync`:  {:?}.", request)).await?;
-        let response = { self.state.lock().signer.sync(request) };
+        info!("[REQUEST] processing `sync`:  {:?}.", request);
+        let response = self.state.lock().signer.sync(request);
+        /*
         task::spawn(async {
             if self.save().await.is_err() {
-                let _ = warn("unable to save current signer state").await;
+                warn!("unable to save current signer state");
             }
         });
-        info(format!(
-            "[RESPONSE] responding to `sync` with: {:?}.",
-            response
-        ))
-        .await?;
+        */
+        info!("[RESPONSE] responding to `sync` with: {:?}.", response);
         Ok(response)
     }
 
     /// Runs the transaction signing protocol on the signer.
     #[inline]
+    #[tracing::instrument(skip_all)]
     async fn sign(self, request: SignRequest) -> Result<Result<SignResponse, SignError>> {
-        info(format!("[REQUEST] processing `sign`: {:?}.", request)).await?;
+        info!("[REQUEST] processing `sign`: {:?}.", request);
         let SignRequest {
             transaction,
             metadata,
@@ -412,7 +361,7 @@ where
                 //       default, requests authorization.
             }
             _ => {
-                info("[AUTH] asking for transaction authorization").await?;
+                info!("[AUTH] asking for transaction authorization");
                 let summary = metadata
                     .map(|m| transaction.display(&m, receiving_key_to_base58))
                     .unwrap_or_default();
@@ -420,28 +369,20 @@ where
             }
         }
         let response = self.state.lock().signer.sign(transaction);
-        info(format!(
-            "[RESPONSE] responding to `sign` with: {:?}.",
-            response
-        ))
-        .await?;
+        info!("[RESPONSE] responding to `sign` with: {:?}.", response);
         Ok(response)
     }
 
     /// Runs the receiving key sampling protocol on the signer.
     #[inline]
+    #[tracing::instrument(skip_all)]
     async fn receiving_keys(self, request: ReceivingKeyRequest) -> Result<Vec<ReceivingKey>> {
-        info(format!(
-            "[REQUEST] processing `receivingKeys`: {:?}",
-            request
-        ))
-        .await?;
+        info!("[REQUEST] processing `receivingKeys`: {:?}", request);
         let response = self.state.lock().signer.receiving_keys(request);
-        info(format!(
+        info!(
             "[RESPONSE] responding to `receivingKeys` with: {:?}",
             response
-        ))
-        .await?;
+        );
         Ok(response)
     }
 }
@@ -459,11 +400,12 @@ where
 
 /// Starts the signer server with `config` and `authorizer`.
 #[inline]
+#[instrument(skip_all)]
 pub async fn start<A>(config: Config, authorizer: A) -> Result<()>
 where
     A: Authorizer,
 {
-    info(format!("performing service setup with: {:#?}", config)).await?;
+    info!("performing service setup with {:#?}", config);
     let socket_address = config.service_url.parse::<SocketAddr>()?;
     let cors = CorsMiddleware::new()
         .allow_methods("GET, POST".parse::<HeaderValue>().unwrap())
@@ -479,7 +421,7 @@ where
     api.at("/sign").post(|r| Server::execute(r, Server::sign));
     api.at("/receivingKeys")
         .post(|r| Server::execute(r, Server::receiving_keys));
-    info(format!("serving signer API at: {}", socket_address)).await?;
+    info!("serving signer API at {}", socket_address);
     api.listen(socket_address).await?;
     Ok(())
 }

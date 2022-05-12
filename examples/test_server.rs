@@ -51,6 +51,7 @@ impl Authorizer for MockUser {
 
 #[async_std::main]
 async fn main() -> Result<(), Error> {
+    tracing_subscriber::fmt().compact().init();
     let test_dir = tempfile::tempdir()?;
     let mut config =
         Config::try_default().expect("Unable to generate the default server configuration.");

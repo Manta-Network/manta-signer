@@ -25,9 +25,6 @@ is-it-maintained-open-issues = { repository = "Manta-Network/manta-signer" }
 maintenance = { status = "actively-developed" }
 
 [features]
-# Enable Logging
-log = []
-
 # Disable CORS Check: This is UNSAFE in general and should only be used in debug builds.
 unsafe-disable-cors = []
 
@@ -50,6 +47,8 @@ serde_json = { version = "1.0.68", default-features = false }
 subtle = { version = "2.4.1", default-features = false }
 tide = { version = "0.16.0", default-features = false, features = ["h1-server"] }
 tokio = { version = "1.17.0", default-features = false, features = ["fs", "io-std", "io-util", "rt", "sync", "time"] }
+tracing = { version = "0.1.34", default-features = false, features = ["attributes"] }
+tracing-subscriber = { version = "0.3.11", default-features = false, features = ["ansi"] }
 
 [dev-dependencies]
 async-std = { version = "1.11.0", default-features = false, features = ["attributes", "tokio1"] }
