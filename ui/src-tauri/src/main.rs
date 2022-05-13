@@ -31,9 +31,8 @@ use manta_signer::{
     config::{Config, Setup},
     secret::{Authorizer, Password, PasswordFuture, Secret, SecretString, UnitFuture},
     serde::Serialize,
-    service, tracing_subscriber,
+    service,
 };
-use std::{fs::OpenOptions, sync};
 use tauri::{
     async_runtime::{channel, spawn, Mutex, Receiver, Sender},
     CustomMenuItem, Manager, RunEvent, State, SystemTray, SystemTrayEvent, SystemTrayMenu, Window,
@@ -217,28 +216,10 @@ async fn stop_password_prompt(password_store: State<'_, PasswordStore>) -> Resul
     Ok(())
 }
 
-/// Creates log file for logging signer events.
-#[inline]
-#[cfg(feature = "log")]
-fn setup_logging(config: &Config) {
-    let log_file = OpenOptions::new()
-        .create(true)
-        .append(true)
-        .open(config.data_directory().join("dolphin.log"))
-        .expect("Unable to create log file for signer.");
-    tracing_subscriber::fmt()
-        .with_writer(sync::Mutex::new(log_file))
-        .compact()
-        .init();
-}
-
 /// Runs the main Tauri application.
 fn main() {
     let config =
         Config::try_default().expect("Unable to generate the default server configuration.");
-
-    #[cfg(feature = "log")]
-    setup_logging(&config);
 
     let mut app = tauri::Builder::default()
         .system_tray(

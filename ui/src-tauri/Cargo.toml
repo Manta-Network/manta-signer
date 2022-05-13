@@ -31,9 +31,6 @@ default = ["custom-protocol"]
 # Tauri Custom Protocol Building Feature
 custom-protocol = ["tauri/custom-protocol"]
 
-# Enable Logging
-log = []
-
 # Disable CORS Check
 unsafe-disable-cors = ["manta-signer/unsafe-disable-cors"]
 
