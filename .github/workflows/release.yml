@@ -21,6 +21,7 @@ jobs:
     needs: setup
     runs-on: ${{ matrix.os }}
     strategy:
+      fail-fast: false
       matrix:
         include:
           - os: ubuntu-latest
