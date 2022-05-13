@@ -2492,7 +2492,7 @@ dependencies = [
 [[package]]
 name = "manta-accounting"
 version = "0.4.0"
-source = "git+https://github.com/manta-network/manta-rs?branch=feat/improve-sync#5878fc047946f38067c0160b99649af374f4365c"
+source = "git+https://github.com/manta-network/manta-rs#d49e3214e91e6367007e2ad6d8887da693d88db3"
 dependencies = [
  "bitflags",
  "cocoon",
@@ -2506,7 +2506,7 @@ dependencies = [
 [[package]]
 name = "manta-crypto"
 version = "0.4.0"
-source = "git+https://github.com/manta-network/manta-rs?branch=feat/improve-sync#5878fc047946f38067c0160b99649af374f4365c"
+source = "git+https://github.com/manta-network/manta-rs#d49e3214e91e6367007e2ad6d8887da693d88db3"
 dependencies = [
  "derivative",
  "manta-util",
@@ -2516,7 +2516,7 @@ dependencies = [
 [[package]]
 name = "manta-pay"
 version = "0.4.0"
-source = "git+https://github.com/manta-network/manta-rs?branch=feat/improve-sync#5878fc047946f38067c0160b99649af374f4365c"
+source = "git+https://github.com/manta-network/manta-rs#d49e3214e91e6367007e2ad6d8887da693d88db3"
 dependencies = [
  "aes-gcm 0.9.4",
  "ark-bls12-381",
@@ -2542,7 +2542,7 @@ dependencies = [
 [[package]]
 name = "manta-sdk"
 version = "0.5.0"
-source = "git+https://github.com/manta-network/sdk#48859513e49f8bd7f78586cc5265225363c260b3"
+source = "git+https://github.com/manta-network/sdk#2f16d6a809076bbfee2de20774f51edf3ac30f6e"
 dependencies = [
  "anyhow",
  "attohttpc 0.18.0",
@@ -2588,7 +2588,7 @@ dependencies = [
 [[package]]
 name = "manta-util"
 version = "0.4.0"
-source = "git+https://github.com/manta-network/manta-rs?branch=feat/improve-sync#5878fc047946f38067c0160b99649af374f4365c"
+source = "git+https://github.com/manta-network/manta-rs#d49e3214e91e6367007e2ad6d8887da693d88db3"
 dependencies = [
  "serde",
  "serde_with",
@@ -3981,9 +3981,9 @@ dependencies = [
 
 [[package]]
 name = "soup2"
-version = "0.2.0"
+version = "0.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2eda64fb9a59670c3dca9edc9459a010ca1f8fb134eac5ea7edece453f90cc7b"
+checksum = "b2b4d76501d8ba387cf0fefbe055c3e0a59891d09f0f995ae4e4b16f6b60f3c0"
 dependencies = [
  "bitflags",
  "gio",
@@ -4132,9 +4132,9 @@ checksum = "45f6ee7c7b87caf59549e9fe45d6a69c75c8019e79e212a835c5da0e92f0ba08"
 
 [[package]]
 name = "syn"
-version = "1.0.93"
+version = "1.0.94"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "04066589568b72ec65f42d65a1a52436e954b168773148893c020269563decf2"
+checksum = "a07e33e919ebcd69113d5be0e4d70c5707004ff45188910106854f38b960df4a"
 dependencies = [
  "proc-macro2",
  "quote",
