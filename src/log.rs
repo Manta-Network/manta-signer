@@ -40,19 +40,20 @@ pub enum Level {
     Error,
 }
 
-impl fmt::Display for Level {
+impl Level {
+    /// Returns the loggging prefix for `self` as a static string.
     #[inline]
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    const fn as_prefix(&self) -> &'static str {
         match self {
-            Self::Trace => write!(f, "TRACE"),
-            Self::Info => write!(f, "INFO"),
-            Self::Warn => write!(f, "WARN"),
-            Self::Error => write!(f, "ERROR"),
+            Self::Trace => "TRACE",
+            Self::Info => "INFO ",
+            Self::Warn => "WARN ",
+            Self::Error => "ERROR",
         }
     }
 }
 
-///
+/// Prints the `display` as a log line to the `writer` with the given logging `level`.
 #[inline]
 pub async fn log<W, D>(writer: &mut W, level: Level, display: D) -> io::Result<()>
 where
@@ -60,11 +61,19 @@ where
     D: fmt::Display,
 {
     writer
-        .write_all(format!("{} [{}]: {}\n", level, chrono::offset::Utc::now(), display).as_bytes())
+        .write_all(
+            format!(
+                "{} {}: {}\n",
+                level.as_prefix(),
+                chrono::offset::Utc::now(),
+                display
+            )
+            .as_bytes(),
+        )
         .await
 }
 
-///
+/// Logs a single log line to the default writer of the given `$level`.
 macro_rules! log_macro {
     ($level:expr, $($expr:expr),*) => {{
         $crate::log::log(&mut $crate::log::stdout(), $level, format!($($expr),*)).await
@@ -73,7 +82,7 @@ macro_rules! log_macro {
 
 pub(crate) use log_macro as log;
 
-///
+/// Logs some trace information to the default writer.
 macro_rules! trace_macro {
     ($($expr:expr),*) => {{
         $crate::log::log!($crate::log::Level::Trace, $($expr),*)
@@ -82,7 +91,7 @@ macro_rules! trace_macro {
 
 pub(crate) use trace_macro as trace;
 
-///
+/// Logs some basic information to the default writer.
 macro_rules! info_macro {
     ($($expr:expr),*) => {{
         $crate::log::log!($crate::log::Level::Info, $($expr),*)
@@ -91,7 +100,7 @@ macro_rules! info_macro {
 
 pub(crate) use info_macro as info;
 
-///
+/// Logs a warning to the default writer.
 macro_rules! warn_macro {
     ($($expr:expr),*) => {{
         $crate::log::log!($crate::log::Level::Warn, $($expr),*)
@@ -100,7 +109,7 @@ macro_rules! warn_macro {
 
 pub(crate) use warn_macro as warn;
 
-///
+/// Logs an error to the default writer.
 macro_rules! error_macro {
     ($($expr:expr),*) => {{
         $crate::log::log!($crate::log::Level::Error, $($expr),*)

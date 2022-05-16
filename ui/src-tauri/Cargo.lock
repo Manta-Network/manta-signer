@@ -2019,7 +2019,7 @@ dependencies = [
  "indexmap",
  "slab",
  "tokio",
- "tokio-util 0.7.1",
+ "tokio-util 0.7.2",
  "tracing",
 ]
 
@@ -2114,7 +2114,7 @@ checksum = "ff8670570af52249509a86f5e3e18a08c60b177071826898fde8997cf5f6bfbb"
 dependencies = [
  "bytes",
  "fnv",
- "itoa 1.0.1",
+ "itoa 1.0.2",
 ]
 
 [[package]]
@@ -2195,7 +2195,7 @@ dependencies = [
  "http-body",
  "httparse",
  "httpdate",
- "itoa 1.0.1",
+ "itoa 1.0.2",
  "pin-project-lite 0.2.9",
  "socket2",
  "tokio",
@@ -2319,9 +2319,9 @@ checksum = "b71991ff56294aa922b450139ee08b3bfc70982c6b2c7562771375cf73542dd4"
 
 [[package]]
 name = "itoa"
-version = "1.0.1"
+version = "1.0.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1aab8fc367588b89dcee83ab0fd66b72b50b72fa1904d7095045ace2b0c81c35"
+checksum = "112c678d4050afce233f4f2852bb2eb519230b3cf12f33585275537d7e41578d"
 
 [[package]]
 name = "javascriptcore-rs"
@@ -2484,9 +2484,9 @@ dependencies = [
 
 [[package]]
 name = "loom"
-version = "0.5.4"
+version = "0.5.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "edc5c7d328e32cc4954e8e01193d7f0ef5ab257b5090b70a964e099a36034309"
+checksum = "85eb735cf3c8ebac6cc3655c5da2f4a088b6a19133aa482471a21ba0eb5d83ab"
 dependencies = [
  "cfg-if",
  "generator",
@@ -3523,7 +3523,7 @@ dependencies = [
  "serde_urlencoded",
  "tokio",
  "tokio-native-tls",
- "tokio-util 0.6.9",
+ "tokio-util 0.6.10",
  "url",
  "wasm-bindgen",
  "wasm-bindgen-futures",
@@ -3618,9 +3618,9 @@ checksum = "f2cc38e8fa666e2de3c4aba7edeb5ffc5246c1c2ed0e3d17e560aeeba736b23f"
 
 [[package]]
 name = "ryu"
-version = "1.0.9"
+version = "1.0.10"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "73b4b750c782965c211b42f022f59af1fbceabdd026623714f104152f1ec149f"
+checksum = "f3f6f92acf49d1b98f7a81226834412ada05458b7364277387724a237f062695"
 
 [[package]]
 name = "same-file"
@@ -3782,7 +3782,7 @@ version = "1.0.81"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9b7ce2b32a1aed03c558dc61a5cd328f15aff2dbc17daad8fb8af04d2100e15c"
 dependencies = [
- "itoa 1.0.1",
+ "itoa 1.0.2",
  "ryu",
  "serde",
 ]
@@ -3816,7 +3816,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d3491c14715ca2294c4d6a88f15e84739788c1d030eed8c110436aafdaa2f3fd"
 dependencies = [
  "form_urlencoded",
- "itoa 1.0.1",
+ "itoa 1.0.2",
  "ryu",
  "serde",
 ]
@@ -3938,9 +3938,9 @@ dependencies = [
 
 [[package]]
 name = "signal-hook"
-version = "0.3.13"
+version = "0.3.14"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "647c97df271007dcea485bb74ffdb57f2e683f1306c854f468a0c244badabf2d"
+checksum = "a253b5e89e2698464fc26b545c9edceb338e18a89effeeecfea192c3025be29d"
 dependencies = [
  "libc",
  "signal-hook-registry",
@@ -4270,6 +4270,8 @@ dependencies = [
 [[package]]
 name = "tauri"
 version = "1.0.0-rc.10"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6d5ab16d343563684af482b1cb87acc515a1e359515b70c525c709372134c257"
 dependencies = [
  "anyhow",
  "attohttpc 0.19.1",
@@ -4306,7 +4308,7 @@ dependencies = [
  "tauri-macros",
  "tauri-runtime",
  "tauri-runtime-wry",
- "tauri-utils 1.0.0-rc.6",
+ "tauri-utils",
  "tempfile",
  "thiserror",
  "tokio",
@@ -4328,13 +4330,15 @@ dependencies = [
  "cargo_toml",
  "semver 1.0.9",
  "serde_json",
- "tauri-utils 1.0.0-rc.6 (registry+https://github.com/rust-lang/crates.io-index)",
+ "tauri-utils",
  "winres",
 ]
 
 [[package]]
 name = "tauri-codegen"
 version = "1.0.0-rc.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7b6273cb4ba4210d48cba182415dd8ed2f23b29f9f89801f77a09fcbb6a6d92b"
 dependencies = [
  "base64",
  "ico",
@@ -4344,7 +4348,7 @@ dependencies = [
  "serde",
  "serde_json",
  "sha2 0.10.2",
- "tauri-utils 1.0.0-rc.6",
+ "tauri-utils",
  "thiserror",
  "uuid 1.0.0",
  "walkdir",
@@ -4353,18 +4357,22 @@ dependencies = [
 [[package]]
 name = "tauri-macros"
 version = "1.0.0-rc.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "07d91657771bb36eca42d86afc80aa05e10f6b7328f8f40630e52c10ae84ddf3"
 dependencies = [
  "heck 0.4.0",
  "proc-macro2",
  "quote",
  "syn",
  "tauri-codegen",
- "tauri-utils 1.0.0-rc.6",
+ "tauri-utils",
 ]
 
 [[package]]
 name = "tauri-runtime"
 version = "0.5.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "86b266b563439a4c300a524edc695541d72cb5ba55cd41f27adc6944c9c88d6e"
 dependencies = [
  "gtk",
  "http",
@@ -4372,7 +4380,7 @@ dependencies = [
  "infer 0.7.0",
  "serde",
  "serde_json",
- "tauri-utils 1.0.0-rc.6",
+ "tauri-utils",
  "thiserror",
  "uuid 1.0.0",
  "webview2-com",
@@ -4382,38 +4390,20 @@ dependencies = [
 [[package]]
 name = "tauri-runtime-wry"
 version = "0.5.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "31a5558141be2d58e9f8071ed29d49ccf56076d0b12d40b6b21c6d3f6786b8d2"
 dependencies = [
  "cocoa",
  "gtk",
  "percent-encoding",
  "rand 0.8.5",
  "tauri-runtime",
- "tauri-utils 1.0.0-rc.6",
+ "tauri-utils",
  "uuid 1.0.0",
  "webkit2gtk",
  "webview2-com",
  "windows 0.30.0",
  "wry",
-]
-
-[[package]]
-name = "tauri-utils"
-version = "1.0.0-rc.6"
-dependencies = [
- "ctor",
- "heck 0.4.0",
- "html5ever",
- "json-patch",
- "kuchiki",
- "memchr",
- "phf 0.10.1",
- "proc-macro2",
- "quote",
- "serde",
- "serde_json",
- "serde_with",
- "thiserror",
- "url",
 ]
 
 [[package]]
@@ -4603,9 +4593,9 @@ dependencies = [
 
 [[package]]
 name = "tokio-util"
-version = "0.6.9"
+version = "0.6.10"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9e99e1983e5d376cd8eb4b66604d2e99e79f5bd988c3055891dcd8c9e2604cc0"
+checksum = "36943ee01a6d67977dd3f84a5a1d2efeb4ada3a1ae771cadfaa535d9d9fc6507"
 dependencies = [
  "bytes",
  "futures-core",
@@ -4617,9 +4607,9 @@ dependencies = [
 
 [[package]]
 name = "tokio-util"
-version = "0.7.1"
+version = "0.7.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0edfdeb067411dba2044da6d1cb2df793dd35add7888d73c16e3381ded401764"
+checksum = "f988a1a1adc2fb21f9c12aa96441da33a1728193ae0b95d2be22dbd17fcb4e5c"
 dependencies = [
  "bytes",
  "futures-core",
