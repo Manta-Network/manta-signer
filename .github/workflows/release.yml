@@ -83,7 +83,7 @@ jobs:
         run: cd ui/src-tauri; sed -i /icns/d tauri.conf.json
         if: matrix.os_type == 'ubuntu'
       - name: Ubuntu Build Dependencies
-        run: sudo apt-get update && sudo apt-get -y install libwebkit2gtk-4.0-dev libgtk-3-dev libappindicator3-dev patchelf librsvg2-dev
+        run: sudo apt-get update && sudo apt-get -y install libayatana-appindicator3-dev libwebkit2gtk-4.0-dev libgtk-3-dev libappindicator3-dev patchelf librsvg2-dev
         if: matrix.os_type == 'ubuntu'
       - name: Suffix version
         id: suffixed
