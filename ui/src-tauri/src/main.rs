@@ -16,8 +16,6 @@
 
 //! Manta Signer UI
 
-// TODO: Check what the `windows_subsystem` attributes do, and if we need them.
-
 #![cfg_attr(doc_cfg, feature(doc_cfg))]
 #![forbid(rustdoc::broken_intra_doc_links)]
 #![forbid(missing_docs)]
@@ -26,19 +24,19 @@
     windows_subsystem = "windows"
 )]
 
-use async_std::{fs, path::PathBuf, stream::StreamExt, sync::Arc};
+extern crate alloc;
+
+use alloc::sync::Arc;
 use manta_signer::{
-    config::Config,
-    secret::{
-        account_exists, create_account, Authorizer, ExposeSecret, Password, PasswordFuture,
-        SecretString, UnitFuture,
-    },
-    service::{Prompt, Service},
+    config::{Config, Setup},
+    secret::{Authorizer, Password, PasswordFuture, Secret, SecretString, UnitFuture},
+    serde::Serialize,
+    service,
 };
-use serde::{Deserialize, Serialize};
 use tauri::{
     async_runtime::{channel, spawn, Mutex, Receiver, Sender},
-    CustomMenuItem, Event, Manager, State, SystemTray, SystemTrayEvent, SystemTrayMenu, Window,
+    CustomMenuItem, Manager, RunEvent, State, SystemTray, SystemTrayEvent, SystemTrayMenu, Window,
+    WindowEvent,
 };
 
 /// User
@@ -54,75 +52,23 @@ pub struct User {
 
     /// Waiting Flag
     waiting: bool,
-
-    /// Resource Directory
-    resource_directory: PathBuf,
 }
 
 impl User {
-    /// Builds a new [`User`] from `window`, `password`, `retry`, and `resource_directory`.
+    /// Builds a new [`User`] from `window`, `password`, and `retry`.
     #[inline]
-    pub fn new(
-        window: Window,
-        password: Receiver<Password>,
-        retry: Sender<bool>,
-        resource_directory: PathBuf,
-    ) -> Self {
+    pub fn new(window: Window, password: Receiver<Password>, retry: Sender<bool>) -> Self {
         Self {
             window,
             password,
             retry,
             waiting: false,
-            resource_directory,
-        }
-    }
-
-    /// Pulls resources from `self.resource_directory` and moves them to the proving key directory.
-    #[inline]
-    async fn setup_resources(&self, config: &Config) {
-        if !self.resource_directory.exists().await {
-            // NOTE: If this file does not exist, then we are in development mode.
-            return;
-        }
-        let mut entries = fs::read_dir(&self.resource_directory)
-            .await
-            .expect("The resource directory should be a directory.");
-        while let Some(entry) = entries.next().await {
-            let entry = entry.expect("Unable to get directory entry.");
-            if entry.file_type().await.unwrap().is_file() {
-                let path = entry.path();
-                if matches!(path.extension(), Some(ext) if ext == "dat") {
-                    fs::copy(
-                        &path,
-                        &config
-                            .proving_key_directory
-                            .join(&path.file_name().expect("Path should point to a real file.")),
-                    )
-                    .await
-                    .expect("Copy should have succeeded.");
-                }
-            } else if entry.path().to_str().unwrap().ends_with(".dat") {
-                let mut bins = fs::read_dir(&entry.path())
-                    .await
-                    .expect("The resource directory should be a directory.");
-                while let Some(entry) = bins.next().await {
-                    let path = entry.expect("Unable to get directory entry.").path();
-                    fs::copy(
-                        &path,
-                        &config
-                            .proving_key_directory
-                            .join(&path.file_name().expect("Path should point to a real file.")),
-                    )
-                    .await
-                    .expect("Copy should have succeeded.");
-                }
-            }
         }
     }
 
     /// Emits a `message` of the given `kind` to the window.
     #[inline]
-    fn emit<T>(&self, kind: &'static str, message: T)
+    fn emit<T>(&self, kind: &'static str, message: &T)
     where
         T: Serialize,
     {
@@ -163,31 +109,28 @@ impl User {
 }
 
 impl Authorizer for User {
-    type Prompt = Prompt;
-
-    type Message = ();
-
-    type Error = ();
-
     #[inline]
     fn password(&mut self) -> PasswordFuture {
         Box::pin(async move { self.request_password().await })
     }
 
     #[inline]
-    fn setup<'s>(&'s mut self, config: &'s Config) -> UnitFuture<'s> {
-        Box::pin(async move { self.setup_resources(config).await })
+    fn setup<'s>(&'s mut self, setup: &'s Setup) -> UnitFuture<'s> {
+        self.emit("connect", setup);
+        Box::pin(async move {})
     }
 
     #[inline]
-    fn wake(&mut self, prompt: Self::Prompt) -> UnitFuture {
+    fn wake<T>(&mut self, prompt: &T) -> UnitFuture
+    where
+        T: Serialize,
+    {
         self.emit("authorize", prompt);
         Box::pin(async move {})
     }
 
     #[inline]
-    fn sleep(&mut self, message: Result<Self::Message, Self::Error>) -> UnitFuture {
-        let _ = message;
+    fn sleep(&mut self) -> UnitFuture {
         Box::pin(async move { self.validate_password().await })
     }
 }
@@ -263,7 +206,7 @@ async fn send_password(
     password_store: State<'_, PasswordStore>,
     password: String,
 ) -> Result<bool, ()> {
-    Ok(password_store.load(password.into()).await)
+    Ok(password_store.load(Secret::new(password)).await)
 }
 
 /// Stops the server from prompting for the password.
@@ -271,44 +214,6 @@ async fn send_password(
 async fn stop_password_prompt(password_store: State<'_, PasswordStore>) -> Result<(), ()> {
     password_store.clear().await;
     Ok(())
-}
-
-/// Connection Event
-#[derive(Clone, Copy, Debug, Deserialize, Eq, Hash, PartialEq, Serialize)]
-#[serde(rename_all = "kebab-case")]
-enum ConnectEvent {
-    /// Create Account
-    CreateAccount,
-
-    /// Setup Authorization
-    SetupAuthorization,
-}
-
-/// Starts the first round of communication between the UI and the signer.
-#[tauri::command]
-async fn connect(config: State<'_, Config>) -> Result<ConnectEvent, ()> {
-    match account_exists(&config.root_seed_file).await {
-        Ok(true) => Ok(ConnectEvent::SetupAuthorization),
-        _ => Ok(ConnectEvent::CreateAccount),
-    }
-}
-
-/// Sends the mnemonic to the UI for the user to memorize.
-#[tauri::command]
-async fn get_mnemonic(
-    config: State<'_, Config>,
-    password_store: State<'_, PasswordStore>,
-    password: String,
-) -> Result<String, ()> {
-    let password = password.into();
-    let mnemonic = create_account(&config.root_seed_file, &password)
-        .await
-        .map_err(move |_| ())?
-        .expose_secret()
-        .clone()
-        .into_phrase();
-    password_store.load_exact(password).await;
-    Ok(mnemonic)
 }
 
 /// Runs the main Tauri application.
@@ -336,25 +241,18 @@ fn main() {
         .manage(PasswordStore::default())
         .manage(config)
         .setup(|app| {
-            let resource_directory = app.path_resolver().resource_dir().unwrap();
             let window = app.get_window("main").unwrap();
             let config = app.state::<Config>().inner().clone();
             let password_store = app.state::<PasswordStore>().handle();
             spawn(async move {
                 let (password, retry) = password_store.into_channel().await;
-                Service::build(
-                    config,
-                    User::new(window, password, retry, resource_directory.into()),
-                )
-                .serve()
-                .await
-                .expect("Unable to build manta-signer service.");
+                service::start(config, User::new(window, password, retry))
+                    .await
+                    .expect("Unable to build manta-signer service.");
             });
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
-            connect,
-            get_mnemonic,
             send_password,
             stop_password_prompt,
         ])
@@ -365,8 +263,12 @@ fn main() {
     app.set_activation_policy(tauri::ActivationPolicy::Accessory);
 
     app.run(|app, event| match event {
-        Event::Ready => app.get_window("about").unwrap().hide().unwrap(),
-        Event::CloseRequested { label, api, .. } => {
+        RunEvent::Ready => app.get_window("about").unwrap().hide().unwrap(),
+        RunEvent::WindowEvent {
+            label,
+            event: WindowEvent::CloseRequested { api, .. },
+            ..
+        } => {
             api.prevent_close();
             match label.as_str() {
                 "about" => app.get_window(&label).unwrap().hide().unwrap(),

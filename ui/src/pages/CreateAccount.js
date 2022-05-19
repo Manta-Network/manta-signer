@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
-import { Button, Input, Header, Container } from 'semantic-ui-react';
+import { useState } from 'react';
+import { Button, Input, Header } from 'semantic-ui-react';
 
-const CreateAccount = ({ getRecoveryPhrase, endInitialConnectionPhase }) => {
+const CreateAccount = ({ recoveryPhrase, sendPassword, endInitialConnectionPhase }) => {
   const [password, setPassword] = useState('');
-  const [recoveryPhrase, setRecoveryPhrase] = useState('');
+  const [createdAccount, setCreatedAccount] = useState(false);
 
   const isValid = (password) => {
     console.log("[INFO]: Check password validity.")
@@ -13,21 +13,20 @@ const CreateAccount = ({ getRecoveryPhrase, endInitialConnectionPhase }) => {
   const onClickCreateAccount = async () => {
     console.log("[INFO]: Creating account.")
     if (isValid(password)) {
-      const recoveryPhrase = await getRecoveryPhrase(password);
+      await sendPassword(password);
       setPassword('');
-      setRecoveryPhrase(recoveryPhrase);
+      setCreatedAccount(true);
     }
   };
 
   const onClickConfirmRecoveryPhrase = async () => {
     console.log("[INFO]: Confirming recovery phrase.")
-    setRecoveryPhrase('');
     await endInitialConnectionPhase();
   };
 
   return (
     <>
-      {!recoveryPhrase && (
+      {!createdAccount && (
         <>
           <Header> Create Account </Header>
           <Input
@@ -40,17 +39,18 @@ const CreateAccount = ({ getRecoveryPhrase, endInitialConnectionPhase }) => {
           </Button>
         </>
       )}
-      {recoveryPhrase && (
+      {createdAccount && (
         <>
           <Header className="recovery-phrase-header">
-            Your recovery phrase
+            Recovery Phrase
           </Header>
           <div className="recovery-phrase-info">
-            This phrase can restore your funds if you lose access to your
-            account. Write it down on paper and store it somewhere secure. ⚠️
-            Never share your recovery phrase with anyone!
+            <p>This phrase can restore your funds if you lose access to your account.</p>
+            <p>Write it down on paper and store it somewhere secure.</p>
           </div>
-          <Container className="recovery-phrase-warning"></Container>
+          <div className="recovery-phrase-warning">
+            ⚠️  Never share your recovery phrase with anyone! ⚠️ 
+          </div>
           <div className="recovery-phrase">
             <b>{recoveryPhrase}</b>
           </div>

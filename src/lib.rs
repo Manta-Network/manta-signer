@@ -20,7 +20,14 @@
 #![forbid(rustdoc::broken_intra_doc_links)]
 #![forbid(missing_docs)]
 
-pub mod batching;
 pub mod config;
+pub mod log;
+pub mod parameters;
 pub mod secret;
 pub mod service;
+
+#[doc(inline)]
+pub use manta_util::serde;
+
+/// Manta Signer Server Version
+pub const VERSION: &str = env!("CARGO_PKG_VERSION");

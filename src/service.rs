@@ -14,635 +14,408 @@
 // You should have received a copy of the GNU General Public License
 // along with manta-signer. If not, see <http://www.gnu.org/licenses/>.
 
-//! Manta Signer Service
+//! Manta Signer Service Implementation
 
-// TODO: Add better logging.
-
+use crate::log::{info, trace, warn};
 use crate::{
-    batching::{batch_generate_private_transfer_data, batch_generate_reclaim_data},
-    config::Config,
-    secret::{Authorizer, Password, RootSeed, SecretString},
+    config::{Config, Setup},
+    secret::{Argon2, Authorizer, ExposeSecret, PasswordHash, SecretString},
 };
-use async_std::{
-    io::{self, WriteExt},
-    sync::Mutex,
-    task::sleep,
-};
-use codec::{Decode, Encode};
-use core::time::Duration;
+use core::{future::Future, time::Duration};
 use http_types::headers::HeaderValue;
-use manta_api::{
-    get_private_transfer_batch_params_currency_symbol, get_private_transfer_batch_params_recipient,
-    get_private_transfer_batch_params_value, get_reclaim_batch_params_currency_symbol,
-    get_reclaim_batch_params_value, DeriveShieldedAddressParams, GenerateAssetParams,
-    GeneratePrivateTransferBatchParams, GenerateReclaimBatchParams, RecoverAccountParams,
+use manta_accounting::{
+    fs::{cocoon::File, File as _, SaveError},
+    key::HierarchicalKeyDerivationScheme,
+    transfer::canonical::TransferShape,
 };
-use manta_asset::AssetId;
-use manta_crypto::MantaSerDes;
-use rand::{thread_rng, SeedableRng};
-use rand_chacha::ChaCha20Rng;
-use secrecy::ExposeSecret;
-use serde::{Deserialize, Serialize};
-use std::sync::Arc;
-use std::time::Instant;
+use manta_pay::{
+    config::{receiving_key_to_base58, ReceivingKey},
+    key::{Mnemonic, TestnetKeySecret},
+    signer::{
+        base::{
+            HierarchicalKeyDerivationFunction, Signer, SignerParameters, SignerState,
+            UtxoAccumulator,
+        },
+        ReceivingKeyRequest, SignError, SignRequest, SignResponse, SyncError, SyncRequest,
+        SyncResponse,
+    },
+};
+use manta_util::{
+    from_variant_impl,
+    serde::{de::DeserializeOwned, Serialize},
+};
+use parking_lot::Mutex;
+use std::{
+    io,
+    net::{AddrParseError, SocketAddr},
+    path::Path,
+    sync::Arc,
+};
 use tide::{
     security::{CorsMiddleware, Origin},
-    Body, Error, Request as ServerRequest, Result as ServerResult, Server, StatusCode,
+    Body, Request, Response, StatusCode,
+};
+use tokio::{
+    fs,
+    sync::Mutex as AsyncMutex,
+    task::{self, JoinError},
 };
 
-/// Manta Signer Server Version
-const VERSION: &str = env!("CARGO_PKG_VERSION");
-
-/// Ensure that `$expr` is `Ok(_)` and if not returns a [`StatusCode::InternalServerError`].
-macro_rules! ensure {
-    ($expr:expr) => {
-        ensure!($expr, "")
-    };
-    ($expr:expr, $msg:expr) => {
-        core::result::Result::map_err($expr, move |_| {
-            Error::from_str(StatusCode::InternalServerError, $msg)
-        })
-    };
-}
-
-/// Returns the currency symbol for the given `asset_id`.
-#[inline]
-pub fn get_currency_symbol_by_asset_id(asset_id: AssetId) -> Option<&'static str> {
-    Some(match asset_id {
-        1 => "DOT",
-        2 => "KSM",
-        _ => return None,
-    })
-}
+/// Password Retry Interval
+pub const PASSWORD_RETRY_INTERVAL: Duration = Duration::from_millis(1000);
 
 /// Sets the task to sleep to delay password retry.
 #[inline]
-async fn delay_password_retry() {
-    sleep(Duration::from_millis(1000)).await;
+pub async fn delay_password_retry() {
+    tokio::time::sleep(PASSWORD_RETRY_INTERVAL).await;
 }
 
-/// Prompt
-#[derive(Clone, Debug, Deserialize, Eq, Hash, PartialEq, Serialize)]
-#[serde(deny_unknown_fields, tag = "type")]
-pub enum Prompt {
-    /// Recover Account
-    RecoverAccount,
+/// Service Error
+#[derive(Debug)]
+pub enum Error {
+    /// Address Parsing Error
+    AddrParseError(AddrParseError),
 
-    /// Derive Shielded Address
-    DeriveShieldedAddress,
+    /// Runtime Join Error
+    JoinError(JoinError),
 
-    /// Generate Asset
-    GenerateAsset,
+    /// Failed to Load SDK Parameters
+    ParameterLoadingError,
 
-    /// Mint
-    Mint,
+    /// Save Error
+    SaveError(SaveError<File>),
 
-    /// Private Transfer
-    PrivateTransfer {
-        /// Transaction Recipient
-        recipient: String,
+    /// Generic I/O Error
+    Io(io::Error),
 
-        /// Transaction Amount
-        amount: String,
-
-        /// Currency Symbol
-        currency_symbol: Option<&'static str>,
-    },
-
-    /// Reclaim
-    Reclaim {
-        /// Transaction Amount
-        amount: String,
-
-        /// Currency Symbol
-        currency_symbol: Option<&'static str>,
-    },
+    /// Authorization Error
+    AuthorizationError,
 }
 
-impl From<&GeneratePrivateTransferBatchParams> for Prompt {
+from_variant_impl!(Error, AddrParseError, AddrParseError);
+from_variant_impl!(Error, JoinError, JoinError);
+from_variant_impl!(Error, SaveError, SaveError<File>);
+from_variant_impl!(Error, Io, io::Error);
+
+impl From<Error> for tide::Error {
     #[inline]
-    fn from(params: &GeneratePrivateTransferBatchParams) -> Self {
-        Self::PrivateTransfer {
-            recipient: get_private_transfer_batch_params_recipient(params),
-            amount: get_private_transfer_batch_params_value(params),
-            currency_symbol: get_private_transfer_batch_params_currency_symbol(params),
+    fn from(err: Error) -> tide::Error {
+        match err {
+            Error::AuthorizationError => {
+                Self::from_str(StatusCode::Unauthorized, "request was not authorized")
+            }
+            _ => Self::from_str(
+                StatusCode::InternalServerError,
+                "unable to complete request",
+            ),
         }
     }
 }
 
-impl From<&GenerateReclaimBatchParams> for Prompt {
-    #[inline]
-    fn from(params: &GenerateReclaimBatchParams) -> Self {
-        Self::Reclaim {
-            amount: get_reclaim_batch_params_value(params),
-            currency_symbol: get_reclaim_batch_params_currency_symbol(params),
-        }
-    }
-}
+/// Result Type
+pub type Result<T, E = Error> = core::result::Result<T, E>;
 
-/// Inner State
-///
-/// The inner state of the server contains a copy of the server configuration as well as the
-/// currently known root seed an access to an [`Authorizer`] future which can reconfirm the root
-/// seed.
-struct InnerState<A>
+/// Checked Authorizer
+struct CheckedAuthorizer<A>
 where
     A: Authorizer,
 {
-    /// Server Configuration
-    pub config: Config,
+    /// Password Hash
+    password_hash: PasswordHash<Argon2>,
 
     /// Authorizer
-    pub authorizer: A,
-
-    /// Current Root Seed
-    root_seed: Option<RootSeed>,
+    authorizer: A,
 }
 
-impl<A> InnerState<A>
+impl<A> CheckedAuthorizer<A>
 where
     A: Authorizer,
 {
-    /// Builds a new [`InnerState`] from `config` and `authorizer`.
+    /// Checks that the authorizer's password matches the known password by sending the `prompt`.
     #[inline]
-    fn new(config: Config, authorizer: A) -> Self {
-        Self {
-            config,
-            authorizer,
-            root_seed: None,
-        }
-    }
-
-    /// Loads the root seed from `root_seed_file` with `password`.
-    #[inline]
-    async fn load_seed(&self, password: &SecretString) -> Option<RootSeed> {
-        RootSeed::load(&self.config.root_seed_file, password)
-            .await
-            .ok()
-    }
-
-    /// Sets the inner seed from a given `password`.
-    #[inline]
-    async fn set_seed(&mut self, password: &SecretString) {
-        self.root_seed = self.load_seed(password).await;
-    }
-
-    /// Sets the inner seed from a given `password`.
-    #[inline]
-    async fn set_seed_from_password(&mut self, password: Password) -> Option<RootSeed> {
-        if let Some(password) = password.known() {
-            self.set_seed(&password).await;
-        }
-        self.root_seed.clone()
-    }
-
-    /// Sets the inner seed from the output of a call to [`Authorizer::password`].
-    #[inline]
-    async fn set_seed_from_authorization(&mut self) -> Option<RootSeed> {
-        let password = self.authorizer.password().await;
-        self.set_seed_from_password(password).await
-    }
-
-    /// Checks that the starting password can decrypt the root seed file.
-    #[inline]
-    async fn check_starting_password(&mut self) -> bool {
-        self.set_seed_from_authorization().await.is_some()
-    }
-
-    /// Returns the stored root seed if it exists, otherwise, gets the password from the user
-    /// and tries to decrypt the root seed.
-    #[inline]
-    async fn get_root_seed(&mut self, prompt: A::Prompt) -> Option<RootSeed> {
-        if self.root_seed.is_none() {
-            self.authorizer.wake(prompt).await;
-            loop {
-                if let Some(password) = self.authorizer.password().await.known() {
-                    if let Some(root_seed) = self.load_seed(&password).await {
-                        self.root_seed = Some(root_seed);
-                        self.authorizer.success(Default::default()).await;
-                        break;
-                    }
-                } else {
-                    return None;
+    async fn check<T>(&mut self, prompt: &T) -> Result<()>
+    where
+        T: Serialize,
+    {
+        self.authorizer.wake(prompt).await;
+        loop {
+            if let Some(password) = self.authorizer.password().await.known() {
+                if self
+                    .password_hash
+                    .verify(password.expose_secret().as_bytes())
+                    .is_ok()
+                {
+                    self.authorizer.sleep().await;
+                    return Ok(());
                 }
-                delay_password_retry().await;
+            } else {
+                return Err(Error::AuthorizationError);
             }
-        }
-        self.root_seed.clone()
-    }
-
-    /// Returns the currently stored root seed if it matches the one returned by the user after
-    /// prompting.
-    #[inline]
-    async fn check_root_seed(&mut self, prompt: A::Prompt) -> Option<RootSeed> {
-        match &self.root_seed {
-            Some(current_root_seed) => {
-                self.authorizer.wake(prompt).await;
-                loop {
-                    if let Some(password) = self.authorizer.password().await.known() {
-                        if let Some(root_seed) = self.load_seed(&password).await {
-                            if current_root_seed == &root_seed {
-                                self.authorizer.success(Default::default()).await;
-                                return Some(root_seed);
-                            }
-                        }
-                    } else {
-                        return None;
-                    }
-                    delay_password_retry().await;
-                }
-            }
-            _ => self.get_root_seed(prompt).await,
+            delay_password_retry().await;
         }
     }
 }
 
-/// Signer State
+/// State
+struct State {
+    /// Configuration
+    config: Config,
+
+    /// Signer
+    signer: Signer,
+}
+
+/// Signer Server
 #[derive(derivative::Derivative)]
 #[derivative(Clone(bound = ""))]
-pub struct State<A>(Arc<Mutex<InnerState<A>>>)
-where
-    A: Authorizer;
-
-impl<A> State<A>
+struct Server<A>
 where
     A: Authorizer,
 {
-    /// Builds a new [`State`] using `config` and `authorizer`.
-    #[inline]
-    pub fn new(config: Config, authorizer: A) -> Self {
-        Self(Arc::new(Mutex::new(InnerState::new(config, authorizer))))
-    }
+    /// Server State
+    state: Arc<Mutex<State>>,
 
-    /// Returns the server configuration for `self`.
-    #[inline]
-    async fn config(&self) -> Config {
-        // TODO: Consider removing this clone, if possible.
-        self.0.lock().await.config.clone()
-    }
-
-    /// Returns the stored root seed if it exists, otherwise, gets the password from the user
-    /// and tries to decrypt the root seed.
-    #[inline]
-    async fn get_root_seed(&self, prompt: A::Prompt) -> Option<RootSeed> {
-        self.0.lock().await.get_root_seed(prompt).await
-    }
-
-    /// Returns the currently stored root seed if it matches the one returned by the user after
-    /// prompting.
-    #[inline]
-    async fn check_root_seed(&self, prompt: A::Prompt) -> Option<RootSeed> {
-        self.0.lock().await.check_root_seed(prompt).await
-    }
+    /// Authorizer
+    authorizer: Arc<AsyncMutex<CheckedAuthorizer<A>>>,
 }
 
-/// Server Request Type
-pub type Request<A> = ServerRequest<State<A>>;
-
-/// Signer Service
-pub struct Service<A>(Server<State<A>>)
+impl<A> Server<A>
 where
-    A: Authorizer;
-
-impl<A> Service<A>
-where
-    A: 'static + Authorizer<Prompt = Prompt> + Send + Sync,
-    A::Message: Send,
-    A::Error: Send,
+    A: Authorizer,
 {
-    /// Builds a new [`Service`] from `config` and `authorizer`.
+    /// Builds a new [`Server`] from `config` and `authorizer`.
     #[inline]
-    pub fn build(config: Config, authorizer: A) -> Self {
-        let cors = CorsMiddleware::new()
-            .allow_methods("GET, POST".parse::<HeaderValue>().unwrap())
-            .allow_origin(Origin::from(config.origin_url.as_str()))
-            .allow_credentials(false);
-        let mut server = Server::with_state(State::new(config, authorizer));
-        server.with(cors);
-        server.at("/version").get(Self::version);
-        server.at("/recoverAccount").post(Self::recover_account);
-        server
-            .at("/deriveShieldedAddress")
-            .post(Self::derive_shielded_address);
-        server.at("/generateAsset").post(Self::generate_asset);
-        server.at("/generateMintData").post(Self::mint);
-        server
-            .at("/generatePrivateTransferData")
-            .post(Self::private_transfer);
-        server.at("/generateReclaimData").post(Self::reclaim);
-        Self(server)
-    }
-
-    /// Starts the service.
-    #[inline]
-    pub async fn serve(self) -> io::Result<()> {
-        Self::log(String::from("[INFO]: Starting Service ...")).await?;
-        let service_url = {
-            let state = &mut *self.0.state().0.lock().await;
-
-            Self::log(String::from("Setting up configuration: ")).await?;
-            state.config.setup().await?;
-
-            Self::log(String::from("Setting up authorizer: ")).await?;
-            state.authorizer.setup(&state.config).await;
-
-            Self::log(String::from("Checking password: ")).await?;
-            loop {
-                if state.check_starting_password().await {
-                    state.authorizer.success(Default::default()).await;
-                    break;
+    async fn build(config: Config, mut authorizer: A) -> Result<Self> {
+        info!("building signer server")?;
+        info!("loading latest parameters from Manta SDK")?;
+        let data_path = config.data_directory().to_owned();
+        let parameters = task::spawn_blocking(move || crate::parameters::load(data_path))
+            .await?
+            .ok_or(Error::ParameterLoadingError)?;
+        info!("setting up configuration")?;
+        let setup = config.setup().await?;
+        authorizer.setup(&setup).await;
+        let (password_hash, signer) = match setup {
+            Setup::CreateAccount(mnemonic) => loop {
+                if let Some((password, password_hash)) = Self::load_password(&mut authorizer).await
+                {
+                    let state = Self::create_state(
+                        &config.data_path,
+                        &password,
+                        &password_hash,
+                        mnemonic,
+                        parameters,
+                    )
+                    .await?;
+                    break (password_hash, state);
                 }
                 delay_password_retry().await;
-            }
-
-            state.config.service_url.clone()
+            },
+            Setup::Login => loop {
+                if let Some((_, password_hash)) = Self::load_password(&mut authorizer).await {
+                    if let Some(state) = Self::load_state(&config.data_path, &password_hash).await?
+                    {
+                        break (password_hash, Signer::from_parts(parameters, state));
+                    }
+                }
+                delay_password_retry().await;
+            },
         };
-        Self::log(String::from("DONE. Listening ...")).await?;
-        self.0.listen(service_url).await
+        info!("telling authorizer to sleep")?;
+        authorizer.sleep().await;
+        Ok(Self {
+            state: Arc::new(Mutex::new(State { config, signer })),
+            authorizer: Arc::new(AsyncMutex::new(CheckedAuthorizer {
+                password_hash,
+                authorizer,
+            })),
+        })
     }
 
-    /// Returns a reference to the internal state of the service.
+    /// Loads the password from the `authorizer` and compute the password hash.
     #[inline]
-    pub fn state(&self) -> &State<A> {
-        self.0.state()
+    async fn load_password(authorizer: &mut A) -> Option<(SecretString, PasswordHash<Argon2>)> {
+        info!("loading password from authorizer").ok()?;
+        let password = authorizer.password().await.known()?;
+        let password_hash = PasswordHash::from_default(password.expose_secret().as_bytes());
+        Some((password, password_hash))
     }
 
-    /// Sends version to the client.
+    /// Creates the initial signer state for a new account.
     #[inline]
-    async fn version(request: Request<A>) -> ServerResult {
-        let now = Instant::now();
-        Self::log(String::from("REQUEST: version")).await?;
-        let _ = request;
-        Self::log(format!("RESPONSE: {:?} ({} ms)", VERSION, now.elapsed().as_millis())).await?;
-        Ok(Body::from_json(&VersionMessage::default())?.into())
+    async fn create_state(
+        data_path: &Path,
+        password: &SecretString,
+        password_hash: &PasswordHash<Argon2>,
+        mnemonic: Mnemonic,
+        parameters: SignerParameters,
+    ) -> Result<Signer> {
+        info!("creating signer state")?;
+        let state = SignerState::new(
+            TestnetKeySecret::new(mnemonic, password.expose_secret())
+                .map(HierarchicalKeyDerivationFunction::default()),
+            UtxoAccumulator::new(
+                task::spawn_blocking(crate::parameters::load_utxo_accumulator_model)
+                    .await?
+                    .ok_or(Error::ParameterLoadingError)?,
+            ),
+        );
+        info!("saving signer state")?;
+        let data_path = data_path.to_owned();
+        let password_hash_bytes = password_hash.as_bytes();
+        let cloned_state = state.clone();
+        task::spawn_blocking(move || File::save(&data_path, &password_hash_bytes, cloned_state))
+            .await??;
+        Ok(Signer::from_parts(parameters, state))
     }
 
-    /// Runs an account recovery for the given `request`.
+    /// Loads the signer state from the data path.
     #[inline]
-    async fn recover_account(mut request: Request<A>) -> ServerResult {
-        let now = Instant::now();
-        let (body, state) = Self::process(&mut request).await?;
-        let params = ensure!(RecoverAccountParams::decode(&mut body.as_slice()))?;
-        Self::log(String::from("REQUEST: RecoverAccountParams { ... }")).await?;
-        let root_seed = ensure!(state.get_root_seed(Prompt::RecoverAccount).await.ok_or(()))?;
-        let recovered_account =
-            manta_api::recover_account(params, root_seed.expose_secret()).encode();
-        Self::log(format!("RESPONSE: {:?} ({} ms)", recovered_account, now.elapsed().as_millis())).await?;
-        Ok(Body::from_json(&RecoverAccountMessage::new(recovered_account))?.into())
+    async fn load_state(
+        data_path: &Path,
+        password_hash: &PasswordHash<Argon2>,
+    ) -> Result<Option<SignerState>> {
+        info!("loading signer state from disk")?;
+        let data_path = data_path.to_owned();
+        let password_hash_bytes = password_hash.as_bytes();
+        if let Ok(state) =
+            task::spawn_blocking(move || File::load(&data_path, &password_hash_bytes)).await?
+        {
+            Ok(Some(state))
+        } else {
+            Ok(None)
+        }
     }
 
-    /// Generates a new derived shielded address for the given `request`.
+    /// Executes `f` on the incoming `request`.
     #[inline]
-    async fn derive_shielded_address(mut request: Request<A>) -> ServerResult {
-        let now = Instant::now();
-        let (body, state) = Self::process(&mut request).await?;
-        let params = ensure!(DeriveShieldedAddressParams::decode(&mut body.as_slice(),))?;
-        Self::log(format!("REQUEST: {:?}", params)).await?;
-        let root_seed = ensure!(state
-            .get_root_seed(Prompt::DeriveShieldedAddress)
-            .await
-            .ok_or(()))?;
-        let mut address = Vec::new();
-        ensure!(
-            manta_api::derive_shielded_address(params, root_seed.expose_secret())
-                .serialize(&mut address)
+    async fn execute<T, R, F, Fut>(
+        mut request: Request<Self>,
+        f: F,
+    ) -> Result<Response, tide::Error>
+    where
+        T: DeserializeOwned,
+        R: Serialize,
+        F: FnOnce(Self, T) -> Fut,
+        Fut: Future<Output = Result<R>>,
+    {
+        let args = request.body_json::<T>().await?;
+        into_body(move || async move { f(request.state().clone(), args).await }).await
+    }
+
+    /// Saves the signer state to disk.
+    #[inline]
+    async fn save(self) -> Result<()> {
+        info!("starting signer state save to disk")?;
+        let path = self.state.lock().config.data_path.clone();
+        let backup = path.with_extension("backup");
+        fs::rename(&path, &backup).await?;
+        let password_hash_bytes = self.authorizer.lock().await.password_hash.as_bytes();
+        task::spawn_blocking(move || {
+            let lock = self.state.lock();
+            File::save(path, &password_hash_bytes, lock.signer.state())
+        })
+        .await??;
+        fs::remove_file(backup).await?;
+        info!("save complete")?;
+        Ok(())
+    }
+
+    /// Returns the [`crate::VERSION`] string to the client.
+    #[inline]
+    async fn version() -> Result<&'static str> {
+        trace!("[PING] current signer version: {}", crate::VERSION)?;
+        Ok(crate::VERSION)
+    }
+
+    /// Runs the synchronization protocol on the signer.
+    #[inline]
+    async fn sync(self, request: SyncRequest) -> Result<Result<SyncResponse, SyncError>> {
+        info!("[REQUEST] processing `sync`:  {:?}.", request)?;
+        let response = self.state.lock().signer.sync(request);
+        task::spawn(async {
+            if self.save().await.is_err() {
+                let _ = warn!("unable to save current signer state");
+            }
+        });
+        info!("[RESPONSE] responding to `sync` with: {:?}.", response)?;
+        Ok(response)
+    }
+
+    /// Runs the transaction signing protocol on the signer.
+    #[inline]
+    async fn sign(self, request: SignRequest) -> Result<Result<SignResponse, SignError>> {
+        info!("[REQUEST] processing `sign`: {:?}.", request)?;
+        let SignRequest {
+            transaction,
+            metadata,
+        } = request;
+        match transaction.shape() {
+            TransferShape::Mint => {
+                // NOTE: We skip authorization on mint transactions because they are deposits not
+                //       withdrawals from the point of view of the signer. Everything else, by
+                //       default, requests authorization.
+            }
+            _ => {
+                info!("[AUTH] asking for transaction authorization")?;
+                let summary = metadata
+                    .map(|m| transaction.display(&m, receiving_key_to_base58))
+                    .unwrap_or_default();
+                self.authorizer.lock().await.check(&summary).await?
+            }
+        }
+        let response = self.state.lock().signer.sign(transaction);
+        info!("[RESPONSE] responding to `sign` with: {:?}.", response)?;
+        Ok(response)
+    }
+
+    /// Runs the receiving key sampling protocol on the signer.
+    #[inline]
+    async fn receiving_keys(self, request: ReceivingKeyRequest) -> Result<Vec<ReceivingKey>> {
+        info!("[REQUEST] processing `receivingKeys`: {:?}", request)?;
+        let response = self.state.lock().signer.receiving_keys(request);
+        info!(
+            "[RESPONSE] responding to `receivingKeys` with: {:?}",
+            response
         )?;
-        Self::log(format!("RESPONSE: {:?} ({} ms)", address, now.elapsed().as_millis())).await?;
-        Ok(Body::from_json(&ShieldedAddressMessage::new(address))?.into())
-    }
-
-    /// Generates an asset for the given `request`.
-    #[inline]
-    async fn generate_asset(mut request: Request<A>) -> ServerResult {
-        let now = Instant::now();
-        let (body, state) = Self::process(&mut request).await?;
-        let params = ensure!(GenerateAssetParams::decode(&mut body.as_slice()))?;
-        Self::log(format!("REQUEST: {:?}", params)).await?;
-        let root_seed = ensure!(state.get_root_seed(Prompt::GenerateAsset).await.ok_or(()))?;
-        let asset =
-            manta_api::generate_signer_input_asset(params, root_seed.expose_secret()).encode();
-        Self::log(format!("RESPONSE: {:?} ({} ms)", asset, now.elapsed().as_millis())).await?;
-        Ok(Body::from_json(&AssetMessage::new(asset))?.into())
-    }
-
-    /// Generates mint data for the given `request`.
-    #[inline]
-    async fn mint(mut request: Request<A>) -> ServerResult {
-        let now = Instant::now();
-        let (body, state) = Self::process(&mut request).await?;
-        let params = ensure!(GenerateAssetParams::decode(&mut body.as_slice()))?;
-        Self::log(format!("REQUEST: {:?}", params)).await?;
-        let root_seed = ensure!(state.get_root_seed(Prompt::Mint).await.ok_or(()))?;
-        let mut mint_data = Vec::new();
-        ensure!(
-            manta_api::generate_mint_data(params, root_seed.expose_secret())
-                .serialize(&mut mint_data)
-        )?;
-        Self::log(format!("RESPONSE: {:?} ({} ms)", mint_data, now.elapsed().as_millis())).await?;
-        Ok(Body::from_json(&MintMessage::new(mint_data))?.into())
-    }
-
-    /// Generates private transfer data for the given `request`.
-    #[inline]
-    async fn private_transfer(mut request: Request<A>) -> ServerResult {
-        let now = Instant::now();
-        let (body, state) = Self::process(&mut request).await?;
-        let params = ensure!(GeneratePrivateTransferBatchParams::decode(
-            &mut body.as_slice()
-        ))?;
-        Self::log(format!("REQUEST: {:?}", params)).await?;
-        let root_seed = ensure!(state.check_root_seed(Prompt::from(&params)).await.ok_or(()))?;
-        let private_transfer_data = batch_generate_private_transfer_data(
-            params,
-            *root_seed.expose_secret(),
-            state.config().await.private_transfer_proving_key_path(),
-            Self::rng,
-        )
-        .await
-        .encode();
-        Self::log(format!("RESPONSE: {:?} ({} ms)", private_transfer_data, now.elapsed().as_millis())).await?;
-        Ok(Body::from_json(&PrivateTransferMessage::new(private_transfer_data))?.into())
-    }
-
-    /// Generates reclaim data for the given `request`.
-    #[inline]
-    async fn reclaim(mut request: Request<A>) -> ServerResult {
-        let now = Instant::now();
-        let (body, state) = Self::process(&mut request).await?;
-        let params = ensure!(GenerateReclaimBatchParams::decode(&mut body.as_slice()))?;
-        Self::log(format!("REQUEST: {:?}", params)).await?;
-        let root_seed = ensure!(state.check_root_seed(Prompt::from(&params)).await.ok_or(()))?;
-        let config = state.config().await;
-        let reclaim_data = batch_generate_reclaim_data(
-            params,
-            *root_seed.expose_secret(),
-            config.private_transfer_proving_key_path(),
-            config.reclaim_proving_key_path(),
-            Self::rng,
-        )
-        .await
-        .encode();
-        Self::log(format!("RESPONSE: {:?} ({} ms)", reclaim_data, now.elapsed().as_millis())).await?;
-        Ok(Body::from_json(&ReclaimMessage::new(reclaim_data))?.into())
-    }
-
-    /// Preprocesses a `request`, extracting the body as a byte vector and returning the
-    /// internal state.
-    #[inline]
-    async fn process(request: &mut Request<A>) -> ServerResult<(Vec<u8>, &State<A>)> {
-        Ok((request.body_bytes().await?, request.state()))
-    }
-
-    /// Logs the string to the console.
-    #[inline]
-    async fn log(string: String) -> io::Result<()> {
-        let mut stdout = io::stdout();
-        stdout.write_all(string.as_bytes()).await?;
-        stdout.write_all(b"\n\n").await
-    }
-
-    /// Samples a new RNG for generating ZKPs.
-    #[inline]
-    fn rng() -> ChaCha20Rng {
-        ChaCha20Rng::from_rng(thread_rng()).expect("Unable to sample RNG.")
+        Ok(response)
     }
 }
 
-/// Version Message
-#[derive(Clone, Debug, Deserialize, Serialize)]
-pub struct VersionMessage {
-    /// Version
-    pub version: &'static str,
+/// Generates the JSON body for the output of `f`, returning an HTTP reponse.
+#[inline]
+async fn into_body<R, F, Fut>(f: F) -> Result<Response, tide::Error>
+where
+    R: Serialize,
+    F: FnOnce() -> Fut,
+    Fut: Future<Output = Result<R>>,
+{
+    Ok(Body::from_json(&f().await?)?.into())
 }
 
-impl Default for VersionMessage {
-    /// Builds a default [`VersionMessage`].
-    fn default() -> Self {
-        Self { version: VERSION }
-    }
-}
-
-/// Shielded Address Message
-#[derive(Clone, Debug, Deserialize, Serialize)]
-pub struct ShieldedAddressMessage {
-    /// Address
-    pub address: Vec<u8>,
-
-    /// Version
-    pub version: &'static str,
-}
-
-impl ShieldedAddressMessage {
-    /// Builds a new [`ShieldedAddressMessage`].
-    #[inline]
-    pub fn new(address: Vec<u8>) -> Self {
-        Self {
-            address,
-            version: VERSION,
-        }
-    }
-}
-/// Recover Account Message
-#[derive(Clone, Debug, Deserialize, Serialize)]
-pub struct RecoverAccountMessage {
-    /// Recovered Account
-    pub recovered_account: Vec<u8>,
-
-    /// Version
-    pub version: &'static str,
-}
-
-impl RecoverAccountMessage {
-    /// Builds a new [`RecoverAccountMessage`].
-    #[inline]
-    pub fn new(recovered_account: Vec<u8>) -> Self {
-        Self {
-            recovered_account,
-            version: VERSION,
-        }
-    }
-}
-
-/// Asset Message
-#[derive(Clone, Debug, Deserialize, Serialize)]
-pub struct AssetMessage {
-    /// Asset
-    pub asset: Vec<u8>,
-
-    /// Version
-    pub version: &'static str,
-}
-
-impl AssetMessage {
-    /// Builds a new [`AssetMessage`].
-    #[inline]
-    pub fn new(asset: Vec<u8>) -> Self {
-        Self {
-            asset,
-            version: VERSION,
-        }
-    }
-}
-
-/// Mint Message
-#[derive(Clone, Debug, Deserialize, Serialize)]
-pub struct MintMessage {
-    /// Mint Data
-    pub mint_data: Vec<u8>,
-
-    /// Version
-    pub version: &'static str,
-}
-
-impl MintMessage {
-    /// Builds a new [`MintMessage`].
-    #[inline]
-    pub fn new(mint_data: Vec<u8>) -> Self {
-        Self {
-            mint_data,
-            version: VERSION,
-        }
-    }
-}
-
-/// Private Transfer Message
-#[derive(Clone, Debug, Deserialize, Serialize)]
-pub struct PrivateTransferMessage {
-    /// Private Transfer Data
-    pub private_transfer_data: Vec<u8>,
-
-    /// Version
-    pub version: &'static str,
-}
-
-impl PrivateTransferMessage {
-    /// Builds a new [`PrivateTransferMessage`].
-    #[inline]
-    pub fn new(private_transfer_data: Vec<u8>) -> Self {
-        Self {
-            private_transfer_data,
-            version: VERSION,
-        }
-    }
-}
-
-/// Reclaim Message
-#[derive(Clone, Debug, Deserialize, Serialize)]
-pub struct ReclaimMessage {
-    /// Reclaim Data
-    pub reclaim_data: Vec<u8>,
-
-    /// Version
-    pub version: &'static str,
-}
-
-impl ReclaimMessage {
-    /// Builds a new [`ReclaimMessage`].
-    #[inline]
-    pub fn new(reclaim_data: Vec<u8>) -> Self {
-        Self {
-            reclaim_data,
-            version: VERSION,
-        }
-    }
+/// Starts the signer server with `config` and `authorizer`.
+#[inline]
+pub async fn start<A>(config: Config, authorizer: A) -> Result<()>
+where
+    A: Authorizer,
+{
+    info!("performing service setup with {:#?}", config)?;
+    let socket_address = config.service_url.parse::<SocketAddr>()?;
+    let cors = CorsMiddleware::new()
+        .allow_methods("GET, POST".parse::<HeaderValue>().unwrap())
+        .allow_origin(match &config.origin_url {
+            Some(origin_url) => Origin::from(origin_url.as_str()),
+            _ => Origin::from("*"),
+        })
+        .allow_credentials(false);
+    let mut api = tide::Server::with_state(Server::build(config, authorizer).await?);
+    api.with(cors);
+    api.at("/version").get(|_| into_body(Server::<A>::version));
+    api.at("/sync").post(|r| Server::execute(r, Server::sync));
+    api.at("/sign").post(|r| Server::execute(r, Server::sign));
+    api.at("/receivingKeys")
+        .post(|r| Server::execute(r, Server::receiving_keys));
+    info!("serving signer API at {}", socket_address)?;
+    api.listen(socket_address).await?;
+    Ok(())
 }

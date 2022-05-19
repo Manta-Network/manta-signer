@@ -1,14 +1,13 @@
 {
     "package": {
         "productName": "manta-signer",
-        "version": "0.5.2"
+        "version": "0.6.0"
     },
     "build": {
         "distDir": "../build",
         "devPath": "http://localhost:3000",
         "beforeDevCommand": "yarn install && yarn start",
-        "beforeBuildCommand": "yarn install && yarn build",
-        "withGlobalTauri": true
+        "beforeBuildCommand": "yarn install && yarn build"
     },
     "tauri": {
         "bundle": {
@@ -21,20 +20,18 @@
                 "icons/128x128@2x.png",
                 "icons/icon.ico"
             ],
-            "resources": ["*.dat"],
+            "resources": [],
             "externalBin": [],
             "copyright": "Copyright 2019-2022 Manta Network",
             "category": "DeveloperTool",
             "shortDescription": "Manta Network Signer",
             "longDescription": "",
             "deb": {
-                "depends": [],
-                "useBootstrapper": false
+                "depends": []
             },
             "macOS": {
                 "frameworks": [],
                 "minimumSystemVersion": "",
-                "useBootstrapper": false,
                 "exceptionDomain": "",
                 "signingIdentity": null,
                 "entitlements": "../entitlements.plist"
@@ -47,16 +44,24 @@
         },
         "updater": {
             "active": true,
-            "endpoints": ["https://updates.signer.manta.systems/updates/{{target}}/{{current_version}}"],
+            "endpoints": [
+                "https://updates.signer.manta.systems/updates/{{target}}/{{current_version}}"
+            ],
             "dialog": true,
             "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDk3M0QzNEU2MEM0OTExNEEKUldSS0VVa001alE5bHc3M3RmTXdLWThjaDJyeURLUnFhb0dXOS9HZ0l6eTF4MUs5Y2xPSGh2OXQK"
         },
-        "allowlist": {},
-        "windows": [{
+        "allowlist": {
+            "window": {
+                "hide": true,
+                "show": true
+            }
+        },
+        "windows": [
+            {
                 "label": "main",
                 "title": "Manta Signer",
-                "width": 500,
-                "height": 300,
+                "width": 600,
+                "height": 360,
                 "alwaysOnTop": true,
                 "center": true,
                 "decorations": true,
@@ -69,8 +74,8 @@
                 "title": "Manta Signer",
                 "url": "about.html",
                 "width": 350,
-                "height": 270,
-                "alwaysOnTop": false,
+                "height": 300,
+                "alwaysOnTop": true,
                 "center": true,
                 "decorations": true,
                 "resizable": false,

@@ -16,20 +16,17 @@
 
 //! Manta Signer Configuration
 
-use async_std::{fs, io};
-use std::path::{Path, PathBuf};
+use manta_crypto::rand::{OsRng, Sample};
+use manta_pay::key::Mnemonic;
+use manta_util::serde::{Deserialize, Serialize};
+use std::{
+    io,
+    path::{Path, PathBuf},
+};
+use tokio::fs;
 
 /// Manta Path Identifier
-const PATH_IDENTIFIER: &str = "manta-signer";
-
-/// Pushes the [`PATH_IDENTIFIER`] to the end of the given `path` if it exists.
-#[inline]
-fn directory(path: Option<PathBuf>) -> Option<PathBuf> {
-    path.map(move |mut p| {
-        p.push(PATH_IDENTIFIER);
-        p
-    })
-}
+pub const PATH_IDENTIFIER: &str = "manta-signer";
 
 /// Pushes the [`PATH_IDENTIFIER`] to the end of the given `path` if it exists, attaching the file
 /// `name` afterwards.
@@ -46,19 +43,17 @@ where
 }
 
 /// Configuration
-#[derive(Clone, Debug, Eq, Hash, PartialEq)]
+#[derive(Clone, Debug, Deserialize, Eq, Hash, PartialEq, Serialize)]
+#[serde(crate = "manta_util::serde", deny_unknown_fields)]
 pub struct Config {
-    /// Root Seed File
-    pub root_seed_file: PathBuf,
-
-    /// Directory for Proving Keys
-    pub proving_key_directory: PathBuf,
+    /// Data File Path
+    pub data_path: PathBuf,
 
     /// Service URL
     pub service_url: String,
 
     /// Origin URL
-    pub origin_url: String,
+    pub origin_url: Option<String>,
 }
 
 impl Config {
@@ -66,52 +61,50 @@ impl Config {
     #[inline]
     pub fn try_default() -> Option<Self> {
         Some(Self {
-            root_seed_file: file(dirs_next::config_dir(), "root_seed.aes")?,
-            proving_key_directory: directory(dirs_next::data_local_dir())?,
-            service_url: String::from("http://127.0.0.1:29987"),
+            data_path: file(dirs_next::config_dir(), "storage.dat")?,
+            service_url: "127.0.0.1:29987".into(),
             #[cfg(feature = "unsafe-disable-cors")]
-            origin_url: String::from("*"),
+            origin_url: None,
             #[cfg(not(feature = "unsafe-disable-cors"))]
-            origin_url: String::from("https://app.dolphin.manta.network"),
+            origin_url: Some("https://app.dolphin.manta.network".into()),
         })
     }
 
-    /// Runs the setup for the configuration directories. This step ensures that all of the
-    /// directories exist for the current state of the configuration.
+    /// Returns the data directory path.
     #[inline]
-    pub async fn setup(&self) -> io::Result<()> {
-        // FIXME: Use logging instead of `println!`.
-        // FIXME: Not using asynchronous `println!` because it interferes with `Send` requirements.
-        println!("Manta Signer {:#?}\n", self);
-        if let Some(parent) = self.root_seed_file.parent() {
-            fs::create_dir_all(parent).await?;
+    pub fn data_directory(&self) -> &Path {
+        self.data_path
+            .parent()
+            .expect("The data path file must always have a parent.")
+    }
+
+    /// Builds the [`Setup`] for the given configuration depending on the filesystem resources.
+    #[inline]
+    pub async fn setup(&self) -> io::Result<Setup> {
+        fs::create_dir_all(self.data_directory()).await?;
+        match fs::metadata(&self.data_path).await {
+            Ok(metadata) if metadata.is_file() => Ok(Setup::Login),
+            Ok(metadata) => Err(io::Error::new(
+                io::ErrorKind::Other,
+                format!("Invalid file format: {:?}.", metadata),
+            )),
+            _ => Ok(Setup::CreateAccount(Mnemonic::gen(&mut OsRng))),
         }
-        fs::create_dir_all(&self.proving_key_directory).await?;
-        Ok(())
     }
+}
 
-    /// Returns the path to a file in the [`self.proving_key_directory`].
-    ///
-    /// [`self.proving_key_directory`](Self::proving_key_directory)
-    #[inline]
-    pub fn proving_key_path<P>(&self, path: P) -> PathBuf
-    where
-        P: AsRef<Path>,
-    {
-        let mut directory = self.proving_key_directory.clone();
-        directory.push(path);
-        directory
-    }
+/// Setup Phase
+#[derive(Clone, Deserialize, Serialize)]
+#[serde(
+    content = "content",
+    crate = "manta_util::serde",
+    deny_unknown_fields,
+    tag = "type"
+)]
+pub enum Setup {
+    /// Create Account
+    CreateAccount(Mnemonic),
 
-    /// Returns the path to the `PrivateTransfer` proving key.
-    #[inline]
-    pub fn private_transfer_proving_key_path(&self) -> PathBuf {
-        self.proving_key_path("private-transfer.dat")
-    }
-
-    /// Returns the path to the `Reclaim` proving key.
-    #[inline]
-    pub fn reclaim_proving_key_path(&self) -> PathBuf {
-        self.proving_key_path("reclaim.dat")
-    }
+    /// Login
+    Login,
 }

@@ -1,7 +1,7 @@
 [package]
 name = "manta-signer-ui"
 edition = "2018"
-version = "0.5.2"
+version = "0.6.0"
 authors = ["Manta Network <contact@manta.network>"]
 readme = "README.md"
 license-file = "LICENSE"
@@ -35,11 +35,9 @@ custom-protocol = ["tauri/custom-protocol"]
 unsafe-disable-cors = ["manta-signer/unsafe-disable-cors"]
 
 [dependencies]
-async-std = { version = "1.10.0" }
-manta-signer = { path = "../../" }
-serde = { version = "1.0.131", features = ["derive"] }
-tauri = { version = "1.0.0-beta.8", features = ["reqwest-client", "system-tray", "updater"] }
+manta-signer = { path = "../../", default-features = false }
+tauri = { version = "1.0.0-rc.11", default-features = false, features = ["gtk-tray", "reqwest-client", "system-tray", "updater", "window-hide", "window-show", "wry"] }
 
 [build-dependencies]
-tauri-build = { version = "1.0.0-beta.4" }
+tauri-build = { version = "1.0.0-rc.9", default-features = false, features = [] }
 

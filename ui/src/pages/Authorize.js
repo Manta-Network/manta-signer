@@ -10,23 +10,6 @@ const Authorize = ({
   const [password, setPassword] = useState('');
   const [passwordInvalid, setPasswordInvalid] = useState(false)
 
-  let header;
-  let summaryMessage;
-  switch (summary.type) {
-    case "Reclaim":
-      header = "Authorize Transaction";
-      summaryMessage = `Withdraw ${summary.amount} ${summary.currency_symbol} to your public wallet`;
-      break;
-    case "PrivateTransfer":
-      header = "Authorize Transaction";
-      summaryMessage = `Transfer ${summary.amount} ${summary.currency_symbol} to: ${summary.recipient}`;
-      break;
-    default:
-      header = "Login";
-      summaryMessage = ""
-      break;
-  }
-
   const onClickAuthorize = async () => {
     console.log("[INFO]: Authorizing.");
     const shouldRetry = await sendPassword(password);
@@ -54,8 +37,8 @@ const Authorize = ({
 
   return (
     <>
-      <Header>{header}</Header>
-      <div className="authorize-summary">{summaryMessage}</div>
+      <Header>Authorize</Header>
+      <div className="authorize-summary">{summary}</div>
       <Input
         type="password"
         label="Password"

@@ -1,73 +1,71 @@
 import './App.css';
-import React, { useState, useEffect } from 'react';
+import Authorize from './pages/Authorize';
 import CreateAccount from './pages/CreateAccount';
+import Loading from './pages/Loading';
+import SignIn from './pages/SignIn';
 import { Container } from 'semantic-ui-react';
 import { appWindow } from '@tauri-apps/api/window';
-import Authorize from './pages/Authorize';
-import SignIn from './pages/SignIn';
+import { invoke } from '@tauri-apps/api/tauri';
+import { listen, once } from '@tauri-apps/api/event';
+import { useState, useEffect } from 'react';
 
+const LOADING_PAGE = 0;
 const CREATE_ACCOUNT_PAGE = 1;
 const LOGIN_PAGE = 2;
 const AUTHORIZE_PAGE = 3;
 
 function App() {
-  const [currentPage, setCurrentPage] = useState(null);
+  const [currentPage, setCurrentPage] = useState(LOADING_PAGE);
   const [isConnected, setIsConnected] = useState(false);
+  const [recoveryPhrase, setRecoveryPhrase] = useState(null);
   const [authorizationSummary, setAuthorizationSummary] = useState(null);
 
   useEffect(() => {
     if (isConnected) return;
     const beginInitialConnectionPhase = async () => {
-      const event = await window.__TAURI__.invoke('connect');
-      switch (event) {
-        case 'create-account':
-          setCurrentPage(CREATE_ACCOUNT_PAGE);
-          break;
-        case 'setup-authorization':
-          setCurrentPage(LOGIN_PAGE);
-          break;
-        default:
-          break;
-      }
+      await once('connect', (event) => {
+        console.log("[INFO]: Connect Event: ", event);
+        let payload = event.payload;
+        switch (payload.type) {
+          case 'CreateAccount':
+            setRecoveryPhrase(payload.content);
+            setCurrentPage(CREATE_ACCOUNT_PAGE);
+            break;
+          case 'Login':
+            setCurrentPage(LOGIN_PAGE);
+            break;
+          default:
+            break;
+        }
+      });
     };
     beginInitialConnectionPhase();
   }, [isConnected]);
 
   const hideWindow = () => {
     console.log("[INFO]: HIDE.");
-    setCurrentPage(null);
     appWindow.hide();
+    setCurrentPage(LOADING_PAGE);
   };
 
   const listenForTxAuthorizationRequests = () => {
     console.log("[INFO]: Setup listener.");
-    window.__TAURI__.event.listen('authorize', (event) => {
-      console.log("[INFO]: WAKE: ", event);
-      appWindow.show();
+    listen('authorize', (event) => {
+      console.log("[INFO]: Wake: ", event);
       setAuthorizationSummary(event.payload);
       setCurrentPage(AUTHORIZE_PAGE);
+      appWindow.show();
     });
   };
 
   const sendPassword = async (password) => {
     console.log("[INFO]: Send password to signer server.");
-    const should_retry = await window.__TAURI__.invoke('send_password', {
-      password: password,
-    });
-    return should_retry;
+    return await invoke('send_password', { password: password });
   };
 
   const stopPasswordPrompt = async () => {
     console.log("[INFO]: Stop password prompt.");
-    await window.__TAURI__.invoke('stop_password_prompt');
-  };
-
-  const getRecoveryPhrase = async (password) => {
-    console.log("[INFO]: Get recovery phase.");
-    const mnemonic = await window.__TAURI__.invoke('get_mnemonic', {
-      password: password,
-    });
-    return mnemonic;
+    await invoke('stop_password_prompt');
   };
 
   const endInitialConnectionPhase = async () => {
@@ -80,9 +78,13 @@ function App() {
   return (
     <div className="App">
       <Container className="page">
+        {currentPage === LOADING_PAGE && (
+          <Loading/>
+        )}
         {currentPage === CREATE_ACCOUNT_PAGE && (
           <CreateAccount
-            getRecoveryPhrase={getRecoveryPhrase}
+            recoveryPhrase={recoveryPhrase}
+            sendPassword={sendPassword}
             endInitialConnectionPhase={endInitialConnectionPhase}
           />
         )}

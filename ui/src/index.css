@@ -1,19 +1,14 @@
-@font-face {
-    font-family: 'UbuntuMono';
-    src: url('./fonts/UbuntuMono-Regular.ttf') format('truetype'), url('./fonts/UbuntuMono-Bold.ttf') format('truetype'), url('./fonts/UbuntuMono-Italic.ttf') format('truetype'), url('./fonts/UbuntuMono-BoldItalic.ttf') format('truetype');
-}
-
 body {
     margin: 0;
-    font-family: 'UbuntuMono' !important;
+    font-family: 'IBM Plex Sans' !important;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
 }
 
 code {
-    font-family: 'UbuntuMono' !important;
+    font-family: 'IBM Plex Mono' !important;
 }
 
 .ui {
-    font-family: 'UbuntuMono' !important;
+    font-family: 'IBM Plex Sans' !important;
 }

@@ -1,7 +1,7 @@
 [package]
 name = "manta-signer"
-edition = "2018"
-version = "0.5.2"
+edition = "2021"
+version = "0.6.0"
 authors = ["Manta Network <contact@manta.network>"]
 readme = "README.md"
 license-file = "LICENSE"
@@ -25,34 +25,29 @@ is-it-maintained-open-issues = { repository = "Manta-Network/manta-signer" }
 maintenance = { status = "actively-developed" }
 
 [features]
-# Disable CORS Check
+# Disable CORS Check: This is UNSAFE in general and should only be used in debug builds.
 unsafe-disable-cors = []
 
 [dependencies]
-ark-serialize = { version = "0.3.0", default-features = false }
-async-std = { version = "1.10.0" }
-bip0039 = { version = "0.10.0" }
-bip32 = { version = "0.2.2" }
-bs58 = { version = "0.4.0" }
-cocoon = { version = "0.3.0" }
-codec = { package = "parity-scale-codec", version = "2.0.0", default-features = false, features = [ "derive", "full" ] }
+argon2 = { version = "0.3.4", default-features = false, features = ["alloc", "password-hash"] }
+async-std = { version = "1.11.0", default-features = false, features = ["attributes", "tokio1"] }
+chrono = { version = "0.4.19", default-features = false, features = ["clock"] }
 derivative = { version = "2.2.0", default-features = false, features = ["use_core"] }
-dirs-next = { version = "2.0.0" }
-futures = { version = "0.3.17", default-features = false }
+dirs-next = { version = "2.0.0", default-features = false }
+futures = { version = "0.3.17", default-features = false, features = ["alloc"] }
 http-types = { version = "2.12.0", default-features = false }
-manta-api = { git = "https://github.com/Manta-Network/manta-api", branch = "manta", default-features = false, features = ["signer", "testnet"] }
-manta-asset = { git = "https://github.com/Manta-Network/manta-types", branch = "manta" }
-manta-crypto = { git = "https://github.com/Manta-Network/manta-crypto", branch = "manta" }
-manta-data = { git = "https://github.com/Manta-Network/manta-types", branch = "manta" }
-rand = { version = "0.8.4", default-features = false }
-rand_chacha = { version = "0.3.1", default-features = false }
+manta-accounting = { git = "https://github.com/manta-network/manta-rs", default-features = false, features = ["cocoon-fs"] }
+manta-crypto = { git = "https://github.com/manta-network/manta-rs", default-features = false, features = ["getrandom"] }
+manta-pay = { git = "https://github.com/manta-network/manta-rs", default-features = false, features = ["bs58", "groth16", "serde", "wallet"] }
+manta-sdk = { git = "https://github.com/manta-network/sdk", default-features = false, features = ["download"] }
+manta-util = { git = "https://github.com/manta-network/manta-rs", default-features = false }
+parking_lot = { version = "0.12.0", default-features = false }
+password-hash = { version = "0.3.2", default-features = false, features = ["alloc"] }
 secrecy = { version = "0.8.0", default-features = false, features = ["alloc"] }
-serde = { version = "1.0.131", default-features = false, features = ["derive"] }
 serde_json = { version = "1.0.68", default-features = false }
-subtle = { version = "2.4.1" }
-tide = { version = "0.16.0" }
+subtle = { version = "2.4.1", default-features = false }
+tide = { version = "0.16.0", default-features = false, features = ["h1-server"] }
+tokio = { version = "1.17.0", default-features = false, features = ["fs", "io-std", "io-util", "rt", "sync", "time"] }
 
 [dev-dependencies]
-async-std = { version = "1.10.0", features = ["attributes"] }
-tempfile = { version = "3.2.0" }
-
+tempfile = { version = "3.3.0", default-features = false }
