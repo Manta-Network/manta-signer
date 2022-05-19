@@ -1,12 +1,10 @@
 name: Build and upload release binaries
-
 on:
   pull_request:
     branches:
-      - master
+      - main
   release:
     types: [published]
-
 jobs:
   setup:
     name: Get version
