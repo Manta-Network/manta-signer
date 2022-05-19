@@ -1,17 +1,31 @@
-name: Bump version
+---
+name: Bump Version
+
 on:
   push:
     branches:
       - main
+      - test-tagger
+
 jobs:
-  build:
+  setup:
+    name: Get version
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
-      with:
-        fetch-depth: '0'
-    - name: Bump version and push tag
-      uses: anothrNick/github-tag-action@1.36.0
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        WITH_V: false
+      - uses: actions/checkout@v2
+      - run: echo "VERSION=$(cat Cargo.toml | grep ^version | awk -F'=' '{print $2}' | tr -d '\" ')" >> $GITHUB_ENV
+    outputs:
+      release_version: ${{ env.VERSION }}
+
+  pre-release:
+    name: "Pre Release"
+    needs: setup
+    runs-on: "ubuntu-latest"
+
+    steps:
+      - uses: "marvinpinto/action-automatic-releases@latest"
+        with:
+          repo_token: "${{ secrets.GITHUB_TOKEN }}"
+          automatic_release_tag: "${{ needs.setup.outputs.release_version }}"
+          prerelease: true
+          title: "Release Build"
