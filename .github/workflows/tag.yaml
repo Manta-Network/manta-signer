@@ -11,7 +11,22 @@ jobs:
       with:
         fetch-depth: '0'
     - name: Bump version and push tag
+      id: tag_version
       uses: anothrNick/github-tag-action@1.36.0
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         WITH_V: false
+    - name: Create Release
+      id: create_release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: ${{ steps.create_release.outputs.tag }}
+        release_name: Release ${{ steps.create_release.outputs.tag }}
+        body: |
+          Changes in this Release
+          - First Change
+          - Second Change
+        draft: false
+        prerelease: true
