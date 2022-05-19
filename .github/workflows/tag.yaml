@@ -3,7 +3,6 @@ on:
   push:
     branches:
       - main
-      - manta-rs-integration
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -15,4 +14,4 @@ jobs:
       uses: anothrNick/github-tag-action@1.36.0
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        WITH_V: true
+        WITH_V: false
