@@ -24,9 +24,5 @@ jobs:
       with:
         tag_name: ${{ steps.create_release.outputs.tag }}
         release_name: Release ${{ steps.create_release.outputs.tag }}
-        body: |
-          Changes in this Release
-          - First Change
-          - Second Change
         draft: false
         prerelease: true
