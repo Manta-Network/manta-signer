@@ -1,0 +1,12 @@
+!.yarn/plugins
+!.yarn/releases
+!.yarn/sdks
+!.yarn/versions
+**/.DS_Store
+.eslintcache
+.pnp.*
+.vscode
+.yarn/*
+build
+node_modules
+src/tailwind.css
