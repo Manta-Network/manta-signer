@@ -6,7 +6,6 @@ import {
   faTelegram,
   faGithub,
 } from '@fortawesome/free-brands-svg-icons';
-
 import DolphinLogo from './assets/dolphin.svg';
 import MantaLogo from './assets/manta.png';
 import './App.css';
@@ -16,7 +15,7 @@ function App() {
 
   const getOS = () => {
     const os = ['Linux', 'Mac', 'Windows'];
-    return os.find((v) => navigator.appVersion.contains(v));
+    return os.find((v) => navigator.appVersion.indexOf(v) >= 0);
   };
 
   useEffect(() => {
@@ -81,7 +80,7 @@ function App() {
               : 'https://github.com/Manta-Network/manta-signer/releases/download/0.6.0/manta-signer-ubuntu-18.04_0.6.0_amd64.deb'}
           title=
           {os === 'Mac'
-            ? "Manta Signer for macOS 10.15 or later"
+            ? 'Manta Signer for macOS 10.15 or later'
             : os === 'Windows'
               ? 'Manta Signer for Windows 10 or later'
               : 'Manta Signer for Ubuntu 18.04 or later'}
