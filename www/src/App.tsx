@@ -1,3 +1,4 @@
+// @ts-nocheck
 import React, { useEffect, useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
@@ -6,8 +7,6 @@ import {
   faTelegram,
   faGithub,
 } from '@fortawesome/free-brands-svg-icons';
-import DolphinLogo from './assets/dolphin.svg';
-import MantaLogo from './assets/manta.png';
 import './App.css';
 
 function App() {
@@ -30,7 +29,7 @@ function App() {
           href='http://manta.network/'
           target='_blank'
         >
-          <img src={MantaLogo} alt='Manta Network' className='w-6 h-6' />
+          <img src={require('./assets/manta.png')} alt='Manta Network' className='w-6 h-6' />
           <div className='text-primary'>
             <strong>MANTA</strong>&nbsp;NETWORK
           </div>
@@ -67,7 +66,7 @@ function App() {
         </div>
       </header>
       <div className='flex flex-col flex-grow justify-center items-center p-4'>
-        <img src={DolphinLogo} alt='Dolphin Network' className='sm:w-24 w-16' />
+        <img src={require('./assets/dolphin.svg')} alt='Dolphin Network' className='sm:w-24 w-16' />
         <h1 className='mt-6 text-4xl sm:text-6xl'>
           Your Gateway to Web3 Privacy.
         </h1>
