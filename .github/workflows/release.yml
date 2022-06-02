@@ -46,12 +46,6 @@ jobs:
             asset_name: manta-signer-macos-amd64
             version_suffix: 3
             target: darwin
-          - os: macos-10.15
-            os_type: macos
-            artifact_name: manta-signer
-            asset_name: manta-signer-macos-amd64
-            version_suffix: 4
-            target: darwin
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
