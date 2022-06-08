@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Button, Input, Header } from 'semantic-ui-react';
+import { Button, Input, Label, Header } from 'semantic-ui-react';
 
 const CreateAccount = ({ recoveryPhrase, sendPassword, endInitialConnectionPhase }) => {
   const [password, setPassword] = useState('');
@@ -37,6 +37,7 @@ const CreateAccount = ({ recoveryPhrase, sendPassword, endInitialConnectionPhase
           <Button className="button" onClick={onClickCreateAccount}>
             Create Account
           </Button>
+          {password.length > 0 && !isValid(password) && (<><br/><Label basic color='red' pointing> Please enter a minimum of 8 characters. </Label></>)}
         </>
       )}
       {createdAccount && (
