@@ -1,13 +1,15 @@
 import { useState } from 'react';
 import { Button, Input, Label, Header } from 'semantic-ui-react';
 
+const MIN_PASSWORD_LENGTH = 8;
+
 const CreateAccount = ({ recoveryPhrase, sendPassword, endInitialConnectionPhase }) => {
   const [password, setPassword] = useState('');
   const [createdAccount, setCreatedAccount] = useState(false);
 
   const isValid = (password) => {
     console.log("[INFO]: Check password validity.")
-    return password.length >= 8;
+    return password.length >= MIN_PASSWORD_LENGTH;
   };
 
   const onClickCreateAccount = async () => {
@@ -37,7 +39,7 @@ const CreateAccount = ({ recoveryPhrase, sendPassword, endInitialConnectionPhase
           <Button className="button" onClick={onClickCreateAccount}>
             Create Account
           </Button>
-          {password.length > 0 && !isValid(password) && (<><br/><Label basic color='red' pointing> Please enter a minimum of 8 characters. </Label></>)}
+          {password.length > 0 && !isValid(password) && (<><br/><Label basic color='red' pointing> `Please enter a minimum of ${MIN_PASSWORD_LENGTH} characters.`</Label></>)}
         </>
       )}
       {createdAccount && (
