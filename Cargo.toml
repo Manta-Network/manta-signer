@@ -36,11 +36,11 @@ derivative = { version = "2.2.0", default-features = false, features = ["use_cor
 dirs-next = { version = "2.0.0", default-features = false }
 futures = { version = "0.3.17", default-features = false, features = ["alloc"] }
 http-types = { version = "2.12.0", default-features = false }
-manta-accounting = { git = "https://github.com/manta-network/manta-rs", branch = "feat/simplify-sync", default-features = false, features = ["cocoon-fs"] }
-manta-crypto = { git = "https://github.com/manta-network/manta-rs", branch = "feat/simplify-sync", default-features = false, features = ["getrandom"] }
-manta-pay = { git = "https://github.com/manta-network/manta-rs", branch = "feat/simplify-sync", default-features = false, features = ["bs58", "groth16", "serde", "wallet"] }
+manta-accounting = { git = "https://github.com/manta-network/manta-rs", default-features = false, features = ["cocoon-fs"] }
+manta-crypto = { git = "https://github.com/manta-network/manta-rs", default-features = false, features = ["getrandom"] }
+manta-pay = { git = "https://github.com/manta-network/manta-rs", default-features = false, features = ["bs58", "groth16", "serde", "wallet"] }
 manta-sdk = { git = "https://github.com/manta-network/sdk", default-features = false, features = ["download"] }
-manta-util = { git = "https://github.com/manta-network/manta-rs", branch = "feat/simplify-sync", default-features = false }
+manta-util = { git = "https://github.com/manta-network/manta-rs", default-features = false }
 parking_lot = { version = "0.12.1", default-features = false }
 password-hash = { version = "0.3.2", default-features = false, features = ["alloc"] }
 secrecy = { version = "0.8.0", default-features = false, features = ["alloc"] }
