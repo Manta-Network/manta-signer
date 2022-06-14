@@ -41,13 +41,13 @@ manta-crypto = { git = "https://github.com/manta-network/manta-rs", default-feat
 manta-pay = { git = "https://github.com/manta-network/manta-rs", default-features = false, features = ["bs58", "groth16", "serde", "wallet"] }
 manta-sdk = { git = "https://github.com/manta-network/sdk", default-features = false, features = ["download"] }
 manta-util = { git = "https://github.com/manta-network/manta-rs", default-features = false }
-parking_lot = { version = "0.12.0", default-features = false }
+parking_lot = { version = "0.12.1", default-features = false }
 password-hash = { version = "0.3.2", default-features = false, features = ["alloc"] }
 secrecy = { version = "0.8.0", default-features = false, features = ["alloc"] }
 serde_json = { version = "1.0.68", default-features = false }
 subtle = { version = "2.4.1", default-features = false }
 tide = { version = "0.16.0", default-features = false, features = ["h1-server"] }
-tokio = { version = "1.17.0", default-features = false, features = ["fs", "io-std", "io-util", "rt", "sync", "time"] }
+tokio = { version = "1.19.2", default-features = false, features = ["fs", "io-std", "io-util", "rt", "sync", "time"] }
 
 [dev-dependencies]
 tempfile = { version = "3.3.0", default-features = false }
