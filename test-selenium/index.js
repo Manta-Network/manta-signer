@@ -40,14 +40,9 @@ const ASSET_LOCATIONS = {
           V1: {
             parents: 1,
             interior: {
-              X2: [
-                {
+              X1: {
                   Parachain: 2000
-                },
-                {
-                  GeneralKey: "0x0080"
-                }
-              ]
+              }
             }
           }
     },
@@ -55,14 +50,9 @@ const ASSET_LOCATIONS = {
           V1: {
             parents: 1,
             interior: {
-              X2: [
-                {
+              X1: {
                   Parachain: 2000
-                },
-                {
-                  GeneralKey: "0x0081"
-                }
-              ]
+              }
             }
           }
     },
@@ -70,21 +60,20 @@ const ASSET_LOCATIONS = {
           V1: {
             parents: 1,
             interior: {
-              X2: [
-                {
+              X1: {
                   Parachain: 2000
-                },
-                {
-                  GeneralKey: "0x0083"
-                }
-              ]
+              }
             }
           }
     },
     ROC: {
           V1: {
             parents: 1,
-            interior: "Here"
+            interior: {
+              X1: {
+                  Parachain: 2000
+              }
+            }
           }
     },
     kBTC: {
@@ -102,7 +91,7 @@ const ASSET_LOCATIONS = {
             parents: 1,
             interior: {
               X1: {
-                Parachain: 2214
+                Parachain: 2000
               }
             }
           }
@@ -176,53 +165,53 @@ async function register_asset(api, alice, symbol) {
       await init_account(api, alice, accounts, index, initial);
     };
 
-    for (const {type, source_index, asset, sender_index, receiver_index} of sim.updates.filter(i => i.asset.id == 0)) {
-        console.log(`Transaction: ${type}`);
-        if (type == 'Mint') {
-            console.log(`Mint Source ${source_index} asset ${asset}`);
+    //for (const {type, source_index, asset, sender_index, receiver_index} of sim.updates.filter(i => i.asset.id == 0)) {
+    //    console.log(`Transaction: ${type}`);
+    //    if (type == 'Mint') {
+    //        console.log(`Mint Source ${source_index} asset ${asset}`);
 
-            const acct = accounts[source_index];
-            await acct.public_private_send(acct.private_account, PUBLIC_ASSETS[asset.id], `${asset.value}`, "Success");
-        } else if (type == 'Reclaim') {
-            console.log(`Reclaim asset ${asset} sender_index ${sender_index}`);
+    //        const acct = accounts[source_index];
+    //        await acct.public_private_send(acct.private_account, PUBLIC_ASSETS[asset.id], `${asset.value}`, "Success");
+    //    } else if (type == 'Reclaim') {
+    //        console.log(`Reclaim asset ${asset} sender_index ${sender_index}`);
 
-            const acct = accounts[sender_index];
-            await acct.private_public_send(acct.public_account, PRIVATE_ASSETS[asset.id], `${asset.value}`, "Success");
-        } else if (type == 'PrivateTransfer') {
-            console.log(`PvtTrans asset ${asset} sender_index ${sender_index} receiver_index ${receiver_index}`);
+    //        const acct = accounts[sender_index];
+    //        await acct.private_public_send(acct.public_account, PRIVATE_ASSETS[asset.id], `${asset.value}`, "Success");
+    //    } else if (type == 'PrivateTransfer') {
+    //        console.log(`PvtTrans asset ${asset} sender_index ${sender_index} receiver_index ${receiver_index}`);
 
-            const from = accounts[sender_index];
-            const to = accounts[receiver_index];
+    //        const from = accounts[sender_index];
+    //        const to = accounts[receiver_index];
 
-            await from.private_private_send(to.private_account, PRIVATE_ASSETS[asset.id], `${asset.value}`, "Success");
-        } else if (type == 'PublicDeposit') {
-            console.log(`PubDeps Source index ${source_index} asset ${asset}`);
-        } else if (type == 'PublicWithdraw') {
-            console.log(`PubWth Source index ${source_index} asset ${asset}`);
-        } else {
-             throw Error(`Unhandled tx type! ${type}`);
-        }
-        console.log("Transaction complete");
-    }
+    //        await from.private_private_send(to.private_account, PRIVATE_ASSETS[asset.id], `${asset.value}`, "Success");
+    //    } else if (type == 'PublicDeposit') {
+    //        console.log(`PubDeps Source index ${source_index} asset ${asset}`);
+    //    } else if (type == 'PublicWithdraw') {
+    //        console.log(`PubWth Source index ${source_index} asset ${asset}`);
+    //    } else {
+    //         throw Error(`Unhandled tx type! ${type}`);
+    //    }
+    //    console.log("Transaction complete");
+    //}
 
-    for (const [index, final_balance] of sim.final_accounts.entries()) {
-        const acct = accounts[index];
-        console.log(`Balances for: ${acct.path}`);
+    //for (const [index, final_balance] of sim.final_accounts.entries()) {
+    //    const acct = accounts[index];
+    //    console.log(`Balances for: ${acct.path}`);
 
-        // Public.
-        for (const [id, amount] of Object.entries(final_balance.public)) {
-            const symbol = PUBLIC_ASSETS[id];
-            const public_balance = await acct.public_balance(symbol);
-            console.log(`${symbol}: should have ${amount}, has ${public_balance}`);
-        }
+    //    // Public.
+    //    for (const [id, amount] of Object.entries(final_balance.public)) {
+    //        const symbol = PUBLIC_ASSETS[id];
+    //        const public_balance = await acct.public_balance(symbol);
+    //        console.log(`${symbol}: should have ${amount}, has ${public_balance}`);
+    //    }
 
-        // Private.
-        for (const [id, amount] of Object.entries(final_balance.secret)) {
-            const symbol = PRIVATE_ASSETS[id];
-            const private_balance = await acct.private_balance(symbol);
-            console.log(`${symbol}: should have ${amount}, has ${private_balance}`);
-        }
-    }
+    //    // Private.
+    //    for (const [id, amount] of Object.entries(final_balance.secret)) {
+    //        const symbol = PRIVATE_ASSETS[id];
+    //        const private_balance = await acct.private_balance(symbol);
+    //        console.log(`${symbol}: should have ${amount}, has ${private_balance}`);
+    //    }
+    //}
 })()
 
 
@@ -254,7 +243,7 @@ async function init_account(api, alice, accounts, index, initial) {
             let nonce = await api.rpc.system.accountNextIndex(alice.address);
             console.log(`${to_acct.public_account} receiving ${value} ${symbol} (${assetId})`);
             const unsub = await api.tx.sudo.sudoUncheckedWeight(
-                api.tx.assetManager.mintAsset(parseInt(assetId), to_acct.public_account, new BN(value)), 1
+                api.tx.assetManager.mintAsset(parseInt(assetId), to_acct.public_account, new BN(value) * new BN(10).pow(new BN(DECIMALS[symbol])).toString()), 1
             ).signAndSend(alice, {nonce}, resultHandler);
         } catch (e) {
             throw Error(`Somethin' messed up happened ${e}`);
