@@ -165,7 +165,7 @@ async function register_asset(api, alice, symbol) {
       await init_account(api, alice, accounts, index, initial);
     };
 
-    for (const {type, source_index, asset, sender_index, receiver_index} of sim.updates.filter(i => i.asset.id == 0)) {
+    for (const {type, source_index, asset, sender_index, receiver_index} of sim.updates) {
         console.log(`Transaction: ${type}`);
         if (type == 'Mint') {
             console.log(`Mint Source ${source_index} asset ${asset}`);
@@ -243,7 +243,7 @@ async function init_account(api, alice, accounts, index, initial) {
             let nonce = await api.rpc.system.accountNextIndex(alice.address);
             console.log(`${to_acct.public_account} receiving ${value} ${symbol} (${assetId})`);
             const unsub = await api.tx.sudo.sudoUncheckedWeight(
-                api.tx.assetManager.mintAsset(parseInt(assetId), to_acct.public_account, new BN(value) * new BN(10).pow(new BN(DECIMALS[symbol])).toString()), 1
+                api.tx.assetManager.mintAsset(parseInt(assetId), to_acct.public_account, (new BN(value) * new BN(10).pow(new BN(DECIMALS[symbol])).toString()).toString()), 1
             ).signAndSend(alice, {nonce}, resultHandler);
         } catch (e) {
             throw Error(`Somethin' messed up happened ${e}`);
