@@ -28,3 +28,4 @@ write a little note why.
    * ui/public/about.html
    * ui/src-tauri/Cargo.toml
    * ui/src-tauri/tauri.conf.json
+   * www/src/App.tsx

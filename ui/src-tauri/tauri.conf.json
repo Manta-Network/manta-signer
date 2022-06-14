@@ -39,7 +39,8 @@
             "windows": {
                 "certificateThumbprint": null,
                 "digestAlgorithm": "sha256",
-                "timestampUrl": ""
+                "timestampUrl": "",
+                "tsp": false
             }
         },
         "updater": {

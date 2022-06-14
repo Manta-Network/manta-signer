@@ -90,7 +90,7 @@ jobs:
       - name: Append version suffix
         run: node ./scripts/suffix.js ${{ steps.suffixed.outputs.SUFFIXED }}
       - name: Build & Sign
-        run: cd ui;yarn && yarn add @tauri-apps/cli && yarn tauri build -v
+        run: cd ui;yarn && yarn tauri build -v
         env:
           TAURI_PRIVATE_KEY: ${{ secrets.TAURI_PRIVATE_KEY }}
           TAURI_KEY_PASSWORD: ${{ secrets.TAURI_KEY_PASSWORD }}
