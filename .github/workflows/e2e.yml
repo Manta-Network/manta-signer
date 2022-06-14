@@ -26,22 +26,30 @@ jobs:
         with:
           access_token: ${{ github.token }}
       - uses: actions/checkout@v3
-      - name: Use Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v3
-        with:
-          node-version: ${{ matrix.node-version }}
-      - name: Build manta-signer test server
-        run: cargo build --example test_server --release --features=unsafe-disable-cors
-      - name: Build manta-js
-        run: |
-          cd js
-          yarn install --immutable | grep -v 'YN0013'
-          yarn build
-      - name: Enable test scripts
-        run: |
-          chmod +x "${GITHUB_WORKSPACE}/.github/workflows/e2e/get_node.sh"
-          chmod +x "${GITHUB_WORKSPACE}/.github/workflows/e2e/run_test.sh"
-      - name: Get Dolphin node
-        run: "${GITHUB_WORKSPACE}/.github/workflows/e2e/get_node.sh"
-      - name: Run test
-        run: "${GITHUB_WORKSPACE}/.github/workflows/e2e/run_test.sh"
+      #- name: Checkout Launch Tools
+      #  uses: actions/checkout@v3
+      #  with:
+      #    repository: Manta-Network/manta-pc-launch
+      #    path: manta-pc-launch
+      #- name: Checkout Front End
+      #  uses: actions/checkout@v3
+      #  with:
+      #    repository: Manta-Network/manta-front-end
+      #    path: manta-front-end
+      #    branch: add-button-ids
+      #- name: Use Node.js ${{ matrix.node-version }}
+      #  uses: actions/setup-node@v3
+      #  with:
+      #    node-version: ${{ matrix.node-version }}
+      #- name: Fetch manta node
+      #  shell: bash
+      #  run: curl -L https://e2e-assets.s3.us-east-2.amazonaws.com/manta -o manta-pc-launch/manta; chmod +x manta-pc-launch/manta
+      #- name: Fetch polkadot node
+      #  shell: bash
+      #  run: curl -L https://e2e-assets.s3.us-east-2.amazonaws.com/polkadot -o manta-pc-launch/polkadot; chmod +x manta-pc-launch/polkadot
+      #- name: Copy e2e launch config
+      #  run: cp test-selenium/e2e-local.json manta-pc-launch;
+      #- name: Copy e2e frontend config
+      #  run: cp test-selenium/e2e.json manta-front-end/src/config/production.json;
+      #- name: Running test script
+      #  run: ./test-selenium/bringup.sh

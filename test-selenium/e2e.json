@@ -1,0 +1,12 @@
+{
+    "PROVIDER_SOCKET": "wss://localhost:9800",
+    "DEV_CONSOLE": false,
+    "DEVELOPMENT_KEYRING": true,
+    "BASE_STORAGE_KEY": "dolphinE2E",
+    "SUBSCAN_URL": "https://dolphin.subscan.io",
+    "NETWORK_NAME": "Dolphin",
+    "NODES": [{
+        "name": "Dolphin",
+        "url": "wss://localhost:9800"
+    }]
+}

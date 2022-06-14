@@ -1,0 +1,117 @@
+{
+	"relaychain": {
+		"bin": "./polkadot",
+		"chain": "rococo-local",
+		"nodes": [
+			{
+				"name": "alice",
+				"wsPort": 9944,
+				"port": 30444,
+				"flags": [
+					"--rpc-cors=all",
+					"--execution=wasm",
+					"--wasm-execution=compiled"
+				]
+			},
+			{
+				"name": "bob",
+				"wsPort": 9955,
+				"port": 30555,
+				"flags": [
+					"--rpc-cors=all",
+					"--execution=wasm",
+					"--wasm-execution=compiled"
+				]
+			},
+			{
+				"name": "charlie",
+				"wsPort": 9966,
+				"port": 30666,
+				"flags": [
+					"--rpc-cors=all",
+					"--execution=wasm",
+					"--wasm-execution=compiled"
+				]
+			}
+		],
+		"genesis": {
+			"runtime": {
+				"runtime_genesis_config": {
+					"configuration": {
+						"config": {
+							"validation_upgrade_frequency": 10,
+							"validation_upgrade_delay": 10
+						}
+					}
+				}
+			}
+		}
+	},
+	"parachains": [
+		{
+			"bin": "./manta",
+			"chain": "dolphin-local",
+			"nodes": [
+				{
+					"wsPort": 9800,
+					"port": 31200,
+					"rpcPort": 9970,
+					"name": "alice",
+					"flags": [
+						"--rpc-cors=all",
+						"--execution=wasm",
+						"--wasm-execution=compiled"
+					]
+				},
+				{
+					"wsPort": 9806,
+					"port": 31206,
+					"rpcPort": 9976,
+					"name": "bob",
+					"flags": [
+						"--rpc-cors=all",
+						"--execution=wasm",
+						"--wasm-execution=compiled"
+					]
+				},
+				{
+					"wsPort": 9807,
+					"port": 31207,
+					"rpcPort": 9977,
+					"name": "charlie",
+					"flags": [
+						"--rpc-cors=all",
+						"--execution=wasm",
+						"--wasm-execution=compiled"
+					]
+				},
+				{
+					"wsPort": 9808,
+					"port": 31208,
+					"rpcPort": 9978,
+					"name": "dave",
+					"flags": [
+						"--rpc-cors=all",
+						"--execution=wasm",
+						"--wasm-execution=compiled"
+					]
+				},
+				{
+					"wsPort": 9809,
+					"port": 31209,
+					"rpcPort": 9979,
+					"name": "eve",
+					"flags": [
+						"--rpc-cors=all",
+						"--execution=wasm",
+						"--wasm-execution=compiled"
+					]
+				}
+			]
+		}	
+	],
+	"simpleParachains": [],
+	"hrmpChannels": [],
+	"types": {},
+	"finalization": false
+}

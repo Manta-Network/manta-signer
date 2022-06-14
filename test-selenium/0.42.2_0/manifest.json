@@ -1,0 +1,34 @@
+{
+   "author": "polkadot.{js}",
+   "background": {
+      "persistent": true,
+      "scripts": [ "background.js" ]
+   },
+   "browser_action": {
+      "default_popup": "index.html",
+      "default_title": "polkadot{.js}"
+   },
+   "content_scripts": [ {
+      "js": [ "content.js" ],
+      "matches": [ "http://*/*", "https://*/*" ],
+      "run_at": "document_start"
+   } ],
+   "content_security_policy": "script-src 'self' blob: 'unsafe-eval' 'wasm-eval'; object-src 'self'",
+   "description": "Manage your Polkadot accounts outside of dapps. Injects the accounts and allows signing transactions for a specific account.",
+   "homepage_url": "https://github.com/polkadot-js/extension",
+   "icons": {
+      "128": "images/icon-128.png",
+      "16": "images/icon-16.png",
+      "32": "images/icon-32.png",
+      "48": "images/icon-48.png",
+      "64": "images/icon-64.png"
+   },
+   "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAxztbevtmoIYN2bACMJvUEXAhMI1CMMGXPt9UAH5xoOjZgBHhAXWf0F2pMyHygKlN498GxwSXNzD3NoZVkAbu7Vq70NMDpOoMkFPj9JT4ApJwkGTtsnWnOgOszLIUEYgLbJteV4v5dmNmx9rfLcQIqTe0pmh2RnSjllqGVz7E0hHv16PLRhptzrhXYq1mn5v/JlivbudT6WeLVDv/Xps3w71d2hQxXz3JWr4flZupnNxGijrIuULl9i7XSGUC5EcxR33TTJGsc787RAVYl1/xksOZeT/t65wGzGk3KIS9Oe3B7CpXHs6p5wkWFwV5aKT7tGJQe79fWCA8k92W5IA6nwIDAQAB",
+   "manifest_version": 2,
+   "name": "polkadot{.js} extension",
+   "permissions": [ "storage", "tabs" ],
+   "short_name": "polkadot{.js}",
+   "update_url": "https://clients2.google.com/service/update2/crx",
+   "version": "0.42.2",
+   "web_accessible_resources": [ "page.js" ]
+}
