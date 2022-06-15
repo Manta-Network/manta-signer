@@ -9,6 +9,7 @@ body {
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  height: 100%;
 }
 
 code {
@@ -32,4 +33,5 @@ html {
   --color-fill-secondary: #7e7e7e;
   --gradient-bg-primary: linear-gradient(to top bottom, #b0d2eb, white);
   --gradient-button-primary: linear-gradient(to left, #26c8bf, #1fa2f9);
+  height: 100%;
 }
