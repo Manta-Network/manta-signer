@@ -25,7 +25,7 @@
 
 .authorize-summary {
     inline-size: 26rem;
-    margin:0 auto;
+    margin: 0 auto;
     max-width: 22.5rem !important;
     overflow-wrap: break-word;
     text-align: center;
@@ -36,7 +36,7 @@
     text-align: center;
 }
 
-.recovery-phrase-info > p {
+.recovery-phrase-info>p {
     margin: 0;
 }
 
@@ -54,6 +54,11 @@
     min-width: 10rem;
     padding: 0.5rem;
     text-align: center;
+}
+
+.recovery-phrase::selection {
+    color: white;
+    background-color: darkblue;
 }
 
 .recovery-phrase-header {
