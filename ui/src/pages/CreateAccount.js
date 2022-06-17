@@ -39,7 +39,7 @@ const CreateAccount = ({ recoveryPhrase, sendPassword, endInitialConnectionPhase
           <Button className="button" onClick={onClickCreateAccount}>
             Create Account
           </Button>
-          {password.length > 0 && !isValid(password) && (<><br/><Label basic color='red' pointing> `Please enter a minimum of ${MIN_PASSWORD_LENGTH} characters.`</Label></>)}
+          {password.length > 0 && !isValid(password) && (<><br/><Label basic color='red' pointing>Please enter a minimum of {MIN_PASSWORD_LENGTH} characters.</Label></>)}
         </>
       )}
       {createdAccount && (

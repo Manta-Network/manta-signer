@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
-import { Button, Input, Header, Form } from 'semantic-ui-react';
+import { Button, Input, Header, Form, Label } from 'semantic-ui-react';
 
 const SignIn = ({ sendPassword, endInitialConnectionPhase }) => {
   const [password, setPassword] = useState('');
   const [passwordInvalid, setPasswordInvalid] = useState(null);
+  const [badPasswordTried, setBadPasswordTried] = useState(false);
 
   const onClickSignIn = async () => {
     const shouldRetry = await sendPassword(password);
@@ -13,11 +14,13 @@ const SignIn = ({ sendPassword, endInitialConnectionPhase }) => {
       await endInitialConnectionPhase();
     } else {
       console.log("RETRY!");
-      setPasswordInvalid(true)
+      setPasswordInvalid(true);
+      setBadPasswordTried(true);
     }
   };
 
   const onChangePassword = password => {
+    setBadPasswordTried(false);
     setPassword(password)
     setPasswordInvalid(false)
   }
@@ -34,6 +37,7 @@ const SignIn = ({ sendPassword, endInitialConnectionPhase }) => {
           error={passwordInvalid}
         />
       </Form.Field>
+      { badPasswordTried && <><Label basic color='red' pointing>Wrong Password</Label><br/></> }
       <Button className="button" onClick={onClickSignIn}>
         Sign in
       </Button>
