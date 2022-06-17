@@ -34,6 +34,12 @@ jobs:
             asset_name: manta-signer-linux-amd64
             version_suffix: 1
             target: linux
+          - os: ubuntu-22.04
+            os_type: ubuntu
+            artifact_name: manta-signer
+            asset_name: manta-signer-linux-amd64
+            version_suffix: 2
+            target: linux
           - os: windows-2019
             os_type: windows
             artifact_name: manta-signer
