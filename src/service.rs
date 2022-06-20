@@ -16,9 +16,9 @@
 
 //! Manta Signer Service Implementation
 
-use crate::log::{info, trace, warn};
 use crate::{
     config::{Config, Setup},
+    log::{info, trace, warn},
     secret::{Argon2, Authorizer, ExposeSecret, PasswordHash, SecretString},
 };
 use core::{future::Future, time::Duration};
