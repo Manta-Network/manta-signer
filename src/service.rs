@@ -16,9 +16,9 @@
 
 //! Manta Signer Service Implementation
 
-use crate::log::{info, trace, warn};
 use crate::{
     config::{Config, Setup},
+    log::{info, trace, warn},
     secret::{Argon2, Authorizer, ExposeSecret, PasswordHash, SecretString},
 };
 use core::{future::Future, time::Duration};
@@ -187,7 +187,7 @@ where
     #[inline]
     async fn build(config: Config, mut authorizer: A) -> Result<Self> {
         info!("building signer server")?;
-        info!("loading latest parameters from Manta SDK")?;
+        info!("loading latest parameters from Manta Parameters")?;
         let data_path = config.data_directory().to_owned();
         let parameters = task::spawn_blocking(move || crate::parameters::load(data_path))
             .await?
