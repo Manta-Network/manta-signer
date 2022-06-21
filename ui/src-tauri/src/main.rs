@@ -27,6 +27,7 @@
 extern crate alloc;
 
 use alloc::sync::Arc;
+use std::fs;
 use manta_signer::{
     config::{Config, Setup},
     secret::{Authorizer, Password, PasswordFuture, Secret, SecretString, UnitFuture},
@@ -34,10 +35,26 @@ use manta_signer::{
     service,
 };
 use tauri::{
-    async_runtime::{channel, spawn, Mutex, Receiver, Sender},
+    AppHandle,
+    async_runtime::{channel, block_on, spawn, Mutex, Receiver, Sender},
     CustomMenuItem, Manager, RunEvent, State, SystemTray, SystemTrayEvent, SystemTrayMenu, Window,
     WindowEvent,
 };
+
+#[derive(Clone, Default)]
+struct ResetHandle(Arc<Mutex<Option<AppHandle>>>);
+
+impl ResetHandle {
+    pub fn initialize(&self, handle: AppHandle) {
+        block_on(async {
+            *self.0.lock().await = Some(handle);
+        })
+    }
+
+    pub async fn take(&self) -> Option<AppHandle> {
+        self.0.lock().await.take()
+    }
+}
 
 /// User
 pub struct User {
@@ -202,6 +219,20 @@ impl PasswordStore {
 
 /// Sends the current `password` into storage from the UI.
 #[tauri::command]
+async fn send_recovery_info(
+    app_config: State<'_, Config>,
+    reset_handle: State<'_, ResetHandle>,
+    phrase: String,
+    password: String,
+) -> Result<bool, ()> {
+    let handle = reset_handle.take().await;
+    // TODO: password file
+    handle.unwrap().restart();
+    Ok(true)
+}
+
+/// Sends the current `password` into storage from the UI.
+#[tauri::command]
 async fn send_password(
     password_store: State<'_, PasswordStore>,
     password: String,
@@ -226,6 +257,7 @@ fn main() {
             SystemTray::new().with_menu(
                 SystemTrayMenu::new()
                     .add_item(CustomMenuItem::new("about", "About"))
+                    .add_item(CustomMenuItem::new("reset", "Reset Seed"))
                     .add_item(CustomMenuItem::new("exit", "Quit")),
             ),
         )
@@ -233,17 +265,28 @@ fn main() {
             if let SystemTrayEvent::MenuItemClick { id, .. } = event {
                 match id.as_str() {
                     "about" => app.get_window("about").unwrap().show().unwrap(),
+                    "reset" => {
+                        let config = app.state::<Config>().inner().clone();
+                        fs::remove_file(config.data_path).expect("Failed to remove file");
+                        let window  = app.get_window("main").unwrap();
+                        window.emit("reset", "").unwrap();
+                    }
                     "exit" => app.exit(0),
                     _ => {}
                 }
             }
         })
         .manage(PasswordStore::default())
+        .manage(ResetHandle::default())
         .manage(config)
         .setup(|app| {
             let window = app.get_window("main").unwrap();
             let config = app.state::<Config>().inner().clone();
             let password_store = app.state::<PasswordStore>().handle();
+            let reset_handle = app.state::<ResetHandle>().clone();
+            let apphandle = app.handle().clone();
+            reset_handle.initialize(apphandle);
+
             spawn(async move {
                 let (password, retry) = password_store.into_channel().await;
                 service::start(config, User::new(window, password, retry))
@@ -253,6 +296,7 @@ fn main() {
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
+            send_recovery_info,
             send_password,
             stop_password_prompt,
         ])

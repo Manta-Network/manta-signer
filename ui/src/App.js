@@ -1,6 +1,7 @@
 import './App.css';
 import Authorize from './pages/Authorize';
 import CreateAccount from './pages/CreateAccount';
+import ResetAccount from './pages/ResetAccount';
 import Loading from './pages/Loading';
 import SignIn from './pages/SignIn';
 import { Container } from 'semantic-ui-react';
@@ -13,6 +14,7 @@ const LOADING_PAGE = 0;
 const CREATE_ACCOUNT_PAGE = 1;
 const LOGIN_PAGE = 2;
 const AUTHORIZE_PAGE = 3;
+const RESET_PAGE = 4;
 
 function App() {
   const [currentPage, setCurrentPage] = useState(LOADING_PAGE);
@@ -33,6 +35,9 @@ function App() {
             break;
           case 'Login':
             setCurrentPage(LOGIN_PAGE);
+            break;
+          case 'Recover':
+            setCurrentPage(RESET_PAGE);
             break;
           default:
             break;
@@ -58,6 +63,20 @@ function App() {
     });
   };
 
+  const listenForResetRequests = () => {
+    console.log("[INFO]: Setup listener.");
+    listen('reset', (event) => {
+      console.log("[INFO]: Wake: ", event);
+      setCurrentPage(RESET_PAGE);
+      appWindow.show();
+    });
+  };
+
+  const sendRecoveryInfo = async (phrase, password) => {
+    console.log("[INFO]: Send info to signer server.");
+    return await invoke('send_recovery_info', { phrase: phrase, password: password });
+  };
+
   const sendPassword = async (password) => {
     console.log("[INFO]: Send password to signer server.");
     return await invoke('send_password', { password: password });
@@ -73,11 +92,18 @@ function App() {
     setIsConnected(true);
     hideWindow();
     listenForTxAuthorizationRequests();
+    listenForResetRequests();
   };
 
   return (
     <div className="App">
       <Container className="page">
+        {currentPage === RESET_PAGE && (
+          <ResetAccount
+            sendRecoveryInfo={sendRecoveryInfo}
+            hideWindow={hideWindow}
+          />
+        )}
         {currentPage === LOADING_PAGE && (
           <Loading/>
         )}
