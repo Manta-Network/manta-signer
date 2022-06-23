@@ -284,7 +284,7 @@ fn main() {
             async {
                 let (password, retry) = password_store.into_channel().await;
                 let authorizer = User::new(window, password, retry);
-                let server = service::setup(config.clone(), authorizer).await.unwrap();
+                let server = service::setup(config.clone(), authorizer).await;
                 let server_handle = app.state::<ServerHandle<User>>().clone();
                 spawn(async move {
                     service::start(server, config)

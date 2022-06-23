@@ -45,12 +45,12 @@ where
     directory.push("proving");
     fs::create_dir_all(&directory).ok()?;
     let mint = directory.join("mint.dat");
-    manta_sdk::pay::testnet::proving::Mint::download_if_invalid(&mint).ok()?;
+    manta_parameters::pay::testnet::proving::Mint::download_if_invalid(&mint).ok()?;
     let private_transfer = directory.join("private-transfer.dat");
-    manta_sdk::pay::testnet::proving::PrivateTransfer::download_if_invalid(&private_transfer)
+    manta_parameters::pay::testnet::proving::PrivateTransfer::download_if_invalid(&private_transfer)
         .ok()?;
     let reclaim = directory.join("reclaim.dat");
-    manta_sdk::pay::testnet::proving::Reclaim::download_if_invalid(&reclaim).ok()?;
+    manta_parameters::pay::testnet::proving::Reclaim::download_if_invalid(&reclaim).ok()?;
     Some(SignerParameters {
         proving_context: MultiProvingContext {
             mint: ProvingContext::decode(IoReader(File::open(mint).ok()?)).ok()?,
@@ -60,15 +60,15 @@ where
         },
         parameters: Parameters {
             note_encryption_scheme: NoteEncryptionScheme::decode(
-                manta_sdk::pay::testnet::parameters::NoteEncryptionScheme::get()?,
+                manta_parameters::pay::testnet::parameters::NoteEncryptionScheme::get()?,
             )
             .ok()?,
             utxo_commitment: UtxoCommitmentScheme::decode(
-                manta_sdk::pay::testnet::parameters::UtxoCommitmentScheme::get()?,
+                manta_parameters::pay::testnet::parameters::UtxoCommitmentScheme::get()?,
             )
             .ok()?,
             void_number_commitment: VoidNumberCommitmentScheme::decode(
-                manta_sdk::pay::testnet::parameters::VoidNumberCommitmentScheme::get()?,
+                manta_parameters::pay::testnet::parameters::VoidNumberCommitmentScheme::get()?,
             )
             .ok()?,
         },
@@ -78,6 +78,6 @@ where
 /// Loads the [`UtxoAccumulatorModel`] from the Manta SDK.
 #[inline]
 pub fn load_utxo_accumulator_model() -> Option<UtxoAccumulatorModel> {
-    UtxoAccumulatorModel::decode(manta_sdk::pay::testnet::parameters::UtxoAccumulatorModel::get()?)
+    UtxoAccumulatorModel::decode(manta_parameters::pay::testnet::parameters::UtxoAccumulatorModel::get()?)
         .ok()
 }
