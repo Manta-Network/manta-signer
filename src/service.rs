@@ -157,23 +157,23 @@ where
 }
 
 /// State
-struct State {
+pub struct State {
     /// Configuration
     config: Config,
 
     /// Signer
-    signer: Signer,
+    pub signer: Signer,
 }
 
 /// Signer Server
 #[derive(derivative::Derivative)]
 #[derivative(Clone(bound = ""))]
-struct Server<A>
+pub struct Server<A>
 where
     A: Authorizer,
 {
     /// Server State
-    state: Arc<Mutex<State>>,
+    pub state: Arc<Mutex<State>>,
 
     /// Authorizer
     authorizer: Arc<AsyncMutex<CheckedAuthorizer<A>>>,
@@ -393,9 +393,18 @@ where
     Ok(Body::from_json(&f().await?)?.into())
 }
 
+
+/// Build the signer server
+pub async fn setup<A>(config: Config, authorizer: A) -> Server<A>
+where
+    A: Authorizer,
+{
+    Server::build(config, authorizer).await.unwrap()
+}
+
 /// Starts the signer server with `config` and `authorizer`.
 #[inline]
-pub async fn start<A>(config: Config, authorizer: A) -> Result<()>
+pub async fn start<A>(server: Server<A>, config: Config) -> Result<()>
 where
     A: Authorizer,
 {
@@ -408,7 +417,7 @@ where
             _ => Origin::from("*"),
         })
         .allow_credentials(false);
-    let mut api = tide::Server::with_state(Server::build(config, authorizer).await?);
+    let mut api = tide::Server::with_state(server);
     api.with(cors);
     api.at("/version").get(|_| into_body(Server::<A>::version));
     api.at("/sync").post(|r| Server::execute(r, Server::sync));

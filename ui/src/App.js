@@ -19,6 +19,7 @@ function App() {
   const [isConnected, setIsConnected] = useState(false);
   const [recoveryPhrase, setRecoveryPhrase] = useState(null);
   const [authorizationSummary, setAuthorizationSummary] = useState(null);
+  const [receivingKeys, setReceivingKeys] = useState(null);
 
   useEffect(() => {
     if (isConnected) return;
@@ -72,8 +73,15 @@ function App() {
     console.log("[INFO]: End Initial Connection Phase");
     setIsConnected(true);
     hideWindow();
+    await getReceivingKeys();
     listenForTxAuthorizationRequests();
   };
+
+  const getReceivingKeys = async () => {
+    const receivingKeys = await invoke('receiving_keys');
+    console.log(receivingKeys);
+    setReceivingKeys(receivingKeys)
+  }
 
   return (
     <div className="App">

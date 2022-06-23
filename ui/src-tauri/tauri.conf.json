@@ -57,8 +57,7 @@
                 "show": true
             }
         },
-        "windows": [
-            {
+        "windows": [{
                 "label": "main",
                 "title": "Manta Signer",
                 "width": 600,

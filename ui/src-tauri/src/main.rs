@@ -32,6 +32,11 @@ use manta_signer::{
     secret::{Authorizer, Password, PasswordFuture, Secret, SecretString, UnitFuture},
     serde::Serialize,
     service,
+    service::Server
+};
+use manta_pay::{
+    config::{receiving_key_to_base58, ReceivingKey},
+    signer::{self, ReceivingKeyRequest}
 };
 use tauri::{
     async_runtime::{channel, spawn, Mutex, Receiver, Sender},
@@ -52,6 +57,14 @@ pub struct User {
 
     /// Waiting Flag
     waiting: bool,
+}
+
+/// Handle to access server from UI
+impl ServerHandle::<User> {
+    /// default ServerHandle
+    pub fn default() -> Self {
+        Self(None)
+    }
 }
 
 impl User {
@@ -161,6 +174,11 @@ impl PasswordStoreHandle {
     }
 }
 
+/// Handle to access server from UI
+#[derive(Default)]
+pub struct ServerHandle<A: manta_signer::secret::Authorizer>(Option<Server<A>>);
+
+
 /// Password Storage
 #[derive(Default)]
 pub struct PasswordStore(PasswordStoreType);
@@ -216,6 +234,24 @@ async fn stop_password_prompt(password_store: State<'_, PasswordStore>) -> Resul
     Ok(())
 }
 
+
+/// Gets the user's receiving keys
+#[tauri::command]
+fn receiving_keys(server_handle: State<'_, ServerHandle<User>>) -> Result<Vec<String>, ()>
+where
+{
+    if let Some(handle) = server_handle.0.as_ref() {
+        let keys = handle
+            .state
+            .lock()
+            .signer
+            .receiving_keys(ReceivingKeyRequest::GetAll);
+        println!("keys: {:?}", keys);
+        println!("key: {:?}", receiving_key_to_base58(&keys[0]))
+    }
+    Ok(vec![String::from("dadadsadaddad")])
+}
+
 /// Runs the main Tauri application.
 fn main() {
     let config =
@@ -239,22 +275,29 @@ fn main() {
             }
         })
         .manage(PasswordStore::default())
+        .manage(ServerHandle::<User>::default())
         .manage(config)
         .setup(|app| {
             let window = app.get_window("main").unwrap();
             let config = app.state::<Config>().inner().clone();
             let password_store = app.state::<PasswordStore>().handle();
-            spawn(async move {
+            async {
                 let (password, retry) = password_store.into_channel().await;
-                service::start(config, User::new(window, password, retry))
-                    .await
-                    .expect("Unable to build manta-signer service.");
-            });
+                let authorizer = User::new(window, password, retry);
+                let server = service::setup(config.clone(), authorizer).await.unwrap();
+                let server_handle = app.state::<ServerHandle<User>>().clone();
+                spawn(async move {
+                    service::start(server, config)
+                        .await
+                        .expect("Unable to build manta-signer service.")
+                });
+            };
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
             send_password,
             stop_password_prompt,
+            receiving_keys
         ])
         .build(tauri::generate_context!())
         .expect("Error while building UI.");
