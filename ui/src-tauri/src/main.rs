@@ -27,22 +27,20 @@
 extern crate alloc;
 
 use alloc::sync::Arc;
-use std::fs;
 use manta_signer::{
     config::{Config, Setup},
-    secret::{Authorizer, ResetInfo, Password, PasswordFuture, Secret, SecretString, UnitFuture},
+    secret::{Authorizer, Password, PasswordFuture, ResetInfo, Secret, SecretString, UnitFuture},
     serde::Serialize,
     service,
 };
+use std::fs;
 use tauri::{
     async_runtime::{channel, spawn, Mutex, Receiver, Sender},
     CustomMenuItem, Manager, RunEvent, State, SystemTray, SystemTrayEvent, SystemTrayMenu, Window,
     WindowEvent,
 };
 
-
 type ResetHandle = Sender<ResetInfo>;
-
 
 /// User
 pub struct User {
@@ -257,7 +255,7 @@ fn main() {
                     "reset" => {
                         let config = app.state::<Config>().inner().clone();
                         fs::remove_file(config.data_path).expect("Failed to remove file");
-                        let window  = app.get_window("main").unwrap();
+                        let window = app.get_window("main").unwrap();
                         window.emit("reset", "").unwrap();
                     }
                     "exit" => app.exit(0),
