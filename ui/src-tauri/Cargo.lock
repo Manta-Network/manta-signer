@@ -2604,6 +2604,7 @@ version = "0.7.1"
 dependencies = [
  "manta-pay",
  "manta-signer",
+ "reqwest",
  "tauri",
  "tauri-build",
 ]

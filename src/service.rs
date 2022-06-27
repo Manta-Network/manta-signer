@@ -159,7 +159,7 @@ where
 /// State
 pub struct State {
     /// Configuration
-    config: Config,
+    pub config: Config,
 
     /// Signer
     pub signer: Signer,
@@ -399,7 +399,8 @@ pub async fn setup<A>(config: Config, authorizer: A) -> Server<A>
 where
     A: Authorizer,
 {
-    Server::build(config, authorizer).await.unwrap()
+    let server = Server::build(config, authorizer).await.unwrap();
+    server
 }
 
 /// Starts the signer server with `config` and `authorizer`.
