@@ -30,7 +30,7 @@ use alloc::sync::Arc;
 use std::fs;
 use manta_signer::{
     config::{Config, Setup},
-    secret::{Authorizer, Password, PasswordFuture, Secret, SecretString, UnitFuture},
+    secret::{Authorizer, ResetInfo, Password, PasswordFuture, Secret, SecretString, UnitFuture},
     serde::Serialize,
     service,
 };
@@ -41,20 +41,10 @@ use tauri::{
     WindowEvent,
 };
 
-#[derive(Clone, Default)]
-struct ResetHandle(Arc<Mutex<Option<AppHandle>>>);
 
-impl ResetHandle {
-    pub fn initialize(&self, handle: AppHandle) {
-        block_on(async {
-            *self.0.lock().await = Some(handle);
-        })
-    }
+#[derive(Clone)]
+type ResetHandle = Sender<ResetInfo>;
 
-    pub async fn take(&self) -> Option<AppHandle> {
-        self.0.lock().await.take()
-    }
-}
 
 /// User
 pub struct User {
@@ -225,9 +215,9 @@ async fn send_recovery_info(
     phrase: String,
     password: String,
 ) -> Result<bool, ()> {
-    let handle = reset_handle.take().await;
-    // TODO: password file
-    handle.unwrap().restart();
+    let info = (Secret::new(phrase), Secret::new(password));
+
+    reset_handle.send(info).await;
     Ok(true)
 }
 
@@ -251,6 +241,8 @@ async fn stop_password_prompt(password_store: State<'_, PasswordStore>) -> Resul
 fn main() {
     let config =
         Config::try_default().expect("Unable to generate the default server configuration.");
+
+    let (reset_tx, reset_rx) = channel();
 
     let mut app = tauri::Builder::default()
         .system_tray(
@@ -277,19 +269,16 @@ fn main() {
             }
         })
         .manage(PasswordStore::default())
-        .manage(ResetHandle::default())
+        .manage(reset_tx)
         .manage(config)
         .setup(|app| {
             let window = app.get_window("main").unwrap();
             let config = app.state::<Config>().inner().clone();
             let password_store = app.state::<PasswordStore>().handle();
-            let reset_handle = app.state::<ResetHandle>().clone();
-            let apphandle = app.handle().clone();
-            reset_handle.initialize(apphandle);
 
             spawn(async move {
                 let (password, retry) = password_store.into_channel().await;
-                service::start(config, User::new(window, password, retry))
+                service::start(config, User::new(window, password, retry), reset)
                     .await
                     .expect("Unable to build manta-signer service.");
             });

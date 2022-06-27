@@ -36,11 +36,11 @@ derivative = { version = "2.2.0", default-features = false, features = ["use_cor
 dirs-next = { version = "2.0.0", default-features = false }
 futures = { version = "0.3.17", default-features = false, features = ["alloc"] }
 http-types = { version = "2.12.0", default-features = false }
-manta-accounting = { git = "https://github.com/manta-network/manta-rs", tag = "v0.5.1", default-features = false, features = ["cocoon-fs"] }
-manta-crypto = { git = "https://github.com/manta-network/manta-rs", tag = "v0.5.1", default-features = false, features = ["getrandom"] }
-manta-parameters = { git = "https://github.com/manta-network/manta-rs", tag = "v0.5.1", default-features = false, features = ["download"] }
-manta-pay = { git = "https://github.com/manta-network/manta-rs", tag = "v0.5.1", default-features = false, features = ["bs58", "groth16", "serde", "wallet"] }
-manta-util = { git = "https://github.com/manta-network/manta-rs", tag = "v0.5.1", default-features = false }
+manta-accounting = { git = "https://github.com/manta-network/manta-rs", branch = "fix/reduce-key-rederivations", default-features = false, features = ["cocoon-fs"] }
+manta-crypto = { git = "https://github.com/manta-network/manta-rs", branch = "fix/reduce-key-rederivations", default-features = false, features = ["getrandom"] }
+manta-parameters = { git = "https://github.com/manta-network/manta-rs", branch = "fix/reduce-key-rederivations", default-features = false, features = ["download"] }
+manta-pay = { git = "https://github.com/manta-network/manta-rs", branch = "fix/reduce-key-rederivations", default-features = false, features = ["bs58", "groth16", "serde", "wallet"] }
+manta-util = { git = "https://github.com/manta-network/manta-rs", branch = "fix/reduce-key-rederivations", default-features = false }
 parking_lot = { version = "0.12.1", default-features = false }
 password-hash = { version = "0.3.2", default-features = false, features = ["alloc"] }
 secrecy = { version = "0.8.0", default-features = false, features = ["alloc"] }

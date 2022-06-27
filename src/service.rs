@@ -19,7 +19,7 @@
 use crate::{
     config::{Config, Setup},
     log::{info, trace, warn},
-    secret::{Argon2, Authorizer, ExposeSecret, PasswordHash, SecretString},
+    secret::{Argon2, Authorizer, ExposeSecret, PasswordHash, ResetInfo, SecretString},
 };
 use core::{future::Future, time::Duration};
 use http_types::headers::HeaderValue;
@@ -57,7 +57,7 @@ use tide::{
 };
 use tokio::{
     fs,
-    sync::Mutex as AsyncMutex,
+    sync::{Mutex as AsyncMutex, mpsc::Receiver},
     task::{self, JoinError},
 };
 
@@ -395,7 +395,7 @@ where
 
 /// Starts the signer server with `config` and `authorizer`.
 #[inline]
-pub async fn start<A>(config: Config, authorizer: A) -> Result<()>
+pub async fn start<A>(config: Config, authorizer: A, reset_rx: Receiver<ResetInfo>) -> Result<()>
 where
     A: Authorizer,
 {

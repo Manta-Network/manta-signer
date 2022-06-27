@@ -27,6 +27,9 @@ pub use password_hash::{Error as PasswordHashError, PasswordHasher, PasswordVeri
 pub use secrecy::{ExposeSecret, Secret, SecretString};
 pub use subtle::{Choice, ConstantTimeEq, CtOption};
 
+/// mnemonic, password
+pub type ResetInfo = (SecretString, SecretString);
+
 /// Password Secret Wrapper
 pub struct Password(CtOption<SecretString>);
 

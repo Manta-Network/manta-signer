@@ -2477,7 +2477,7 @@ dependencies = [
 [[package]]
 name = "manta-accounting"
 version = "0.5.1"
-source = "git+https://github.com/manta-network/manta-rs?tag=v0.5.1#ac8e929f45e169a4540e5fc591e09f9f5a6a939c"
+source = "git+https://github.com/manta-network/manta-rs?branch=fix/reduce-key-rederivations#271ebf7d8c283e4504b8ee22625d25c97e554648"
 dependencies = [
  "bitflags",
  "cocoon",
@@ -2491,7 +2491,7 @@ dependencies = [
 [[package]]
 name = "manta-crypto"
 version = "0.5.1"
-source = "git+https://github.com/manta-network/manta-rs?tag=v0.5.1#ac8e929f45e169a4540e5fc591e09f9f5a6a939c"
+source = "git+https://github.com/manta-network/manta-rs?branch=fix/reduce-key-rederivations#271ebf7d8c283e4504b8ee22625d25c97e554648"
 dependencies = [
  "derivative",
  "manta-util",
@@ -2501,7 +2501,7 @@ dependencies = [
 [[package]]
 name = "manta-parameters"
 version = "0.5.1"
-source = "git+https://github.com/manta-network/manta-rs?tag=v0.5.1#ac8e929f45e169a4540e5fc591e09f9f5a6a939c"
+source = "git+https://github.com/manta-network/manta-rs?branch=fix/reduce-key-rederivations#271ebf7d8c283e4504b8ee22625d25c97e554648"
 dependencies = [
  "anyhow",
  "attohttpc",
@@ -2513,7 +2513,7 @@ dependencies = [
 [[package]]
 name = "manta-pay"
 version = "0.5.1"
-source = "git+https://github.com/manta-network/manta-rs?tag=v0.5.1#ac8e929f45e169a4540e5fc591e09f9f5a6a939c"
+source = "git+https://github.com/manta-network/manta-rs?branch=fix/reduce-key-rederivations#271ebf7d8c283e4504b8ee22625d25c97e554648"
 dependencies = [
  "aes-gcm 0.9.4",
  "ark-bls12-381",
@@ -2573,7 +2573,7 @@ dependencies = [
 [[package]]
 name = "manta-util"
 version = "0.5.1"
-source = "git+https://github.com/manta-network/manta-rs?tag=v0.5.1#ac8e929f45e169a4540e5fc591e09f9f5a6a939c"
+source = "git+https://github.com/manta-network/manta-rs?branch=fix/reduce-key-rederivations#271ebf7d8c283e4504b8ee22625d25c97e554648"
 dependencies = [
  "serde",
  "serde_with",
