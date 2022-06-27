@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Button, Form, Input, TextArea, Label, Header } from 'semantic-ui-react';
+const bip39 = require('bip39');
 
 const MIN_PASSWORD_LENGTH = 8;
 
@@ -15,9 +16,7 @@ const ResetAccount = ({ sendRecoveryInfo, hideWindow }) => {
   };
 
   const isValidSeed = (phrase) => {
-      //TODO: this....
-
-      return phrase.length > 20;
+      return bip39.validateMnemonic(phrase);
   };
 
   const onEnterSeedPhrase = async (e, data) => {
@@ -53,8 +52,8 @@ const ResetAccount = ({ sendRecoveryInfo, hideWindow }) => {
           <div className="recovery-phrase-warning">
             ⚠️  Never share your recovery phrase with anyone! ⚠️ 
           </div>
-          {!validSeedPhrase && <h3> 😏 Make it a valid one tho! 😏 </h3> }
-          {validSeedPhrase && <Label basic color='blue'> Cool! Hit send! </Label> }
+          {!validSeedPhrase && <Label basic color='yellow'>Enter a valid seed phrase</Label> }
+          {validSeedPhrase && <Label basic color='blue'>Cool! Hit send!</Label> }
           <Form>
               <Form.TextArea onChange={onEnterSeedPhrase}>
               </Form.TextArea>

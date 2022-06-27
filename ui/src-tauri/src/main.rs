@@ -35,14 +35,12 @@ use manta_signer::{
     service,
 };
 use tauri::{
-    AppHandle,
-    async_runtime::{channel, block_on, spawn, Mutex, Receiver, Sender},
+    async_runtime::{channel, spawn, Mutex, Receiver, Sender},
     CustomMenuItem, Manager, RunEvent, State, SystemTray, SystemTrayEvent, SystemTrayMenu, Window,
     WindowEvent,
 };
 
 
-#[derive(Clone)]
 type ResetHandle = Sender<ResetInfo>;
 
 
@@ -210,14 +208,13 @@ impl PasswordStore {
 /// Sends the current `password` into storage from the UI.
 #[tauri::command]
 async fn send_recovery_info(
-    app_config: State<'_, Config>,
     reset_handle: State<'_, ResetHandle>,
     phrase: String,
     password: String,
 ) -> Result<bool, ()> {
     let info = (Secret::new(phrase), Secret::new(password));
 
-    reset_handle.send(info).await;
+    reset_handle.send(info).await.expect("Reset channel broke");
     Ok(true)
 }
 
@@ -242,7 +239,7 @@ fn main() {
     let config =
         Config::try_default().expect("Unable to generate the default server configuration.");
 
-    let (reset_tx, reset_rx) = channel();
+    let (reset_tx, reset_rx) = channel(1);
 
     let mut app = tauri::Builder::default()
         .system_tray(
@@ -278,7 +275,7 @@ fn main() {
 
             spawn(async move {
                 let (password, retry) = password_store.into_channel().await;
-                service::start(config, User::new(window, password, retry), reset)
+                service::start(config, User::new(window, password, retry), reset_rx)
                     .await
                     .expect("Unable to build manta-signer service.");
             });
