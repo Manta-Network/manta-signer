@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Button, Form, Input, TextArea, Label, Header } from 'semantic-ui-react';
+import { Button, Form, Input, Label, Header } from 'semantic-ui-react';
 const bip39 = require('bip39');
 
 const MIN_PASSWORD_LENGTH = 8;
