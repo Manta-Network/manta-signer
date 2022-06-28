@@ -496,7 +496,7 @@ where
 
     let server = Server::build(config, authorizer).await?;
 
-    if let Err(_) = init_tx.send(server.state_handle()).await {
+    if init_tx.send(server.state_handle()).await.is_err() {
         return Err(Error::ChannelClosedError);
     }
 
