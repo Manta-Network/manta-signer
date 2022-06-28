@@ -57,7 +57,10 @@ use tide::{
 };
 use tokio::{
     fs,
-    sync::{mpsc::Receiver, Mutex as AsyncMutex},
+    sync::{
+        mpsc::{channel, Receiver},
+        Mutex as AsyncMutex,
+    },
     task::{self, JoinError},
 };
 
@@ -81,6 +84,9 @@ pub enum Error {
 
     /// Failed to Load SDK Parameters
     ParameterLoadingError,
+
+    /// Channel closed Error
+    ChannelClosedError,
 
     /// Save Error
     SaveError(SaveError<File>),
@@ -397,44 +403,65 @@ where
     Ok(Body::from_json(&f().await?)?.into())
 }
 
-async fn handle_reset(mut reset_rx: Receiver<ResetInfo>, state_handle: Arc<Mutex<State>>) {
+async fn do_reset(mnemonic: SecretString, password: SecretString, config: &Config) -> State {
+    info!("resetting signer state").expect("Logger error in reset handler");
+
+    let mnemonic = Mnemonic::new(mnemonic.expose_secret()).expect("Invalid mnemonic phrase");
+    let password_hash = PasswordHash::<Argon2>::from_default(password.expose_secret().as_bytes());
+
+    let data_path = config.data_directory().to_owned();
+    let parameters = task::spawn_blocking(move || crate::parameters::load(data_path))
+        .await
+        .expect("Parameter loading error")
+        .expect("Failed to load parameters");
+
+    let state = SignerState::new(
+        TestnetKeySecret::new(mnemonic, password.expose_secret())
+            .map(HierarchicalKeyDerivationFunction::default()),
+        UtxoAccumulator::new(
+            task::spawn_blocking(crate::parameters::load_utxo_accumulator_model)
+                .await
+                .expect("Error loading utxo accumulator model")
+                .unwrap(),
+        ),
+    );
+    info!("saving signer state").expect("Logger error in reset handler");
+    let password_hash_bytes = password_hash.as_bytes();
+    let cloned_state = state.clone();
+    let path = config.data_path.clone();
+
+    task::spawn_blocking(move || File::save(&path, &password_hash_bytes, cloned_state))
+        .await
+        .expect("Signer state save failed")
+        .expect("Could not save signer state.");
+    let signer = Signer::from_parts(parameters, state);
+
+    State {
+        config: config.clone(),
+        signer,
+    }
+}
+
+async fn handle_reset(
+    mut reset_rx: Receiver<ResetInfo>,
+    mut init_rx: Receiver<Arc<Mutex<State>>>,
+    config: Config,
+) {
+    let state_handle = loop {
+        tokio::select! {
+            state = init_rx.recv() => {
+                break state.expect("Did not receive init state message!");
+            }
+            info = reset_rx.recv() => {
+                let (mnemonic, password) = info.expect("Invalid reset payload!");
+                let _ = do_reset(mnemonic, password, &config).await;
+            }
+        }
+    };
+
     loop {
         if let Some((mnemonic, password)) = reset_rx.recv().await {
-            info!("resetting signer state").expect("Logger error in reset handler");
-
-            let mnemonic =
-                Mnemonic::new(mnemonic.expose_secret()).expect("Invalid mnemonic phrase");
-            let password_hash =
-                PasswordHash::<Argon2>::from_default(password.expose_secret().as_bytes());
-            let config = state_handle.lock().config.clone();
-
-            let data_path = config.data_directory().to_owned();
-            let parameters = task::spawn_blocking(move || crate::parameters::load(data_path))
-                .await
-                .expect("Parameter loading error")
-                .expect("Failed to load parameters");
-
-            let state = SignerState::new(
-                TestnetKeySecret::new(mnemonic, password.expose_secret())
-                    .map(HierarchicalKeyDerivationFunction::default()),
-                UtxoAccumulator::new(
-                    task::spawn_blocking(crate::parameters::load_utxo_accumulator_model)
-                        .await
-                        .expect("Error loading utxo accumulator model")
-                        .unwrap(),
-                ),
-            );
-            info!("saving signer state").expect("Logger error in reset handler");
-            let password_hash_bytes = password_hash.as_bytes();
-            let cloned_state = state.clone();
-            let path = config.data_path.clone();
-
-            task::spawn_blocking(move || File::save(&path, &password_hash_bytes, cloned_state))
-                .await
-                .expect("Signer state save failed")
-                .expect("Could not save signer state.");
-            let signer = Signer::from_parts(parameters, state);
-            let mut new_state = State { config, signer };
+            let mut new_state = do_reset(mnemonic, password, &config).await;
 
             std::mem::swap(&mut *state_handle.lock(), &mut new_state);
         } else {
@@ -459,12 +486,19 @@ where
             _ => Origin::from("*"),
         })
         .allow_credentials(false);
-    let server = Server::build(config, authorizer).await?;
-    let state_handle = server.state_handle();
+
+    let (init_tx, init_rx) = channel(1);
+    let conf = config.clone();
 
     task::spawn(async move {
-        handle_reset(reset_rx, state_handle).await;
+        handle_reset(reset_rx, init_rx, conf).await;
     });
+
+    let server = Server::build(config, authorizer).await?;
+
+    if let Err(_) = init_tx.send(server.state_handle()).await {
+        return Err(Error::ChannelClosedError);
+    }
 
     let mut api = tide::Server::with_state(server);
     api.with(cors);

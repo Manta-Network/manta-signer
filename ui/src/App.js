@@ -44,6 +44,7 @@ function App() {
         }
       });
     };
+    listenForResetRequests();
     beginInitialConnectionPhase();
   }, [isConnected]);
 
@@ -92,7 +93,6 @@ function App() {
     setIsConnected(true);
     hideWindow();
     listenForTxAuthorizationRequests();
-    listenForResetRequests();
   };
 
   return (
