@@ -33,6 +33,8 @@ use manta_signer::{
     serde::Serialize,
     service,
 };
+use std::{fs, time::Duration};
+use tokio::time::sleep;
 use tauri::{
     async_runtime::{channel, spawn, Mutex, Receiver, Sender},
     CustomMenuItem, Manager, RunEvent, State, SystemTray, SystemTrayEvent, SystemTrayMenu, Window,
@@ -116,8 +118,13 @@ impl Authorizer for User {
 
     #[inline]
     fn setup<'s>(&'s mut self, setup: &'s Setup) -> UnitFuture<'s> {
-        self.emit("connect", setup);
-        Box::pin(async move {})
+
+        let window = self.window.clone();
+
+        Box::pin(async move {
+            sleep(Duration::from_millis(500)).await;
+            window.emit("connect", setup).expect("Connect failed");
+        })
     }
 
     #[inline]

@@ -2569,6 +2569,7 @@ dependencies = [
  "manta-signer",
  "tauri",
  "tauri-build",
+ "tokio",
 ]
 
 [[package]]
