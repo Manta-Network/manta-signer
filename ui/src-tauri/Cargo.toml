@@ -35,6 +35,7 @@ custom-protocol = ["tauri/custom-protocol"]
 unsafe-disable-cors = ["manta-signer/unsafe-disable-cors"]
 
 [dependencies]
+async-trait = "0.1.56"
 manta-signer = { path = "../../", default-features = false }
 tauri = { version = "1.0.0-rc.14", default-features = false, features = ["gtk-tray", "reqwest-client", "system-tray", "updater", "window-hide", "window-show", "wry"] }
 

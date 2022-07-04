@@ -18,8 +18,8 @@
 
 // TODO: Use password hashing abstractions from `manta-rs`.
 
+use async_trait::async_trait;
 use crate::config::Setup;
-use futures::future::BoxFuture;
 use manta_util::serde::Serialize;
 use password_hash::{PasswordHashString, SaltString};
 
@@ -69,26 +69,11 @@ impl Default for Password {
     }
 }
 
-/// Unit Future
-///
-/// This `type` is used by the [`setup`], [`wake`], and [`sleep`] methods of [`Authorizer`].
-/// See their documentation for more.
-///
-/// [`setup`]: Authorizer::setup
-/// [`wake`]: Authorizer::wake
-/// [`sleep`]: Authorizer::sleep
-pub type UnitFuture<'t> = BoxFuture<'t, ()>;
-
-/// Password Future
-///
-/// This `type` is used by the [`password`](Authorizer::password) method of [`Authorizer`].
-/// See its documentation for more.
-pub type PasswordFuture<'t> = BoxFuture<'t, Password>;
-
 /// Authorizer
+#[async_trait]
 pub trait Authorizer: 'static + Send {
     /// Retrieves the password from the authorizer.
-    fn password(&mut self) -> PasswordFuture;
+    async fn password(&mut self) -> Password;
 
     /// Runs some setup for the authorizer using the `setup`.
     ///
@@ -99,9 +84,8 @@ pub trait Authorizer: 'static + Send {
     ///
     /// [`service::start`]: crate::service::start
     #[inline]
-    fn setup<'s>(&'s mut self, setup: &'s Setup) -> UnitFuture<'s> {
+    async fn setup(&mut self, setup: &Setup) {
         let _ = setup;
-        Box::pin(async move {})
     }
 
     /// Prompts the authorizer with `prompt` so that they can be notified that their password is
@@ -116,12 +100,11 @@ pub trait Authorizer: 'static + Send {
     /// [`wake`]: Self::wake
     /// [`password`]: Self::password
     #[inline]
-    fn wake<T>(&mut self, prompt: &T) -> UnitFuture
+    async fn wake<T>(&mut self, prompt: &T)
     where
-        T: Serialize,
+        T: Serialize + Sync + Send,
     {
         let _ = prompt;
-        Box::pin(async move {})
     }
 
     /// Sends a message to the authorizer to end communication.
@@ -130,9 +113,7 @@ pub trait Authorizer: 'static + Send {
     ///
     /// By default, [`sleep`](Self::sleep) does nothing.
     #[inline]
-    fn sleep(&mut self) -> UnitFuture {
-        Box::pin(async move {})
-    }
+    async fn sleep(&mut self) {}
 }
 
 /// Argon2 Hasher Type

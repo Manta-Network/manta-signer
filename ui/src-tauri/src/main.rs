@@ -27,9 +27,10 @@
 extern crate alloc;
 
 use alloc::sync::Arc;
+use async_trait::async_trait;
 use manta_signer::{
     config::{Config, Setup},
-    secret::{Authorizer, Password, PasswordFuture, Secret, SecretString, UnitFuture},
+    secret::{Authorizer, Password, Secret, SecretString},
     serde::Serialize,
     service,
 };
@@ -108,30 +109,29 @@ impl User {
     }
 }
 
+#[async_trait]
 impl Authorizer for User {
     #[inline]
-    fn password(&mut self) -> PasswordFuture {
-        Box::pin(async move { self.request_password().await })
+    async fn password(&mut self) -> Password {
+        self.request_password().await
     }
 
     #[inline]
-    fn setup<'s>(&'s mut self, setup: &'s Setup) -> UnitFuture<'s> {
+    async fn setup(&mut self, setup: &Setup) {
         self.emit("connect", setup);
-        Box::pin(async move {})
     }
 
     #[inline]
-    fn wake<T>(&mut self, prompt: &T) -> UnitFuture
+    async fn wake<T>(&mut self, prompt: &T)
     where
-        T: Serialize,
+        T: Serialize + Sync + Send,
     {
         self.emit("authorize", prompt);
-        Box::pin(async move {})
     }
 
     #[inline]
-    fn sleep(&mut self) -> UnitFuture {
-        Box::pin(async move { self.validate_password().await })
+    async fn sleep(&mut self) {
+        self.validate_password().await
     }
 }
 

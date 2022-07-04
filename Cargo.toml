@@ -31,10 +31,10 @@ unsafe-disable-cors = []
 [dependencies]
 argon2 = { version = "0.3.4", default-features = false, features = ["alloc", "password-hash"] }
 async-std = { version = "1.11.0", default-features = false, features = ["attributes", "tokio1"] }
+async-trait = "0.1.56"
 chrono = { version = "0.4.19", default-features = false, features = ["clock"] }
 derivative = { version = "2.2.0", default-features = false, features = ["use_core"] }
 dirs-next = { version = "2.0.0", default-features = false }
-futures = { version = "0.3.17", default-features = false, features = ["alloc"] }
 http-types = { version = "2.12.0", default-features = false }
 manta-accounting = { git = "https://github.com/manta-network/manta-rs", tag = "v0.5.2", default-features = false, features = ["cocoon-fs"] }
 manta-crypto = { git = "https://github.com/manta-network/manta-rs", tag = "v0.5.2", default-features = false, features = ["getrandom"] }

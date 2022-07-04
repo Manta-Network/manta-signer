@@ -16,10 +16,11 @@
 
 //! Test Signer Server
 
+use async_trait::async_trait;
 use manta_crypto::rand::{CryptoRng, OsRng, RngCore, Sample};
 use manta_signer::{
     config::Config,
-    secret::{Authorizer, Password, PasswordFuture, SecretString},
+    secret::{Authorizer, Password, SecretString},
     service::{self, Error},
 };
 
@@ -42,10 +43,11 @@ impl MockUser {
     }
 }
 
+#[async_trait]
 impl Authorizer for MockUser {
     #[inline]
-    fn password(&mut self) -> PasswordFuture {
-        Box::pin(async move { Password::from_known(self.password.clone()) })
+    async fn password(&mut self) -> Password {
+        Password::from_known(self.password.clone())
     }
 }
 

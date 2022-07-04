@@ -135,7 +135,7 @@ where
     #[inline]
     async fn check<T>(&mut self, prompt: &T) -> Result<()>
     where
-        T: Serialize,
+        T: Serialize + Sync + Send,
     {
         self.authorizer.wake(prompt).await;
         loop {
