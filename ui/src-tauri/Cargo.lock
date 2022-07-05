@@ -2477,8 +2477,8 @@ dependencies = [
 
 [[package]]
 name = "manta-accounting"
-version = "0.5.0"
-source = "git+https://github.com/manta-network/manta-rs#c8f9a3f07e185206d8c2f6e0f59dd84de0681f36"
+version = "0.5.2"
+source = "git+https://github.com/manta-network/manta-rs?tag=v0.5.2#7c8d6c45bfd2c5ce1b1ceb70af824de0fb0bc609"
 dependencies = [
  "bitflags",
  "cocoon",
@@ -2491,8 +2491,8 @@ dependencies = [
 
 [[package]]
 name = "manta-crypto"
-version = "0.5.0"
-source = "git+https://github.com/manta-network/manta-rs#c8f9a3f07e185206d8c2f6e0f59dd84de0681f36"
+version = "0.5.2"
+source = "git+https://github.com/manta-network/manta-rs?tag=v0.5.2#7c8d6c45bfd2c5ce1b1ceb70af824de0fb0bc609"
 dependencies = [
  "derivative",
  "manta-util",
@@ -2500,9 +2500,21 @@ dependencies = [
 ]
 
 [[package]]
+name = "manta-parameters"
+version = "0.5.2"
+source = "git+https://github.com/manta-network/manta-rs?tag=v0.5.2#7c8d6c45bfd2c5ce1b1ceb70af824de0fb0bc609"
+dependencies = [
+ "anyhow",
+ "attohttpc",
+ "blake3",
+ "hex",
+ "walkdir",
+]
+
+[[package]]
 name = "manta-pay"
-version = "0.5.0"
-source = "git+https://github.com/manta-network/manta-rs#c8f9a3f07e185206d8c2f6e0f59dd84de0681f36"
+version = "0.5.2"
+source = "git+https://github.com/manta-network/manta-rs?tag=v0.5.2#7c8d6c45bfd2c5ce1b1ceb70af824de0fb0bc609"
 dependencies = [
  "aes-gcm 0.9.4",
  "ark-bls12-381",
@@ -2526,18 +2538,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "manta-sdk"
-version = "0.5.0"
-source = "git+https://github.com/manta-network/sdk#4695cffb2cbb65f9a2efc24d54c11c801785b006"
-dependencies = [
- "anyhow",
- "attohttpc",
- "blake3",
- "hex",
- "walkdir",
-]
-
-[[package]]
 name = "manta-signer"
 version = "0.7.1"
 dependencies = [
@@ -2550,8 +2550,8 @@ dependencies = [
  "http-types",
  "manta-accounting",
  "manta-crypto",
+ "manta-parameters",
  "manta-pay",
- "manta-sdk",
  "manta-util",
  "parking_lot 0.12.1",
  "password-hash",
@@ -2574,8 +2574,8 @@ dependencies = [
 
 [[package]]
 name = "manta-util"
-version = "0.5.0"
-source = "git+https://github.com/manta-network/manta-rs#c8f9a3f07e185206d8c2f6e0f59dd84de0681f36"
+version = "0.5.2"
+source = "git+https://github.com/manta-network/manta-rs?tag=v0.5.2#7c8d6c45bfd2c5ce1b1ceb70af824de0fb0bc609"
 dependencies = [
  "serde",
  "serde_with",

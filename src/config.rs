@@ -16,7 +16,7 @@
 
 //! Manta Signer Configuration
 
-use manta_crypto::rand::{OsRng, Sample};
+use manta_crypto::rand::OsRng;
 use manta_pay::key::Mnemonic;
 use manta_util::serde::{Deserialize, Serialize};
 use std::{
@@ -88,7 +88,7 @@ impl Config {
                 io::ErrorKind::Other,
                 format!("Invalid file format: {:?}.", metadata),
             )),
-            _ => Ok(Setup::CreateAccount(Mnemonic::gen(&mut OsRng))),
+            _ => Ok(Setup::CreateAccount(Mnemonic::sample(&mut OsRng))),
         }
     }
 }
