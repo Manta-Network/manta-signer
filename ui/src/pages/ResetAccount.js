@@ -52,7 +52,7 @@ const ResetAccount = ({ sendRecoveryInfo, hideWindow }) => {
           <div className="recovery-phrase-warning">
             ⚠️  Never share your recovery phrase with anyone! ⚠️ 
           </div>
-          {!validSeedPhrase && <Label basic color='yellow'>Enter a valid seed phrase</Label> }
+          {!validSeedPhrase && recoveryPhrase.length > 0 && <Label basic color='yellow'>Enter a valid seed phrase</Label> }
           {validSeedPhrase && <Label basic color='blue'>Cool! Hit send!</Label> }
           <Form>
               <Form.TextArea onChange={onEnterSeedPhrase}>
