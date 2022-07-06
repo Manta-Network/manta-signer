@@ -1,4 +1,5 @@
 import './App.css';
+import Account from './pages/Account';
 import Authorize from './pages/Authorize';
 import CreateAccount from './pages/CreateAccount';
 import Loading from './pages/Loading';
@@ -13,12 +14,14 @@ const LOADING_PAGE = 0;
 const CREATE_ACCOUNT_PAGE = 1;
 const LOGIN_PAGE = 2;
 const AUTHORIZE_PAGE = 3;
+const ACCOUNT_PAGE = 4;
 
 function App() {
   const [currentPage, setCurrentPage] = useState(LOADING_PAGE);
   const [isConnected, setIsConnected] = useState(false);
   const [recoveryPhrase, setRecoveryPhrase] = useState(null);
   const [authorizationSummary, setAuthorizationSummary] = useState(null);
+  const [receivingKeys, setReceivingKeys] = useState(null);
 
   useEffect(() => {
     if (isConnected) return;
@@ -49,7 +52,7 @@ function App() {
   };
 
   const listenForTxAuthorizationRequests = () => {
-    console.log("[INFO]: Setup listener.");
+    console.log("[INFO]: Setup tx authorization listener.");
     listen('authorize', (event) => {
       console.log("[INFO]: Wake: ", event);
       setAuthorizationSummary(event.payload);
@@ -57,6 +60,17 @@ function App() {
       appWindow.show();
     });
   };
+
+  const listenForAccountRequests = () => {
+    console.log("[INFO]: Setup account display listener.");
+    listen('account', (event) => {
+      console.log("[INFO]: Wake: ", event);
+      if (receivingKeys.length && currentPage !== AUTHORIZE_PAGE) {
+        setCurrentPage(ACCOUNT_PAGE);
+        appWindow.show();
+      }
+    });
+  }
 
   const sendPassword = async (password) => {
     console.log("[INFO]: Send password to signer server.");
@@ -72,8 +86,16 @@ function App() {
     console.log("[INFO]: End Initial Connection Phase");
     setIsConnected(true);
     hideWindow();
+    await getReceivingKeys();
+    setCurrentPage(ACCOUNT_PAGE);
     listenForTxAuthorizationRequests();
+    listenForAccountRequests();
   };
+
+  const getReceivingKeys = async () => {
+    const receivingKeys = await invoke('receiving_keys');
+    setReceivingKeys(receivingKeys)
+  }
 
   return (
     <div className="App">
@@ -100,6 +122,12 @@ function App() {
             sendPassword={sendPassword}
             stopPasswordPrompt={stopPasswordPrompt}
             hideWindow={hideWindow}
+          />
+        )}
+        {currentPage === ACCOUNT_PAGE && (
+          <Account
+          receivingKeys={receivingKeys}
+          hideWindow={hideWindow}
           />
         )}
       </Container>

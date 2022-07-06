@@ -64,3 +64,18 @@
 .recovery-phrase-header {
     margin-bottom: 0.5rem !important;
 }
+
+.account-address-container {
+    display: flex;
+    width: 50%;
+    margin: 0 auto;
+    padding-left: 1.5rem;
+}
+
+.account-address {
+    padding-left: 0.5rem;
+}
+
+.account-address-copy-icon {
+    cursor: pointer !important;
+}

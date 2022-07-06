@@ -221,11 +221,12 @@ async fn stop_password_prompt(password_store: State<'_, PasswordStore>) -> Resul
 }
 
 #[tauri::command]
-async fn receiving_keys() -> Result<Vec<String>, ()>
+async fn receiving_keys(config: State<'_, Config>) -> Result<Vec<String>, ()>
 where
 {
     let client = reqwest::Client::new();
-    let res: Vec<String> = client.post("http://127.0.0.1:29987/receivingKeys")
+    let url = format!("http://{}{}", config.service_url , "/receivingKeys");
+    let keys: Vec<String> = client.post(url)
         .json(&String::from("GetAll"))
         .send()
         .await
@@ -237,8 +238,7 @@ where
         .map(|key| receiving_key_to_base58(&key))
         .collect();
 
-    println!("receiving_keys res? {:?}", res);
-    Ok(vec![])
+    Ok(keys)
 }
 
 /// Runs the main Tauri application.
@@ -251,13 +251,15 @@ fn main() {
             SystemTray::new().with_menu(
                 SystemTrayMenu::new()
                     .add_item(CustomMenuItem::new("about", "About"))
-                    .add_item(CustomMenuItem::new("exit", "Quit")),
+                    .add_item(CustomMenuItem::new("account", "Account"))
+                    .add_item(CustomMenuItem::new("exit", "Quit"))
             ),
         )
         .on_system_tray_event(move |app, event| {
             if let SystemTrayEvent::MenuItemClick { id, .. } = event {
                 match id.as_str() {
                     "about" => app.get_window("about").unwrap().show().unwrap(),
+                    "account" => app.get_window("main").unwrap().emit("account", "").unwrap(),
                     "exit" => app.exit(0),
                     _ => {}
                 }
