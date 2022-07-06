@@ -220,6 +220,7 @@ async fn stop_password_prompt(password_store: State<'_, PasswordStore>) -> Resul
     Ok(())
 }
 
+/// Sends all receiving keys to the front end
 #[tauri::command]
 async fn receiving_keys(config: State<'_, Config>) -> Result<Vec<String>, ()>
 where
@@ -230,10 +231,10 @@ where
         .json(&String::from("GetAll"))
         .send()
         .await
-        .unwrap()
+        .expect("Failed to get receiving keys")
         .json::<Vec<ReceivingKey>>()
         .await
-        .unwrap()
+        .expect("Failed to deserialize receiving keys")
         .into_iter()
         .map(|key| receiving_key_to_base58(&key))
         .collect();
