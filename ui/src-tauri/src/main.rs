@@ -27,6 +27,10 @@
 extern crate alloc;
 
 use alloc::sync::Arc;
+use manta_pay::{
+    config::{receiving_key_to_base58, ReceivingKey},
+    signer::{self, ReceivingKeyRequest}
+};
 use manta_signer::{
     config::{Config, Setup},
     secret::{Authorizer, Password, PasswordFuture, Secret, SecretString, UnitFuture},
@@ -216,6 +220,27 @@ async fn stop_password_prompt(password_store: State<'_, PasswordStore>) -> Resul
     Ok(())
 }
 
+#[tauri::command]
+async fn receiving_keys() -> Result<Vec<String>, ()>
+where
+{
+    let client = reqwest::Client::new();
+    let res: Vec<String> = client.post("http://127.0.0.1:29987/receivingKeys")
+        .json(&String::from("GetAll"))
+        .send()
+        .await
+        .unwrap()
+        .json::<Vec<ReceivingKey>>()
+        .await
+        .unwrap()
+        .into_iter()
+        .map(|key| receiving_key_to_base58(&key))
+        .collect();
+
+    println!("receiving_keys res? {:?}", res);
+    Ok(vec![])
+}
+
 /// Runs the main Tauri application.
 fn main() {
     let config =
@@ -255,6 +280,7 @@ fn main() {
         .invoke_handler(tauri::generate_handler![
             send_password,
             stop_password_prompt,
+            receiving_keys
         ])
         .build(tauri::generate_context!())
         .expect("Error while building UI.");
