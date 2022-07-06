@@ -33,7 +33,7 @@ use manta_signer::{
     serde::Serialize,
     service,
 };
-use std::{fs, time::Duration};
+use std::time::Duration;
 use tokio::time::sleep;
 use tauri::{
     async_runtime::{channel, spawn, Mutex, Receiver, Sender},
@@ -122,6 +122,7 @@ impl Authorizer for User {
         let window = self.window.clone();
 
         Box::pin(async move {
+            // wait until front-end listener is registered
             sleep(Duration::from_millis(500)).await;
             window.emit("connect", setup).expect("Connect failed");
         })
