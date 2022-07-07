@@ -219,8 +219,7 @@ async fn stop_password_prompt(password_store: State<'_, PasswordStore>) -> Resul
 
 /// Sends all receiving keys to the front end
 #[tauri::command]
-async fn receiving_keys(config: State<'_, Config>) -> Result<Vec<String>, ()>
-{
+async fn receiving_keys(config: State<'_, Config>) -> Result<Vec<String>, ()> {
     let keys = get_receiving_keys(&config.service_url).await?;
     Ok(keys)
 }
@@ -236,7 +235,7 @@ fn main() {
                 SystemTrayMenu::new()
                     .add_item(CustomMenuItem::new("about", "About"))
                     .add_item(CustomMenuItem::new("account", "Account"))
-                    .add_item(CustomMenuItem::new("exit", "Quit"))
+                    .add_item(CustomMenuItem::new("exit", "Quit")),
             ),
         )
         .on_system_tray_event(move |app, event| {
