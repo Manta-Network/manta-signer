@@ -217,11 +217,14 @@ async fn stop_password_prompt(password_store: State<'_, PasswordStore>) -> Resul
     Ok(())
 }
 
-/// Sends all receiving keys to the front end
+/// Sends all receiving keys to the UI.
 #[tauri::command]
-async fn receiving_keys(config: State<'_, Config>) -> Result<Vec<String>, ()> {
-    let keys = get_receiving_keys(&config.service_url).await?;
-    Ok(keys)
+async fn receiving_keys(config: State<'_, Config>) -> Result<Vec<String>, String> {
+    let res = get_receiving_keys(&config.service_url).await;
+    match res {
+        Ok(keys) => Ok(keys),
+        Err(error) => Err(error.to_string())
+    }
 }
 
 /// Runs the main Tauri application.

@@ -93,8 +93,13 @@ function App() {
   };
 
   const getReceivingKeys = async () => {
-    const receivingKeys = await invoke('receiving_keys');
-    setReceivingKeys(receivingKeys)
+    try {
+      const receivingKeys = await invoke('receiving_keys');
+      setReceivingKeys(receivingKeys);
+    } catch(error) {
+      console.error(error);
+      setReceivingKeys(null);
+    }
   }
 
   return (

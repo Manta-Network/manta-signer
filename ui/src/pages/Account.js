@@ -4,10 +4,8 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCopy, faCheck } from '@fortawesome/free-solid-svg-icons';
 
 const Account = ({receivingKeys, hideWindow}) => {
-  const receivingKey = receivingKeys[0];
-  const receivingKeyDisplay = receivingKey ?
-    `${receivingKey.slice(0, 10)}...${receivingKey.slice(-10)}` :
-    '';
+  const receivingKey = receivingKeys && receivingKeys[0];
+  const receivingKeyDisplay = receivingKey && `${receivingKey.slice(0, 10)}...${receivingKey.slice(-10)}`;
 
   const onClickClose = () => {
     hideWindow()
@@ -16,16 +14,35 @@ const Account = ({receivingKeys, hideWindow}) => {
   return (
     <>
       <Header>Account</Header>
-      <div className='account-address-container'>
-        <CopyIcon receivingKey={receivingKey} />
-        <div className='account-address' title={receivingKey} >{receivingKeyDisplay}</div>
-      </div>
+        <div className='account-address-container'>
+          {receivingKey
+            ? <AddressDisplay receivingKey={receivingKey} receivingKeyDisplay={receivingKeyDisplay} />
+            : <AddressErrorDisplay />
+          }
+        </div>
       <Button className="button" onClick={onClickClose}>
         Close
       </Button>
     </>
   );
 };
+
+const AddressDisplay = ({receivingKey, receivingKeyDisplay}) => {
+  return (
+    <>
+      <div className='account-address-display' title={receivingKey} >{receivingKeyDisplay}</div>
+      <CopyIcon receivingKey={receivingKey} />
+    </>
+  )
+}
+
+const AddressErrorDisplay = () => {
+  return (
+    <div className='account-address-error-display'>
+      Error: shielded address not found
+    </div>
+  )
+}
 
 const CopyIcon = ({receivingKey}) => {
   const [addressCopied, setAddressCopied] = useState(false);
@@ -48,7 +65,7 @@ const CopyIcon = ({receivingKey}) => {
   return (
     <div>
       {addressCopied ? (
-        <FontAwesomeIcon icon={faCheck} />
+        <FontAwesomeIcon className='account-address-copy-icon' icon={faCheck} />
       ) : (
         <FontAwesomeIcon
           className='account-address-copy-icon'

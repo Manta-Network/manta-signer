@@ -17,23 +17,20 @@
 //! Queries to Manta Signer Server
 
 use manta_pay::config::{receiving_key_to_base58, ReceivingKey};
+use reqwest::Error;
 
 /// Queries signer server to get all receiving keys
-pub async fn get_receiving_keys(service_url: &str) -> Result<Vec<String>, ()> {
-    let client = reqwest::Client::new();
-    let url = format!("http://{}{}", service_url, "/receivingKeys");
-    let keys: Vec<String> = client
-        .post(url)
-        .json(&String::from("GetAll"))
+#[inline]
+pub async fn get_receiving_keys(service_url: &str) -> Result<Vec<String>, Error> {
+    Ok(reqwest::Client::new()
+        .post(format!("http://{}{}", service_url, "/receivingKeys"))
+        .json(&"GetAll")
         .send()
-        .await
-        .expect("Failed to get receiving keys")
+        .await?
         .json::<Vec<ReceivingKey>>()
-        .await
-        .expect("Failed to deserialize receiving keys")
+        .await?
         .into_iter()
         .map(|key| receiving_key_to_base58(&key))
-        .collect();
-
-    Ok(keys)
+        .collect()
+    )
 }
