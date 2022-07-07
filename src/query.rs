@@ -31,6 +31,5 @@ pub async fn get_receiving_keys(service_url: &str) -> Result<Vec<String>, Error>
         .await?
         .into_iter()
         .map(|key| receiving_key_to_base58(&key))
-        .collect()
-    )
+        .collect())
 }

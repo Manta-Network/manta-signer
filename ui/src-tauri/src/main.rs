@@ -223,7 +223,7 @@ async fn receiving_keys(config: State<'_, Config>) -> Result<Vec<String>, String
     let res = get_receiving_keys(&config.service_url).await;
     match res {
         Ok(keys) => Ok(keys),
-        Err(error) => Err(error.to_string())
+        Err(error) => Err(error.to_string()),
     }
 }
 
