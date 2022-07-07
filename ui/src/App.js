@@ -65,7 +65,7 @@ function App() {
     console.log("[INFO]: Setup account display listener.");
     listen('account', (event) => {
       console.log("[INFO]: Wake: ", event);
-      if (receivingKeys.length && currentPage !== AUTHORIZE_PAGE) {
+      if (currentPage !== AUTHORIZE_PAGE) {
         setCurrentPage(ACCOUNT_PAGE);
         appWindow.show();
       }

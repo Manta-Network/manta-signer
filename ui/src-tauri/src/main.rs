@@ -27,12 +27,9 @@
 extern crate alloc;
 
 use alloc::sync::Arc;
-use manta_pay::{
-    config::{receiving_key_to_base58, ReceivingKey},
-    signer::{self, ReceivingKeyRequest}
-};
 use manta_signer::{
     config::{Config, Setup},
+    query::get_receiving_keys,
     secret::{Authorizer, Password, PasswordFuture, Secret, SecretString, UnitFuture},
     serde::Serialize,
     service,
@@ -223,22 +220,8 @@ async fn stop_password_prompt(password_store: State<'_, PasswordStore>) -> Resul
 /// Sends all receiving keys to the front end
 #[tauri::command]
 async fn receiving_keys(config: State<'_, Config>) -> Result<Vec<String>, ()>
-where
 {
-    let client = reqwest::Client::new();
-    let url = format!("http://{}{}", config.service_url , "/receivingKeys");
-    let keys: Vec<String> = client.post(url)
-        .json(&String::from("GetAll"))
-        .send()
-        .await
-        .expect("Failed to get receiving keys")
-        .json::<Vec<ReceivingKey>>()
-        .await
-        .expect("Failed to deserialize receiving keys")
-        .into_iter()
-        .map(|key| receiving_key_to_base58(&key))
-        .collect();
-
+    let keys = get_receiving_keys(&config.service_url).await?;
     Ok(keys)
 }
 
