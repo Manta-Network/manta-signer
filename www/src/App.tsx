@@ -24,7 +24,7 @@ function App() {
   }, []);
 
   return (
-    <div className='App bg-primary h-screen flex flex-col'>
+    <div className='App bg-primary flex flex-grow flex-col'>
       <header className='h-16 flex flex-shrink-0 px-4 sm:px-6 justify-between items-center border border-gray-300 border-x-0 border-t-0'>
         <a
           className='flex gap-2 cursor-pointer'
@@ -72,19 +72,22 @@ function App() {
         <h1 className='mt-6 text-4xl sm:text-6xl'>
           Your Gateway to Web3 Privacy.
         </h1>
-        <a className='px-6 py-4 text-white text-2xl bg-button rounded-full mt-12 cursor-pointer'
-          href=
-          {os === 'Mac'
-            ? 'https://github.com/Manta-Network/manta-signer/releases/download/0.6.0/manta-signer-macos-latest_0.6.0-103_x64.dmg'
-            : os === 'Windows'
-              ? 'https://github.com/Manta-Network/manta-signer/releases/download/0.6.0/manta-signer-windows-2019_0.6.0.102_x64.msi'
-              : 'https://github.com/Manta-Network/manta-signer/releases/download/0.6.0/manta-signer-ubuntu-18.04_0.6.0_amd64.deb'}
-          title=
-          {os === 'Mac'
-            ? 'Manta Signer for macOS 10.15 or later'
-            : os === 'Windows'
+        <a
+          className='px-6 py-4 text-white text-2xl bg-button rounded-full mt-12 cursor-pointer'
+          href={
+            os === 'Mac'
+              ? 'https://github.com/Manta-Network/manta-signer/releases/download/v0.7.2/manta-signer-macos-latest_0.7.2-103_x64.dmg'
+              : os === 'Windows'
+              ? 'https://github.com/Manta-Network/manta-signer/releases/download/v0.7.2/manta-signer-windows-2019_0.7.2_x64.msi'
+              : 'https://github.com/Manta-Network/manta-signer/releases/download/v0.7.2/manta-signer-ubuntu-18.04_0.7.2_amd64.deb'
+          }
+          title={
+            os === 'Mac'
+              ? 'Manta Signer for macOS 10.15 or later'
+              : os === 'Windows'
               ? 'Manta Signer for Windows 10 or later'
-              : 'Manta Signer for Ubuntu 18.04 or later'}
+              : 'Manta Signer for Ubuntu 18.04 or later'
+          }
         >
           Download Manta Signer
         </a>
@@ -92,11 +95,12 @@ function App() {
           {os === 'Mac'
             ? 'For macOS 10.15 or later'
             : os === 'Windows'
-              ? 'For Windows 10 or later'
-              : 'For Ubuntu 18.04 or later'}
+            ? 'For Windows 10 or later'
+            : 'For Ubuntu 18.04 or later'}
         </p>
         <p className='mt-10 text-secondary text-lg max-w-lg'>
-          Manta Signer enables access to all privacy tools and services on Manta Network, Calamari Network, and Dolphin Testnet.
+          Manta Signer enables access to all privacy tools and services on Manta
+          Network, Calamari Network, and Dolphin Testnet.
         </p>
         <a
           href='https://docs.manta.network/docs/concepts/Signer?utm_source=website&utm_id=manta-signer-landing-page'
@@ -107,7 +111,9 @@ function App() {
         </a>
 
         <p className='mt-10 text-secondary text-lg max-w-lg'>
-          Try MantaPay on the Dolphin Testnet - MantaPay allows users to privatize public assets, transfer private assets, and convert private assets back into public assets.
+          Try MantaPay on the Dolphin Testnet - MantaPay allows users to
+          privatize public assets, transfer private assets, and convert private
+          assets back into public assets.
         </p>
         <a
           href='https://app.dolphin.manta.network/?utm_source=website&utm_id=manta-signer-landing-page#/transact'
@@ -116,9 +122,8 @@ function App() {
         >
           Try Dolphin Testnet
         </a>
-
       </div>
-    </div >
+    </div>
   );
 }
 

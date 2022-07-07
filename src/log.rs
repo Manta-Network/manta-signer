@@ -18,8 +18,7 @@
 
 #![allow(unused_imports, unused_macros)] // NOTE: We are exposing them as a library for this crate.
 
-use core::fmt;
-use core::marker::Unpin;
+use core::{fmt, marker::Unpin};
 use tokio::io::{self, AsyncWrite, AsyncWriteExt};
 
 pub use tokio::io::stdout;
