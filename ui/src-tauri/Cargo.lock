@@ -808,9 +808,6 @@ name = "cc"
 version = "1.0.73"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "2fff2a6927b3bb87f9595d67196a70493f627687a71d87a0d692242c33f58c11"
-dependencies = [
- "jobserver",
-]
 
 [[package]]
 name = "cesu8"
@@ -1754,10 +1751,8 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "4eb1a864a501629691edf6c15a593b7a51eebaa1e8468e9ddc623de7c9b58ec6"
 dependencies = [
  "cfg-if",
- "js-sys",
  "libc",
  "wasi 0.11.0+wasi-snapshot-preview1",
- "wasm-bindgen",
 ]
 
 [[package]]
@@ -2360,15 +2355,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8eaf4bc02d17cbdd7ff4c7438cafcdf7fb9a4613313ad11b4f8fefe7d3fa0130"
 
 [[package]]
-name = "jobserver"
-version = "0.1.24"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "af25a77299a7f711a01975c35a6a424eb6862092cc2d6c72c4ed6cbc56dfc1fa"
-dependencies = [
- "libc",
-]
-
-[[package]]
 name = "js-sys"
 version = "0.3.58"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2476,12 +2462,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "libm"
-version = "0.2.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "33a33a362ce288760ec6a508b94caaec573ae7d3bbbd91b87aa0bad4456839db"
-
-[[package]]
 name = "line-wrap"
 version = "0.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2549,21 +2529,9 @@ dependencies = [
  "cocoon",
  "derivative",
  "derive_more",
- "manta-crypto 0.5.2 (git+https://github.com/manta-network/manta-rs?tag=v0.5.2)",
- "manta-util 0.5.2 (git+https://github.com/manta-network/manta-rs?tag=v0.5.2)",
+ "manta-crypto",
+ "manta-util",
  "rand_chacha 0.3.1",
-]
-
-[[package]]
-name = "manta-accounting"
-version = "0.5.2"
-source = "git+https://github.com/manta-network/manta-rs#07bc1abb7c7cc347561654d897f8cb78fb122996"
-dependencies = [
- "derivative",
- "derive_more",
- "manta-crypto 0.5.2 (git+https://github.com/manta-network/manta-rs)",
- "manta-util 0.5.2 (git+https://github.com/manta-network/manta-rs)",
- "manta-workspace-hack",
 ]
 
 [[package]]
@@ -2572,18 +2540,7 @@ version = "0.5.2"
 source = "git+https://github.com/manta-network/manta-rs?tag=v0.5.2#7c8d6c45bfd2c5ce1b1ceb70af824de0fb0bc609"
 dependencies = [
  "derivative",
- "manta-util 0.5.2 (git+https://github.com/manta-network/manta-rs?tag=v0.5.2)",
- "rand_core 0.6.3",
-]
-
-[[package]]
-name = "manta-crypto"
-version = "0.5.2"
-source = "git+https://github.com/manta-network/manta-rs#07bc1abb7c7cc347561654d897f8cb78fb122996"
-dependencies = [
- "derivative",
- "manta-util 0.5.2 (git+https://github.com/manta-network/manta-rs)",
- "manta-workspace-hack",
+ "manta-util",
  "rand_core 0.6.3",
 ]
 
@@ -2619,36 +2576,9 @@ dependencies = [
  "blake2 0.10.4",
  "bs58",
  "derivative",
- "manta-accounting 0.5.2 (git+https://github.com/manta-network/manta-rs?tag=v0.5.2)",
- "manta-crypto 0.5.2 (git+https://github.com/manta-network/manta-rs?tag=v0.5.2)",
- "manta-util 0.5.2 (git+https://github.com/manta-network/manta-rs?tag=v0.5.2)",
- "rand_chacha 0.3.1",
-]
-
-[[package]]
-name = "manta-pay"
-version = "0.5.2"
-source = "git+https://github.com/manta-network/manta-rs#07bc1abb7c7cc347561654d897f8cb78fb122996"
-dependencies = [
- "aes-gcm 0.9.4",
- "ark-bls12-381",
- "ark-ec",
- "ark-ed-on-bls12-381",
- "ark-ff",
- "ark-groth16",
- "ark-r1cs-std",
- "ark-relations",
- "ark-serialize",
- "ark-snark",
- "ark-std",
- "bip32",
- "blake2 0.10.4",
- "bs58",
- "derivative",
- "manta-accounting 0.5.2 (git+https://github.com/manta-network/manta-rs)",
- "manta-crypto 0.5.2 (git+https://github.com/manta-network/manta-rs)",
- "manta-util 0.5.2 (git+https://github.com/manta-network/manta-rs)",
- "manta-workspace-hack",
+ "manta-accounting",
+ "manta-crypto",
+ "manta-util",
  "rand_chacha 0.3.1",
 ]
 
@@ -2663,11 +2593,11 @@ dependencies = [
  "dirs-next",
  "futures",
  "http-types",
- "manta-accounting 0.5.2 (git+https://github.com/manta-network/manta-rs?tag=v0.5.2)",
- "manta-crypto 0.5.2 (git+https://github.com/manta-network/manta-rs?tag=v0.5.2)",
+ "manta-accounting",
+ "manta-crypto",
  "manta-parameters",
- "manta-pay 0.5.2 (git+https://github.com/manta-network/manta-rs?tag=v0.5.2)",
- "manta-util 0.5.2 (git+https://github.com/manta-network/manta-rs?tag=v0.5.2)",
+ "manta-pay",
+ "manta-util",
  "parking_lot 0.12.1",
  "password-hash",
  "reqwest",
@@ -2682,7 +2612,6 @@ dependencies = [
 name = "manta-signer-ui"
 version = "0.7.2"
 dependencies = [
- "manta-pay 0.5.2 (git+https://github.com/manta-network/manta-rs)",
  "manta-signer",
  "tauri",
  "tauri-build",
@@ -2695,59 +2624,6 @@ source = "git+https://github.com/manta-network/manta-rs?tag=v0.5.2#7c8d6c45bfd2c
 dependencies = [
  "serde",
  "serde_with",
-]
-
-[[package]]
-name = "manta-util"
-version = "0.5.2"
-source = "git+https://github.com/manta-network/manta-rs#07bc1abb7c7cc347561654d897f8cb78fb122996"
-dependencies = [
- "manta-workspace-hack",
- "serde",
- "serde_with",
-]
-
-[[package]]
-name = "manta-workspace-hack"
-version = "0.1.0"
-source = "git+https://github.com/manta-network/manta-rs#07bc1abb7c7cc347561654d897f8cb78fb122996"
-dependencies = [
- "aes-gcm 0.9.4",
- "anyhow",
- "bitflags",
- "blake3",
- "block-buffer 0.9.0",
- "cc",
- "crypto-common",
- "digest 0.10.3",
- "digest 0.9.0",
- "futures",
- "futures-channel",
- "futures-core",
- "futures-io",
- "futures-sink",
- "futures-task",
- "futures-util",
- "generic-array",
- "getrandom 0.2.7",
- "indexmap",
- "log",
- "memchr",
- "num-traits",
- "pbkdf2",
- "ppv-lite86",
- "rand 0.8.5",
- "rand_chacha 0.3.1",
- "rand_core 0.6.3",
- "serde",
- "serde_json",
- "sha2 0.9.9",
- "standback",
- "subtle",
- "syn",
- "url",
- "web-sys",
- "zeroize",
 ]
 
 [[package]]
@@ -2935,7 +2811,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "578ede34cf02f8924ab9447f50c28075b4d3e5b269972345e7e0372b38c6cdcd"
 dependencies = [
  "autocfg",
- "libm",
 ]
 
 [[package]]

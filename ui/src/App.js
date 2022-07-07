@@ -8,7 +8,7 @@ import { Container } from 'semantic-ui-react';
 import { appWindow } from '@tauri-apps/api/window';
 import { invoke } from '@tauri-apps/api/tauri';
 import { listen, once } from '@tauri-apps/api/event';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 
 const LOADING_PAGE = 0;
 const CREATE_ACCOUNT_PAGE = 1;
@@ -17,11 +17,17 @@ const AUTHORIZE_PAGE = 3;
 const ACCOUNT_PAGE = 4;
 
 function App() {
-  const [currentPage, setCurrentPage] = useState(LOADING_PAGE);
+  const [currentPage, _setCurrentPage] = useState(LOADING_PAGE);
+  const currentPageRef = useRef(LOADING_PAGE);
   const [isConnected, setIsConnected] = useState(false);
   const [recoveryPhrase, setRecoveryPhrase] = useState(null);
   const [authorizationSummary, setAuthorizationSummary] = useState(null);
   const [receivingKeys, setReceivingKeys] = useState(null);
+
+  const setCurrentPage = (page) => {
+    _setCurrentPage(page);
+    currentPageRef.current = page;
+  };
 
   useEffect(() => {
     if (isConnected) return;
@@ -65,7 +71,7 @@ function App() {
     console.log("[INFO]: Setup account display listener.");
     listen('account', (event) => {
       console.log("[INFO]: Wake: ", event);
-      if (currentPage !== AUTHORIZE_PAGE) {
+      if (currentPageRef.current !== AUTHORIZE_PAGE) {
         setCurrentPage(ACCOUNT_PAGE);
         appWindow.show();
       }
