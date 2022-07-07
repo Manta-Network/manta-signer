@@ -30,5 +30,8 @@ pub mod service;
 #[doc(inline)]
 pub use manta_util::serde;
 
+#[doc(inline)]
+pub use tokio;
+
 /// Manta Signer Server Version
 pub const VERSION: &str = env!("CARGO_PKG_VERSION");

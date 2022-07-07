@@ -1997,7 +1997,7 @@
   dependencies:
     defer-to-connect "^2.0.1"
 
-"@tauri-apps/api@^1.0.1":
+"@tauri-apps/api@1.0.1":
   version "1.0.1"
   resolved "https://registry.yarnpkg.com/@tauri-apps/api/-/api-1.0.1.tgz#f516cf3b83139312141123c08f1d75260274da50"
   integrity sha512-TJwKkXxtF52kN9Auu5TWD2AE4ssqTrsfdpIrixYwRb3gQ/FuYwvZjrMc9weYpgsW2cMhVNkvKgneNXF/4n04lw==
@@ -2064,7 +2064,7 @@
     "@tauri-apps/cli-win32-ia32-msvc" "1.0.2"
     "@tauri-apps/cli-win32-x64-msvc" "1.0.2"
 
-"@tauri-apps/tauricon@^1.0.2":
+"@tauri-apps/tauricon@1.0.2":
   version "1.0.2"
   resolved "https://registry.yarnpkg.com/@tauri-apps/tauricon/-/tauricon-1.0.2.tgz#5ddc9ddf2895c5116d2059d911db9891e836590b"
   integrity sha512-hIwfM1NNqinktT/VwyavR4eTr4yu9ezSCO2QvMutxa1+vmr/Gl58cjKFzR7IRW8IjSV6iCEgjXpTuT/X9ygaCA==
@@ -2234,9 +2234,9 @@
   integrity sha512-Klz949h02Gz2uZCMGwDUSDS1YBlTdDDgbWHi+81l29tQALUtvz4rAYi5uoVhE5Lagoq6DeqAUlbrHvW/mXDgdQ==
 
 "@types/node@*":
-  version "18.0.2"
-  resolved "https://registry.yarnpkg.com/@types/node/-/node-18.0.2.tgz#a594e580c396c22dd6b1470be81737c79ec0b1b1"
-  integrity sha512-b947SdS4GH+g2W33wf5FzUu1KLj5FcSIiNWbU1ZyMvt/X7w48ZsVcsQoirIgE/Oq03WT5Qbn/dkY0hePi4ZXcQ==
+  version "18.0.3"
+  resolved "https://registry.yarnpkg.com/@types/node/-/node-18.0.3.tgz#463fc47f13ec0688a33aec75d078a0541a447199"
+  integrity sha512-HzNRZtp4eepNitP+BD6k2L6DROIDG4Q0fm4x+dwfsr6LGmROENnok75VGw40628xf+iR24WeMFcHuuBDUAzzsQ==
 
 "@types/node@16.9.1":
   version "16.9.1"
@@ -5137,9 +5137,9 @@ download@^7.1.0:
     pify "^3.0.0"
 
 duplexer3@^0.1.4:
-  version "0.1.4"
-  resolved "https://registry.yarnpkg.com/duplexer3/-/duplexer3-0.1.4.tgz#ee01dd1cac0ed3cbc7fdbea37dc0a8f1ce002ce2"
-  integrity sha512-CEj8FwwNA4cVH2uFCoHUrmojhYh1vmCdOaneKJXwkeY1i9jnlslVo9dx+hQ5Hl9GnH/Bwy/IjxAyOePyPKYnzA==
+  version "0.1.5"
+  resolved "https://registry.yarnpkg.com/duplexer3/-/duplexer3-0.1.5.tgz#0b5e4d7bad5de8901ea4440624c8e1d20099217e"
+  integrity sha512-1A8za6ws41LQgv9HrE/66jyC5yuSjQ3L/KOpFtoBilsAK2iA2wuS5rTt1OCzIvtS2V7nVmedsUU+DGRcjBmOYA==
 
 duplexer@^0.1.1:
   version "0.1.2"
@@ -5167,9 +5167,9 @@ ejs@^2.6.1:
   integrity sha512-7vmuyh5+kuUyJKePhQfRQBhXV5Ce+RnaeeQArKu1EAMpL3WbgMt5WG6uQZpEVvYSSsxMXRKOewtDk9RaTKXRlA==
 
 electron-to-chromium@^1.3.564, electron-to-chromium@^1.4.172:
-  version "1.4.180"
-  resolved "https://registry.yarnpkg.com/electron-to-chromium/-/electron-to-chromium-1.4.180.tgz#380b06037836055d12c7de181ee90b8ed911c3e7"
-  integrity sha512-7at5ash3FD9U5gPa3/wPr6OdiZd/zBjvDZaaHBpcqFOFUhZiWnb7stkqk8xUFL9H9nk7Yok5vCCNK8wyC/+f8A==
+  version "1.4.182"
+  resolved "https://registry.yarnpkg.com/electron-to-chromium/-/electron-to-chromium-1.4.182.tgz#5d59214ebfe90b36f23e81cd226a42732cd8c677"
+  integrity sha512-OpEjTADzGoXABjqobGhpy0D2YsTncAax7IkER68ycc4adaq0dqEG9//9aenKPy7BGA90bqQdLac0dPp6uMkcSg==
 
 elliptic@^6.5.3:
   version "6.5.4"
@@ -8351,9 +8351,9 @@ jsonfile@^6.0.1:
     graceful-fs "^4.1.6"
 
 "jsx-ast-utils@^2.4.1 || ^3.0.0", jsx-ast-utils@^3.3.1:
-  version "3.3.1"
-  resolved "https://registry.yarnpkg.com/jsx-ast-utils/-/jsx-ast-utils-3.3.1.tgz#a3e0f1cb7e230954eab4dcbce9f6288a78f8ba44"
-  integrity sha512-pxrjmNpeRw5wwVeWyEAk7QJu2GnBO3uzPFmHCKJJFPKK2Cy0cWL23krGtLdnMmbIi6/FjlrQpPyfQI19ByPOhQ==
+  version "3.3.2"
+  resolved "https://registry.yarnpkg.com/jsx-ast-utils/-/jsx-ast-utils-3.3.2.tgz#afe5efe4332cd3515c065072bd4d6b0aa22152bd"
+  integrity sha512-4ZCADZHRkno244xlNnn4AOG6sRQ7iBZ5BbgZ4vW4y5IZw7cVUD1PPeblm1xx/nfmMxPdt/LHsXZW8z/j58+l9Q==
   dependencies:
     array-includes "^3.1.5"
     object.assign "^4.1.2"
@@ -11789,9 +11789,9 @@ sanitize.css@^10.0.0:
   integrity sha512-vTxrZz4dX5W86M6oVWVdOVe72ZiPs41Oi7Z6Km4W5Turyz28mrXSJhhEBZoRtzJWIv3833WKVwLSDWWkEfupMg==
 
 sass-loader@^10.0.5:
-  version "10.3.0"
-  resolved "https://registry.yarnpkg.com/sass-loader/-/sass-loader-10.3.0.tgz#d663f98ce3faee247fa0ed46321db3f9618ee202"
-  integrity sha512-H2cLgK0PiH+5KsdSzw41uqx1ph7OP68+bK03JliezXjvSgKfddHyD7biCJge8ygHSEH0zo9sO8Jf6BN5sKs/Ig==
+  version "10.3.1"
+  resolved "https://registry.yarnpkg.com/sass-loader/-/sass-loader-10.3.1.tgz#a45f0d1dd7ea90de7eb099239a18c83dea6e6341"
+  integrity sha512-y2aBdtYkbqorVavkC3fcJIUDGIegzDWPn3/LAFhsf3G+MzPKTJx37sROf5pXtUeggSVbNbmfj8TgRaSLMelXRA==
   dependencies:
     klona "^2.0.4"
     loader-utils "^2.0.0"
