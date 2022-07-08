@@ -29,18 +29,15 @@ extern crate alloc;
 use alloc::sync::Arc;
 use manta_signer::{
     config::{Config, Setup},
-    secret::{Authorizer, Password, PasswordFuture, ResetInfo, Secret, SecretString, UnitFuture},
+    secret::{Authorizer, ExposeSecret, Password, PasswordFuture, ResetInfo, Secret, SecretString, UnitFuture},
     serde::Serialize,
-    service,
+    service::{self, ResetChannel, ResetRequester},
 };
-use std::fs;
 use tauri::{
     async_runtime::{channel, spawn, Mutex, Receiver, Sender},
     CustomMenuItem, Manager, RunEvent, State, SystemTray, SystemTrayEvent, SystemTrayMenu, Window,
     WindowEvent,
 };
-
-type ResetHandle = Sender<ResetInfo>;
 
 /// User
 pub struct User {
@@ -206,14 +203,17 @@ impl PasswordStore {
 /// Sends the current `password` into storage from the UI.
 #[tauri::command]
 async fn send_recovery_info(
-    reset_handle: State<'_, ResetHandle>,
-    phrase: String,
+    reset: State<'_, ResetRequester>,
+    phrase: Option<String>,
     password: String,
-) -> Result<bool, ()> {
-    let info = (Secret::new(phrase), Secret::new(password));
+) -> Result<String, ()> {
+    let info = ResetInfo::new(phrase.map(Secret::new), Secret::new(password));
 
-    reset_handle.send(info).await.expect("Reset channel broke");
-    Ok(true)
+    reset.reset_tx.send(info).await.expect("Reset channel broke");
+    let mnemonic = reset.mnemonic_rx.lock().await.recv().await.expect("Reset response channel broke");
+
+    let mnemonic = mnemonic.expose_secret().to_string();
+    Ok(mnemonic)
 }
 
 /// Sends the current `password` into storage from the UI.
@@ -237,14 +237,14 @@ fn main() {
     let config =
         Config::try_default().expect("Unable to generate the default server configuration.");
 
-    let (reset_tx, reset_rx) = channel(1);
+    let ResetChannel{ requester, responder } = ResetChannel::new();
 
     let mut app = tauri::Builder::default()
         .system_tray(
             SystemTray::new().with_menu(
                 SystemTrayMenu::new()
                     .add_item(CustomMenuItem::new("about", "About"))
-                    .add_item(CustomMenuItem::new("reset", "Reset Seed"))
+                    .add_item(CustomMenuItem::new("account", "Account"))
                     .add_item(CustomMenuItem::new("exit", "Quit")),
             ),
         )
@@ -252,11 +252,9 @@ fn main() {
             if let SystemTrayEvent::MenuItemClick { id, .. } = event {
                 match id.as_str() {
                     "about" => app.get_window("about").unwrap().show().unwrap(),
-                    "reset" => {
-                        let config = app.state::<Config>().inner().clone();
-                        fs::remove_file(config.data_path).expect("Failed to remove file");
+                    "account" => {
                         let window = app.get_window("main").unwrap();
-                        window.emit("reset", "").unwrap();
+                        window.emit("account", "").unwrap();
                     }
                     "exit" => app.exit(0),
                     _ => {}
@@ -264,7 +262,7 @@ fn main() {
             }
         })
         .manage(PasswordStore::default())
-        .manage(reset_tx)
+        .manage(requester)
         .manage(config)
         .setup(|app| {
             let window = app.get_window("main").unwrap();
@@ -273,7 +271,7 @@ fn main() {
 
             spawn(async move {
                 let (password, retry) = password_store.into_channel().await;
-                service::start(config, User::new(window, password, retry), reset_rx)
+                service::start(config, User::new(window, password, retry), responder)
                     .await
                     .expect("Unable to build manta-signer service.");
             });

@@ -28,6 +28,7 @@ use manta_accounting::{
     key::HierarchicalKeyDerivationScheme,
     transfer::canonical::TransferShape,
 };
+use manta_crypto::rand::OsRng;
 use manta_pay::{
     config::{receiving_key_to_base58, ReceivingKey},
     key::{Mnemonic, TestnetKeySecret},
@@ -58,7 +59,7 @@ use tide::{
 use tokio::{
     fs,
     sync::{
-        mpsc::{channel, Receiver},
+        mpsc::{channel, Receiver, Sender},
         Mutex as AsyncMutex,
     },
     task::{self, JoinError},
@@ -120,6 +121,53 @@ impl From<Error> for tide::Error {
 
 /// Result Type
 pub type Result<T, E = Error> = core::result::Result<T, E>;
+
+/// ResetRequest
+pub struct ResetRequester {
+    /// Reset request info
+    pub reset_tx: Sender<ResetInfo>,
+    /// receiver for mnemonic
+    pub mnemonic_rx: Arc<AsyncMutex<Receiver<SecretString>>>,
+}
+
+/// ResetResponse
+pub struct ResetResponder {
+    /// Receiver for reset info
+    pub reset_rx: Arc<AsyncMutex<Receiver<ResetInfo>>>,
+    /// Transmit the mnemonic
+    pub mnemonic_tx: Sender<SecretString>,
+}
+
+/// Resetter
+pub struct ResetChannel {
+    /// Request reset
+    pub requester: ResetRequester,
+    /// New mnemonic
+    pub responder: ResetResponder,
+}
+
+impl ResetChannel {
+    /// Create new resetter channel
+    pub fn new() -> ResetChannel {
+        let (reset_tx, reset_rx) = channel(1);
+        let (mnemonic_tx, mnemonic_rx) = channel(1);
+
+        let requester = ResetRequester {
+            reset_tx,
+            mnemonic_rx: Arc::new(AsyncMutex::new(mnemonic_rx)),
+        };
+
+        let responder = ResetResponder {
+            reset_rx: Arc::new(AsyncMutex::new(reset_rx)),
+            mnemonic_tx,
+        };
+
+        ResetChannel {
+            requester,
+            responder,
+        }
+    }
+}
 
 /// Checked Authorizer
 struct CheckedAuthorizer<A>
@@ -403,10 +451,9 @@ where
     Ok(Body::from_json(&f().await?)?.into())
 }
 
-async fn do_reset(mnemonic: SecretString, password: SecretString, config: &Config) -> State {
+async fn do_reset(mnemonic: Mnemonic, password: SecretString, config: &Config) -> State {
     info!("resetting signer state").expect("Logger error in reset handler");
 
-    let mnemonic = Mnemonic::new(mnemonic.expose_secret()).expect("Invalid mnemonic phrase");
     let password_hash = PasswordHash::<Argon2>::from_default(password.expose_secret().as_bytes());
 
     let data_path = config.data_directory().to_owned();
@@ -443,27 +490,50 @@ async fn do_reset(mnemonic: SecretString, password: SecretString, config: &Confi
 }
 
 async fn handle_reset(
-    mut reset_rx: Receiver<ResetInfo>,
+    responder: ResetResponder,
     mut init_rx: Receiver<Arc<Mutex<State>>>,
     config: Config,
 ) {
+    let ResetResponder {
+        reset_rx,
+        mnemonic_tx,
+    } = responder;
+    let mut reset_rx = reset_rx.lock().await;
+
     let state_handle = loop {
         tokio::select! {
             state = init_rx.recv() => {
                 break state.expect("Did not receive init state message!");
             }
             info = reset_rx.recv() => {
-                let (mnemonic, password) = info.expect("Invalid reset payload!");
-                let _ = do_reset(mnemonic, password, &config).await;
+                let ResetInfo { phrase, password } = info.expect("Invalid reset payload!");
+                let mnemonic = match phrase {
+                    Some(mnemonic) => {
+                        Mnemonic::new(mnemonic.expose_secret()).expect("Invalid mnemonic phrase")
+                    }
+                    None => Mnemonic::sample(&mut OsRng),
+                };
+                let _ = do_reset(mnemonic.clone(), password, &config).await;
+                mnemonic_tx.send(SecretString::from(mnemonic.as_ref().to_owned())).await.expect("Receiving end closed");
             }
         }
     };
 
     loop {
-        if let Some((mnemonic, password)) = reset_rx.recv().await {
-            let mut new_state = do_reset(mnemonic, password, &config).await;
+        if let Some(ResetInfo { phrase, password }) = reset_rx.recv().await {
+            let mnemonic = match phrase {
+                Some(mnemonic) => {
+                    Mnemonic::new(mnemonic.expose_secret()).expect("Invalid mnemonic phrase")
+                }
+                None => Mnemonic::sample(&mut OsRng),
+            };
 
+            let mut new_state = do_reset(mnemonic.clone(), password, &config).await;
             std::mem::swap(&mut *state_handle.lock(), &mut new_state);
+            mnemonic_tx
+                .send(SecretString::from(mnemonic.as_ref().to_owned()))
+                .await
+                .expect("Receiving end closed");
         } else {
             info!("Reset channel closed, exiting.").expect("Logger error in reset handler");
             break;
@@ -473,7 +543,7 @@ async fn handle_reset(
 
 /// Starts the signer server with `config` and `authorizer`.
 #[inline]
-pub async fn start<A>(config: Config, authorizer: A, reset_rx: Receiver<ResetInfo>) -> Result<()>
+pub async fn start<A>(config: Config, authorizer: A, responder: ResetResponder) -> Result<()>
 where
     A: Authorizer,
 {
@@ -491,7 +561,7 @@ where
     let conf = config.clone();
 
     task::spawn(async move {
-        handle_reset(reset_rx, init_rx, conf).await;
+        handle_reset(responder, init_rx, conf).await;
     });
 
     let server = Server::build(config, authorizer).await?;
