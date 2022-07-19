@@ -38,8 +38,8 @@ jobs:
         run: curl -L https://github.com/paritytech/polkadot/releases/download/v0.9.22/polkadot -o manta-pc-launch/polkadot; chmod +x manta-pc-launch/polkadot
       - name: Copy e2e launch config
         run: cp test-selenium/e2e-local.json manta-pc-launch
-      - name: Run PC-Launch
-        run: cd manta-pc-launch; yarn install && yarn start e2e-local.json
+      # - name: Run PC-Launch
+      #   run: cd manta-pc-launch; yarn install && yarn start e2e-local.json
       - name: Copy e2e frontend config
         run: cp test-selenium/e2e.json manta-front-end/src/config/production.json;
       - name: Fetch Chrome driver
