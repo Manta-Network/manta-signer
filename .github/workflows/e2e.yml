@@ -40,7 +40,9 @@ jobs:
         run: cp test-selenium/e2e-local.json manta-pc-launch
       - name: Run PC-Launch
         run: cd manta-pc-launch; yarn install && yarn start e2e-local.json
-    # - name: Copy e2e frontend config
-    #   run: cp test-selenium/e2e.json manta-front-end/src/config/production.json;
-    # - name: Running test script
-    #   run: ./test-selenium/bringup.sh
+      - name: Copy e2e frontend config
+        run: cp test-selenium/e2e.json manta-front-end/src/config/production.json;
+      - name: Fetch Chrome driver
+        run: ./test-selenium/fetch_driver.sh
+      - name: Running test script
+        run: ./test-selenium/run_test.sh
