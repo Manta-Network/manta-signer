@@ -5,7 +5,7 @@ const DEV_ACCOUNT_SEED = 'bottom drive obey lake curtain smoke basket hold race 
 const TEST_ACCT_PASS = 'test_password';
 
 // TODO: changeme
-const POLKADOT_PLUGIN_PATH = '/home/tj/manta/test-selenium/0.42.2_0/';
+const POLKADOT_PLUGIN_PATH = 'test-selenium/0.42.2_0';
 const BALANCE_SYNC_TEXT = '...';
 
 // Click the buttons!!
@@ -55,7 +55,7 @@ class CryptoPerson {
         const chromabilities = Capabilities.chrome();
 
         chromabilities.set("goog:chromeOptions", {
-            args: ['--window-size=1920,1080', `--load-extension=${POLKADOT_PLUGIN_PATH}`, '--disable-dev-shm-usage']
+            args: ['--window-size=1920,1080', `--load-extension=${POLKADOT_PLUGIN_PATH}`, '--disable-dev-shm-usage', '--no-sandbox', '--disable-setuid-sandbox']
         });
 
         let driver = await new Builder()
@@ -384,6 +384,10 @@ class CryptoPerson {
         await this.public_asset_select(asset);
         await this.set_recipient(to);
         await this.send(amount, expected);
+    }
+
+    async quit() {
+        await this.driver.quit();
     }
 }
 

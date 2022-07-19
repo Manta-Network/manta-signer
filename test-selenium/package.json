@@ -4,6 +4,6 @@
     "@polkadot/util": "^9.4.1",
     "@polkadot/wasm-crypto": "^6.1.1",
     "chromedriver": "^101.0.0",
-    "selenium-webdriver": "^4.1.2"
+    "selenium-webdriver": "^4.3.0"
   }
 }

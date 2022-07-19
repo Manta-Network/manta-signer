@@ -249,6 +249,12 @@ async function init_account(api, alice, accounts, index, initial) {
             console.log(`${symbol}: should have ${amount}, has ${private_balance}`);
         }
     }
+
+    for (const acct of accounts) {
+        await acct.quit();
+    }
+    
+    process.exit(0);
 })()
 
 
