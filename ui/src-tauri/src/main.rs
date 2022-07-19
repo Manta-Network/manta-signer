@@ -27,11 +27,13 @@
 extern crate alloc;
 
 use alloc::sync::Arc;
+use core::time::Duration;
 use manta_signer::{
     config::{Config, Setup},
     secret::{Authorizer, Password, PasswordFuture, Secret, SecretString, UnitFuture},
     serde::Serialize,
     service,
+    tokio::time::sleep,
 };
 use tauri::{
     async_runtime::{channel, spawn, Mutex, Receiver, Sender},
@@ -116,8 +118,14 @@ impl Authorizer for User {
 
     #[inline]
     fn setup<'s>(&'s mut self, setup: &'s Setup) -> UnitFuture<'s> {
-        self.emit("connect", setup);
-        Box::pin(async move {})
+        let window = self.window.clone();
+        Box::pin(async move {
+            // NOTE: We have to wait here until the UI listener is registered.
+            sleep(Duration::from_millis(500)).await;
+            window
+                .emit("connect", setup)
+                .expect("The `connect` command failed to be emitted to the window.");
+        })
     }
 
     #[inline]
