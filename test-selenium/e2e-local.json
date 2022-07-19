@@ -1,6 +1,6 @@
 {
 	"relaychain": {
-		"bin": "./polkadot",
+		"bin": "../../polkadot/target/release/polkadot",
 		"chain": "rococo-local",
 		"nodes": [
 			{
@@ -49,7 +49,7 @@
 	},
 	"parachains": [
 		{
-			"bin": "./manta",
+			"bin": "../../Manta/target/release/manta",
 			"chain": "dolphin-local",
 			"nodes": [
 				{

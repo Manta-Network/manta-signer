@@ -55,7 +55,7 @@ class CryptoPerson {
         const chromabilities = Capabilities.chrome();
 
         chromabilities.set("goog:chromeOptions", {
-            args: ['--window-size=1920,1080', `--load-extension=${POLKADOT_PLUGIN_PATH}`]
+            args: ['--window-size=1920,1080', `--load-extension=${POLKADOT_PLUGIN_PATH}`, '--disable-dev-shm-usage']
         });
 
         let driver = await new Builder()
