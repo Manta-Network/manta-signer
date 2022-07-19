@@ -139,6 +139,43 @@ async function register_asset(api, alice, symbol) {
     });
 }
 
+async function init_account(api, alice, accounts, index, initial) {
+    let to_acct = accounts[index];
+    for (const [assetIdx, value] of Object.entries(initial.public)) {
+        let idx = parseInt(assetIdx);
+        let symbol = PUBLIC_ASSETS[idx];
+        let assetId = SYMBOL_TO_ASSET_ID[symbol];
+
+        try {
+            let resultHandler = (result) => {
+                if (result.status.isFinalized) {
+                    const msg = getFailedExtrinsicError(result.events, api);
+        		    if (msg != null) {
+        		        throw Error(`transfer failed: ${msg}`);
+        		    } else {
+        		        const id = result.status.asFinalized.toHex();
+        		        console.log(`${symbol} transfer complete: ${assetId}, hash: ${id}`);
+        		    }
+        		    unsub();
+        	    } else if (result.status.isInBlock) {
+                    console.log(`INBLOCK`);
+        	    } else {
+                    console.log(`Something else happened: ${result.status}`);
+        	    }
+            };
+
+            let nonce = await api.rpc.system.accountNextIndex(alice.address);
+            console.log(`${to_acct.public_account} receiving ${value} ${symbol} (${assetId})`);
+            const unsub = await api.tx.sudo.sudoUncheckedWeight(
+                api.tx.assetManager.mintAsset(parseInt(assetId), to_acct.public_account, (new BN(value) * new BN(10).pow(new BN(DECIMALS[symbol])).toString()).toString()), 1
+            ).signAndSend(alice, {nonce}, resultHandler);
+        } catch (e) {
+            throw Error(`Somethin' messed up happened ${e}`);
+        }
+        await sleep(1);
+    }
+}
+
 
 (async () => {
     await waitReady();
@@ -214,41 +251,4 @@ async function register_asset(api, alice, symbol) {
     }
 })()
 
-
-async function init_account(api, alice, accounts, index, initial) {
-    let to_acct = accounts[index];
-    for (const [assetIdx, value] of Object.entries(initial.public)) {
-        let idx = parseInt(assetIdx);
-        let symbol = PUBLIC_ASSETS[idx];
-        let assetId = SYMBOL_TO_ASSET_ID[symbol];
-
-        try {
-            let resultHandler = (result) => {
-                if (result.status.isFinalized) {
-                    const msg = getFailedExtrinsicError(result.events, api);
-        		    if (msg != null) {
-        		        throw Error(`transfer failed: ${msg}`);
-        		    } else {
-        		        const id = result.status.asFinalized.toHex();
-        		        console.log(`${symbol} transfer complete: ${assetId}, hash: ${id}`);
-        		    }
-        		    unsub();
-        	    } else if (result.status.isInBlock) {
-                    console.log(`INBLOCK`);
-        	    } else {
-                    console.log(`Something else happened: ${result.status}`);
-        	    }
-            };
-
-            let nonce = await api.rpc.system.accountNextIndex(alice.address);
-            console.log(`${to_acct.public_account} receiving ${value} ${symbol} (${assetId})`);
-            const unsub = await api.tx.sudo.sudoUncheckedWeight(
-                api.tx.assetManager.mintAsset(parseInt(assetId), to_acct.public_account, (new BN(value) * new BN(10).pow(new BN(DECIMALS[symbol])).toString()).toString()), 1
-            ).signAndSend(alice, {nonce}, resultHandler);
-        } catch (e) {
-            throw Error(`Somethin' messed up happened ${e}`);
-        }
-        await sleep(1);
-    }
-}
 
