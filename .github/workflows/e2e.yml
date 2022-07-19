@@ -18,38 +18,41 @@ jobs:
     strategy:
       matrix:
         node-version: [16.x]
-    env:
-      MANTA_SDK_BRANCH: "main"
     steps:
       - name: Cancel previous runs
         uses: styfle/cancel-workflow-action@0.9.1
         with:
           access_token: ${{ github.token }}
       - uses: actions/checkout@v3
-      #- name: Checkout Launch Tools
-      #  uses: actions/checkout@v3
-      #  with:
-      #    repository: Manta-Network/manta-pc-launch
-      #    path: manta-pc-launch
-      #- name: Checkout Front End
-      #  uses: actions/checkout@v3
-      #  with:
-      #    repository: Manta-Network/manta-front-end
-      #    path: manta-front-end
-      #    branch: add-button-ids
-      #- name: Use Node.js ${{ matrix.node-version }}
-      #  uses: actions/setup-node@v3
-      #  with:
-      #    node-version: ${{ matrix.node-version }}
-      #- name: Fetch manta node
-      #  shell: bash
-      #  run: curl -L https://e2e-assets.s3.us-east-2.amazonaws.com/manta -o manta-pc-launch/manta; chmod +x manta-pc-launch/manta
-      #- name: Fetch polkadot node
-      #  shell: bash
-      #  run: curl -L https://e2e-assets.s3.us-east-2.amazonaws.com/polkadot -o manta-pc-launch/polkadot; chmod +x manta-pc-launch/polkadot
-      #- name: Copy e2e launch config
-      #  run: cp test-selenium/e2e-local.json manta-pc-launch;
-      #- name: Copy e2e frontend config
-      #  run: cp test-selenium/e2e.json manta-front-end/src/config/production.json;
-      #- name: Running test script
-      #  run: ./test-selenium/bringup.sh
+      - name: Checkout Launch Tools
+        uses: actions/checkout@v3
+        with:
+          repository: Manta-Network/manta-pc-launch
+          path: manta-pc-launch
+      - name: Checkout Front End
+        uses: actions/checkout@v3
+        with:
+          repository: Manta-Network/manta-front-end
+          path: manta-front-end
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ matrix.node-version }}
+      - name: Fetch manta node
+        shell: bash
+        run: curl -L https://github.com/Manta-Network/Manta/releases/download/v3.2.0/manta -o manta-pc-launch/manta
+        run: chmod +x manta-pc-launch/manta
+      - name: Fetch polkadot node
+        shell: bash
+        run: curl -L https://github.com/paritytech/polkadot/releases/download/v0.9.22/polkadot -o manta-pc-launch/polkadot
+        run: chmod +x manta-pc-launch/polkadot
+      - name: Copy e2e launch config
+        run: cp test-selenium/e2e-local.json manta-pc-launch
+      - name: Run PC-Launch
+        run: cd manta-pc-launch
+        run: yarn install
+        run: yarn start e2e-local.json
+    # - name: Copy e2e frontend config
+    #   run: cp test-selenium/e2e.json manta-front-end/src/config/production.json;
+    # - name: Running test script
+    #   run: ./test-selenium/bringup.sh

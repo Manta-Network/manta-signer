@@ -7,6 +7,7 @@ function kill_it_with_fire() {
 
 # TODO: set up local testnet..
 # cd ../manta-pc-launch
+# yarn install
 # yarn start dolphin-local.json
 
 # TODO: patch up the front-end with the sdk?!?!
