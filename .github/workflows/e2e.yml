@@ -32,18 +32,14 @@ jobs:
           node-version: ${{ matrix.node-version }}
       - name: Fetch manta node
         shell: bash
-        run: curl -L https://github.com/Manta-Network/Manta/releases/download/v3.2.0/manta -o manta-pc-launch/manta
-        run: chmod +x manta-pc-launch/manta
+        run: curl -L https://github.com/Manta-Network/Manta/releases/download/v3.2.0/manta -o manta-pc-launch/manta; chmod +x manta-pc-launch/manta
       - name: Fetch polkadot node
         shell: bash
-        run: curl -L https://github.com/paritytech/polkadot/releases/download/v0.9.22/polkadot -o manta-pc-launch/polkadot
-        run: chmod +x manta-pc-launch/polkadot
+        run: curl -L https://github.com/paritytech/polkadot/releases/download/v0.9.22/polkadot -o manta-pc-launch/polkadot; chmod +x manta-pc-launch/polkadot
       - name: Copy e2e launch config
         run: cp test-selenium/e2e-local.json manta-pc-launch
       - name: Run PC-Launch
-        run: cd manta-pc-launch
-        run: yarn install
-        run: yarn start e2e-local.json
+        run: cd manta-pc-launch; yarn install && yarn start e2e-local.json
     # - name: Copy e2e frontend config
     #   run: cp test-selenium/e2e.json manta-front-end/src/config/production.json;
     # - name: Running test script
