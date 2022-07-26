@@ -40,7 +40,10 @@
                 "certificateThumbprint": null,
                 "digestAlgorithm": "sha256",
                 "timestampUrl": "",
-                "tsp": false
+                "tsp": false,
+                "webviewInstallMode": {
+                    "type": "offlineInstaller"
+                }
             }
         },
         "updater": {
