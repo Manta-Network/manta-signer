@@ -1,6 +1,8 @@
 import './App.css';
 import Authorize from './pages/Authorize';
 import CreateAccount from './pages/CreateAccount';
+import ResetAccount from './pages/ResetAccount';
+import Account from './pages/Account';
 import Loading from './pages/Loading';
 import SignIn from './pages/SignIn';
 import { Container } from 'semantic-ui-react';
@@ -13,6 +15,8 @@ const LOADING_PAGE = 0;
 const CREATE_ACCOUNT_PAGE = 1;
 const LOGIN_PAGE = 2;
 const AUTHORIZE_PAGE = 3;
+const ACCOUNT_PAGE = 4;
+const RESET_PAGE = 5;
 
 function App() {
   const [currentPage, setCurrentPage] = useState(LOADING_PAGE);
@@ -34,11 +38,18 @@ function App() {
           case 'Login':
             setCurrentPage(LOGIN_PAGE);
             break;
+          case 'Account':
+            setCurrentPage(ACCOUNT_PAGE);
+            break;
+          case 'Reset':
+            setCurrentPage(RESET_PAGE);
+            break;
           default:
             break;
         }
       });
     };
+    listenForResetRequests();
     beginInitialConnectionPhase();
   }, [isConnected]);
 
@@ -56,6 +67,30 @@ function App() {
       setCurrentPage(AUTHORIZE_PAGE);
       appWindow.show();
     });
+  };
+
+  const listenForResetRequests = () => {
+    console.log("[INFO]: Setup listener.");
+    listen('account', (event) => {
+      console.log("[INFO]: Wake: ", event);
+      setCurrentPage(ACCOUNT_PAGE);
+      appWindow.show();
+    });
+  };
+
+  const sendRecoveryInfo = async (phrase, password) => {
+    console.log("[INFO]: Send info to signer server.");
+    return await invoke('send_recovery_info', { phrase: phrase, password: password });
+  };
+
+  const createNew = async (password) => {
+    console.log("[INFO]: Create new account.");
+    return await invoke('send_recovery_info', { phrase: null, password: password });
+  };
+
+  const sendResetAccount = async () => {
+    console.log("[INFO]: Switch to reset account page.");
+    setCurrentPage(RESET_PAGE);
   };
 
   const sendPassword = async (password) => {
@@ -78,6 +113,19 @@ function App() {
   return (
     <div className="App">
       <Container className="page">
+        {currentPage === ACCOUNT_PAGE && (
+          <Account
+            onResetAccount={sendResetAccount}
+            hideWindow={hideWindow}
+          />
+        )}
+        {currentPage === RESET_PAGE && (
+          <ResetAccount
+            sendCreateNew={createNew}
+            sendRecoveryInfo={sendRecoveryInfo}
+            hideWindow={hideWindow}
+          />
+        )}
         {currentPage === LOADING_PAGE && (
           <Loading/>
         )}

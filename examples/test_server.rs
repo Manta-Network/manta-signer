@@ -22,6 +22,7 @@ use manta_signer::{
     secret::{Authorizer, Password, PasswordFuture, SecretString},
     service::{self, Error},
 };
+use tokio::sync::mpsc::channel;
 
 /// Mock User
 pub struct MockUser {
@@ -58,5 +59,6 @@ async fn main() -> Result<(), Error> {
     if let Some(url) = std::env::args().nth(1) {
         config.service_url = url;
     }
-    service::start(config, MockUser::new(&mut OsRng)).await
+    let (_tx, rx) = channel(1);
+    service::start(config, MockUser::new(&mut OsRng), rx).await
 }

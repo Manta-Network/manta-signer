@@ -19,7 +19,7 @@
 use crate::{
     config::{Config, Setup},
     log::{info, trace, warn},
-    secret::{Argon2, Authorizer, ExposeSecret, PasswordHash, SecretString},
+    secret::{Argon2, Authorizer, ExposeSecret, PasswordHash, ResetInfo, SecretString},
 };
 use core::{future::Future, time::Duration};
 use http_types::headers::HeaderValue;
@@ -28,6 +28,7 @@ use manta_accounting::{
     key::HierarchicalKeyDerivationScheme,
     transfer::canonical::TransferShape,
 };
+use manta_crypto::rand::OsRng;
 use manta_pay::{
     config::{receiving_key_to_base58, ReceivingKey},
     key::{Mnemonic, TestnetKeySecret},
@@ -57,7 +58,10 @@ use tide::{
 };
 use tokio::{
     fs,
-    sync::Mutex as AsyncMutex,
+    sync::{
+        mpsc::{channel, Receiver, Sender},
+        Mutex as AsyncMutex,
+    },
     task::{self, JoinError},
 };
 
@@ -81,6 +85,9 @@ pub enum Error {
 
     /// Failed to Load SDK Parameters
     ParameterLoadingError,
+
+    /// Channel closed Error
+    ChannelClosedError,
 
     /// Save Error
     SaveError(SaveError<File>),
@@ -114,6 +121,53 @@ impl From<Error> for tide::Error {
 
 /// Result Type
 pub type Result<T, E = Error> = core::result::Result<T, E>;
+
+/// ResetRequest
+pub struct ResetRequester {
+    /// Reset request info
+    pub reset_tx: Sender<ResetInfo>,
+    /// receiver for mnemonic
+    pub mnemonic_rx: Arc<AsyncMutex<Receiver<SecretString>>>,
+}
+
+/// ResetResponse
+pub struct ResetResponder {
+    /// Receiver for reset info
+    pub reset_rx: Arc<AsyncMutex<Receiver<ResetInfo>>>,
+    /// Transmit the mnemonic
+    pub mnemonic_tx: Sender<SecretString>,
+}
+
+/// Resetter
+pub struct ResetChannel {
+    /// Request reset
+    pub requester: ResetRequester,
+    /// New mnemonic
+    pub responder: ResetResponder,
+}
+
+impl ResetChannel {
+    /// Create new resetter channel
+    pub fn new() -> ResetChannel {
+        let (reset_tx, reset_rx) = channel(1);
+        let (mnemonic_tx, mnemonic_rx) = channel(1);
+
+        let requester = ResetRequester {
+            reset_tx,
+            mnemonic_rx: Arc::new(AsyncMutex::new(mnemonic_rx)),
+        };
+
+        let responder = ResetResponder {
+            reset_rx: Arc::new(AsyncMutex::new(reset_rx)),
+            mnemonic_tx,
+        };
+
+        ResetChannel {
+            requester,
+            responder,
+        }
+    }
+}
 
 /// Checked Authorizer
 struct CheckedAuthorizer<A>
@@ -230,6 +284,10 @@ where
                 authorizer,
             })),
         })
+    }
+
+    fn state_handle(&self) -> Arc<Mutex<State>> {
+        self.state.clone()
     }
 
     /// Loads the password from the `authorizer` and compute the password hash.
@@ -393,9 +451,99 @@ where
     Ok(Body::from_json(&f().await?)?.into())
 }
 
+async fn do_reset(mnemonic: Mnemonic, password: SecretString, config: &Config) -> State {
+    info!("resetting signer state").expect("Logger error in reset handler");
+
+    let password_hash = PasswordHash::<Argon2>::from_default(password.expose_secret().as_bytes());
+
+    let data_path = config.data_directory().to_owned();
+    let parameters = task::spawn_blocking(move || crate::parameters::load(data_path))
+        .await
+        .expect("Parameter loading error")
+        .expect("Failed to load parameters");
+
+    let state = SignerState::new(
+        TestnetKeySecret::new(mnemonic, password.expose_secret())
+            .map(HierarchicalKeyDerivationFunction::default()),
+        UtxoAccumulator::new(
+            task::spawn_blocking(crate::parameters::load_utxo_accumulator_model)
+                .await
+                .expect("Error loading utxo accumulator model")
+                .unwrap(),
+        ),
+    );
+    info!("saving signer state").expect("Logger error in reset handler");
+    let password_hash_bytes = password_hash.as_bytes();
+    let cloned_state = state.clone();
+    let path = config.data_path.clone();
+
+    task::spawn_blocking(move || File::save(&path, &password_hash_bytes, cloned_state))
+        .await
+        .expect("Signer state save failed")
+        .expect("Could not save signer state.");
+    let signer = Signer::from_parts(parameters, state);
+
+    State {
+        config: config.clone(),
+        signer,
+    }
+}
+
+async fn handle_reset(
+    responder: ResetResponder,
+    mut init_rx: Receiver<Arc<Mutex<State>>>,
+    config: Config,
+) {
+    let ResetResponder {
+        reset_rx,
+        mnemonic_tx,
+    } = responder;
+    let mut reset_rx = reset_rx.lock().await;
+
+    let state_handle = loop {
+        tokio::select! {
+            state = init_rx.recv() => {
+                break state.expect("Did not receive init state message!");
+            }
+            info = reset_rx.recv() => {
+                let ResetInfo { phrase, password } = info.expect("Invalid reset payload!");
+                let mnemonic = match phrase {
+                    Some(mnemonic) => {
+                        Mnemonic::new(mnemonic.expose_secret()).expect("Invalid mnemonic phrase")
+                    }
+                    None => Mnemonic::sample(&mut OsRng),
+                };
+                let _ = do_reset(mnemonic.clone(), password, &config).await;
+                mnemonic_tx.send(SecretString::from(mnemonic.as_ref().to_owned())).await.expect("Receiving end closed");
+            }
+        }
+    };
+
+    loop {
+        if let Some(ResetInfo { phrase, password }) = reset_rx.recv().await {
+            let mnemonic = match phrase {
+                Some(mnemonic) => {
+                    Mnemonic::new(mnemonic.expose_secret()).expect("Invalid mnemonic phrase")
+                }
+                None => Mnemonic::sample(&mut OsRng),
+            };
+
+            let mut new_state = do_reset(mnemonic.clone(), password, &config).await;
+            std::mem::swap(&mut *state_handle.lock(), &mut new_state);
+            mnemonic_tx
+                .send(SecretString::from(mnemonic.as_ref().to_owned()))
+                .await
+                .expect("Receiving end closed");
+        } else {
+            info!("Reset channel closed, exiting.").expect("Logger error in reset handler");
+            break;
+        }
+    }
+}
+
 /// Starts the signer server with `config` and `authorizer`.
 #[inline]
-pub async fn start<A>(config: Config, authorizer: A) -> Result<()>
+pub async fn start<A>(config: Config, authorizer: A, responder: ResetResponder) -> Result<()>
 where
     A: Authorizer,
 {
@@ -408,7 +556,21 @@ where
             _ => Origin::from("*"),
         })
         .allow_credentials(false);
-    let mut api = tide::Server::with_state(Server::build(config, authorizer).await?);
+
+    let (init_tx, init_rx) = channel(1);
+    let conf = config.clone();
+
+    task::spawn(async move {
+        handle_reset(responder, init_rx, conf).await;
+    });
+
+    let server = Server::build(config, authorizer).await?;
+
+    if init_tx.send(server.state_handle()).await.is_err() {
+        return Err(Error::ChannelClosedError);
+    }
+
+    let mut api = tide::Server::with_state(server);
     api.with(cors);
     api.at("/version").get(|_| into_body(Server::<A>::version));
     api.at("/sync").post(|r| Server::execute(r, Server::sync));
