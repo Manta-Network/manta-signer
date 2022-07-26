@@ -4,11 +4,17 @@ updates:
     directory: "/"
     schedule:
       interval: "daily"
+    labels:
+      - "L-skip"
   - package-ecosystem: "cargo"
     directory: "/"
     schedule:
       interval: "daily"
+    labels:
+      - "L-skip"
   - package-ecosystem: "npm"
     directory: "/"
     schedule:
       interval: "daily"
+    labels:
+      - "L-skip"
