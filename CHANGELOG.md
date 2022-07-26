@@ -83,17 +83,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 ### Fixed
 - [\#25](https://github.com/Manta-Network/manta-signer/pull/25) Fix issues with password retry and UI
 
-## [0.4.0] - 2021-11-28T09:37:08Z
-### Added
-- [\#4](https://github.com/Manta-Network/manta-signer/pull/4) Integrate with frontend
-- [\#14](https://github.com/Manta-Network/manta-signer/pull/14) New Signer UI
-- [\#17](https://github.com/Manta-Network/manta-signer/pull/17) Add about page with version number
-- [\#21](https://github.com/Manta-Network/manta-signer/pull/21) Add `README.md`
-- [\#23](https://github.com/Manta-Network/manta-signer/pull/23) Add Testnet Transaction Summary
-
-### Changed
-- [\#13](https://github.com/Manta-Network/manta-signer/pull/13) Rewrite Signer in Rust
-
 [Unreleased]: https://github.com/Manta-Network/manta-signer/compare/v0.7.3...HEAD
 [0.7.3]: https://github.com/Manta-Network/manta-signer/releases/tag/v0.7.3
 [0.7.2]: https://github.com/Manta-Network/manta-signer/releases/tag/v0.7.2
@@ -103,4 +92,3 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 [0.5.1]: https://github.com/Manta-Network/manta-signer/releases/tag/v0.5.1
 [0.5.0]: https://github.com/Manta-Network/manta-signer/releases/tag/v0.5.0
 [0.4.1]: https://github.com/Manta-Network/manta-signer/releases/tag/v0.4.1
-[0.4.0]: https://github.com/Manta-Network/manta-signer/releases/tag/v0.4.0
