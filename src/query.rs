@@ -19,7 +19,7 @@
 use manta_pay::config::{receiving_key_to_base58, ReceivingKey};
 use reqwest::Error;
 
-/// Queries signer server to get all receiving keys
+/// Queries signer server to get all receiving keys.
 #[inline]
 pub async fn get_receiving_keys(service_url: &str) -> Result<Vec<String>, Error> {
     Ok(reqwest::Client::new()

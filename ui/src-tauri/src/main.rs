@@ -30,10 +30,9 @@ use alloc::sync::Arc;
 use core::time::Duration;
 use manta_signer::{
     config::{Config, Setup},
-    query::get_receiving_keys,
     secret::{Authorizer, Password, PasswordFuture, Secret, SecretString, UnitFuture},
     serde::Serialize,
-    service,
+    service::{self, receiving_key_to_base58, ReceivingKeyRequest, Server},
     tokio::time::sleep,
 };
 use tauri::{
@@ -209,6 +208,32 @@ impl PasswordStore {
     }
 }
 
+///
+type ServerStoreType = Arc<Mutex<Option<Server<User>>>>;
+
+///
+pub struct ServerStoreHandle(ServerStoreType);
+
+impl ServerStoreHandle {
+    ///
+    #[inline]
+    pub async fn set(&self, server: Server<User>) {
+        *self.0.lock().await = Some(server)
+    }
+}
+
+///
+#[derive(Default)]
+pub struct ServerStore(ServerStoreType);
+
+impl ServerStore {
+    ///
+    #[inline]
+    pub fn handle(&self) -> ServerStoreHandle {
+        ServerStoreHandle(self.0.clone())
+    }
+}
+
 /// Sends the current `password` into storage from the UI.
 #[tauri::command]
 async fn send_password(
@@ -227,8 +252,19 @@ async fn stop_password_prompt(password_store: State<'_, PasswordStore>) -> Resul
 
 /// Sends all receiving keys to the UI.
 #[tauri::command]
-async fn receiving_keys(config: State<'_, Config>) -> Result<Vec<String>, String> {
-    get_receiving_keys(&config.service_url).await.map_err(|e| e.to_string())
+async fn receiving_keys(server: State<'_, ServerStore>) -> Result<Vec<String>, String> {
+    Ok(server
+        .0
+        .lock()
+        .await
+        .clone()
+        .unwrap()
+        .receiving_keys(ReceivingKeyRequest::GetAll)
+        .await
+        .map_err(|e| e.to_string())?
+        .into_iter()
+        .map(|key| receiving_key_to_base58(&key))
+        .collect())
 }
 
 /// Runs the main Tauri application.
@@ -255,15 +291,21 @@ fn main() {
                 }
             }
         })
+        .manage(ServerStore::default())
         .manage(PasswordStore::default())
         .manage(config)
         .setup(|app| {
             let window = app.get_window("main").unwrap();
             let config = app.state::<Config>().inner().clone();
             let password_store = app.state::<PasswordStore>().handle();
+            let server_store = app.state::<ServerStore>().handle();
             spawn(async move {
                 let (password, retry) = password_store.into_channel().await;
-                service::start(config, User::new(window, password, retry))
+                let server = service::setup(&config, User::new(window, password, retry))
+                    .await
+                    .expect("Unable to setup manta-signer service.");
+                server_store.set(server.clone()).await;
+                service::start(&config, server)
                     .await
                     .expect("Unable to build manta-signer service.");
             });

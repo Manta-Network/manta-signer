@@ -21,7 +21,11 @@ use crate::{
     log::{info, trace, warn},
     secret::{Argon2, Authorizer, ExposeSecret, PasswordHash, SecretString},
 };
-use core::{future::Future, time::Duration};
+use core::{
+    fmt::{self, Display},
+    future::Future,
+    time::Duration,
+};
 use http_types::headers::HeaderValue;
 use manta_accounting::{
     fs::{cocoon::File, File as _, SaveError},
@@ -29,15 +33,10 @@ use manta_accounting::{
     transfer::canonical::TransferShape,
 };
 use manta_pay::{
-    config::{receiving_key_to_base58, ReceivingKey},
+    config::ReceivingKey,
     key::{Mnemonic, TestnetKeySecret},
-    signer::{
-        base::{
-            HierarchicalKeyDerivationFunction, Signer, SignerParameters, SignerState,
-            UtxoAccumulator,
-        },
-        ReceivingKeyRequest, SignError, SignRequest, SignResponse, SyncError, SyncRequest,
-        SyncResponse,
+    signer::base::{
+        HierarchicalKeyDerivationFunction, Signer, SignerParameters, SignerState, UtxoAccumulator,
     },
 };
 use manta_util::{
@@ -59,6 +58,14 @@ use tokio::{
     fs,
     sync::Mutex as AsyncMutex,
     task::{self, JoinError},
+};
+
+pub use manta_pay::{
+    config::receiving_key_to_base58,
+    signer::{
+        ReceivingKeyRequest, SignError, SignRequest, SignResponse, SyncError, SyncRequest,
+        SyncResponse,
+    },
 };
 
 /// Password Retry Interval
@@ -108,6 +115,20 @@ impl From<Error> for tide::Error {
                 StatusCode::InternalServerError,
                 "unable to complete request",
             ),
+        }
+    }
+}
+
+impl Display for Error {
+    #[inline]
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            Self::AddrParseError(err) => write!(f, "Address Parse Error: {}", err),
+            Self::JoinError(err) => write!(f, "Join Error: {}", err),
+            Self::ParameterLoadingError => write!(f, "Parameter Loading Error"),
+            Self::SaveError(err) => write!(f, "Save Error: {}", err),
+            Self::Io(err) => write!(f, "I/O Error: {}", err),
+            Self::AuthorizationError => write!(f, "Authorization Error"),
         }
     }
 }
@@ -168,7 +189,7 @@ struct State {
 /// Signer Server
 #[derive(derivative::Derivative)]
 #[derivative(Clone(bound = ""))]
-struct Server<A>
+pub struct Server<A>
 where
     A: Authorizer,
 {
@@ -371,7 +392,7 @@ where
 
     /// Runs the receiving key sampling protocol on the signer.
     #[inline]
-    async fn receiving_keys(self, request: ReceivingKeyRequest) -> Result<Vec<ReceivingKey>> {
+    pub async fn receiving_keys(self, request: ReceivingKeyRequest) -> Result<Vec<ReceivingKey>> {
         info!("[REQUEST] processing `receivingKeys`: {:?}", request)?;
         let response = self.state.lock().signer.receiving_keys(request);
         info!(
@@ -393,13 +414,22 @@ where
     Ok(Body::from_json(&f().await?)?.into())
 }
 
-/// Starts the signer server with `config` and `authorizer`.
+///
 #[inline]
-pub async fn start<A>(config: Config, authorizer: A) -> Result<()>
+pub async fn setup<A>(config: &Config, authorizer: A) -> Result<Server<A>>
 where
     A: Authorizer,
 {
     info!("performing service setup with {:#?}", config)?;
+    Server::build(config.clone(), authorizer).await
+}
+
+/// Starts the signer server with `config` and `authorizer`.
+#[inline]
+pub async fn start<A>(config: &Config, server: Server<A>) -> Result<()>
+where
+    A: Authorizer,
+{
     let socket_address = config.service_url.parse::<SocketAddr>()?;
     let cors = CorsMiddleware::new()
         .allow_methods("GET, POST".parse::<HeaderValue>().unwrap())
@@ -408,7 +438,7 @@ where
             _ => Origin::from("*"),
         })
         .allow_credentials(false);
-    let mut api = tide::Server::with_state(Server::build(config, authorizer).await?);
+    let mut api = tide::Server::with_state(server);
     api.with(cors);
     api.at("/version").get(|_| into_body(Server::<A>::version));
     api.at("/sync").post(|r| Server::execute(r, Server::sync));
