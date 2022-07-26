@@ -80,8 +80,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - [\#36](https://github.com/Manta-Network/manta-signer/pull/36) Improve wallet recovery performance
 
 ## [0.4.1] - 2021-12-08T21:52:47Z
+### Added
+- [\#4](https://github.com/Manta-Network/manta-signer/pull/4) Integrate with frontend
+- [\#14](https://github.com/Manta-Network/manta-signer/pull/14) New Signer UI
+- [\#17](https://github.com/Manta-Network/manta-signer/pull/17) Add about page with version number
+- [\#21](https://github.com/Manta-Network/manta-signer/pull/21) Add `README.md`
+- [\#23](https://github.com/Manta-Network/manta-signer/pull/23) Add Testnet transaction summary
+
+### Changed
+- [\#10](https://github.com/Manta-Network/manta-signer/pull/10) Upgrade to Signer v2
+- [\#13](https://github.com/Manta-Network/manta-signer/pull/13) Rewrite Signer in Rust
+
 ### Fixed
 - [\#25](https://github.com/Manta-Network/manta-signer/pull/25) Fix issues with password retry and UI
+- [\#3](https://github.com/Manta-Network/manta-signer/pull/3) Translate to English
 
 [Unreleased]: https://github.com/Manta-Network/manta-signer/compare/v0.7.3...HEAD
 [0.7.3]: https://github.com/Manta-Network/manta-signer/releases/tag/v0.7.3
