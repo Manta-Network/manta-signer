@@ -616,18 +616,18 @@ checksum = "3bdca834647821e0b13d9539a8634eb62d3501b6b6c2cec1722786ee6671b851"
 
 [[package]]
 name = "bip32"
-version = "0.3.0"
+version = "0.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "873faa4363bfc54c36a48321da034c92a0645a363eed34d948683ffc1706e37f"
+checksum = "b30ed1d6f8437a487a266c8293aeb95b61a23261273e3e02912cdb8b68bf798b"
 dependencies = [
  "bs58",
- "hmac 0.11.0",
+ "hmac 0.12.1",
  "k256",
  "once_cell",
- "pbkdf2",
+ "pbkdf2 0.11.0",
  "rand_core 0.6.3",
- "ripemd160",
- "sha2 0.9.9",
+ "ripemd",
+ "sha2 0.10.2",
  "subtle",
  "zeroize",
 ]
@@ -684,7 +684,6 @@ version = "0.9.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "4152116fd6e9dadb291ae18fc1ec3575ed6d84c29642d97890f4b4a3417297e4"
 dependencies = [
- "block-padding",
  "generic-array",
 ]
 
@@ -696,12 +695,6 @@ checksum = "0bf7fe51849ea569fd452f37822f606a5cabb684dc918707a0193fd4664ff324"
 dependencies = [
  "generic-array",
 ]
-
-[[package]]
-name = "block-padding"
-version = "0.2.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8d696c370c750c948ada61c69a0ee2cbbb9c50b1019ddb86d9317157a99c2cae"
 
 [[package]]
 name = "blocking"
@@ -808,9 +801,6 @@ name = "cc"
 version = "1.0.73"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "2fff2a6927b3bb87f9595d67196a70493f627687a71d87a0d692242c33f58c11"
-dependencies = [
- "jobserver",
-]
 
 [[package]]
 name = "cesu8"
@@ -947,7 +937,7 @@ dependencies = [
  "aes-gcm 0.9.4",
  "chacha20poly1305",
  "hmac 0.11.0",
- "pbkdf2",
+ "pbkdf2 0.9.0",
  "rand 0.8.5",
  "sha2 0.9.9",
  "zeroize",
@@ -971,18 +961,18 @@ dependencies = [
 
 [[package]]
 name = "concurrent-queue"
-version = "1.2.2"
+version = "1.2.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "30ed07550be01594c6026cff2a1d7fe9c8f683caa798e12b68694ac9e88286a3"
+checksum = "af4780a44ab5696ea9e28294517f1fffb421a83a25af521333c838635509db9c"
 dependencies = [
  "cache-padded",
 ]
 
 [[package]]
 name = "const-oid"
-version = "0.7.1"
+version = "0.9.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e4c78c047431fee22c1a7bb92e00ad095a02a983affe4d8a72e2a2c62c1b94f3"
+checksum = "722e23542a15cea1f65d4a1419c4cfd7a26706c70871a13a04238ca3f40f1661"
 
 [[package]]
 name = "const_fn"
@@ -1106,9 +1096,9 @@ dependencies = [
 
 [[package]]
 name = "crypto-bigint"
-version = "0.3.2"
+version = "0.4.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "03c6a1d5fa1de37e071642dfa44ec552ca5b299adb128fab16138e24b548fd21"
+checksum = "9f2b443d17d49dad5ef0ede301c3179cc923b8822f3393b4d2c28c269dd4a122"
 dependencies = [
  "generic-array",
  "rand_core 0.6.3",
@@ -1185,9 +1175,9 @@ dependencies = [
 
 [[package]]
 name = "ctor"
-version = "0.1.22"
+version = "0.1.23"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f877be4f7c9f246b183111634f75baa039715e3f46ce860677d3b19a69fb229c"
+checksum = "cdffe87e1d521a10f9696f833fe502293ea446d7f256c06128293a4119bdf4cb"
 dependencies = [
  "quote",
  "syn",
@@ -1273,9 +1263,9 @@ dependencies = [
 
 [[package]]
 name = "der"
-version = "0.5.1"
+version = "0.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6919815d73839e7ad218de758883aae3a257ba6759ce7a9992501efbb53d705c"
+checksum = "13dd2ae565c0a381dde7fade45fce95984c568bdcb4700a4fdbe3175e0380b2f"
 dependencies = [
  "const-oid",
 ]
@@ -1374,9 +1364,9 @@ dependencies = [
 
 [[package]]
 name = "ecdsa"
-version = "0.13.4"
+version = "0.14.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d0d69ae62e0ce582d56380743515fefaf1a8c70cec685d9677636d7e30ae9dc9"
+checksum = "3bd46e0c364655e5baf2f5e99b603e7a09905da9966d7928d7470af393b28670"
 dependencies = [
  "der",
  "elliptic-curve",
@@ -1386,13 +1376,14 @@ dependencies = [
 
 [[package]]
 name = "elliptic-curve"
-version = "0.11.12"
+version = "0.12.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "25b477563c2bfed38a3b7a60964c49e058b2510ad3f12ba3483fd8f62c2306d6"
+checksum = "c47abd0a791d2ac0c7aa1118715f85b83689e4522c4e3a244e159d4fc9848a8d"
 dependencies = [
  "base16ct",
  "crypto-bigint",
  "der",
+ "digest 0.10.3",
  "ff",
  "generic-array",
  "group",
@@ -1432,9 +1423,9 @@ dependencies = [
 
 [[package]]
 name = "event-listener"
-version = "2.5.2"
+version = "2.5.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "77f3309417938f28bf8228fcff79a4a37103981e3e186d2ccd19c74b38f4eb71"
+checksum = "0206175f82b8d6bf6652ff7d71a1e27fd2e4efde587fd368662814d6ec1d9ce0"
 
 [[package]]
 name = "fastrand"
@@ -1447,9 +1438,9 @@ dependencies = [
 
 [[package]]
 name = "ff"
-version = "0.11.1"
+version = "0.12.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "131655483be284720a17d74ff97592b8e76576dc25563148601df2d7c9080924"
+checksum = "df689201f395c6b90dfe87127685f8dbfc083a5e779e613575d8bd7314300c3e"
 dependencies = [
  "rand_core 0.6.3",
  "subtle",
@@ -1754,10 +1745,8 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "4eb1a864a501629691edf6c15a593b7a51eebaa1e8468e9ddc623de7c9b58ec6"
 dependencies = [
  "cfg-if",
- "js-sys",
  "libc",
  "wasi 0.11.0+wasi-snapshot-preview1",
- "wasm-bindgen",
 ]
 
 [[package]]
@@ -1899,9 +1888,9 @@ dependencies = [
 
 [[package]]
 name = "group"
-version = "0.11.0"
+version = "0.12.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bc5ac374b108929de78460075f3dc439fa66df9d8fc77e8f12caa5165fcf0c89"
+checksum = "7391856def869c1c81063a03457c676fbcd419709c3dfb33d8d319de484b154d"
 dependencies = [
  "ff",
  "rand_core 0.6.3",
@@ -2055,6 +2044,15 @@ checksum = "2a2a2320eb7ec0ebe8da8f744d7812d9fc4cb4d09344ac01898dbcb6a20ae69b"
 dependencies = [
  "crypto-mac 0.11.1",
  "digest 0.9.0",
+]
+
+[[package]]
+name = "hmac"
+version = "0.12.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6c49c37c09c17a53d937dfbb742eb3a961d65a994e6bcdcf37e7399d0cc8ab5e"
+dependencies = [
+ "digest 0.10.3",
 ]
 
 [[package]]
@@ -2359,15 +2357,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8eaf4bc02d17cbdd7ff4c7438cafcdf7fb9a4613313ad11b4f8fefe7d3fa0130"
 
 [[package]]
-name = "jobserver"
-version = "0.1.24"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "af25a77299a7f711a01975c35a6a424eb6862092cc2d6c72c4ed6cbc56dfc1fa"
-dependencies = [
- "libc",
-]
-
-[[package]]
 name = "js-sys"
 version = "0.3.59"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2389,15 +2378,14 @@ dependencies = [
 
 [[package]]
 name = "k256"
-version = "0.10.4"
+version = "0.11.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "19c3a5e0a0b8450278feda242592512e09f61c72e018b8cd5c859482802daf2d"
+checksum = "2c8a5a96d92d849c4499d99461da81c9cdc1467418a8ed2aaeb407e8d85940ed"
 dependencies = [
  "cfg-if",
  "ecdsa",
  "elliptic-curve",
- "sec1",
- "sha2 0.9.9",
+ "sha2 0.10.2",
  "sha3",
 ]
 
@@ -2475,12 +2463,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "libm"
-version = "0.2.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "33a33a362ce288760ec6a508b94caaec573ae7d3bbbd91b87aa0bad4456839db"
-
-[[package]]
 name = "line-wrap"
 version = "0.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2541,8 +2523,8 @@ dependencies = [
 
 [[package]]
 name = "manta-accounting"
-version = "0.5.3"
-source = "git+https://github.com/manta-network/manta-rs?tag=v0.5.3#c90a4cd6105510b73646ed3029a24f9aa5b6594b"
+version = "0.5.4"
+source = "git+https://github.com/manta-network/manta-rs?tag=v0.5.4#aef233ce1b57c265b70b7fca6d951556eb97c715"
 dependencies = [
  "bitflags",
  "cocoon",
@@ -2556,8 +2538,8 @@ dependencies = [
 
 [[package]]
 name = "manta-crypto"
-version = "0.5.3"
-source = "git+https://github.com/manta-network/manta-rs?tag=v0.5.3#c90a4cd6105510b73646ed3029a24f9aa5b6594b"
+version = "0.5.4"
+source = "git+https://github.com/manta-network/manta-rs?tag=v0.5.4#aef233ce1b57c265b70b7fca6d951556eb97c715"
 dependencies = [
  "derivative",
  "manta-util",
@@ -2567,8 +2549,8 @@ dependencies = [
 
 [[package]]
 name = "manta-parameters"
-version = "0.5.3"
-source = "git+https://github.com/manta-network/manta-rs?tag=v0.5.3#c90a4cd6105510b73646ed3029a24f9aa5b6594b"
+version = "0.5.4"
+source = "git+https://github.com/manta-network/manta-rs?tag=v0.5.4#aef233ce1b57c265b70b7fca6d951556eb97c715"
 dependencies = [
  "anyhow",
  "attohttpc",
@@ -2580,8 +2562,8 @@ dependencies = [
 
 [[package]]
 name = "manta-pay"
-version = "0.5.3"
-source = "git+https://github.com/manta-network/manta-rs?tag=v0.5.3#c90a4cd6105510b73646ed3029a24f9aa5b6594b"
+version = "0.5.4"
+source = "git+https://github.com/manta-network/manta-rs?tag=v0.5.4#aef233ce1b57c265b70b7fca6d951556eb97c715"
 dependencies = [
  "aes-gcm 0.9.4",
  "ark-bls12-381",
@@ -2641,8 +2623,8 @@ dependencies = [
 
 [[package]]
 name = "manta-util"
-version = "0.5.3"
-source = "git+https://github.com/manta-network/manta-rs?tag=v0.5.3#c90a4cd6105510b73646ed3029a24f9aa5b6594b"
+version = "0.5.4"
+source = "git+https://github.com/manta-network/manta-rs?tag=v0.5.4#aef233ce1b57c265b70b7fca6d951556eb97c715"
 dependencies = [
  "serde",
  "serde_with",
@@ -2834,7 +2816,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "578ede34cf02f8924ab9447f50c28075b4d3e5b269972345e7e0372b38c6cdcd"
 dependencies = [
  "autocfg",
- "libm",
 ]
 
 [[package]]
@@ -3043,6 +3024,15 @@ dependencies = [
  "crypto-mac 0.11.1",
  "hmac 0.11.0",
  "sha2 0.9.9",
+]
+
+[[package]]
+name = "pbkdf2"
+version = "0.11.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "83a0692ec44e4cf1ef28ca317f14f8f07da2d95ec3fa01f86e4467b725e60917"
+dependencies = [
+ "digest 0.10.3",
 ]
 
 [[package]]
@@ -3542,12 +3532,12 @@ dependencies = [
 
 [[package]]
 name = "rfc6979"
-version = "0.1.0"
+version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "96ef608575f6392792f9ecf7890c00086591d29a83910939d430753f7c050525"
+checksum = "88c86280f057430a52f4861551b092a01b419b8eacefc7c995eacb9dc132fe32"
 dependencies = [
  "crypto-bigint",
- "hmac 0.11.0",
+ "hmac 0.12.1",
  "zeroize",
 ]
 
@@ -3577,14 +3567,12 @@ dependencies = [
 ]
 
 [[package]]
-name = "ripemd160"
-version = "0.9.1"
+name = "ripemd"
+version = "0.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2eca4ecc81b7f313189bf73ce724400a07da2a6dac19588b03c8bd76a2dcc251"
+checksum = "1facec54cb5e0dc08553501fa740091086d0259ad0067e0d4103448e4cb22ed3"
 dependencies = [
- "block-buffer 0.9.0",
- "digest 0.9.0",
- "opaque-debug",
+ "digest 0.10.3",
 ]
 
 [[package]]
@@ -3671,10 +3659,11 @@ checksum = "d29ab0c6d3fc0ee92fe66e2d99f700eab17a8d57d1c1d3b748380fb20baa78cd"
 
 [[package]]
 name = "sec1"
-version = "0.2.1"
+version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "08da66b8b0965a5555b6bd6639e68ccba85e1e2506f5fbb089e93f8a04e1a2d1"
+checksum = "3be24c1842290c45df0a7bf069e0c268a747ad05a192f2fd7dcfdbc1cba40928"
 dependencies = [
+ "base16ct",
  "der",
  "generic-array",
  "subtle",
@@ -3935,14 +3924,12 @@ dependencies = [
 
 [[package]]
 name = "sha3"
-version = "0.9.1"
+version = "0.10.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f81199417d4e5de3f04b1e871023acea7389672c4135918f05aa9cbf2f2fa809"
+checksum = "881bf8156c87b6301fc5ca6b27f11eeb2761224c7081e69b409d5a1951a70c86"
 dependencies = [
- "block-buffer 0.9.0",
- "digest 0.9.0",
+ "digest 0.10.3",
  "keccak",
- "opaque-debug",
 ]
 
 [[package]]
@@ -3975,11 +3962,11 @@ dependencies = [
 
 [[package]]
 name = "signature"
-version = "1.4.0"
+version = "1.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "02658e48d89f2bec991f9a78e69cfa4c316f8d6a6c4ec12fae1aeb263d486788"
+checksum = "f054c6c1a6e95179d6f23ed974060dcefb2d9388bb7256900badad682c499de4"
 dependencies = [
- "digest 0.9.0",
+ "digest 0.10.3",
  "rand_core 0.6.3",
 ]
 
@@ -5306,45 +5293,7 @@ dependencies = [
 [[package]]
 name = "workspace-hack"
 version = "0.1.0"
-source = "git+https://github.com/manta-network/manta-rs?tag=v0.5.3#c90a4cd6105510b73646ed3029a24f9aa5b6594b"
-dependencies = [
- "aes-gcm 0.9.4",
- "anyhow",
- "bitflags",
- "blake3",
- "block-buffer 0.9.0",
- "cc",
- "crypto-common",
- "digest 0.10.3",
- "digest 0.9.0",
- "futures",
- "futures-channel",
- "futures-core",
- "futures-io",
- "futures-sink",
- "futures-task",
- "futures-util",
- "generic-array",
- "getrandom 0.2.7",
- "indexmap",
- "log",
- "memchr",
- "num-traits",
- "pbkdf2",
- "ppv-lite86",
- "rand 0.8.5",
- "rand_chacha 0.3.1",
- "rand_core 0.6.3",
- "serde",
- "serde_json",
- "sha2 0.9.9",
- "standback",
- "subtle",
- "syn",
- "url",
- "web-sys",
- "zeroize",
-]
+source = "git+https://github.com/manta-network/manta-rs?tag=v0.5.4#aef233ce1b57c265b70b7fca6d951556eb97c715"
 
 [[package]]
 name = "wry"

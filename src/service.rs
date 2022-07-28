@@ -39,7 +39,7 @@ use manta_pay::{
         HierarchicalKeyDerivationFunction, Signer, SignerParameters, SignerState, UtxoAccumulator,
     },
 };
-use manta_util::{from_variant_impl, serde::Serialize};
+use manta_util::{from_variant, serde::Serialize};
 use parking_lot::Mutex;
 use std::{
     io,
@@ -95,10 +95,10 @@ pub enum Error {
     AuthorizationError,
 }
 
-from_variant_impl!(Error, AddrParseError, AddrParseError);
-from_variant_impl!(Error, JoinError, JoinError);
-from_variant_impl!(Error, SaveError, SaveError<File>);
-from_variant_impl!(Error, Io, io::Error);
+from_variant!(Error, AddrParseError, AddrParseError);
+from_variant!(Error, JoinError, JoinError);
+from_variant!(Error, SaveError, SaveError<File>);
+from_variant!(Error, Io, io::Error);
 
 impl From<Error> for tide::Error {
     #[inline]
