@@ -2,7 +2,9 @@
 
 `manta-signer` is manta's native client that **turbo charges** zero-knowledge-proof generation.
 
-<img width="655" src="https://user-images.githubusercontent.com/720571/142786609-ce7455e1-dbe7-4a6d-8a78-4aa22984a3d7.png">
+<p align="center">
+    <img width="655" src="./mac-installation.png">
+</p>
 
 **Disclaimer: `manta-signer` is experimental software, use it at your own risk.**
 
