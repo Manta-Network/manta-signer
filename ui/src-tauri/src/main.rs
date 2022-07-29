@@ -26,19 +26,21 @@
 
 extern crate alloc;
 
-use alloc::sync::Arc;
 use core::time::Duration;
 use manta_signer::{
     config::{Config, Setup},
-    secret::{Authorizer, Password, PasswordFuture, Secret, SecretString, UnitFuture},
+    secret::{
+        password_channel, Authorizer, Password, PasswordFuture, PasswordReceiver, PasswordSender,
+        Secret, UnitFuture,
+    },
     serde::Serialize,
-    service,
+    service::Server,
+    storage::Store,
     tokio::time::sleep,
 };
 use tauri::{
-    async_runtime::{channel, spawn, Mutex, Receiver, Sender},
-    CustomMenuItem, Manager, RunEvent, State, SystemTray, SystemTrayEvent, SystemTrayMenu, Window,
-    WindowEvent,
+    async_runtime::spawn, CustomMenuItem, Manager, RunEvent, Runtime, State, SystemTray,
+    SystemTrayEvent, SystemTrayMenu, Window, WindowEvent,
 };
 
 /// User
@@ -47,23 +49,19 @@ pub struct User {
     window: Window,
 
     /// Password Receiver
-    password: Receiver<Password>,
-
-    /// Password Retry Sender
-    retry: Sender<bool>,
+    password_receiver: PasswordReceiver,
 
     /// Waiting Flag
     waiting: bool,
 }
 
 impl User {
-    /// Builds a new [`User`] from `window`, `password`, and `retry`.
+    /// Builds a new [`User`] from `window` and `password_receiver`.
     #[inline]
-    pub fn new(window: Window, password: Receiver<Password>, retry: Sender<bool>) -> Self {
+    pub fn new(window: Window, password_receiver: PasswordReceiver) -> Self {
         Self {
             window,
-            password,
-            retry,
+            password_receiver,
             waiting: false,
         }
     }
@@ -74,16 +72,9 @@ impl User {
     where
         T: Serialize,
     {
-        self.window.emit(kind, message).unwrap()
-    }
-
-    /// Sends a the `retry` message to have the user retry the password.
-    #[inline]
-    async fn should_retry(&mut self, retry: bool) {
-        self.retry
-            .send(retry)
-            .await
-            .expect("Failed to send retry message.");
+        self.window
+            .emit(kind, message)
+            .expect("Unable to emit message to the window.")
     }
 
     /// Requests password from user, sending a retry message if the previous password did not match
@@ -91,13 +82,9 @@ impl User {
     #[inline]
     async fn request_password(&mut self) -> Password {
         if self.waiting {
-            self.should_retry(true).await;
+            self.password_receiver.should_retry(true).await;
         }
-        let password = self
-            .password
-            .recv()
-            .await
-            .expect("Failed to receive retry message.");
+        let password = self.password_receiver.password().await;
         self.waiting = password.is_known();
         password
     }
@@ -106,7 +93,7 @@ impl User {
     #[inline]
     async fn validate_password(&mut self) {
         self.waiting = false;
-        self.should_retry(false).await;
+        self.password_receiver.should_retry(false).await;
     }
 }
 
@@ -143,70 +130,11 @@ impl Authorizer for User {
     }
 }
 
-/// Password Storage Channel
-struct PasswordStoreChannel {
-    /// Password Sender
-    password: Sender<Password>,
+/// Password Store
+pub type PasswordStore = Store<PasswordSender>;
 
-    /// Retry Receiver
-    retry: Receiver<bool>,
-}
-
-/// Password Storage Type
-type PasswordStoreType = Arc<Mutex<Option<PasswordStoreChannel>>>;
-
-/// Password Storage Handle
-pub struct PasswordStoreHandle(PasswordStoreType);
-
-impl PasswordStoreHandle {
-    /// Constructs the opposite end of `self` for the password storage handle.
-    #[inline]
-    pub async fn into_channel(self) -> (Receiver<Password>, Sender<bool>) {
-        let (password, receiver) = channel(1);
-        let (sender, retry) = channel(1);
-        *self.0.lock().await = Some(PasswordStoreChannel { password, retry });
-        (receiver, sender)
-    }
-}
-
-/// Password Storage
-#[derive(Default)]
-pub struct PasswordStore(PasswordStoreType);
-
-impl PasswordStore {
-    /// Returns a handle for setting up a [`PasswordStore`].
-    #[inline]
-    pub fn handle(&self) -> PasswordStoreHandle {
-        PasswordStoreHandle(self.0.clone())
-    }
-
-    /// Loads the password store with `password`, returning `true` if the password was correct.
-    #[inline]
-    pub async fn load(&self, password: SecretString) -> bool {
-        if let Some(store) = &mut *self.0.lock().await {
-            let _ = store.password.send(Password::from_known(password)).await;
-            store.retry.recv().await.unwrap()
-        } else {
-            false
-        }
-    }
-
-    /// Loads the password with `password`, not requesting a retry.
-    #[inline]
-    pub async fn load_exact(&self, password: SecretString) {
-        if let Some(store) = &mut *self.0.lock().await {
-            let _ = store.password.send(Password::from_known(password)).await;
-        }
-    }
-
-    /// Clears the password from the store.
-    #[inline]
-    pub async fn clear(&self) {
-        if let Some(store) = &mut *self.0.lock().await {
-            let _ = store.password.send(Password::from_unknown()).await;
-        }
-    }
-}
+/// Server Store
+pub type ServerStore = Store<Server<User>>;
 
 /// Sends the current `password` into storage from the UI.
 #[tauri::command]
@@ -214,14 +142,37 @@ async fn send_password(
     password_store: State<'_, PasswordStore>,
     password: String,
 ) -> Result<bool, ()> {
-    Ok(password_store.load(Secret::new(password)).await)
+    if let Some(store) = &mut *password_store.lock().await {
+        Ok(store.load(Secret::new(password)).await)
+    } else {
+        Ok(false)
+    }
 }
 
 /// Stops the server from prompting for the password.
 #[tauri::command]
 async fn stop_password_prompt(password_store: State<'_, PasswordStore>) -> Result<(), ()> {
-    password_store.clear().await;
+    if let Some(store) = &mut *password_store.lock().await {
+        store.clear().await;
+    }
     Ok(())
+}
+
+/// Returns the window with the given `label` from `app`.
+///
+/// # Panics
+///
+/// This function panics if the window with the given `label` was unreachable.
+#[inline]
+pub fn window<R, M>(app: &M, label: &str) -> Window<R>
+where
+    R: Runtime,
+    M: Manager<R>,
+{
+    match app.get_window(label) {
+        Some(window) => window,
+        _ => panic!("Unable to get {:?} window handler.", label),
+    }
 }
 
 /// Runs the main Tauri application.
@@ -240,21 +191,27 @@ fn main() {
         .on_system_tray_event(move |app, event| {
             if let SystemTrayEvent::MenuItemClick { id, .. } = event {
                 match id.as_str() {
-                    "about" => app.get_window("about").unwrap().show().unwrap(),
+                    "about" => window(app, "about").show().expect("Unable to show window."),
                     "exit" => app.exit(0),
                     _ => {}
                 }
             }
         })
         .manage(PasswordStore::default())
-        .manage(config)
+        .manage(ServerStore::default())
         .setup(|app| {
-            let window = app.get_window("main").unwrap();
-            let config = app.state::<Config>().inner().clone();
-            let password_store = app.state::<PasswordStore>().handle();
+            let window = window(app, "main");
+            let password_store = app.state::<PasswordStore>().inner().clone();
+            let server_store = app.state::<ServerStore>().inner().clone();
             spawn(async move {
-                let (password, retry) = password_store.into_channel().await;
-                service::start(config, User::new(window, password, retry))
+                let (password_sender, password_receiver) = password_channel();
+                password_store.set(password_sender).await;
+                let server = Server::build(config, User::new(window, password_receiver))
+                    .await
+                    .expect("Unable to build manta-signer server.");
+                server_store.set(server.clone()).await;
+                server
+                    .start()
                     .await
                     .expect("Unable to build manta-signer service.");
             });
@@ -271,7 +228,7 @@ fn main() {
     app.set_activation_policy(tauri::ActivationPolicy::Accessory);
 
     app.run(|app, event| match event {
-        RunEvent::Ready => app.get_window("about").unwrap().hide().unwrap(),
+        RunEvent::Ready => window(app, "about").hide().expect("Unable to hind window."),
         RunEvent::WindowEvent {
             label,
             event: WindowEvent::CloseRequested { api, .. },
@@ -279,7 +236,7 @@ fn main() {
         } => {
             api.prevent_close();
             match label.as_str() {
-                "about" => app.get_window(&label).unwrap().hide().unwrap(),
+                "about" => window(app, "about").hide().expect("Unable to hide window."),
                 "main" => app.exit(0),
                 _ => unreachable!("There are no other windows."),
             }

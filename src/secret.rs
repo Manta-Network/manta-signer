@@ -22,6 +22,7 @@ use crate::config::Setup;
 use futures::future::BoxFuture;
 use manta_util::serde::Serialize;
 use password_hash::{PasswordHashString, SaltString};
+use tokio::sync::mpsc::{channel, Receiver, Sender};
 
 pub use password_hash::{Error as PasswordHashError, PasswordHasher, PasswordVerifier};
 pub use secrecy::{ExposeSecret, Secret, SecretString};
@@ -95,9 +96,9 @@ pub trait Authorizer: 'static + Send {
     /// # Implementation Note
     ///
     /// For custom service implementations, this method should be called before any service is run.
-    /// The [`service::start`] function already calls this method internally.
+    /// The [`Server::start`] function already calls this method internally.
     ///
-    /// [`service::start`]: crate::service::start
+    /// [`Server::start`]: crate::service::Server::start
     #[inline]
     fn setup<'s>(&'s mut self, setup: &'s Setup) -> UnitFuture<'s> {
         let _ = setup;
@@ -197,4 +198,89 @@ where
             .as_bytes()
             .to_owned()
     }
+}
+
+/// Password Sender
+pub struct PasswordSender {
+    /// Password Sender
+    pub password: Sender<Password>,
+
+    /// Retry Receiver
+    pub retry: Receiver<bool>,
+}
+
+impl PasswordSender {
+    /// Builds a new [`PasswordSender`] from `password` and `retry`.
+    #[inline]
+    pub fn new(password: Sender<Password>, retry: Receiver<bool>) -> Self {
+        Self { password, retry }
+    }
+
+    /// Loads the password with `password` waiting for a retry message.
+    #[inline]
+    pub async fn load(&mut self, password: SecretString) -> bool {
+        self.load_exact(password).await;
+        self.retry
+            .recv()
+            .await
+            .expect("Failed to receive retry message.")
+    }
+
+    /// Loads the password with `password` without requesting a retry message.
+    #[inline]
+    pub async fn load_exact(&mut self, password: SecretString) {
+        let _ = self.password.send(Password::from_known(password)).await;
+    }
+
+    /// Clears the currently stored password.
+    #[inline]
+    pub async fn clear(&self) {
+        let _ = self.password.send(Password::from_unknown()).await;
+    }
+}
+
+/// Password Receiver
+pub struct PasswordReceiver {
+    /// Password Receiver
+    pub password: Receiver<Password>,
+
+    /// Retry Sender
+    pub retry: Sender<bool>,
+}
+
+impl PasswordReceiver {
+    /// Builds a new [`PasswordReceiver`] from `password` and `retry`.
+    #[inline]
+    pub fn new(password: Receiver<Password>, retry: Sender<bool>) -> Self {
+        Self { password, retry }
+    }
+
+    /// Sends the message `retry` across the retry channel.
+    #[inline]
+    pub async fn should_retry(&mut self, retry: bool) {
+        self.retry
+            .send(retry)
+            .await
+            .expect("Failed to send retry message.");
+    }
+
+    /// Loads the password from the password channel.
+    #[inline]
+    pub async fn password(&mut self) -> Password {
+        self.password
+            .recv()
+            .await
+            .expect("Failed to receive password message.")
+    }
+}
+
+/// Generates a new password-sending channel.
+#[inline]
+pub fn password_channel() -> (PasswordSender, PasswordReceiver) {
+    let (password_sender, password_receiver) = channel(1);
+    let (retry_sender, retry_receiver) = channel(1);
+    (
+        PasswordSender::new(password_sender, retry_receiver),
+        PasswordReceiver::new(password_receiver, retry_sender),
+    )
 }
