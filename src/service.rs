@@ -18,10 +18,15 @@
 
 use crate::{
     config::{Config, Setup},
+    http,
     log::{info, trace, warn},
     secret::{Argon2, Authorizer, ExposeSecret, PasswordHash, SecretString},
 };
-use core::{future::Future, time::Duration};
+use alloc::sync::Arc;
+use core::{
+    fmt::{self, Display},
+    time::Duration,
+};
 use http_types::headers::HeaderValue;
 use manta_accounting::{
     fs::{cocoon::File, File as _, SaveError},
@@ -29,36 +34,34 @@ use manta_accounting::{
     transfer::canonical::TransferShape,
 };
 use manta_pay::{
-    config::{receiving_key_to_base58, ReceivingKey},
     key::{Mnemonic, TestnetKeySecret},
-    signer::{
-        base::{
-            HierarchicalKeyDerivationFunction, Signer, SignerParameters, SignerState,
-            UtxoAccumulator,
-        },
-        ReceivingKeyRequest, SignError, SignRequest, SignResponse, SyncError, SyncRequest,
-        SyncResponse,
+    signer::base::{
+        HierarchicalKeyDerivationFunction, Signer, SignerParameters, SignerState, UtxoAccumulator,
     },
 };
-use manta_util::{
-    from_variant_impl,
-    serde::{de::DeserializeOwned, Serialize},
-};
+use manta_util::{from_variant, serde::Serialize};
 use parking_lot::Mutex;
 use std::{
     io,
     net::{AddrParseError, SocketAddr},
     path::Path,
-    sync::Arc,
 };
 use tide::{
     security::{CorsMiddleware, Origin},
-    Body, Request, Response, StatusCode,
+    StatusCode,
 };
 use tokio::{
     fs,
     sync::Mutex as AsyncMutex,
     task::{self, JoinError},
+};
+
+pub use manta_pay::{
+    config::{receiving_key_to_base58, ReceivingKey},
+    signer::{
+        ReceivingKeyRequest, SignError, SignRequest, SignResponse, SyncError, SyncRequest,
+        SyncResponse,
+    },
 };
 
 /// Password Retry Interval
@@ -92,10 +95,10 @@ pub enum Error {
     AuthorizationError,
 }
 
-from_variant_impl!(Error, AddrParseError, AddrParseError);
-from_variant_impl!(Error, JoinError, JoinError);
-from_variant_impl!(Error, SaveError, SaveError<File>);
-from_variant_impl!(Error, Io, io::Error);
+from_variant!(Error, AddrParseError, AddrParseError);
+from_variant!(Error, JoinError, JoinError);
+from_variant!(Error, SaveError, SaveError<File>);
+from_variant!(Error, Io, io::Error);
 
 impl From<Error> for tide::Error {
     #[inline]
@@ -108,6 +111,20 @@ impl From<Error> for tide::Error {
                 StatusCode::InternalServerError,
                 "unable to complete request",
             ),
+        }
+    }
+}
+
+impl Display for Error {
+    #[inline]
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            Self::AddrParseError(err) => write!(f, "Address Parse Error: {}", err),
+            Self::JoinError(err) => write!(f, "Join Error: {}", err),
+            Self::ParameterLoadingError => write!(f, "Parameter Loading Error"),
+            Self::SaveError(err) => write!(f, "Save Error: {}", err),
+            Self::Io(err) => write!(f, "I/O Error: {}", err),
+            Self::AuthorizationError => write!(f, "Authorization Error"),
         }
     }
 }
@@ -168,7 +185,7 @@ struct State {
 /// Signer Server
 #[derive(derivative::Derivative)]
 #[derivative(Clone(bound = ""))]
-struct Server<A>
+pub struct Server<A>
 where
     A: Authorizer,
 {
@@ -185,7 +202,7 @@ where
 {
     /// Builds a new [`Server`] from `config` and `authorizer`.
     #[inline]
-    async fn build(config: Config, mut authorizer: A) -> Result<Self> {
+    pub async fn build(config: Config, mut authorizer: A) -> Result<Self> {
         info!("building signer server")?;
         info!("loading latest parameters from Manta Parameters")?;
         let data_path = config.data_directory().to_owned();
@@ -230,6 +247,31 @@ where
                 authorizer,
             })),
         })
+    }
+
+    /// Starts the signer server with `config` and `authorizer`.
+    #[inline]
+    pub async fn start(self) -> Result<()> {
+        let config = self.state.lock().config.clone();
+        info!("performing service setup with {:#?}", config)?;
+        let socket_address = config.service_url.parse::<SocketAddr>()?;
+        let cors = CorsMiddleware::new()
+            .allow_methods("GET, POST".parse::<HeaderValue>().unwrap())
+            .allow_origin(match &config.origin_url {
+                Some(origin_url) => Origin::from(origin_url.as_str()),
+                _ => Origin::from("*"),
+            })
+            .allow_credentials(false);
+        let mut api = tide::Server::with_state(self);
+        api.with(cors);
+        api.at("/version")
+            .get(|_| http::into_body(Server::<A>::version));
+        http::register_post(&mut api, "/sync", Server::sync);
+        http::register_post(&mut api, "/sign", Server::sign);
+        http::register_post(&mut api, "/receivingKeys", Server::receiving_keys);
+        info!("serving signer API at {}", socket_address)?;
+        api.listen(socket_address).await?;
+        Ok(())
     }
 
     /// Loads the password from the `authorizer` and compute the password hash.
@@ -287,22 +329,6 @@ where
         }
     }
 
-    /// Executes `f` on the incoming `request`.
-    #[inline]
-    async fn execute<T, R, F, Fut>(
-        mut request: Request<Self>,
-        f: F,
-    ) -> Result<Response, tide::Error>
-    where
-        T: DeserializeOwned,
-        R: Serialize,
-        F: FnOnce(Self, T) -> Fut,
-        Fut: Future<Output = Result<R>>,
-    {
-        let args = request.body_json::<T>().await?;
-        into_body(move || async move { f(request.state().clone(), args).await }).await
-    }
-
     /// Saves the signer state to disk.
     #[inline]
     async fn save(self) -> Result<()> {
@@ -323,14 +349,14 @@ where
 
     /// Returns the [`crate::VERSION`] string to the client.
     #[inline]
-    async fn version() -> Result<&'static str> {
+    pub async fn version() -> Result<&'static str> {
         trace!("[PING] current signer version: {}", crate::VERSION)?;
         Ok(crate::VERSION)
     }
 
     /// Runs the synchronization protocol on the signer.
     #[inline]
-    async fn sync(self, request: SyncRequest) -> Result<Result<SyncResponse, SyncError>> {
+    pub async fn sync(self, request: SyncRequest) -> Result<Result<SyncResponse, SyncError>> {
         info!("[REQUEST] processing `sync`:  {:?}.", request)?;
         let response = self.state.lock().signer.sync(request);
         task::spawn(async {
@@ -344,7 +370,7 @@ where
 
     /// Runs the transaction signing protocol on the signer.
     #[inline]
-    async fn sign(self, request: SignRequest) -> Result<Result<SignResponse, SignError>> {
+    pub async fn sign(self, request: SignRequest) -> Result<Result<SignResponse, SignError>> {
         info!("[REQUEST] processing `sign`: {:?}.", request)?;
         let SignRequest {
             transaction,
@@ -371,7 +397,7 @@ where
 
     /// Runs the receiving key sampling protocol on the signer.
     #[inline]
-    async fn receiving_keys(self, request: ReceivingKeyRequest) -> Result<Vec<ReceivingKey>> {
+    pub async fn receiving_keys(self, request: ReceivingKeyRequest) -> Result<Vec<ReceivingKey>> {
         info!("[REQUEST] processing `receivingKeys`: {:?}", request)?;
         let response = self.state.lock().signer.receiving_keys(request);
         info!(
@@ -380,42 +406,4 @@ where
         )?;
         Ok(response)
     }
-}
-
-/// Generates the JSON body for the output of `f`, returning an HTTP reponse.
-#[inline]
-async fn into_body<R, F, Fut>(f: F) -> Result<Response, tide::Error>
-where
-    R: Serialize,
-    F: FnOnce() -> Fut,
-    Fut: Future<Output = Result<R>>,
-{
-    Ok(Body::from_json(&f().await?)?.into())
-}
-
-/// Starts the signer server with `config` and `authorizer`.
-#[inline]
-pub async fn start<A>(config: Config, authorizer: A) -> Result<()>
-where
-    A: Authorizer,
-{
-    info!("performing service setup with {:#?}", config)?;
-    let socket_address = config.service_url.parse::<SocketAddr>()?;
-    let cors = CorsMiddleware::new()
-        .allow_methods("GET, POST".parse::<HeaderValue>().unwrap())
-        .allow_origin(match &config.origin_url {
-            Some(origin_url) => Origin::from(origin_url.as_str()),
-            _ => Origin::from("*"),
-        })
-        .allow_credentials(false);
-    let mut api = tide::Server::with_state(Server::build(config, authorizer).await?);
-    api.with(cors);
-    api.at("/version").get(|_| into_body(Server::<A>::version));
-    api.at("/sync").post(|r| Server::execute(r, Server::sync));
-    api.at("/sign").post(|r| Server::execute(r, Server::sign));
-    api.at("/receivingKeys")
-        .post(|r| Server::execute(r, Server::receiving_keys));
-    info!("serving signer API at {}", socket_address)?;
-    api.listen(socket_address).await?;
-    Ok(())
 }

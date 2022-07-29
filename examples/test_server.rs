@@ -20,7 +20,7 @@ use manta_crypto::rand::{CryptoRng, OsRng, RngCore, Sample};
 use manta_signer::{
     config::Config,
     secret::{Authorizer, Password, PasswordFuture, SecretString},
-    service::{self, Error},
+    service::{Error, Server},
 };
 
 /// Mock User
@@ -58,5 +58,8 @@ async fn main() -> Result<(), Error> {
     if let Some(url) = std::env::args().nth(1) {
         config.service_url = url;
     }
-    service::start(config, MockUser::new(&mut OsRng)).await
+    Server::build(config, MockUser::new(&mut OsRng))
+        .await?
+        .start()
+        .await
 }

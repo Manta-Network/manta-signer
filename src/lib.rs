@@ -20,11 +20,15 @@
 #![forbid(rustdoc::broken_intra_doc_links)]
 #![forbid(missing_docs)]
 
+extern crate alloc;
+
 pub mod config;
+pub mod http;
 pub mod log;
 pub mod parameters;
 pub mod secret;
 pub mod service;
+pub mod storage;
 
 #[doc(inline)]
 pub use manta_util::serde;
