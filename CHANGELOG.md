@@ -17,7 +17,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### Security
 
-## [0.7.4] - 2022-08-04
+## [0.8.0] - 2022-08-08
 ### Added
 - [\#154](https://github.com/Manta-Network/manta-signer/pull/154) Add storage abstractions and add server storage hook
 
