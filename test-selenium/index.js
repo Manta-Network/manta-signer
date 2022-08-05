@@ -178,83 +178,88 @@ async function init_account(api, alice, accounts, index, initial) {
 
 
 (async () => {
-    await waitReady();
-    const provider = new WsProvider(WS_URL);
-    const api = await ApiPromise.create({ provider });
-    const keyring = new Keyring({type: 'sr25519'});
-    const alice = keyring.addFromUri('//Alice');
-    await api.isReady;
+    try {
+        await waitReady();
+        const provider = new WsProvider(WS_URL);
+        const api = await ApiPromise.create({ provider });
+        const keyring = new Keyring({type: 'sr25519'});
+        const alice = keyring.addFromUri('//Alice');
+        await api.isReady;
 
-    const bob = await CryptoPerson.initialize(BOB, BOB_PORT);
-    const charlie = await CryptoPerson.initialize(CHARLIE, CHARLIE_PORT);
-    const dave = await CryptoPerson.initialize(DAVE, DAVE_PORT);
-    const accounts = [bob, charlie, dave];
+        const bob = await CryptoPerson.initialize(BOB, BOB_PORT);
+        const charlie = await CryptoPerson.initialize(CHARLIE, CHARLIE_PORT);
+        const dave = await CryptoPerson.initialize(DAVE, DAVE_PORT);
+        const accounts = [bob, charlie, dave];
 
-    for (const [symbol, config] of Object.entries(SYMBOL_TO_ASSET_ID)) {
-        if (symbol == "DOL") {
-            continue;
+        for (const [symbol, config] of Object.entries(SYMBOL_TO_ASSET_ID)) {
+            if (symbol == "DOL") {
+                continue;
+            }
+            await register_asset(api, alice, symbol);
         }
-        await register_asset(api, alice, symbol);
-    }
-    console.log("Assets registered... pre-funding accounts now");
-          
-    for (const [index, initial] of sim.initial_accounts.entries()) {
-      await init_account(api, alice, accounts, index, initial);
-    };
+        console.log("Assets registered... pre-funding accounts now");
+            
+        for (const [index, initial] of sim.initial_accounts.entries()) {
+        await init_account(api, alice, accounts, index, initial);
+        };
 
-    for (const {type, source_index, asset, sender_index, receiver_index} of sim.updates) {
-        console.log(`Transaction: ${type}`);
-        if (type == 'Mint') {
-            console.log(`Mint Source ${source_index} asset ${asset}`);
+        for (const {type, source_index, asset, sender_index, receiver_index} of sim.updates) {
+            console.log(`Transaction: ${type}`);
+            if (type == 'Mint') {
+                console.log(`Mint Source ${source_index} asset ${asset}`);
 
-            const acct = accounts[source_index];
-            await acct.public_private_send(acct.private_account, PUBLIC_ASSETS[asset.id], `${asset.value}`, "Success");
-        } else if (type == 'Reclaim') {
-            console.log(`Reclaim asset ${asset} sender_index ${sender_index}`);
+                const acct = accounts[source_index];
+                await acct.public_private_send(acct.private_account, PUBLIC_ASSETS[asset.id], `${asset.value}`, "Success");
+            } else if (type == 'Reclaim') {
+                console.log(`Reclaim asset ${asset} sender_index ${sender_index}`);
 
-            const acct = accounts[sender_index];
-            await acct.private_public_send(acct.public_account, PRIVATE_ASSETS[asset.id], `${asset.value}`, "Success");
-        } else if (type == 'PrivateTransfer') {
-            console.log(`PvtTrans asset ${asset} sender_index ${sender_index} receiver_index ${receiver_index}`);
+                const acct = accounts[sender_index];
+                await acct.private_public_send(acct.public_account, PRIVATE_ASSETS[asset.id], `${asset.value}`, "Success");
+            } else if (type == 'PrivateTransfer') {
+                console.log(`PvtTrans asset ${asset} sender_index ${sender_index} receiver_index ${receiver_index}`);
 
-            const from = accounts[sender_index];
-            const to = accounts[receiver_index];
+                const from = accounts[sender_index];
+                const to = accounts[receiver_index];
 
-            await from.private_private_send(to.private_account, PRIVATE_ASSETS[asset.id], `${asset.value}`, "Success");
-        } else if (type == 'PublicDeposit') {
-            console.log(`PubDeps Source index ${source_index} asset ${asset}`);
-        } else if (type == 'PublicWithdraw') {
-            console.log(`PubWth Source index ${source_index} asset ${asset}`);
-        } else {
-             throw Error(`Unhandled tx type! ${type}`);
-        }
-        console.log("Transaction complete");
-    }
-
-    for (const [index, final_balance] of sim.final_accounts.entries()) {
-        const acct = accounts[index];
-        console.log(`Balances for: ${acct.path}`);
-
-        // Public.
-        for (const [id, amount] of Object.entries(final_balance.public)) {
-            const symbol = PUBLIC_ASSETS[id];
-            const public_balance = await acct.public_balance(symbol);
-            console.log(`${symbol}: should have ${amount}, has ${public_balance}`);
+                await from.private_private_send(to.private_account, PRIVATE_ASSETS[asset.id], `${asset.value}`, "Success");
+            } else if (type == 'PublicDeposit') {
+                console.log(`PubDeps Source index ${source_index} asset ${asset}`);
+            } else if (type == 'PublicWithdraw') {
+                console.log(`PubWth Source index ${source_index} asset ${asset}`);
+            } else {
+                throw Error(`Unhandled tx type! ${type}`);
+            }
+            console.log("Transaction complete");
         }
 
-        // Private.
-        for (const [id, amount] of Object.entries(final_balance.secret)) {
-            const symbol = PRIVATE_ASSETS[id];
-            const private_balance = await acct.private_balance(symbol);
-            console.log(`${symbol}: should have ${amount}, has ${private_balance}`);
-        }
-    }
+        for (const [index, final_balance] of sim.final_accounts.entries()) {
+            const acct = accounts[index];
+            console.log(`Balances for: ${acct.path}`);
 
-    for (const acct of accounts) {
-        await acct.quit();
+            // Public.
+            for (const [id, amount] of Object.entries(final_balance.public)) {
+                const symbol = PUBLIC_ASSETS[id];
+                const public_balance = await acct.public_balance(symbol);
+                console.log(`${symbol}: should have ${amount}, has ${public_balance}`);
+            }
+
+            // Private.
+            for (const [id, amount] of Object.entries(final_balance.secret)) {
+                const symbol = PRIVATE_ASSETS[id];
+                const private_balance = await acct.private_balance(symbol);
+                console.log(`${symbol}: should have ${amount}, has ${private_balance}`);
+            }
+        }
+
+        for (const acct of accounts) {
+            await acct.quit();
+        }
+        
+        process.exit(0);
+    } catch (e) {
+        console.error(e);
+        process.exit(1);
     }
-    
-    process.exit(0);
 })()
 
 

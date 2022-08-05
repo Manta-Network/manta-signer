@@ -16,7 +16,6 @@ function cleanup () {
 
 function wait_for () {
     echo "Waiting to see $2"
-    echo $PWD
     touch $1
     (tail -f $1 &) | sed "/$2/q"
     echo "Good to go!"
@@ -24,18 +23,18 @@ function wait_for () {
 
 trap cleanup SIGINT SIGKILL EXIT
 
-SIGNER_HOME=${SIGNER_HOME:-./manta-signer}
+SIGNER_HOME=${SIGNER_HOME:-../manta-signer}
 PC_LAUNCH_HOME=${PC_LAUNCH_HOME:-./manta-pc-launch}
 FRONTEND_HOME=${FRONTEND_HOME:-./manta-front-end}
 
 cd ${PC_LAUNCH_HOME}
-yarn && yarn start dolphin-local.json &> ../../pc_launch_output &
+yarn && yarn start e2e-local.json &> ../pc_launch_output &
 
-wait_for ../../pc_launch_output 'LAUNCH COMPLETE'
+cd -
+wait_for pc_launch_output 'LAUNCH COMPLETE'
 
 echo "Manta devnet is up!"
 
-cd -
 cd ${FRONTEND_HOME}
 yarn --production=false
 yarn build
@@ -64,6 +63,7 @@ cp out.json ${SIGNER_HOME}/test-selenium
 echo "We live in a simulation:"
 
 cd -
+cargo b --release --features=unsafe-disable-cors --example test_server
 cargo run --release --features=unsafe-disable-cors --example test_server &
 
 target/release/examples/test_server 127.0.0.1:29988 > alice_signer &
@@ -78,8 +78,10 @@ wait_for charlie_signer 'serving signer API'
 echo "Signers are up!"
 # 6. mint some coins
 
+cd test-selenium
 yarn
 
+cd ..
 node test-selenium/index.js
 echo "OK, cleaning up"
 
