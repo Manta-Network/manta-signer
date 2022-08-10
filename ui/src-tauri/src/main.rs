@@ -140,7 +140,7 @@ impl Authorizer for User {
                         .expect("The `connect` command failed to be emitted to the window.");
                 },
                 10000,
-                { panic!() }
+                { panic!("Authorizer setup window event \"connect\" timed out!") }
             );
         })
     }
