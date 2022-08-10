@@ -26,7 +26,8 @@
 
 extern crate alloc;
 
-use core::time::Duration;
+use std::sync::atomic::{AtomicBool, Ordering};
+use std::time::{Duration, Instant};
 use manta_signer::{
     config::{Config, Setup},
     secret::{
@@ -42,6 +43,29 @@ use tauri::{
     async_runtime::spawn, CustomMenuItem, Manager, RunEvent, Runtime, State, SystemTray,
     SystemTrayEvent, SystemTrayMenu, Window, WindowEvent,
 };
+
+static UI_READY: AtomicBool = AtomicBool::new(false);
+
+#[tauri::command]
+fn ui_ready() {
+    UI_READY.store(true, Ordering::Relaxed);
+}
+
+macro_rules! ui_ready {
+    ($body:block, $timeout_d:expr, $failure:block) => {{
+        let time_start = Instant::now();
+        let timeout = Duration::from_millis($timeout_d);
+        loop {
+            if UI_READY.load(Ordering::Relaxed) {
+                $body
+                break;
+            }
+            if time_start.elapsed() >= timeout {
+                $failure
+            }
+        }
+    }};
+}
 
 /// User
 pub struct User {
@@ -107,11 +131,12 @@ impl Authorizer for User {
     fn setup<'s>(&'s mut self, setup: &'s Setup) -> UnitFuture<'s> {
         let window = self.window.clone();
         Box::pin(async move {
-            // NOTE: We have to wait here until the UI listener is registered.
-            sleep(Duration::from_millis(500)).await;
-            window
+            ui_ready!({window
                 .emit("connect", setup)
                 .expect("The `connect` command failed to be emitted to the window.");
+            },
+            10000,
+            {panic!()});
         })
     }
 
@@ -220,6 +245,7 @@ fn main() {
         .invoke_handler(tauri::generate_handler![
             send_password,
             stop_password_prompt,
+            ui_ready,
         ])
         .build(tauri::generate_context!())
         .expect("Error while building UI.");
