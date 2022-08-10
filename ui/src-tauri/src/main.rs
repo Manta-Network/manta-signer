@@ -26,8 +26,6 @@
 
 extern crate alloc;
 
-use std::sync::atomic::{AtomicBool, Ordering};
-use std::time::{Duration, Instant};
 use manta_signer::{
     config::{Config, Setup},
     secret::{
@@ -39,6 +37,8 @@ use manta_signer::{
     storage::Store,
     tokio::time::sleep,
 };
+use std::sync::atomic::{AtomicBool, Ordering};
+use std::time::{Duration, Instant};
 use tauri::{
     async_runtime::spawn, CustomMenuItem, Manager, RunEvent, Runtime, State, SystemTray,
     SystemTrayEvent, SystemTrayMenu, Window, WindowEvent,
@@ -131,12 +131,15 @@ impl Authorizer for User {
     fn setup<'s>(&'s mut self, setup: &'s Setup) -> UnitFuture<'s> {
         let window = self.window.clone();
         Box::pin(async move {
-            ui_ready!({window
-                .emit("connect", setup)
-                .expect("The `connect` command failed to be emitted to the window.");
-            },
-            10000,
-            {panic!()});
+            ui_ready!(
+                {
+                    window
+                        .emit("connect", setup)
+                        .expect("The `connect` command failed to be emitted to the window.");
+                },
+                10000,
+                { panic!() }
+            );
         })
     }
 
