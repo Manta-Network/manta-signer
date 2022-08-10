@@ -44,6 +44,8 @@ use tauri::{
     SystemTrayEvent, SystemTrayMenu, Window, WindowEvent,
 };
 
+// UI_READY set by invoking ui_ready from react front end
+// Atomic so we can modify without unsafe blocks
 static UI_READY: AtomicBool = AtomicBool::new(false);
 
 #[tauri::command]
