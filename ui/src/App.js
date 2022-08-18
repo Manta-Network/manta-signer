@@ -20,17 +20,11 @@ function App() {
   const [recoveryPhrase, setRecoveryPhrase] = useState(null);
   const [authorizationSummary, setAuthorizationSummary] = useState(null);
 
-  // Invoke rust function that the UI is ready to receive events
-  // This is called only once on the first iteration
-  // as it has no dependencies.
-  useEffect(() => {
-    invoke('ui_ready');
-  },[]);
-
   useEffect(() => {
     if (isConnected) return;
     const beginInitialConnectionPhase = async () => {
       await once('connect', (event) => {
+        invoke('ui_connected');
         console.log("[INFO]: Connect Event: ", event);
         let payload = event.payload;
         switch (payload.type) {

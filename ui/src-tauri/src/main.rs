@@ -35,7 +35,6 @@ use manta_signer::{
     serde::Serialize,
     service::Server,
     storage::Store,
-    tokio::time::sleep,
 };
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::time::{Duration, Instant};
@@ -44,24 +43,32 @@ use tauri::{
     SystemTrayEvent, SystemTrayMenu, Window, WindowEvent,
 };
 
-// UI_READY set by invoking ui_ready from react front end
-// Atomic so we can modify without unsafe blocks
-static UI_READY: AtomicBool = AtomicBool::new(false);
+/// UI_CONNECTED keeps track if we are yet connected to the UI
+/// This is a workaround as normally Tauri apps do not care to be synced from the start, but we do
+/// Atomic so we can modify without unsafe blocks and in closures from Tauri listen
+static UI_CONNECTED: AtomicBool = AtomicBool::new(false);
 
+/// Called from the UI after it recieves a 'connect' event
+/// To ensure proper connection you should emit 'connect' continuously
+/// untill UI_CONNECTED is true then stop, this is the only way for now to ensure
+/// they are synced. Tauri is working on a better way
 #[tauri::command]
-fn ui_ready() {
-    UI_READY.store(true, Ordering::Relaxed);
+fn ui_connected() {
+    UI_CONNECTED.store(true, Ordering::Relaxed);
 }
 
-macro_rules! ui_ready {
+/// while with a timeout, best used for emitting events and waiting
+/// either for a response or other events to stop
+/// '$condition' does while true (block resulting in true or false)
+/// '$body' while body
+/// '$timeout' timeout
+/// '$falure' body after if while times out
+macro_rules! while_w_timeout{
     ($body:block, $timeout_d:expr, $failure:block) => {{
         let time_start = Instant::now();
         let timeout = Duration::from_millis($timeout_d);
         loop {
-            if UI_READY.load(Ordering::Relaxed) {
-                $body
-                break;
-            }
+            $body
             if time_start.elapsed() >= timeout {
                 $failure
             }
@@ -133,14 +140,19 @@ impl Authorizer for User {
     fn setup<'s>(&'s mut self, setup: &'s Setup) -> UnitFuture<'s> {
         let window = self.window.clone();
         Box::pin(async move {
-            ui_ready!(
+            while_w_timeout!(
                 {
+                    if UI_CONNECTED.load(Ordering::Relaxed) {
+                        break;
+                    }
                     window
-                        .emit("connect", setup)
-                        .expect("The `connect` command failed to be emitted to the window.");
+                    .emit("connect", setup)
+                    .expect("The `connect` command failed to be emitted to the window.");
                 },
-                10000,
-                { panic!("Authorizer setup window event \"connect\" timed out!") }
+                    5000,
+                {
+                    panic!("Connection attempt timedout!");
+                }
             );
         })
     }
@@ -250,7 +262,7 @@ fn main() {
         .invoke_handler(tauri::generate_handler![
             send_password,
             stop_password_prompt,
-            ui_ready,
+            ui_connected,
         ])
         .build(tauri::generate_context!())
         .expect("Error while building UI.");
