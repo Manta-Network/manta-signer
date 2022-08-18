@@ -57,9 +57,7 @@ fn ui_connected() {
     UI_CONNECTED.store(true, Ordering::Relaxed);
 }
 
-/// while with a timeout, best used for emitting events and waiting
-/// either for a response or other events to stop
-/// '$condition' does while true (block resulting in true or false)
+/// while with a timeout
 /// '$body' while body
 /// '$timeout' timeout
 /// '$falure' body after if while times out
@@ -146,10 +144,10 @@ impl Authorizer for User {
                         break;
                     }
                     window
-                    .emit("connect", setup)
-                    .expect("The `connect` command failed to be emitted to the window.");
+                        .emit("connect", setup)
+                        .expect("The `connect` command failed to be emitted to the window.");
                 },
-                    5000,
+                5000,
                 {
                     panic!("Connection attempt timedout!");
                 }
