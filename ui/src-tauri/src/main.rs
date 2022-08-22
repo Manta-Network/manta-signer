@@ -269,6 +269,9 @@ fn main() {
                 "main" => {
                     if APP_STATE.get_authorising() {
                         window(app, "main").hide().expect("Unable to hide window.");
+                        window(app, "main")
+                            .emit("abort_auth", "Aborting Authorization")
+                            .expect("Failed to abort authorization");
                     } else {
                         app.exit(0);
                     }
