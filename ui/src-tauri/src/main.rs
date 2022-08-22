@@ -43,10 +43,29 @@ use tauri::{
     SystemTrayEvent, SystemTrayMenu, Window, WindowEvent,
 };
 
-/// UI_CONNECTED keeps track if we are yet connected to the UI
-/// This is a workaround as normally Tauri apps do not care to be synced from the start, but we do
-/// Atomic so we can modify without unsafe blocks and in closures from Tauri listen
-static UI_CONNECTED: AtomicBool = AtomicBool::new(false);
+/// App State
+/// Keeps track of flags that we need
+/// for specific behaviors
+struct AppState {
+    /// Authorising currently
+    pub ui_connected: AtomicBool,
+}
+
+impl AppState{
+    pub const fn new() -> Self {
+        AppState {ui_connected: AtomicBool::new(false)}
+    }
+
+    pub fn set_ui_connected(&self, auth: bool) {
+        self.ui_connected.store(auth, Ordering::Relaxed);
+    }
+
+    pub fn get_ui_connected(&self) -> bool {
+        self.ui_connected.load(Ordering::Relaxed)
+    }
+}
+
+static APP_STATE: AppState = AppState::new();
 
 /// Called from the UI after it recieves a 'connect' event
 /// To ensure proper connection you should emit 'connect' continuously
@@ -54,7 +73,7 @@ static UI_CONNECTED: AtomicBool = AtomicBool::new(false);
 /// they are synced. Tauri is working on a better way
 #[tauri::command]
 fn ui_connected() {
-    UI_CONNECTED.store(true, Ordering::Relaxed);
+    APP_STATE.set_ui_connected(true);
 }
 
 /// while with a timeout
@@ -140,7 +159,7 @@ impl Authorizer for User {
         Box::pin(async move {
             while_w_timeout!(
                 {
-                    if UI_CONNECTED.load(Ordering::Relaxed) {
+                    if APP_STATE.get_ui_connected() {
                         break;
                     }
                     window
