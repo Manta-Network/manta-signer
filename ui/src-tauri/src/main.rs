@@ -38,10 +38,35 @@ use manta_signer::{
     storage::Store,
     tokio::time::sleep,
 };
+use std::sync::atomic::{AtomicBool, Ordering};
 use tauri::{
     async_runtime::spawn, CustomMenuItem, Manager, RunEvent, Runtime, State, SystemTray,
     SystemTrayEvent, SystemTrayMenu, Window, WindowEvent,
 };
+
+/// App State
+/// Keeps track of flags that we need
+/// for specific behaviors
+struct AppState {
+    /// Authorising currently
+    pub authorising: AtomicBool,
+}
+
+impl AppState{
+    pub const fn new() -> Self {
+        AppState {authorising: AtomicBool::new(false)}
+    }
+
+    pub fn set_authorising(&self, auth: bool) {
+        self.authorising.store(auth, Ordering::Relaxed);
+    }
+
+    pub fn get_authorising(&self) -> bool {
+        self.authorising.load(Ordering::Relaxed)
+    }
+}
+
+static APP_STATE: AppState = AppState::new();
 
 /// User
 pub struct User {
@@ -120,12 +145,16 @@ impl Authorizer for User {
     where
         T: Serialize,
     {
+        // starting authorization
+        APP_STATE.set_authorising(true);
         self.emit("authorize", prompt);
         Box::pin(async move {})
     }
 
     #[inline]
     fn sleep(&mut self) -> UnitFuture {
+        // stopped authorizing
+        APP_STATE.set_authorising(false);
         Box::pin(async move { self.validate_password().await })
     }
 }
@@ -237,7 +266,13 @@ fn main() {
             api.prevent_close();
             match label.as_str() {
                 "about" => window(app, "about").hide().expect("Unable to hide window."),
-                "main" => app.exit(0),
+                "main" => {
+                    if APP_STATE.get_authorising() {
+                        window(app, "main").hide().expect("Unable to hide window.");
+                    } else {
+                        app.exit(0);
+                    }
+                },
                 _ => unreachable!("There are no other windows."),
             }
         }
