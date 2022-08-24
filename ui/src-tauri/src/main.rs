@@ -53,6 +53,9 @@ use tauri::{
 pub struct AppState {
     /// UI is Connected
     pub ui_connected: AtomicBool,
+
+    /// Currently Authorising
+    pub authorizing: AtomicBool,
 }
 
 impl AppState {
@@ -61,6 +64,7 @@ impl AppState {
     pub const fn new() -> Self {
         Self {
             ui_connected: AtomicBool::new(false),
+            authorizing: AtomicBool::new(false),
         }
     }
 
@@ -74,6 +78,18 @@ impl AppState {
     #[inline]
     pub fn set_ui_connected(&self, ui_connected: bool) {
         self.ui_connected.store(ui_connected, Ordering::Relaxed)
+    }
+
+    /// Returns the authorizing status.
+    #[inline]
+    pub fn get_authorizing(&self) -> bool {
+        self.authorizing.load(Ordering::Relaxed)
+    }
+
+    /// Sets the authorizing status.
+    #[inline]
+    pub fn set_authorizing(&self, auth: bool) {
+        self.authorizing.store(auth, Ordering::Relaxed);
     }
 }
 
@@ -186,12 +202,14 @@ impl Authorizer for User {
     where
         T: Serialize,
     {
+        APP_STATE.set_authorizing(true);
         self.emit("authorize", prompt);
         Box::pin(async move {})
     }
 
     #[inline]
     fn sleep(&mut self) -> UnitFuture {
+        APP_STATE.set_authorizing(false);
         Box::pin(async move { self.validate_password().await })
     }
 }
@@ -314,7 +332,16 @@ fn main() {
             api.prevent_close();
             match label.as_str() {
                 "about" => window(app, "about").hide().expect("Unable to hide window."),
-                "main" => app.exit(0),
+                "main" => {
+                    if APP_STATE.get_authorizing() {
+                        window(app, "main").hide().expect("Unable to hide window.");
+                        window(app, "main")
+                            .emit("abort_auth", "Aborting Authorization")
+                            .expect("Failed to abort authorization");
+                    } else {
+                        app.exit(0);
+                    }
+                }
                 _ => unreachable!("There are no other windows."),
             }
         }
