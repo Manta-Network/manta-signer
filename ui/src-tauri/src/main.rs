@@ -53,9 +53,9 @@ use tauri::{
 pub struct AppState {
     /// UI is Connected
     pub ui_connected: AtomicBool,
-    
+
     /// Currently Authorising
-    pub authorising: AtomicBool,
+    pub authorizing: AtomicBool,
 }
 
 impl AppState {
@@ -64,7 +64,7 @@ impl AppState {
     pub const fn new() -> Self {
         Self {
             ui_connected: AtomicBool::new(false),
-            authorising: AtomicBool::new(false),
+            authorizing: AtomicBool::new(false),
         }
     }
 
@@ -79,13 +79,17 @@ impl AppState {
     pub fn set_ui_connected(&self, ui_connected: bool) {
         self.ui_connected.store(ui_connected, Ordering::Relaxed)
     }
-    
-    pub fn set_authorising(&self, auth: bool) {
-        self.authorising.store(auth, Ordering::Relaxed);
+
+    /// Returns the authorizing status.
+    #[inline]
+    pub fn get_authorizing(&self) -> bool {
+        self.authorizing.load(Ordering::Relaxed)
     }
 
-    pub fn get_authorising(&self) -> bool {
-        self.authorising.load(Ordering::Relaxed)
+    /// Sets the authorizing status.
+    #[inline]
+    pub fn set_authorizing(&self, auth: bool) {
+        self.authorizing.store(auth, Ordering::Relaxed);
     }
 }
 
@@ -198,16 +202,14 @@ impl Authorizer for User {
     where
         T: Serialize,
     {
-        // starting authorization
-        APP_STATE.set_authorising(true);
+        APP_STATE.set_authorizing(true);
         self.emit("authorize", prompt);
         Box::pin(async move {})
     }
 
     #[inline]
     fn sleep(&mut self) -> UnitFuture {
-        // stopped authorizing
-        APP_STATE.set_authorising(false);
+        APP_STATE.set_authorizing(false);
         Box::pin(async move { self.validate_password().await })
     }
 }
@@ -331,7 +333,7 @@ fn main() {
             match label.as_str() {
                 "about" => window(app, "about").hide().expect("Unable to hide window."),
                 "main" => {
-                    if APP_STATE.get_authorising() {
+                    if APP_STATE.get_authorizing() {
                         window(app, "main").hide().expect("Unable to hide window.");
                         window(app, "main")
                             .emit("abort_auth", "Aborting Authorization")
@@ -339,7 +341,7 @@ fn main() {
                     } else {
                         app.exit(0);
                     }
-                },
+                }
                 _ => unreachable!("There are no other windows."),
             }
         }
