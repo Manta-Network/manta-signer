@@ -24,6 +24,7 @@ function App() {
     if (isConnected) return;
     const beginInitialConnectionPhase = async () => {
       await once('connect', (event) => {
+        invoke('ui_connected');
         console.log("[INFO]: Connect Event: ", event);
         let payload = event.payload;
         switch (payload.type) {
