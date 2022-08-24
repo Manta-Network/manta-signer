@@ -26,6 +26,10 @@
 
 extern crate alloc;
 
+use core::{
+    sync::atomic::{AtomicBool, Ordering},
+    time::Duration,
+};
 use manta_signer::{
     config::{Config, Setup},
     secret::{
@@ -36,61 +40,61 @@ use manta_signer::{
     service::Server,
     storage::Store,
 };
-use std::sync::atomic::{AtomicBool, Ordering};
-use std::time::{Duration, Instant};
+use std::time::Instant;
 use tauri::{
     async_runtime::spawn, CustomMenuItem, Manager, RunEvent, Runtime, State, SystemTray,
     SystemTrayEvent, SystemTrayMenu, Window, WindowEvent,
 };
 
 /// App State
-/// Keeps track of flags that we need
-/// for specific behaviors
-struct AppState {
-    /// Authorising currently
+///
+/// Keeps track of global state flags that we need for specific behaviors.
+#[derive(Debug)]
+pub struct AppState {
+    /// UI is Connected
     pub ui_connected: AtomicBool,
 }
 
-impl AppState{
+impl AppState {
+    /// Builds a new [`AppState`].
+    #[inline]
     pub const fn new() -> Self {
-        AppState {ui_connected: AtomicBool::new(false)}
+        Self {
+            ui_connected: AtomicBool::new(false),
+        }
     }
 
-    pub fn set_ui_connected(&self, auth: bool) {
-        self.ui_connected.store(auth, Ordering::Relaxed);
-    }
-
+    /// Returns the UI connection status.
+    #[inline]
     pub fn get_ui_connected(&self) -> bool {
         self.ui_connected.load(Ordering::Relaxed)
     }
+
+    /// Sets the UI connection status.
+    #[inline]
+    pub fn set_ui_connected(&self, ui_connected: bool) {
+        self.ui_connected.store(ui_connected, Ordering::Relaxed)
+    }
 }
 
-static APP_STATE: AppState = AppState::new();
+/// Application State
+pub static APP_STATE: AppState = AppState::new();
 
-/// Called from the UI after it recieves a 'connect' event
-/// To ensure proper connection you should emit 'connect' continuously
-/// untill UI_CONNECTED is true then stop, this is the only way for now to ensure
-/// they are synced. Tauri is working on a better way
-#[tauri::command]
-fn ui_connected() {
-    APP_STATE.set_ui_connected(true);
-}
-
-/// while with a timeout
-/// '$body' while body
-/// '$timeout' timeout
-/// '$falure' body after if while times out
-macro_rules! while_w_timeout{
-    ($body:block, $timeout_d:expr, $failure:block) => {{
-        let time_start = Instant::now();
-        let timeout = Duration::from_millis($timeout_d);
-        loop {
-            $body
-            if time_start.elapsed() >= timeout {
-                $failure
-            }
+/// Repeatedly executes `f` until the `timeout` is reached calling `exit` to return from the
+/// function.
+#[inline]
+pub fn while_timeout<F, E, T>(timeout: Duration, mut f: F, exit: E) -> T
+where
+    F: FnMut(),
+    E: FnOnce(Instant, Duration) -> T,
+{
+    let time_start = Instant::now();
+    loop {
+        f();
+        if time_start.elapsed() >= timeout {
+            return exit(time_start, timeout);
         }
-    }};
+    }
 }
 
 /// User
@@ -157,20 +161,23 @@ impl Authorizer for User {
     fn setup<'s>(&'s mut self, setup: &'s Setup) -> UnitFuture<'s> {
         let window = self.window.clone();
         Box::pin(async move {
-            while_w_timeout!(
-                {
+            while_timeout(
+                Duration::from_millis(5000),
+                move || {
                     if APP_STATE.get_ui_connected() {
-                        break;
+                        return;
                     }
                     window
                         .emit("connect", setup)
                         .expect("The `connect` command failed to be emitted to the window.");
                 },
-                5000,
-                {
-                    panic!("Connection attempt timedout!");
-                }
-            );
+                move |time_start, timeout| {
+                    panic!(
+                        "Connection attempt timed-out! Started: {:?} with {:?} timeout.",
+                        time_start, timeout
+                    );
+                },
+            )
         })
     }
 
@@ -194,6 +201,16 @@ pub type PasswordStore = Store<PasswordSender>;
 
 /// Server Store
 pub type ServerStore = Store<Server<User>>;
+
+/// Called from the UI after it recieves a `connect` event.
+///
+/// To ensure proper connection you should emit `connect` continuously until the
+/// [`AppState::ui_connected`] flag is `true` then stop. This is the only way for now to ensure they
+/// are synchronized. Tauri is working on a better way.
+#[tauri::command]
+fn ui_connected() {
+    APP_STATE.set_ui_connected(true);
+}
 
 /// Sends the current `password` into storage from the UI.
 #[tauri::command]
