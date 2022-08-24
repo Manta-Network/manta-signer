@@ -15,6 +15,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### Fixed
 - [\#166](https://github.com/Manta-Network/manta-signer/pull/166) Stop close button[X] on Authorization prompt(Private to Anything) from closing manta-signer
+- [\#164](https://github.com/Manta-Network/manta-signer/pull/164) Adding some communication between UI and backend to ensure sync at connection start
 
 ### Security
 
