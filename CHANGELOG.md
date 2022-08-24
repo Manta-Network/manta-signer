@@ -14,6 +14,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 ### Removed
 
 ### Fixed
+- [\#166](https://github.com/Manta-Network/manta-signer/pull/166) Stop close button[X] on Authorization prompt(Private to Anything) from closing manta-signer
 
 ### Security
 
