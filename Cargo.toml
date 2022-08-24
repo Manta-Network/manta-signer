@@ -13,6 +13,10 @@ keywords = [""]
 description = "Manta Signer"
 publish = false
 
+[workspace]
+resolver = "2"
+members = ["ui/src-tauri"]
+
 [package.metadata.docs.rs]
 # To build locally:
 # RUSTDOCFLAGS="--cfg doc_cfg" cargo +nightly doc --all-features --open
