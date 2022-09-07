@@ -3,16 +3,25 @@ import Authorize from './pages/Authorize';
 import CreateAccount from './pages/CreateAccount';
 import Loading from './pages/Loading';
 import SignIn from './pages/SignIn';
+import SignInOrReset from './pages/SignInOrReset';
+import Reset from "./pages/Reset";
+import CreateOrRecover from './pages/CreateOrRecover';
+import Recover from './pages/Recover';
 import { Container } from 'semantic-ui-react';
 import { appWindow } from '@tauri-apps/api/window';
 import { invoke } from '@tauri-apps/api/tauri';
 import { listen, once } from '@tauri-apps/api/event';
 import { useState, useEffect } from 'react';
 
+
 const LOADING_PAGE = 0;
 const CREATE_ACCOUNT_PAGE = 1;
 const LOGIN_PAGE = 2;
 const AUTHORIZE_PAGE = 3;
+const SIGN_IN_OR_RESET_PAGE = 4;
+const RESET_PAGE = 5;
+const CREATE_OR_RECOVER_PAGE = 6;
+const RECOVER_PAGE = 7;
 
 function App() {
   const [currentPage, setCurrentPage] = useState(LOADING_PAGE);
@@ -29,10 +38,10 @@ function App() {
         switch (payload.type) {
           case 'CreateAccount':
             setRecoveryPhrase(payload.content);
-            setCurrentPage(CREATE_ACCOUNT_PAGE);
+            setCurrentPage(CREATE_OR_RECOVER_PAGE);
             break;
           case 'Login':
-            setCurrentPage(LOGIN_PAGE);
+            setCurrentPage(SIGN_IN_OR_RESET_PAGE);
             break;
           default:
             break;
@@ -75,11 +84,48 @@ function App() {
     listenForTxAuthorizationRequests();
   };
 
+  const startSignIn = async () => {
+    console.log("[INFO]: Start wallet sign in.")
+    setCurrentPage(LOGIN_PAGE);
+  }
+
+  const startReset = async () => {
+    console.log("[INFO]: Start wallet reset process.")
+    setCurrentPage(RESET_PAGE);
+  }
+
+  const startCreate = async () => {
+    console.log("[INFO]: Start wallet creation process.")
+    setCurrentPage(CREATE_ACCOUNT_PAGE);
+  }
+
+  const startRecover = async () => {
+    console.log("[INFO]: Start recovery process.")
+    setCurrentPage(RECOVER_PAGE);
+  }
+
+  const cancelRecover = async () => {
+    console.log("[INFO]: Cancel recovery process.")
+    setCurrentPage(CREATE_OR_RECOVER_PAGE);
+  }
+
   return (
     <div className="App">
       <Container className="page">
         {currentPage === LOADING_PAGE && (
-          <Loading/>
+          <Loading />
+        )}
+        {currentPage === SIGN_IN_OR_RESET_PAGE && (
+          <SignInOrReset startSignIn={startSignIn} startReset={startReset} />
+        )}
+        {currentPage === CREATE_OR_RECOVER_PAGE && (
+          <CreateOrRecover startCreate={startCreate} startRecover={startRecover} />
+        )}
+        {currentPage === RESET_PAGE && (
+          <Reset/>
+        )}
+        {currentPage === RECOVER_PAGE && (
+          <Recover cancelRecover={cancelRecover}/>
         )}
         {currentPage === CREATE_ACCOUNT_PAGE && (
           <CreateAccount
