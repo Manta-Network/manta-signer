@@ -6,6 +6,7 @@
         "@tauri-apps/api": "1.0.1",
         "@tauri-apps/cli": "1.0.2",
         "@tauri-apps/tauricon": "1.0.2",
+        "bip39": "^3.0.4",
         "react": "^17.0.2",
         "react-dom": "^17.0.2",
         "semantic-ui-css": "^2.4.1",

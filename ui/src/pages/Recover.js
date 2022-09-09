@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react"
 import { Button, Input, Label, Header } from 'semantic-ui-react';
 
+const bip39 = require('bip39');
+
 const Recover = (props) => {
 
   const [mnemonics, setMnemonics] = useState('');
   const [validity, setValidity] = useState(false);
-  const VALID_LENGTH = 24;
 
   const onClickStartRecover = async () => {
 
@@ -16,11 +17,11 @@ const Recover = (props) => {
   }
 
   const validateMnemonics = () => {
-    let mnemonics_length = mnemonics.split(" ").length;
+    let is_valid = bip39.validateMnemonic(mnemonics);
 
-    if (mnemonics_length == VALID_LENGTH && (!validity)) {
+    if (is_valid && (!validity)) {
       setValidity(true);
-    } else if ((mnemonics_length != VALID_LENGTH) && (validity)) {
+    } else if (!is_valid && (validity)) {
       setValidity(false);
     }
   }
