@@ -10,6 +10,12 @@
   border-radius: 15px;
 }
 
+.button.ui.danger {
+  background-color: red;
+  color:white;
+  border-radius: 15px;
+}
+
 .secondary-anchor {
   color:black
 }

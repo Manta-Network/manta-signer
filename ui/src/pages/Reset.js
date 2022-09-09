@@ -13,7 +13,7 @@ const Reset = (props) => {
   }
 
   return (<>
-    <Button color='red' onClick={onClickReset}>DELETE ACCOUNT</Button>
+    <Button className="button ui danger" onClick={onClickReset}>DELETE ACCOUNT</Button>
     <div>
       <Button className="button ui two" onClick={onClickCancel}>Cancel</Button>
     </div>
