@@ -23,6 +23,7 @@ const SIGN_IN_OR_RESET_PAGE = 4;
 const RESET_PAGE = 5;
 const CREATE_OR_RECOVER_PAGE = 6;
 const RECOVER_PAGE = 7;
+const NEW_PASSWORD_PAGE = 8;
 
 function App() {
   const [currentPage, setCurrentPage] = useState(LOADING_PAGE);
@@ -137,6 +138,9 @@ function App() {
           <Reset resetAccount={resetAccount} cancelReset={cancelReset}/>
         )}
         {currentPage === RECOVER_PAGE && (
+          <Recover cancelRecover={cancelRecover}/>
+        )}
+        {currentPage === NEW_PASSWORD_PAGE && (
           <Recover cancelRecover={cancelRecover}/>
         )}
         {currentPage === CREATE_ACCOUNT_PAGE && (
