@@ -11,6 +11,7 @@ import { Container } from 'semantic-ui-react';
 import { appWindow } from '@tauri-apps/api/window';
 import { invoke } from '@tauri-apps/api/tauri';
 import { listen, once } from '@tauri-apps/api/event';
+import { exit } from '@tauri-apps/api/process';
 import { useState, useEffect } from 'react';
 
 
@@ -77,6 +78,12 @@ function App() {
     await invoke('stop_password_prompt');
   };
 
+  const resetAccount = async () => {
+    console.log("[INFO]: Resetting Account.");
+    await invoke('reset_account');
+    await exit();
+  }
+
   const endInitialConnectionPhase = async () => {
     console.log("[INFO]: End Initial Connection Phase");
     setIsConnected(true);
@@ -122,7 +129,7 @@ function App() {
           <CreateOrRecover startCreate={startCreate} startRecover={startRecover} />
         )}
         {currentPage === RESET_PAGE && (
-          <Reset/>
+          <Reset resetAccount={resetAccount}/>
         )}
         {currentPage === RECOVER_PAGE && (
           <Recover cancelRecover={cancelRecover}/>

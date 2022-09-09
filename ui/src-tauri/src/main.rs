@@ -37,6 +37,7 @@ use manta_signer::{
     service::Server,
     storage::Store,
     tokio::time::sleep,
+    tokio::fs::{remove_file}
 };
 use tauri::{
     async_runtime::spawn, CustomMenuItem, Manager, RunEvent, Runtime, State, SystemTray,
@@ -158,6 +159,22 @@ async fn stop_password_prompt(password_store: State<'_, PasswordStore>) -> Resul
     Ok(())
 }
 
+/// Deletes the associated file storing the users credentials
+#[tauri::command]
+async fn reset_account(
+) -> Result<(),()> {
+
+    // get file path from config, then check if file exists at path, if so delete it
+
+    let config =
+    Config::try_default().expect("Unable to generate the default server configuration.");
+    let path = config.data_path;
+    
+    remove_file(path).await.expect("File removal failed.");
+
+    Ok(())
+}
+
 /// Returns the window with the given `label` from `app`.
 ///
 /// # Panics
@@ -220,6 +237,7 @@ fn main() {
         .invoke_handler(tauri::generate_handler![
             send_password,
             stop_password_prompt,
+            reset_account
         ])
         .build(tauri::generate_context!())
         .expect("Error while building UI.");
