@@ -162,6 +162,7 @@ async fn stop_password_prompt(password_store: State<'_, PasswordStore>) -> Resul
 /// Deletes the associated file storing the users credentials
 #[tauri::command]
 async fn reset_account(
+    server_store: State<'_,ServerStore>
 ) -> Result<(),()> {
 
     // get file path from config, then check if file exists at path, if so delete it

@@ -1,6 +1,7 @@
 import { useState } from "react"
 import { Button, Input, Label, Header } from 'semantic-ui-react';
-
+import mainLogo from "../icons/Square150x150Logo.png"
+import "../fonts/ibm-plex/css/styles.css";
 const CreateOrRecover = (props) => {
 
   const onClickStartCreate = async () => {
@@ -12,13 +13,14 @@ const CreateOrRecover = (props) => {
   }
 
   return (<>
-    <Header>
-      Create or recover wallet
-    </Header>
+    <div>
+      <img draggable="false" unselectable="on" dragstart="false" src={mainLogo} />
+    </div>
 
-    <Button primary className="button" onClick={onClickStartCreate}>Create New Wallet</Button>
-    <Button secondary className="button" onClick={onClickStartRecover}>Recover Wallet</Button>
-
+    <div>
+      <Button className="button ui first" onClick={onClickStartCreate}>Create New Wallet</Button>
+    </div>
+    <a className="secondary-anchor"><h4 onClick={onClickStartRecover}>Recover Wallet</h4></a>
   </>);
 }
 

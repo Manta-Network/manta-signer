@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Button, Input, Header, Form, Label } from 'semantic-ui-react';
-
+import mainLogo from "../icons/Square150x150Logo.png"
+import "../fonts/ibm-plex/css/styles.css";
 const SignIn = ({ sendPassword, endInitialConnectionPhase }) => {
   const [password, setPassword] = useState('');
   const [passwordInvalid, setPasswordInvalid] = useState(null);
@@ -27,7 +28,9 @@ const SignIn = ({ sendPassword, endInitialConnectionPhase }) => {
 
   return (
     <div>
-      <Header> Sign in </Header>
+      <div>
+        <img draggable="false" unselectable="on" dragstart="false" src={mainLogo} />
+      </div>
       <Form.Field>
         <Input
           type="password"
@@ -37,9 +40,9 @@ const SignIn = ({ sendPassword, endInitialConnectionPhase }) => {
           error={passwordInvalid}
         />
       </Form.Field>
-      { badPasswordTried && <><Label basic color='red' pointing>Wrong Password</Label><br/></> }
-      <Button className="button" onClick={onClickSignIn}>
-        Sign in
+      {badPasswordTried && <><Label basic color='red' pointing>Wrong Password</Label><br /></>}
+      <Button className="button ui first" onClick={onClickSignIn}>
+        Log In
       </Button>
     </div>
   );

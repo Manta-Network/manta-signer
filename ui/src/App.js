@@ -116,6 +116,11 @@ function App() {
     setCurrentPage(CREATE_OR_RECOVER_PAGE);
   }
 
+  const cancelReset = async () => {
+    console.log("[INFO]: Cancel reset process.")
+    setCurrentPage(SIGN_IN_OR_RESET_PAGE);
+  }
+
   return (
     <div className="App">
       <Container className="page">
@@ -129,7 +134,7 @@ function App() {
           <CreateOrRecover startCreate={startCreate} startRecover={startRecover} />
         )}
         {currentPage === RESET_PAGE && (
-          <Reset resetAccount={resetAccount}/>
+          <Reset resetAccount={resetAccount} cancelReset={cancelReset}/>
         )}
         {currentPage === RECOVER_PAGE && (
           <Recover cancelRecover={cancelRecover}/>

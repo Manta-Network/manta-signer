@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react"
-import { Button, Input, Label, Header } from 'semantic-ui-react';
+import { Button, Input, Label, TextArea, Form } from 'semantic-ui-react';
+import "../fonts/ibm-plex/css/styles.css";
 
 const bip39 = require('bip39');
 
@@ -31,24 +32,24 @@ const Recover = (props) => {
   }, [mnemonics])
 
   return (<>
-    <Header>
-      Input Mnemonics.
-    </Header>
 
-    <Input
-      placeholder="Input Mnemonics"
-      onChange={(e) => {
-        setMnemonics(e.target.value);
-      }}
-    />
+    <Form>
+      <TextArea
+        onChange={(e) => {
+          setMnemonics(e.target.value);
+        }}
+        placeholder="Input Mnemonics"
+        className="textarea ui scaled"
+      />
+    </Form>
 
     <div>
       {validity ?
-        <Button primary className="button" onClick={onClickStartRecover}>Start</Button> :
-        <Button disabled primary className="button" onClick={onClickStartRecover}>Start</Button>}
-      <Button secondary className="button" onClick={onClickCancel}>Cancel</Button>
+        <Button primary className="button ui first" onClick={onClickStartRecover}>Start</Button> :
+        <Button disabled primary className="button ui first" onClick={onClickStartRecover}>Start</Button>}
+      <Button className="button ui two" onClick={onClickCancel}>Cancel</Button>
     </div>
-    {(!validity && mnemonics.length != 0) ? <Label color='red'>Invalid Seed Phrase!</Label> : null}
+    {(!validity && mnemonics.length != 0) ? <Label color='red'>Invalid Seed Phrase!</Label> : <br></br>}
   </>);
 }
 

@@ -200,6 +200,13 @@ impl<A> Server<A>
 where
     A: Authorizer,
 {
+    /* 
+    /// Resets the server that has already exisiting config and authorizer
+    #[inline]
+    pub async fn reset(&self) -> Result<()> {
+    }
+    */
+
     /// Builds a new [`Server`] from `config` and `authorizer`.
     #[inline]
     pub async fn build(config: Config, mut authorizer: A) -> Result<Self> {
