@@ -78,17 +78,17 @@ impl Config {
             .expect("The data path file must always have a parent.")
     }
 
-    /// Builds the [`Setup`] for the given configuration depending on the filesystem resources.
+    ///
     #[inline]
-    pub async fn setup(&self) -> io::Result<Setup> {
+    pub async fn does_data_exist(&self) -> io::Result<bool> {
         fs::create_dir_all(self.data_directory()).await?;
         match fs::metadata(&self.data_path).await {
-            Ok(metadata) if metadata.is_file() => Ok(Setup::Login),
+            Ok(metadata) if metadata.is_file() => Ok(true),
             Ok(metadata) => Err(io::Error::new(
                 io::ErrorKind::Other,
                 format!("Invalid file format: {:?}.", metadata),
             )),
-            _ => Ok(Setup::CreateAccount(Mnemonic::sample(&mut OsRng))),
+            _ => Ok(false),
         }
     }
 }

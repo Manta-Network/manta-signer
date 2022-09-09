@@ -26,6 +26,7 @@ function App() {
       await once('connect', (event) => {
         invoke('ui_connected');
         console.log("[INFO]: Connect Event: ", event);
+        /* TODO: payload is now just a boolean whether the file exists or not
         let payload = event.payload;
         switch (payload.type) {
           case 'CreateAccount':
@@ -38,6 +39,7 @@ function App() {
           default:
             break;
         }
+        */
       });
     };
     beginInitialConnectionPhase();

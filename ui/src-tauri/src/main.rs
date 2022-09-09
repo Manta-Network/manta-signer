@@ -34,7 +34,7 @@ use manta_signer::{
     config::{Config, Setup},
     secret::{
         password_channel, Authorizer, Password, PasswordFuture, PasswordReceiver, PasswordSender,
-        Secret, UnitFuture,
+        Secret, SetupFuture, UnitFuture,
     },
     serde::Serialize,
     service::Server,
@@ -119,7 +119,10 @@ pub struct User {
     window: Window,
 
     /// Password Receiver
-    password_receiver: PasswordReceiver,
+    password_receiver: RetryReceiver<Password>,
+
+    /// Password Receiver
+    password_receiver: RetryReceiver<Mnemonic>,
 
     /// Waiting Flag
     waiting: bool,
@@ -174,9 +177,10 @@ impl Authorizer for User {
     }
 
     #[inline]
-    fn setup<'s>(&'s mut self, setup: &'s Setup) -> UnitFuture<'s> {
+    fn setup<'s>(&'s mut self, data_exists: bool) -> SetupFuture<'s> {
         let window = self.window.clone();
         Box::pin(async move {
+            /*
             while_timeout(
                 Duration::from_millis(5000),
                 move || {
@@ -184,7 +188,7 @@ impl Authorizer for User {
                         return;
                     }
                     window
-                        .emit("connect", setup)
+                        .emit("connect", data_exists)
                         .expect("The `connect` command failed to be emitted to the window.");
                 },
                 move |time_start, timeout| {
@@ -194,6 +198,16 @@ impl Authorizer for User {
                     );
                 },
             )
+            */
+
+            1. emit the connect message
+            2. branch on `data_exists` flag
+            3. if true then wait on the mnemonic channel
+                4. once we receive the mnemonic we set the `Setup` value to it
+                5. if bad mnemonic send retry and jump to 3
+            5. otherwise we just return immediately with the `Login` value
+
+
         })
     }
 
@@ -214,6 +228,9 @@ impl Authorizer for User {
     }
 }
 
+/// Mnemonic Store
+pub type MnemonicStore = Store<MnemonicSender>;
+
 /// Password Store
 pub type PasswordStore = Store<PasswordSender>;
 
@@ -228,6 +245,19 @@ pub type ServerStore = Store<Server<User>>;
 #[tauri::command]
 fn ui_connected() {
     APP_STATE.set_ui_connected(true);
+}
+
+/// Sends the current `mnemonic` into storage from the UI.
+#[tauri::command]
+async fn send_mnemonic(
+    mnemonic_store: State<'_, MnemonicStore>,
+    mnemonic: String,
+) -> Result<bool, ()> {
+    if let Some(store) = &mut *mnemonic_store.lock().await {
+        Ok(store.load(Secret::new(mnemonic)).await)
+    } else {
+        Ok(false)
+    }
 }
 
 /// Sends the current `password` into storage from the UI.
@@ -250,6 +280,19 @@ async fn stop_password_prompt(password_store: State<'_, PasswordStore>) -> Resul
         store.clear().await;
     }
     Ok(())
+}
+
+///
+#[tauri::command]
+async fn restart(
+    server: State<'_, ServerStore>,
+    abort_handle: State<'_, ServerAbortHandleStore>
+) -> Result<(), ()> {
+    abort_handle.lock().await.abort();
+    let handle = spawn(async {
+        server.lock().start().await
+    });
+    abort_handle.set(handle);
 }
 
 /// Returns the window with the given `label` from `app`.
@@ -297,7 +340,11 @@ fn main() {
             let window = window(app, "main");
             let password_store = app.state::<PasswordStore>().inner().clone();
             let server_store = app.state::<ServerStore>().inner().clone();
-            spawn(async move {
+
+            let server_abort_handle_store =
+                app.state::<ServerAbortHandleStore>().inner().clone();
+
+            let handle = spawn(async move {
                 let (password_sender, password_receiver) = password_channel();
                 password_store.set(password_sender).await;
                 let server = Server::build(config, User::new(window, password_receiver))
@@ -309,6 +356,9 @@ fn main() {
                     .await
                     .expect("Unable to build manta-signer service.");
             });
+
+            server_abort_handle_store.set(handle);
+
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![

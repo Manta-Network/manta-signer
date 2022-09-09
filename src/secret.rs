@@ -72,13 +72,19 @@ impl Default for Password {
 
 /// Unit Future
 ///
-/// This `type` is used by the [`setup`], [`wake`], and [`sleep`] methods of [`Authorizer`].
+/// This `type` is used by the [`wake`] and [`sleep`] methods of [`Authorizer`].
 /// See their documentation for more.
 ///
-/// [`setup`]: Authorizer::setup
 /// [`wake`]: Authorizer::wake
 /// [`sleep`]: Authorizer::sleep
 pub type UnitFuture<'t> = BoxFuture<'t, ()>;
+
+/// Setup Future
+///
+/// This `type` is used by the [`setup`] method of [`Authorizer`]. See its documentation for more.
+///
+/// [`setup`]: Authorizer::setup
+pub type SetupFuture<'t> = BoxFuture<'t, Setup>;
 
 /// Password Future
 ///
@@ -91,7 +97,7 @@ pub trait Authorizer: 'static + Send {
     /// Retrieves the password from the authorizer.
     fn password(&mut self) -> PasswordFuture;
 
-    /// Runs some setup for the authorizer using the `setup`.
+    /// Runs some setup for the authorizer depending on whether the data file exists or not.
     ///
     /// # Implementation Note
     ///
@@ -99,11 +105,7 @@ pub trait Authorizer: 'static + Send {
     /// The [`Server::start`] function already calls this method internally.
     ///
     /// [`Server::start`]: crate::service::Server::start
-    #[inline]
-    fn setup<'s>(&'s mut self, setup: &'s Setup) -> UnitFuture<'s> {
-        let _ = setup;
-        Box::pin(async move {})
-    }
+    fn setup<'s>(&'s mut self, data_exists: bool) -> SetupFuture<'s>;
 
     /// Prompts the authorizer with `prompt` so that they can be notified that their password is
     /// requested.
@@ -283,4 +285,53 @@ pub fn password_channel() -> (PasswordSender, PasswordReceiver) {
         PasswordSender::new(password_sender, retry_receiver),
         PasswordReceiver::new(password_receiver, retry_sender),
     )
+}
+
+/// Retry Receiver
+pub struct RetryReceiver<T> {
+    /// Receiver
+    pub receiver: Receiver<T>,
+
+    /// Retry Sender
+    pub retry: Sender<bool>,
+}
+
+impl<T> RetryReceiver<T> {
+    /// Builds a new [`RetryReceiver`] from `receiver` and `retry`.
+    #[inline]
+    pub fn new(receiver: Receiver<T>, retry: Sender<bool>) -> Self {
+        Self { receiver, retry }
+    }
+
+    /// Sends the message `retry` across the retry channel.
+    #[inline]
+    pub async fn should_retry(&mut self, retry: bool) {
+        self.retry
+            .send(retry)
+            .await
+            .expect("Failed to send retry message.");
+    }
+
+    /// Loads the message from the channel.
+    #[inline]
+    pub async fn recv(&mut self) -> T {
+        self.receiver
+            .recv()
+            .await
+            .expect("Failed to receive message.")
+    }
+}
+
+/// Generates a new password-sending channel.
+#[inline]
+pub fn retry_channel<T>() -> (RetrySender<T>, RetryReceiver<T>) {
+    /*
+    let (password_sender, password_receiver) = channel(1);
+    let (retry_sender, retry_receiver) = channel(1);
+    (
+        PasswordSender::new(password_sender, retry_receiver),
+        PasswordReceiver::new(password_receiver, retry_sender),
+    )
+    */
+    todo!()
 }
