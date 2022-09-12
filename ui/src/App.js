@@ -23,7 +23,6 @@ const SIGN_IN_OR_RESET_PAGE = 4;
 const RESET_PAGE = 5;
 const CREATE_OR_RECOVER_PAGE = 6;
 const RECOVER_PAGE = 7;
-const NEW_PASSWORD_PAGE = 8;
 
 function App() {
   const [currentPage, setCurrentPage] = useState(LOADING_PAGE);
@@ -69,10 +68,20 @@ function App() {
     });
   };
 
+  const sendCreateOrRecover = async (selection) => {
+    console.log("[INFO]: Send selection to signer server.");
+    return await invoke('create_or_recover', { selection: selection });
+  }
+
   const sendPassword = async (password) => {
     console.log("[INFO]: Send password to signer server.");
     return await invoke('send_password', { password: password });
   };
+
+  const sendMnemonic = async (mnemonic) => {
+    console.log("[INFO]: Send mnemonic to signer server.");
+    return await invoke('send_mnemonic', { mnemonic : mnemonic })
+  }
 
   const stopPasswordPrompt = async () => {
     console.log("[INFO]: Stop password prompt.");
@@ -132,16 +141,13 @@ function App() {
           <SignInOrReset startSignIn={startSignIn} startReset={startReset} />
         )}
         {currentPage === CREATE_OR_RECOVER_PAGE && (
-          <CreateOrRecover startCreate={startCreate} startRecover={startRecover} />
+          <CreateOrRecover sendCreateOrRecover={sendCreateOrRecover} startCreate={startCreate} startRecover={startRecover} />
         )}
         {currentPage === RESET_PAGE && (
           <Reset resetAccount={resetAccount} cancelReset={cancelReset}/>
         )}
         {currentPage === RECOVER_PAGE && (
-          <Recover cancelRecover={cancelRecover}/>
-        )}
-        {currentPage === NEW_PASSWORD_PAGE && (
-          <Recover cancelRecover={cancelRecover}/>
+          <Recover sendPassword={sendPassword} sendMnemonic={sendMnemonic} cancelRecover={cancelRecover}/>
         )}
         {currentPage === CREATE_ACCOUNT_PAGE && (
           <CreateAccount

@@ -31,7 +31,7 @@ use manta_signer::{
     config::{Config, Setup},
     secret::{
         password_channel, Authorizer, Password, PasswordFuture, PasswordReceiver, PasswordSender,
-        Secret, UnitFuture,
+        Secret, UnitFuture, SetupFuture, MnemonicSender, MnemonicReceiver, mnemonic_channel, UserSelection
     },
     serde::Serialize,
     service::Server,
@@ -44,6 +44,9 @@ use tauri::{
     SystemTrayEvent, SystemTrayMenu, Window, WindowEvent,
 };
 
+use manta_crypto::rand::OsRng;
+use manta_pay::key::Mnemonic;
+
 /// User
 pub struct User {
     /// Main Window
@@ -52,6 +55,9 @@ pub struct User {
     /// Password Receiver
     password_receiver: PasswordReceiver,
 
+    /// Mnemonic Receiver
+    mnemonic_receiver: MnemonicReceiver,
+
     /// Waiting Flag
     waiting: bool,
 }
@@ -59,10 +65,11 @@ pub struct User {
 impl User {
     /// Builds a new [`User`] from `window` and `password_receiver`.
     #[inline]
-    pub fn new(window: Window, password_receiver: PasswordReceiver) -> Self {
+    pub fn new(window: Window, password_receiver: PasswordReceiver, mnemonic_receiver: MnemonicReceiver) -> Self {
         Self {
             window,
             password_receiver,
+            mnemonic_receiver,
             waiting: false,
         }
     }
@@ -90,6 +97,22 @@ impl User {
         password
     }
 
+    /// Requests selection from user, either to create account or recover old account.
+    #[inline]
+    async fn request_selection(&mut self) -> UserSelection {
+        let user_selection = self.mnemonic_receiver.selection().await;
+        user_selection
+    }
+
+    /// Requests mnemonic from user
+    #[inline]
+    async fn request_mnemonic(&mut self) -> Mnemonic {
+        let mnemonic = self.mnemonic_receiver.mnemonic().await;
+        mnemonic
+    }
+
+    // @TODO : create validate_mnemonic functions and retry functionality for mnemonic fetching
+
     /// Sends validation message when password was correctly matched.
     #[inline]
     async fn validate_password(&mut self) {
@@ -116,6 +139,54 @@ impl Authorizer for User {
         })
     }
 
+    
+    #[inline]
+    fn setup<'s>(&'s mut self, data_exists : bool ) -> SetupFuture<'s> {
+        let window = self.window.clone();
+        Box::pin(async move {
+            // NOTE: We have to wait here until the UI listener is registered.
+            sleep(Duration::from_millis(500)).await;
+
+            // creating a new mnemonic in case user will create a new account.
+            let new_mnemonic = Mnemonic::sample(&mut OsRng);
+
+            let payload = if data_exists {
+                Setup::Login
+            } else {
+                // Mnemonic created here 
+                Setup::CreateAccount(new_mnemonic)
+            };
+
+            window
+                .emit("connect", payload.clone())
+                .expect("The `connect` command failed to be emitted to the window.");
+            
+            if data_exists {
+                Setup::Login
+            } else {
+                // We need to wait here until user decides to 1. recover using seed phrase or 2. create new account.
+
+                let user_selection = self.request_selection().await;
+
+                // if user decides to create a new account then we can continue to build the server here.
+                if let UserSelection::Create = user_selection {
+                    println!("User selected to create a new account!");
+                    return payload;
+                }
+
+                // now we have to wait again until we get the user's seed phrase.
+
+                let user_seed_phrase = self.request_mnemonic().await;
+                
+                println!("Seed phrase attempted to be aquired");
+
+                Setup::CreateAccount(user_seed_phrase)
+            }
+
+        })
+    } 
+
+
     #[inline]
     fn wake<T>(&mut self, prompt: &T) -> UnitFuture
     where
@@ -136,6 +207,9 @@ pub type PasswordStore = Store<PasswordSender>;
 
 /// Server Store
 pub type ServerStore = Store<Server<User>>;
+
+/// Mnemonic Store
+pub type MnemonicStore = Store<MnemonicSender>;
 
 /// Sends the current `password` into storage from the UI.
 #[tauri::command]
@@ -171,6 +245,43 @@ async fn reset_account(
     let path = config.data_path;
     
     remove_file(path).await.expect("File removal failed.");
+
+    Ok(())
+}
+
+/// Sends the current `mnemonic` into storage from the UI.
+#[tauri::command]
+async fn send_mnemonic(mnemonic_store: State<'_,MnemonicStore>,mnemonic: String) -> Result<(),()> {
+
+    if let Some(store) = &mut *mnemonic_store.lock().await {
+
+        // @TODO : validate mnemonic here before we send it into the channel.
+        // we need to add retry feature after validation, and change the return type of this function to bool.
+
+        // for now we will just assume that we pass in a valid mnemonic.
+
+        let recovered_mnemonic = Mnemonic::new(mnemonic).expect("Unable to generate recovered Mnemonic.");
+        store.load_exact(recovered_mnemonic).await;
+    }
+    Ok(())
+
+}
+
+
+/// Sets the user's selection of whether to create a new account or recover
+/// using a seed phrase.
+#[tauri::command]
+async fn create_or_recover(mnemonic_store: State<'_, MnemonicStore>, selection:String) -> Result<(),()> {
+
+    let selected_option = if selection == "Create" {
+        UserSelection::Create
+    } else {
+        UserSelection::Recover
+    };
+
+    if let Some(store) = &mut *mnemonic_store.lock().await {
+        store.load_selection(selected_option).await;
+    }
 
     Ok(())
 }
@@ -216,14 +327,18 @@ fn main() {
         })
         .manage(PasswordStore::default())
         .manage(ServerStore::default())
+        .manage(MnemonicStore::default())
         .setup(|app| {
             let window = window(app, "main");
             let password_store = app.state::<PasswordStore>().inner().clone();
             let server_store = app.state::<ServerStore>().inner().clone();
+            let mnemonic_store = app.state::<MnemonicStore>().inner().clone();
             spawn(async move {
                 let (password_sender, password_receiver) = password_channel();
+                let (mnemonic_sender,mnemonic_receiver) = mnemonic_channel();
                 password_store.set(password_sender).await;
-                let server = Server::build(config, User::new(window, password_receiver))
+                mnemonic_store.set(mnemonic_sender).await;
+                let server = Server::build(config, User::new(window, password_receiver, mnemonic_receiver))
                     .await
                     .expect("Unable to build manta-signer server.");
                 server_store.set(server.clone()).await;
@@ -237,7 +352,9 @@ fn main() {
         .invoke_handler(tauri::generate_handler![
             send_password,
             stop_password_prompt,
-            reset_account
+            reset_account,
+            create_or_recover,
+            send_mnemonic
         ])
         .build(tauri::generate_context!())
         .expect("Error while building UI.");

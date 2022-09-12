@@ -17,11 +17,12 @@ const Recover = (props) => {
   const MIN_PASSWORD_LENGTH = 8;
 
   const onClickRecover = async () => {
-
+    await props.sendPassword(newPass);
   }
 
   const onClickNewPass = async () => {
     setShowNewPassPage(true);
+    await props.sendMnemonic(mnemonics);
   }
 
   const onClickCancel = async () => {

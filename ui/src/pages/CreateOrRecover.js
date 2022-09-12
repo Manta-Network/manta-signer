@@ -5,10 +5,12 @@ import "../fonts/ibm-plex/css/styles.css";
 const CreateOrRecover = (props) => {
 
   const onClickStartCreate = async () => {
+    await props.sendCreateOrRecover("Create");
     props.startCreate();
   }
 
   const onClickStartRecover = async () => {
+    await props.sendCreateOrRecover("Recover");
     props.startRecover();
   }
 

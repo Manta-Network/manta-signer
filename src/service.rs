@@ -217,8 +217,8 @@ where
             .await?
             .ok_or(Error::ParameterLoadingError)?;
         info!("setting up configuration")?;
-        let setup = config.setup().await?;
-        authorizer.setup(&setup).await;
+        let data_exists = config.does_data_exist().await?;
+        let setup = authorizer.setup(data_exists).await;
         let (password_hash, signer) = match setup {
             Setup::CreateAccount(mnemonic) => loop {
                 if let Some((password, password_hash)) = Self::load_password(&mut authorizer).await
