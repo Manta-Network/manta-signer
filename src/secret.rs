@@ -112,7 +112,8 @@ pub trait Authorizer: 'static + Send {
     /// Retrieves the password from the authorizer.
     fn password(&mut self) -> PasswordFuture;
 
-    /// Runs some setup for the authorizer using the `setup`.
+    /// Runs some setup for the authorizer using the `data_exists` flag, and depending on whether
+    /// user selects to create a new account or recover an old one.
     ///
     /// # Implementation Note
     ///
@@ -120,16 +121,7 @@ pub trait Authorizer: 'static + Send {
     /// The [`Server::start`] function already calls this method internally.
     ///
     /// [`Server::start`]: crate::service::Server::start
-    #[inline]
-    fn setup<'s>(&'s mut self, setup: &'s Setup) -> UnitFuture<'s> {
-        let _ = setup;
-        Box::pin(async move {})
-    }
-
-    /// Setup function which takes in data_exists bool and returns a setup function depending
-    /// on whether the user clicks create account or recover. If user needs to sign in, then it just
-    /// returns a new login object.
-    fn setup_new<'s>(&'s mut self, data_exists : bool ) -> SetupFuture<'s>;
+    fn setup<'s>(&'s mut self, data_exists : bool ) -> SetupFuture<'s>;
 
 
     /// Prompts the authorizer with `prompt` so that they can be notified that their password is
