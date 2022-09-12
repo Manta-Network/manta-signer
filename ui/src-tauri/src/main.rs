@@ -128,19 +128,6 @@ impl Authorizer for User {
     }
 
     #[inline]
-    fn setup<'s>(&'s mut self, setup: &'s Setup) -> UnitFuture<'s> {
-        let window = self.window.clone();
-        Box::pin(async move {
-            // NOTE: We have to wait here until the UI listener is registered.
-            sleep(Duration::from_millis(500)).await;
-            window
-                .emit("connect", setup)
-                .expect("The `connect` command failed to be emitted to the window.");
-        })
-    }
-
-    
-    #[inline]
     fn setup<'s>(&'s mut self, data_exists : bool ) -> SetupFuture<'s> {
         let window = self.window.clone();
         Box::pin(async move {
