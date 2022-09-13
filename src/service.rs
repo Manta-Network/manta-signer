@@ -23,7 +23,6 @@ use crate::{
     secret::{Argon2, Authorizer, ExposeSecret, PasswordHash, SecretString},
 };
 use alloc::sync::Arc;
-use async_std::task::current;
 use core::{
     fmt::{self, Display},
     time::Duration,

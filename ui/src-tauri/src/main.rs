@@ -261,6 +261,7 @@ async fn create_or_recover(mnemonic_store: State<'_, MnemonicStore>, selection:S
 /// once recovery has started.
 #[tauri::command]
 async fn reset_account(
+    delete: bool,
     app_handle_store: State<'_,AppHandleStore>,
     abort_handle_store: State<'_,AbortHandleStore>,
     password_store: State<'_, PasswordStore>,
@@ -268,8 +269,9 @@ async fn reset_account(
 ) -> Result<(),()> {
 
     let config = Config::try_default().expect("Unable to generate the default server configuration.");
-    remove_file(config.data_path.clone()).await.expect("File removal failed.");
-
+    if delete {
+        remove_file(config.data_path.clone()).await.expect("File removal failed.");
+    }
 
 
     if let Some(handle) = &mut *abort_handle_store.lock().await {

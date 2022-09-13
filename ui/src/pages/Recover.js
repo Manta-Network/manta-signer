@@ -18,6 +18,7 @@ const Recover = (props) => {
 
   const onClickRecover = async () => {
     await props.sendPassword(newPass);
+    props.endInitialConnectionPhase();
     props.hideWindow();
   }
 
@@ -27,7 +28,7 @@ const Recover = (props) => {
   }
 
   const onClickCancel = async () => {
-    props.cancelRecover();
+    props.restartServer();
   }
 
   const validateMnemonics = () => {

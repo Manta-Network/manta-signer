@@ -89,7 +89,13 @@ function App() {
 
   const resetAccount = async () => {
     console.log("[INFO]: Resetting Account.");
-    await invoke('reset_account');
+    await invoke('reset_account',{delete:true});
+    setCurrentPage(CREATE_OR_RECOVER_PAGE);
+  }
+  
+  const restartServer = async () => {
+    console.log("[INFO]: Restarting Server.");
+    await invoke('reset_account',{delete:false});
     setCurrentPage(CREATE_OR_RECOVER_PAGE);
   }
 
@@ -151,7 +157,7 @@ function App() {
           <Reset endConnection={endConnection} resetAccount={resetAccount} cancelReset={cancelReset}/>
         )}
         {currentPage === RECOVER_PAGE && (
-          <Recover hideWindow={hideWindow} sendPassword={sendPassword} sendMnemonic={sendMnemonic} cancelRecover={cancelRecover}/>
+          <Recover endInitialConnectionPhase={endInitialConnectionPhase} restartServer={restartServer} hideWindow={hideWindow} sendPassword={sendPassword} sendMnemonic={sendMnemonic} cancelRecover={cancelRecover}/>
         )}
         {currentPage === CREATE_ACCOUNT_PAGE && (
           <CreateAccount
