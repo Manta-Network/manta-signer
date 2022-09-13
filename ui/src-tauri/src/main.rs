@@ -40,8 +40,8 @@ use manta_signer::{
     tokio::fs::{remove_file}
 };
 use tauri::{
-    async_runtime::spawn, CustomMenuItem, Manager, RunEvent, Runtime, State, SystemTray,
-    SystemTrayEvent, SystemTrayMenu, Window, WindowEvent,
+    async_runtime::{spawn, JoinHandle}, CustomMenuItem, Manager, RunEvent, Runtime, State, SystemTray,
+    SystemTrayEvent, SystemTrayMenu, Window, WindowEvent, AppHandle,
 };
 
 use manta_crypto::rand::OsRng;
@@ -111,8 +111,6 @@ impl User {
         mnemonic
     }
 
-    // @TODO : create validate_mnemonic functions and retry functionality for mnemonic fetching
-
     /// Sends validation message when password was correctly matched.
     #[inline]
     async fn validate_password(&mut self) {
@@ -157,7 +155,6 @@ impl Authorizer for User {
 
                 // if user decides to create a new account then we can continue to build the server here.
                 if let UserSelection::Create = user_selection {
-                    println!("User selected to create a new account!");
                     return payload;
                 }
 
@@ -165,8 +162,6 @@ impl Authorizer for User {
 
                 let user_seed_phrase = self.request_mnemonic().await;
                 
-                println!("Seed phrase attempted to be aquired");
-
                 Setup::CreateAccount(user_seed_phrase)
             }
 
@@ -198,6 +193,12 @@ pub type ServerStore = Store<Server<User>>;
 /// Mnemonic Store
 pub type MnemonicStore = Store<MnemonicSender>;
 
+/// App Handle Store
+pub type AppHandleStore = Store<AppHandle>;
+
+/// Abort Handle Store
+pub type AbortHandleStore = Store<JoinHandle<()>>;
+
 /// Sends the current `password` into storage from the UI.
 #[tauri::command]
 async fn send_password(
@@ -220,32 +221,14 @@ async fn stop_password_prompt(password_store: State<'_, PasswordStore>) -> Resul
     Ok(())
 }
 
-/// Deletes the associated file storing the users credentials
-#[tauri::command]
-async fn reset_account(
-) -> Result<(),()> {
-
-    // get file path from config, then check if file exists at path, if so delete it
-
-    let config =
-    Config::try_default().expect("Unable to generate the default server configuration.");
-    let path = config.data_path;
-    
-    remove_file(path).await.expect("File removal failed.");
-
-    Ok(())
-}
 
 /// Sends the current `mnemonic` into storage from the UI.
 #[tauri::command]
 async fn send_mnemonic(mnemonic_store: State<'_,MnemonicStore>,mnemonic: String) -> Result<(),()> {
 
+    // Mnemonic is assumed to be valid because it is validated by front end bip39 library.
+
     if let Some(store) = &mut *mnemonic_store.lock().await {
-
-        // @TODO : validate mnemonic here before we send it into the channel.
-        // we need to add retry feature after validation, and change the return type of this function to bool.
-
-        // for now we will just assume that we pass in a valid mnemonic.
 
         let recovered_mnemonic = Mnemonic::new(mnemonic).expect("Unable to generate recovered Mnemonic.");
         store.load_exact(recovered_mnemonic).await;
@@ -272,6 +255,53 @@ async fn create_or_recover(mnemonic_store: State<'_, MnemonicStore>, selection:S
 
     Ok(())
 }
+
+
+/// Restarts the server in case of account reset. This feature can be used to implement the cancel button
+/// once recovery has started.
+#[tauri::command]
+async fn reset_account(
+    app_handle_store: State<'_,AppHandleStore>,
+    abort_handle_store: State<'_,AbortHandleStore>,
+    password_store: State<'_, PasswordStore>,
+    mnemonic_store: State<'_, MnemonicStore>
+) -> Result<(),()> {
+
+    let config = Config::try_default().expect("Unable to generate the default server configuration.");
+    remove_file(config.data_path.clone()).await.expect("File removal failed.");
+
+
+
+    if let Some(handle) = &mut *abort_handle_store.lock().await {
+        handle.abort();
+    }
+
+    let (password_sender, password_receiver) = password_channel();
+    let (mnemonic_sender,mnemonic_receiver) = mnemonic_channel();
+    password_store.set(password_sender).await;
+    mnemonic_store.set(mnemonic_sender).await;
+
+    let app_handle_guard = app_handle_store.lock().await;
+
+    let app_handle = app_handle_guard.as_ref().unwrap();
+
+    let new_window = app_handle.get_window("main").expect("Unable to open option");
+
+    let new_handle = spawn(async move {
+
+        let new_server = Server::build(config, User::new(new_window, password_receiver, mnemonic_receiver))
+        .await
+        .expect("Unable to build manta-signer");
+
+        new_server.start().await.expect("Unable to start manta-signer");
+    });
+
+
+    abort_handle_store.set(new_handle).await;
+
+    Ok(())
+}
+
 
 /// Returns the window with the given `label` from `app`.
 ///
@@ -315,17 +345,25 @@ fn main() {
         .manage(PasswordStore::default())
         .manage(ServerStore::default())
         .manage(MnemonicStore::default())
+        .manage(AppHandleStore::default())
+        .manage(AbortHandleStore::default())
         .setup(|app| {
             let window = window(app, "main");
             let password_store = app.state::<PasswordStore>().inner().clone();
             let server_store = app.state::<ServerStore>().inner().clone();
             let mnemonic_store = app.state::<MnemonicStore>().inner().clone();
-            spawn(async move {
+            let app_handle_store = app.state::<AppHandleStore>().inner().clone();
+            let abort_handle = app.state::<AbortHandleStore>().inner().clone();
+            let app_handle = app.handle().clone();
+
+            let join_handle = spawn(async move {
                 let (password_sender, password_receiver) = password_channel();
                 let (mnemonic_sender,mnemonic_receiver) = mnemonic_channel();
+                let user = User::new(window, password_receiver, mnemonic_receiver);
                 password_store.set(password_sender).await;
                 mnemonic_store.set(mnemonic_sender).await;
-                let server = Server::build(config, User::new(window, password_receiver, mnemonic_receiver))
+                app_handle_store.set(app_handle).await;
+                let server = Server::build(config, user)
                     .await
                     .expect("Unable to build manta-signer server.");
                 server_store.set(server.clone()).await;
@@ -334,14 +372,19 @@ fn main() {
                     .await
                     .expect("Unable to build manta-signer service.");
             });
+
+            spawn(async move {
+                abort_handle.set(join_handle).await;
+            });
+
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
             send_password,
             stop_password_prompt,
-            reset_account,
             create_or_recover,
-            send_mnemonic
+            send_mnemonic,
+            reset_account
         ])
         .build(tauri::generate_context!())
         .expect("Error while building UI.");
@@ -350,7 +393,7 @@ fn main() {
     app.set_activation_policy(tauri::ActivationPolicy::Accessory);
 
     app.run(|app, event| match event {
-        RunEvent::Ready => window(app, "about").hide().expect("Unable to hind window."),
+        RunEvent::Ready => window(app, "about").hide().expect("Unable to hide window."),
         RunEvent::WindowEvent {
             label,
             event: WindowEvent::CloseRequested { api, .. },

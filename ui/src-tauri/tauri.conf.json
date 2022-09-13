@@ -58,9 +58,6 @@
             "window": {
                 "hide": true,
                 "show": true
-            },
-            "process": {
-                "exit": true
             }
         },
         "windows": [

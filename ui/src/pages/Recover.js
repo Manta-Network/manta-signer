@@ -18,6 +18,7 @@ const Recover = (props) => {
 
   const onClickRecover = async () => {
     await props.sendPassword(newPass);
+    props.hideWindow();
   }
 
   const onClickNewPass = async () => {

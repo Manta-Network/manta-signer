@@ -10,8 +10,7 @@ import Recover from './pages/Recover';
 import { Container } from 'semantic-ui-react';
 import { appWindow } from '@tauri-apps/api/window';
 import { invoke } from '@tauri-apps/api/tauri';
-import { listen, once } from '@tauri-apps/api/event';
-import { exit } from '@tauri-apps/api/process';
+import { listen } from '@tauri-apps/api/event';
 import { useState, useEffect } from 'react';
 
 
@@ -33,7 +32,7 @@ function App() {
   useEffect(() => {
     if (isConnected) return;
     const beginInitialConnectionPhase = async () => {
-      await once('connect', (event) => {
+      await listen('connect', (event) => {
         console.log("[INFO]: Connect Event: ", event);
         let payload = event.payload;
         switch (payload.type) {
@@ -91,7 +90,7 @@ function App() {
   const resetAccount = async () => {
     console.log("[INFO]: Resetting Account.");
     await invoke('reset_account');
-    await exit();
+    setCurrentPage(CREATE_OR_RECOVER_PAGE);
   }
 
   const endInitialConnectionPhase = async () => {
@@ -100,6 +99,11 @@ function App() {
     hideWindow();
     listenForTxAuthorizationRequests();
   };
+
+  const endConnection = async () => {
+    console.log("[INFO]: Ending connection.");
+    setIsConnected(false);
+  }
 
   const startSignIn = async () => {
     console.log("[INFO]: Start wallet sign in.")
@@ -144,10 +148,10 @@ function App() {
           <CreateOrRecover sendCreateOrRecover={sendCreateOrRecover} startCreate={startCreate} startRecover={startRecover} />
         )}
         {currentPage === RESET_PAGE && (
-          <Reset resetAccount={resetAccount} cancelReset={cancelReset}/>
+          <Reset endConnection={endConnection} resetAccount={resetAccount} cancelReset={cancelReset}/>
         )}
         {currentPage === RECOVER_PAGE && (
-          <Recover sendPassword={sendPassword} sendMnemonic={sendMnemonic} cancelRecover={cancelRecover}/>
+          <Recover hideWindow={hideWindow} sendPassword={sendPassword} sendMnemonic={sendMnemonic} cancelRecover={cancelRecover}/>
         )}
         {currentPage === CREATE_ACCOUNT_PAGE && (
           <CreateAccount

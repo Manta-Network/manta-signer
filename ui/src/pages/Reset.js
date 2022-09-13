@@ -1,10 +1,10 @@
-import { useState } from "react"
-import { Button, Input, Label, Header } from 'semantic-ui-react';
+import { Button} from 'semantic-ui-react';
 import "../fonts/ibm-plex/css/styles.css";
 
 const Reset = (props) => {
 
   const onClickReset = async () => {
+    await props.endConnection();
     props.resetAccount();
   }
 

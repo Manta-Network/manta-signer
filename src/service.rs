@@ -23,6 +23,7 @@ use crate::{
     secret::{Argon2, Authorizer, ExposeSecret, PasswordHash, SecretString},
 };
 use alloc::sync::Arc;
+use async_std::task::current;
 use core::{
     fmt::{self, Display},
     time::Duration,
@@ -63,6 +64,7 @@ pub use manta_pay::{
         SyncResponse,
     },
 };
+
 
 /// Password Retry Interval
 pub const PASSWORD_RETRY_INTERVAL: Duration = Duration::from_millis(1000);
@@ -200,12 +202,6 @@ impl<A> Server<A>
 where
     A: Authorizer,
 {
-    /* 
-    /// Resets the server that has already exisiting config and authorizer
-    #[inline]
-    pub async fn reset(&self) -> Result<()> {
-    }
-    */
 
     /// Builds a new [`Server`] from `config` and `authorizer`.
     #[inline]
