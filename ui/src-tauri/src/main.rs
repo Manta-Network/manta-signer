@@ -96,23 +96,24 @@ impl AppState {
 /// Application State
 pub static APP_STATE: AppState = AppState::new();
 
-/// Repeatedly executes `f` until the `timeout` is reached calling `exit` to return from the
-/// function.
-#[inline]
-pub fn while_timeout<F, E, T>(timeout: Duration, mut f: F, exit: E) -> T
-where
-    F: FnMut(),
-    E: FnOnce(Instant, Duration) -> T,
-{
-    let time_start = Instant::now();
-    loop {
-        f();
-        if time_start.elapsed() >= timeout {
-            return exit(time_start, timeout);
+/// while with a timeout, best used for emitting events
+/// either for a response or other events to stop
+/// '$condition' does while true (block resulting in true or false)
+/// '$body' while body
+/// '$timeout' timeout
+/// '$falure' body after if while times out
+macro_rules! while_w_timeout{
+    ($body:block, $timeout_d:expr, $failure:block) => {{
+        let time_start = Instant::now();
+        let timeout = Duration::from_millis($timeout_d);
+        loop {
+            $body
+            if time_start.elapsed() >= timeout {
+                $failure
+            }
         }
-    }
+    }};
 }
-
 /// User
 pub struct User {
     /// Main Window
@@ -177,23 +178,20 @@ impl Authorizer for User {
     fn setup<'s>(&'s mut self, setup: &'s Setup) -> UnitFuture<'s> {
         let window = self.window.clone();
         Box::pin(async move {
-            while_timeout(
-                Duration::from_millis(5000),
-                move || {
+            while_w_timeout!(
+                {
                     if APP_STATE.get_ui_connected() {
-                        return;
+                        break;
                     }
                     window
-                        .emit("connect", setup)
-                        .expect("The `connect` command failed to be emitted to the window.");
+                    .emit("connect", setup)
+                    .expect("The `connect` command failed to be emitted to the window.");
                 },
-                move |time_start, timeout| {
-                    panic!(
-                        "Connection attempt timed-out! Started: {:?} with {:?} timeout.",
-                        time_start, timeout
-                    );
-                },
-            )
+                    5000,
+                {
+                    panic!("Connection attempt timedout!");
+                }
+            );
         })
     }
 
@@ -348,3 +346,4 @@ fn main() {
         _ => (),
     })
 }
+
