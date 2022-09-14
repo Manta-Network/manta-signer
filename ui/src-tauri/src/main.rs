@@ -215,7 +215,7 @@ async fn send_password(
             let app_handle = app_handle_guard.as_ref().unwrap();
             let tray_handle = app_handle.tray_handle();
 
-            // if result == true, it means user has successfully signed in, so we can now all the tray
+            // if result == true, it means user has successfully signed in, so we can now add the tray
             // menu item to reset account. Which will emit "reset_account" to the front-end, and will trigger
             // the load of the delete page. 
             
@@ -308,10 +308,11 @@ async fn reset_account(
 ) -> Result<(),()> {
 
     let config = Config::try_default().expect("Unable to generate the default server configuration.");
+
+    // delete flag is present in case user wants to restart the setup process, but there is no storage file to delete.
     if delete {
         remove_file(config.data_path.clone()).await.expect("File removal failed.");
     }
-
 
     if let Some(handle) = &mut *abort_handle_store.lock().await {
         handle.abort();
