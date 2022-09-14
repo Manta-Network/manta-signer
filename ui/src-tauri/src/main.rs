@@ -181,13 +181,13 @@ impl Authorizer for User {
             while_w_timeout!(
                 {
                     if APP_STATE.get_ui_connected() {
-                        break;
+                        break
                     }
                     window
-                    .emit("connect", setup)
-                    .expect("The `connect` command failed to be emitted to the window.");
+                        .emit("connect", setup)
+                        .expect("The `connect` command failed to be emitted to the window.");
                 },
-                    5000,
+                5000,
                 {
                     panic!("Connection attempt timedout!");
                 }
@@ -346,4 +346,3 @@ fn main() {
         _ => (),
     })
 }
-
