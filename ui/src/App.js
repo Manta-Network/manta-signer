@@ -28,9 +28,15 @@ function App() {
   const [isConnected, setIsConnected] = useState(false);
   const [recoveryPhrase, setRecoveryPhrase] = useState(null);
   const [authorizationSummary, setAuthorizationSummary] = useState(null);
+  const [activeListeners,setActiveListeners] = useState({
+    tx: false,
+    connect: false,
+    reset_tray: false
+  });
 
   useEffect(() => {
     if (isConnected) return;
+    if (activeListeners.connect) return;
     const beginInitialConnectionPhase = async () => {
       await listen('connect', (event) => {
         console.log("[INFO]: Connect Event: ", event);
@@ -49,6 +55,7 @@ function App() {
       });
     };
     beginInitialConnectionPhase();
+    setActiveListeners({...activeListeners, connect:true});
   }, [isConnected]);
 
   const hideWindow = () => {
@@ -67,6 +74,14 @@ function App() {
     });
   };
 
+  const listenForResetTrayRequests = () => {
+    console.log("[INFO]: Setup tray reset listener.");
+    listen('tray_reset_account', (event) => {
+      console.log("[INFO]: Wake: ", event);
+      setCurrentPage(RESET_PAGE);
+    })
+  }
+
   const sendCreateOrRecover = async (selection) => {
     console.log("[INFO]: Send selection to signer server.");
     return await invoke('create_or_recover', { selection: selection });
@@ -79,7 +94,7 @@ function App() {
 
   const sendMnemonic = async (mnemonic) => {
     console.log("[INFO]: Send mnemonic to signer server.");
-    return await invoke('send_mnemonic', { mnemonic : mnemonic })
+    return await invoke('send_mnemonic', { mnemonic: mnemonic })
   }
 
   const stopPasswordPrompt = async () => {
@@ -89,13 +104,13 @@ function App() {
 
   const resetAccount = async () => {
     console.log("[INFO]: Resetting Account.");
-    await invoke('reset_account',{delete:true});
+    await invoke('reset_account', { delete: true });
     setCurrentPage(CREATE_OR_RECOVER_PAGE);
   }
-  
+
   const restartServer = async () => {
     console.log("[INFO]: Restarting Server.");
-    await invoke('reset_account',{delete:false});
+    await invoke('reset_account', { delete: false });
     setCurrentPage(CREATE_OR_RECOVER_PAGE);
   }
 
@@ -103,7 +118,14 @@ function App() {
     console.log("[INFO]: End Initial Connection Phase");
     setIsConnected(true);
     hideWindow();
+    if (activeListeners.tx || activeListeners.reset_tray) return;
     listenForTxAuthorizationRequests();
+    listenForResetTrayRequests();
+    setActiveListeners({
+      ...activeListeners,
+      tx:true,
+      reset_tray:true
+    })
   };
 
   const endConnection = async () => {
@@ -148,16 +170,36 @@ function App() {
           <Loading />
         )}
         {currentPage === SIGN_IN_OR_RESET_PAGE && (
-          <SignInOrReset startSignIn={startSignIn} startReset={startReset} />
+          <SignInOrReset
+            startSignIn={startSignIn}
+            startReset={startReset}
+          />
         )}
         {currentPage === CREATE_OR_RECOVER_PAGE && (
-          <CreateOrRecover sendCreateOrRecover={sendCreateOrRecover} startCreate={startCreate} startRecover={startRecover} />
+          <CreateOrRecover
+            sendCreateOrRecover={sendCreateOrRecover}
+            startCreate={startCreate}
+            startRecover={startRecover}
+          />
         )}
         {currentPage === RESET_PAGE && (
-          <Reset endConnection={endConnection} resetAccount={resetAccount} cancelReset={cancelReset}/>
+          <Reset
+            isConnected={isConnected}
+            hideWindow={hideWindow}
+            endConnection={endConnection}
+            resetAccount={resetAccount}
+            cancelReset={cancelReset}
+          />
         )}
         {currentPage === RECOVER_PAGE && (
-          <Recover endInitialConnectionPhase={endInitialConnectionPhase} restartServer={restartServer} hideWindow={hideWindow} sendPassword={sendPassword} sendMnemonic={sendMnemonic} cancelRecover={cancelRecover}/>
+          <Recover
+            endInitialConnectionPhase={endInitialConnectionPhase}
+            restartServer={restartServer}
+            hideWindow={hideWindow}
+            sendPassword={sendPassword}
+            sendMnemonic={sendMnemonic}
+            cancelRecover={cancelRecover}
+          />
         )}
         {currentPage === CREATE_ACCOUNT_PAGE && (
           <CreateAccount

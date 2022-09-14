@@ -41,7 +41,7 @@ use manta_signer::{
 };
 use tauri::{
     async_runtime::{spawn, JoinHandle}, CustomMenuItem, Manager, RunEvent, Runtime, State, SystemTray,
-    SystemTrayEvent, SystemTrayMenu, Window, WindowEvent, AppHandle,
+    SystemTrayEvent, SystemTrayMenu, Window, WindowEvent, AppHandle, SystemTrayHandle,
 };
 
 use manta_crypto::rand::OsRng;
@@ -203,13 +203,52 @@ pub type AbortHandleStore = Store<JoinHandle<()>>;
 #[tauri::command]
 async fn send_password(
     password_store: State<'_, PasswordStore>,
+    app_handle_store: State<'_,AppHandleStore>,
     password: String,
 ) -> Result<bool, ()> {
     if let Some(store) = &mut *password_store.lock().await {
-        Ok(store.load(Secret::new(password)).await)
+
+        let result = store.load(Secret::new(password)).await;
+
+        if !result {
+            let app_handle_guard = app_handle_store.lock().await;
+            let app_handle = app_handle_guard.as_ref().unwrap();
+            let tray_handle = app_handle.tray_handle();
+
+            // if result == true, it means user has successfully signed in, so we can now all the tray
+            // menu item to reset account. Which will emit "reset_account" to the front-end, and will trigger
+            // the load of the delete page. 
+            
+            set_tray_reset(tray_handle,true).await;
+            
+        }
+
+        Ok(result)
     } else {
         Ok(false)
     }
+}
+
+/// Adds or removes the reset option on the menu tray depending on the value of `reset`.
+async fn set_tray_reset(tray_handle:SystemTrayHandle, reset:bool) {
+
+    let new_menu: SystemTrayMenu = if reset {
+        // add the reset option
+        let menu = SystemTrayMenu::new()
+        .add_item(CustomMenuItem::new("about", "About"))
+        .add_item(CustomMenuItem::new("exit", "Quit"))
+        .add_item(CustomMenuItem::new("reset","Reset"));
+        menu
+    } else {
+        // remove it
+        let menu = SystemTrayMenu::new()
+        .add_item(CustomMenuItem::new("about", "About"))
+        .add_item(CustomMenuItem::new("exit", "Quit"));
+        menu
+    };
+
+    tray_handle.set_menu(new_menu).expect("Unable to update tray menu");
+
 }
 
 /// Stops the server from prompting for the password.
@@ -284,9 +323,8 @@ async fn reset_account(
     mnemonic_store.set(mnemonic_sender).await;
 
     let app_handle_guard = app_handle_store.lock().await;
-
     let app_handle = app_handle_guard.as_ref().unwrap();
-
+    let tray_handle = app_handle.tray_handle();
     let new_window = app_handle.get_window("main").expect("Unable to open option");
 
     let new_handle = spawn(async move {
@@ -298,6 +336,9 @@ async fn reset_account(
         new_server.start().await.expect("Unable to start manta-signer");
     });
 
+    // Removing the reset account menu tray item.
+
+    set_tray_reset(tray_handle,false).await;
 
     abort_handle_store.set(new_handle).await;
 
@@ -339,6 +380,10 @@ fn main() {
             if let SystemTrayEvent::MenuItemClick { id, .. } = event {
                 match id.as_str() {
                     "about" => window(app, "about").show().expect("Unable to show window."),
+                    "reset" => {
+                        window(app,"main").show().expect("Unable to show window");
+                        window(app,"main").emit("tray_reset_account",{}).expect("Unable to emit reset tray event to window.");
+                    },
                     "exit" => app.exit(0),
                     _ => {}
                 }

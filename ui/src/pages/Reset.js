@@ -9,7 +9,12 @@ const Reset = (props) => {
   }
 
   const onClickCancel = async () => {
-    props.cancelReset();
+
+    if (props.isConnected) {
+      props.hideWindow();
+    } else {
+      props.cancelReset();
+    }
   }
 
   return (<>
