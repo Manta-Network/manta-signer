@@ -39,6 +39,7 @@ function App() {
     if (activeListeners.connect) return;
     const beginInitialConnectionPhase = async () => {
       await listen('connect', (event) => {
+        invoke('ui_connected');
         console.log("[INFO]: Connect Event: ", event);
         let payload = event.payload;
         switch (payload.type) {
@@ -104,12 +105,14 @@ function App() {
 
   const resetAccount = async () => {
     console.log("[INFO]: Resetting Account.");
+    await invoke('ui_disconnected');
     await invoke('reset_account', { delete: true });
     setCurrentPage(CREATE_OR_RECOVER_PAGE);
   }
 
   const restartServer = async () => {
     console.log("[INFO]: Restarting Server.");
+    await invoke('ui_disconnected');
     await invoke('reset_account', { delete: false });
     setCurrentPage(CREATE_OR_RECOVER_PAGE);
   }

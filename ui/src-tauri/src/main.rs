@@ -26,7 +26,10 @@
 
 extern crate alloc;
 
-use core::time::Duration;
+use core::{
+    sync::atomic::{AtomicBool, Ordering},
+    time::Duration,
+};
 use manta_signer::{
     config::{Config, Setup},
     secret::{
@@ -36,9 +39,9 @@ use manta_signer::{
     serde::Serialize,
     service::Server,
     storage::Store,
-    tokio::time::sleep,
     tokio::fs::{remove_file}
 };
+use std::time::Instant;
 use tauri::{
     async_runtime::{spawn, JoinHandle}, CustomMenuItem, Manager, RunEvent, Runtime, State, SystemTray,
     SystemTrayEvent, SystemTrayMenu, Window, WindowEvent, AppHandle, SystemTrayHandle,
@@ -47,6 +50,73 @@ use tauri::{
 use manta_crypto::rand::OsRng;
 use manta_pay::key::Mnemonic;
 
+/// App State
+///
+/// Keeps track of global state flags that we need for specific behaviors.
+#[derive(Debug)]
+pub struct AppState {
+    /// UI is Connected
+    pub ui_connected: AtomicBool,
+
+    /// Currently Authorising
+    pub authorizing: AtomicBool,
+}
+
+impl AppState {
+    /// Builds a new [`AppState`].
+    #[inline]
+    pub const fn new() -> Self {
+        Self {
+            ui_connected: AtomicBool::new(false),
+            authorizing: AtomicBool::new(false),
+        }
+    }
+
+    /// Returns the UI connection status.
+    #[inline]
+    pub fn get_ui_connected(&self) -> bool {
+        self.ui_connected.load(Ordering::Relaxed)
+    }
+
+    /// Sets the UI connection status.
+    #[inline]
+    pub fn set_ui_connected(&self, ui_connected: bool) {
+        self.ui_connected.store(ui_connected, Ordering::Relaxed)
+    }
+
+    /// Returns the authorizing status.
+    #[inline]
+    pub fn get_authorizing(&self) -> bool {
+        self.authorizing.load(Ordering::Relaxed)
+    }
+
+    /// Sets the authorizing status.
+    #[inline]
+    pub fn set_authorizing(&self, auth: bool) {
+        self.authorizing.store(auth, Ordering::Relaxed);
+    }
+}
+
+/// Application State
+pub static APP_STATE: AppState = AppState::new();
+
+/// While with a timeout
+/// Loop over body code block until specified time elapses and exits executing a given code block
+/// Needs to be a macro to be able to break early in the main loop body code block
+/// i.e. loop over waiting to connect and then break the loop, or timeout with Error message after
+/// a specified time.
+macro_rules! while_w_timeout{
+    ($body:block, $timeout_d:expr, $failure:block) => {{
+        let time_start = Instant::now();
+        let timeout = Duration::from_millis($timeout_d);
+        loop {
+            $body
+            if time_start.elapsed() >= timeout {
+                $failure
+            }
+        }
+    }};
+}
 /// User
 pub struct User {
     /// Main Window
@@ -129,8 +199,6 @@ impl Authorizer for User {
     fn setup<'s>(&'s mut self, data_exists : bool ) -> SetupFuture<'s> {
         let window = self.window.clone();
         Box::pin(async move {
-            // NOTE: We have to wait here until the UI listener is registered.
-            sleep(Duration::from_millis(500)).await;
 
             // creating a new mnemonic in case user will create a new account.
             let new_mnemonic = Mnemonic::sample(&mut OsRng);
@@ -142,10 +210,21 @@ impl Authorizer for User {
                 Setup::CreateAccount(new_mnemonic)
             };
 
-            window
-                .emit("connect", payload.clone())
-                .expect("The `connect` command failed to be emitted to the window.");
-            
+            while_w_timeout!(
+                {
+                    if APP_STATE.get_ui_connected() {
+                        break;
+                    }
+                    window
+                        .emit("connect", payload.clone())
+                        .expect("The `connect` command failed to be emitted to the window.");
+                },
+                5000,
+                {
+                    panic!("Connection attempt timedout!");
+                }
+            );
+
             if data_exists {
                 Setup::Login
             } else {
@@ -165,6 +244,7 @@ impl Authorizer for User {
                 Setup::CreateAccount(user_seed_phrase)
             }
 
+
         })
     } 
 
@@ -174,12 +254,14 @@ impl Authorizer for User {
     where
         T: Serialize,
     {
+        APP_STATE.set_authorizing(true);
         self.emit("authorize", prompt);
         Box::pin(async move {})
     }
 
     #[inline]
     fn sleep(&mut self) -> UnitFuture {
+        APP_STATE.set_authorizing(false);
         Box::pin(async move { self.validate_password().await })
     }
 }
@@ -198,6 +280,23 @@ pub type AppHandleStore = Store<AppHandle>;
 
 /// Abort Handle Store
 pub type AbortHandleStore = Store<JoinHandle<()>>;
+/// Called from the UI after it recieves a `connect` event.
+///
+/// To ensure proper connection you should emit `connect` continuously until the
+/// [`AppState::ui_connected`] flag is `true` then stop. This is the only way for now to ensure they
+/// are synchronized. Tauri is working on a better way.
+#[tauri::command]
+fn ui_connected() {
+    APP_STATE.set_ui_connected(true);
+}
+
+/// Called when user wants to cancel recovery or when user wants to proceed with recovery
+/// in either case, server needs to restart and setup function needs to be called again to 
+/// emit new `connect` event with new payload.
+#[tauri::command]
+fn ui_disconnected() {
+    APP_STATE.set_ui_connected(false);
+}
 
 /// Sends the current `password` into storage from the UI.
 #[tauri::command]
@@ -432,7 +531,9 @@ fn main() {
             stop_password_prompt,
             create_or_recover,
             send_mnemonic,
-            reset_account
+            reset_account,
+            ui_connected,
+            ui_disconnected
         ])
         .build(tauri::generate_context!())
         .expect("Error while building UI.");
@@ -450,7 +551,16 @@ fn main() {
             api.prevent_close();
             match label.as_str() {
                 "about" => window(app, "about").hide().expect("Unable to hide window."),
-                "main" => app.exit(0),
+                "main" => {
+                    if APP_STATE.get_authorizing() {
+                        window(app, "main").hide().expect("Unable to hide window.");
+                        window(app, "main")
+                            .emit("abort_auth", "Aborting Authorization")
+                            .expect("Failed to abort authorization");
+                    } else {
+                        app.exit(0);
+                    }
+                }
                 _ => unreachable!("There are no other windows."),
             }
         }
