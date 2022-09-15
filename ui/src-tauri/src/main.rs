@@ -96,12 +96,11 @@ impl AppState {
 /// Application State
 pub static APP_STATE: AppState = AppState::new();
 
-/// while with a timeout, best used for emitting events
-/// either for a response or other events to stop
-/// '$condition' does while true (block resulting in true or false)
-/// '$body' while body
-/// '$timeout' timeout
-/// '$falure' body after if while times out
+/// While with a timeout
+/// Loop over body code block until specified time elapses and exits executing a given code block
+/// Needs to be a macro to be able to break early in the main loop body code block
+/// i.e. loop over waiting to connect and then break the loop, or timeout with Error message after
+/// a specified time.
 macro_rules! while_w_timeout{
     ($body:block, $timeout_d:expr, $failure:block) => {{
         let time_start = Instant::now();
@@ -181,7 +180,7 @@ impl Authorizer for User {
             while_w_timeout!(
                 {
                     if APP_STATE.get_ui_connected() {
-                        break
+                        break;
                     }
                     window
                         .emit("connect", setup)
