@@ -65,6 +65,13 @@
     margin-bottom: 0.5rem !important;
 }
 
+.input.ui.password {
+    border-radius: 5px;
+    height: 40px;
+    width: 65%;
+    margin: 0.5rem;
+}
+
 .button.ui.first {
     background-color: #0894ec;
     color:#FFFFFF;
@@ -117,3 +124,7 @@
   .firstbuttoncontainer {
     padding-top: 2rem;
   }
+
+.headercontainer {
+    padding-top: 6rem;
+}

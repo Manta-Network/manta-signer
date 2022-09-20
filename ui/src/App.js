@@ -156,11 +156,6 @@ function App() {
     setCurrentPage(RECOVER_PAGE);
   }
 
-  const cancelRecover = async () => {
-    console.log("[INFO]: Cancel recovery process.")
-    setCurrentPage(CREATE_OR_RECOVER_PAGE);
-  }
-
   const cancelReset = async () => {
     console.log("[INFO]: Cancel reset process.")
     setCurrentPage(SIGN_IN_OR_RESET_PAGE);
@@ -201,7 +196,6 @@ function App() {
             hideWindow={hideWindow}
             sendPassword={sendPassword}
             sendMnemonic={sendMnemonic}
-            cancelRecover={cancelRecover}
           />
         )}
         {currentPage === CREATE_ACCOUNT_PAGE && (
@@ -209,6 +203,7 @@ function App() {
             recoveryPhrase={recoveryPhrase}
             sendPassword={sendPassword}
             endInitialConnectionPhase={endInitialConnectionPhase}
+            restartServer={restartServer}
           />
         )}
         {currentPage === LOGIN_PAGE && (
