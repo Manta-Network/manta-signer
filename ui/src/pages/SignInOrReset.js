@@ -1,6 +1,6 @@
 import { Button, Input, Label, Header } from 'semantic-ui-react';
 import mainLogo from "../icons/Square150x150Logo.png"
-import "../fonts/ibm-plex/css/styles.css";
+import "../App.css";
 
 const SignInOrReset = (props) => {
 

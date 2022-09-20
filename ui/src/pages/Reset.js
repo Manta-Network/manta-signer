@@ -1,5 +1,5 @@
 import { Button} from 'semantic-ui-react';
-import "../fonts/ibm-plex/css/styles.css";
+import "../App.css";
 
 const Reset = (props) => {
 

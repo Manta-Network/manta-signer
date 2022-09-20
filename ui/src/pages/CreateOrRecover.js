@@ -1,6 +1,6 @@
 import { Button } from 'semantic-ui-react';
-import mainLogo from "../icons/Square150x150Logo.png";
-import "../fonts/ibm-plex/css/styles.css";
+import mainLogo from "../icons/manta.png";
+import "../App.css";
 const CreateOrRecover = (props) => {
 
   const onClickStartCreate = async () => {
@@ -14,14 +14,24 @@ const CreateOrRecover = (props) => {
   }
 
   return (<>
-    <div>
-      <img draggable="false" unselectable="on" dragstart="false" src={mainLogo} />
+
+    <div className='mainlogocontainer'>
+      <img className="mainlogo"src={mainLogo}/>
     </div>
 
     <div>
+      <h1 className='mainheadline'>Welcome to Manta Signer</h1>
+      <p className='subtext'>Use signer to generate zkAddress and control it.</p>
+    </div>
+
+    <div className='firstbuttoncontainer'>
       <Button className="button ui first" onClick={onClickStartCreate}>Create New Wallet</Button>
     </div>
-    <a className="secondary-anchor"><h4 onClick={onClickStartRecover}>Recover Wallet</h4></a>
+
+    <div>
+      <Button className="button ui first" onClick={onClickStartRecover}>I already have a wallet</Button>
+    </div>
+
   </>);
 }
 

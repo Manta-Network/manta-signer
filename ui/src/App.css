@@ -1,7 +1,7 @@
 .App {
     left: 50%;
     position: absolute;
-    top: 50%;
+    top: 40%;
     -moz-transform: translateX(-50%) translateY(-50%);
     -webkit-transform: translateX(-50%) translateY(-50%);
     transform: translateX(-50%) translateY(-50%);
@@ -64,3 +64,56 @@
 .recovery-phrase-header {
     margin-bottom: 0.5rem !important;
 }
+
+.button.ui.first {
+    background-color: #0894ec;
+    color:#FFFFFF;
+    border-radius: 5px;
+    height: 40px;
+    width: 65%;
+  }
+  
+  .button.ui.two {
+    background-color: #FFFFFF;
+    color:black;
+    border-radius: 15px;
+  }
+  
+  .button.ui.danger {
+    background-color: red;
+    color:white;
+    border-radius: 15px;
+  }
+  
+  .secondary-anchor {
+    color:black
+  }
+  
+  .textarea.ui.scaled {
+    width:300px;
+    height:180px;
+    text-align: center;
+  }
+  
+  .mainlogo {
+    width:19vw;
+    height:17vh;
+  }
+  
+  .mainheadline {
+    font-weight: 900;
+  }
+  
+  .subtext {
+    color:gray;
+    margin-top:-10px;
+  }
+
+  .mainlogocontainer {
+    padding-bottom: 30px;
+    padding-top: 45px;
+  }
+
+  .firstbuttoncontainer {
+    padding-top: 2rem;
+  }

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Button, Input, Header, Form, Label } from 'semantic-ui-react';
 import mainLogo from "../icons/Square150x150Logo.png"
-import "../fonts/ibm-plex/css/styles.css";
+import "../App.css";
 const SignIn = ({ sendPassword, endInitialConnectionPhase }) => {
   const [password, setPassword] = useState('');
   const [passwordInvalid, setPasswordInvalid] = useState(null);

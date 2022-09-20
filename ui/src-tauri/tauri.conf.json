@@ -64,8 +64,8 @@
             {
                 "label": "main",
                 "title": "Manta Signer",
-                "width": 600,
-                "height": 360,
+                "width": 460,
+                "height": 500,
                 "alwaysOnTop": true,
                 "center": true,
                 "decorations": true,

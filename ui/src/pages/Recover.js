@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react"
 import { Button, Input, Label, TextArea, Form, Header } from 'semantic-ui-react';
-import "../fonts/ibm-plex/css/styles.css";
+import "../App.css";
 
 const bip39 = require('bip39');
 
