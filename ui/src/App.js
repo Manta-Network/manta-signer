@@ -108,13 +108,18 @@ function App() {
     setCurrentPage(CREATE_OR_RECOVER_PAGE);
   }
 
-  const restartServer = async () => {
+  const restartServer = async (loginPage = false) => {
     console.log("[INFO]: Restarting Server.");
     await invoke('ui_disconnected');
     await invoke('reset_account', { delete: false });
-    setCurrentPage(CREATE_OR_RECOVER_PAGE);
-  }
 
+    if (loginPage) {
+      setCurrentPage(LOGIN_PAGE); 
+    } else {
+      setCurrentPage(CREATE_OR_RECOVER_PAGE);
+    }
+  } 
+  
   const endInitialConnectionPhase = async () => {
     console.log("[INFO]: End Initial Connection Phase");
     setIsConnected(true);

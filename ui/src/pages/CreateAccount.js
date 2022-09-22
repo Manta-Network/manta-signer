@@ -19,41 +19,33 @@ const CreateAccount = (props) => {
   const [isValidSelectedPhrase, setIsValidSelectedPhrase] = useState(false);
   const [shuffledRecoveryPhrase, setShuffledRecoveryPhrase] = useState(null);
   const [selectedRecoveryPhrase, setSelectedRecoveryPhrase] = useState([]);
-  const [activeButtons,setActiveButtons] = useState([]);
-  
-  // This function gets called whenever a user clicks on a button
-  const onClickButton = (e, word, index) => {
+  const [actualPhrase, setActualPhrase] = useState(null);
 
-    if (!activeButtons.includes(index)) {
+  // onClickButton is called whenever a selection button gets clicked when
+  // the user is reciting their seed phrase.
+  const onClickButton = (e, word) => {
 
-      setActiveButtons(prevState => [...prevState, index]);
-      e.target.style.backgroundColor = "#0894ec";
-      e.target.style.color = "#FFFFFF";
+    if (selectedRecoveryPhrase.includes(word)) {
 
-      setSelectedRecoveryPhrase(oldPhrase => [...oldPhrase, word]);
-
-
-    } else {
-
-      let buttons_copy = activeButtons;
-      let button_index = buttons_copy.indexOf(index);
-      buttons_copy.splice(button_index, 1);
-      setActiveButtons(buttons_copy);
-
+      const newSelectedRecoveryPhrase = [...selectedRecoveryPhrase];
+      newSelectedRecoveryPhrase.splice(newSelectedRecoveryPhrase.indexOf(word), 1);
+      setSelectedRecoveryPhrase(newSelectedRecoveryPhrase);
       e.target.style.backgroundColor = "#FFFFFF";
       e.target.style.color = "gray";
 
-      let words_copy = selectedRecoveryPhrase;
-      let word_index = words_copy.indexOf(word);
-      words_copy.splice(word_index, 1);
-      setSelectedRecoveryPhrase(words_copy);
+      console.log("[INFO]: Removed ", word);
+    } else {
+      const newSelectedRecoveryPhrase = [...selectedRecoveryPhrase];
+      newSelectedRecoveryPhrase.push(word);
+      setSelectedRecoveryPhrase(newSelectedRecoveryPhrase);
+      e.target.style.backgroundColor = "#0894ec";
+      e.target.style.color = "#FFFFFF";
+
+      console.log("[INFO]: Pushed ", word);
     }
 
     console.log(selectedRecoveryPhrase);
-    console.log(activeButtons)
-
   }
-  
 
 
   const isValid = (password) => {
@@ -64,10 +56,8 @@ const CreateAccount = (props) => {
   // This function will be called after the user confirms their secret recovery phrase.
   const onClickCreateAccount = async () => {
     console.log("[INFO]: Creating account.");
-    if (isValid(password)) {
-      await props.sendPassword(password);
-      setPassword('');
-    }
+    await props.sendPassword(password);
+    setPassword('');
   };
 
   // This function navigates back depending on the current page.
@@ -83,7 +73,6 @@ const CreateAccount = (props) => {
       setCurrentTab(PASSWORD_TAB);
     } else if (currentTab == CONFIRM_PHRASE_TAB) {
       console.log("[INFO]: Going back to View Recovery Phrase Page.");
-      setActiveButtons([]);
       setSelectedRecoveryPhrase([]);
       setCurrentTab(SHOW_PHRASE_TAB);
     }
@@ -98,15 +87,16 @@ const CreateAccount = (props) => {
     } else if (currentTab == CONFIRM_PHRASE_TAB) {
       // Recovery Phrase has already been confirmed here, the button will stop being disabled
       // Once the user has entered it in the correct order.
-      setCurrentTab(FINAL_TAB)
+      onClickCreateAccount();
+      setCurrentTab(FINAL_TAB);
     }
   }
 
   // This function is called when the user clicks "Finish" at the final page
   // This function will close the signer tab.
-  const onClickConfirmRecoveryPhrase = async () => {
-    console.log("[INFO]: Confirming recovery phrase.")
-    await props.endInitialConnectionPhase();
+  const onClickFinishSetup = async () => {
+    console.log("[INFO]: Finishing Setup.")
+    await props.restartServer(true);
   };
 
   // This function enables the Next button to continue in the account creation
@@ -133,11 +123,24 @@ const CreateAccount = (props) => {
 
   useEffect(() => {
 
-    let actualPhrase = props.recoveryPhrase.split(" ");
+    // converting both arrays to strings in order to compare them
+    let stringed_actual = JSON.stringify(actualPhrase);
+    let selectedRecoveryPhrase_copy = [...selectedRecoveryPhrase];
 
-    if ((!isValidSelectedPhrase) && selectedRecoveryPhrase == actualPhrase) {
+    // removing indexes from words to compare properly in case of duplicate words.
+    for (let i = 0; i < selectedRecoveryPhrase_copy.length; i++) {
+      selectedRecoveryPhrase_copy[i] = selectedRecoveryPhrase_copy[i].split("_")[0];
+    }
+    let stringed_selected = JSON.stringify(selectedRecoveryPhrase_copy);
+
+    if (selectedRecoveryPhrase.length != props.recoveryPhrase.split(" ").length) return;
+    if ((!isValidSelectedPhrase) &&
+      (stringed_selected == stringed_actual)) {
+      console.log("[INFO]: Valid phrase chosen.");
       setIsValidSelectedPhrase(true);
-    } else if ((isValidSelectedPhrase) && selectedRecoveryPhrase != actualPhrase) {
+    } else if ((isValidSelectedPhrase) &&
+      (stringed_selected != stringed_actual)) {
+      console.log("[INFO]: Invalid phrase chosen.")
       setIsValidSelectedPhrase(false);
     }
 
@@ -146,14 +149,21 @@ const CreateAccount = (props) => {
 
   useEffect(() => {
     // shuffles array so that user gets recovery phrase in a different order.
-    let actualPhrase = props.recoveryPhrase.split(" ");
+    let actualRecoveryPhrase = props.recoveryPhrase.split(" ");
 
-    let shuffled = actualPhrase
+    let shuffled = actualRecoveryPhrase
       .map(value => ({ value, sort: Math.random() }))
       .sort((a, b) => a.sort - b.sort)
       .map(({ value }) => value);
 
+    for (let i = 0; i < shuffled.length; i++) {
+      shuffled[i] = shuffled[i] + "_" + i;
+    }
+
+    // adding the item index so that we can distinguish between duplicate words.
+
     setShuffledRecoveryPhrase(shuffled);
+    setActualPhrase(actualRecoveryPhrase);
 
   }, []);
 
@@ -235,18 +245,20 @@ const CreateAccount = (props) => {
 
         <div className='wordListContainer'>
           {selectedRecoveryPhrase.map(function (item, index) {
-            return <div className="selectedWord" key={item}>{item}</div>
+            let word = item.split("_")[0];
+            return <div className='button ui buttonlist' key={index}>{word}</div>
           })}
         </div>
 
         <div className='buttonListContainer'>
-          {shuffledRecoveryPhrase.map(function (item,index) {
+          {shuffledRecoveryPhrase.map(function (item) {
+            let word = item.split("_")[0];
             return (
               <Button
                 onClick={(e) => onClickButton(e, item)}
                 className="button ui buttonlist"
                 key={item}>
-                {item}
+                {word}
               </Button>
             )
           })}
@@ -259,7 +271,16 @@ const CreateAccount = (props) => {
         </div>
 
       </>)}
-      {currentTab == FINAL_TAB && (null)}
+      {currentTab == FINAL_TAB && (<>
+        <div className='headercontainerFat'>
+          <h1 className='mainheadline'>You're all done!</h1>
+          <h3 className='mediumSubText'>Press Finish and sign in to begin your ZK journey.</h3>
+        </div>
+        <Button className="button ui first wide" onClick={onClickFinishSetup}>
+          Finish
+        </Button>
+      </>
+      )}
     </>
   );
 };

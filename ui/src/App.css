@@ -183,7 +183,7 @@
     border-radius: 5px;
     display:flex;
     flex-wrap:wrap;
-    justify-content:center;
+    justify-content:left;
     border-color: #eef0f2;
     height:9rem;
     margin-left:1rem;
@@ -196,7 +196,7 @@
     border-radius: 5px;
     display:flex;
     flex-wrap:wrap;
-    justify-content:center;
+    justify-content:space-evenly;
     height:7rem;
     overflow-y: scroll;
     margin:1rem;
@@ -209,4 +209,13 @@
     border: 2px solid #eef0f2;
     border-radius: 5px;
     color:gray;
+    max-height: 3rem;
+}
+
+.mediumSubText {
+    color: gray;
+}
+
+.headercontainerFat {
+    margin: 4rem;
 }
