@@ -3,7 +3,6 @@ import Authorize from './pages/Authorize';
 import CreateAccount from './pages/CreateAccount';
 import Loading from './pages/Loading';
 import SignIn from './pages/SignIn';
-import SignInOrReset from './pages/SignInOrReset';
 import Reset from "./pages/Reset";
 import CreateOrRecover from './pages/CreateOrRecover';
 import Recover from './pages/Recover';
@@ -18,7 +17,6 @@ const LOADING_PAGE = 0;
 const CREATE_ACCOUNT_PAGE = 1;
 const LOGIN_PAGE = 2;
 const AUTHORIZE_PAGE = 3;
-const SIGN_IN_OR_RESET_PAGE = 4;
 const RESET_PAGE = 5;
 const CREATE_OR_RECOVER_PAGE = 6;
 const RECOVER_PAGE = 7;
@@ -48,7 +46,7 @@ function App() {
             setCurrentPage(CREATE_OR_RECOVER_PAGE);
             break;
           case 'Login':
-            setCurrentPage(SIGN_IN_OR_RESET_PAGE);
+            setCurrentPage(LOGIN_PAGE);
             break;
           default:
             break;
@@ -136,16 +134,6 @@ function App() {
     setIsConnected(false);
   }
 
-  const startSignIn = async () => {
-    console.log("[INFO]: Start wallet sign in.")
-    setCurrentPage(LOGIN_PAGE);
-  }
-
-  const startReset = async () => {
-    console.log("[INFO]: Start wallet reset process.")
-    setCurrentPage(RESET_PAGE);
-  }
-
   const startCreate = async () => {
     console.log("[INFO]: Start wallet creation process.")
     setCurrentPage(CREATE_ACCOUNT_PAGE);
@@ -158,7 +146,7 @@ function App() {
 
   const cancelReset = async () => {
     console.log("[INFO]: Cancel reset process.")
-    setCurrentPage(SIGN_IN_OR_RESET_PAGE);
+    hideWindow();
   }
 
   return (
@@ -166,12 +154,6 @@ function App() {
       <Container className="page">
         {currentPage === LOADING_PAGE && (
           <Loading />
-        )}
-        {currentPage === SIGN_IN_OR_RESET_PAGE && (
-          <SignInOrReset
-            startSignIn={startSignIn}
-            startReset={startReset}
-          />
         )}
         {currentPage === CREATE_OR_RECOVER_PAGE && (
           <CreateOrRecover
@@ -210,6 +192,7 @@ function App() {
           <SignIn
             sendPassword={sendPassword}
             endInitialConnectionPhase={endInitialConnectionPhase}
+            startRecover={startRecover}
           />
         )}
         {currentPage === AUTHORIZE_PAGE && (

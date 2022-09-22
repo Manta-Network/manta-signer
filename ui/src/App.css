@@ -32,12 +32,15 @@
 }
 
 .recovery-phrase-info {
-    min-width: 26rem;
-    text-align: center;
+    min-width: 23rem;
+    text-align: left;
+    margin-left: 2rem;
+    margin-right: 2rem;
 }
 
 .recovery-phrase-info>p {
     margin: 0;
+    color: #FFBC2C;
 }
 
 .recovery-phrase-warning {
@@ -72,59 +75,138 @@
     margin: 0.5rem;
 }
 
+.input.ui.password.tall {
+    border-radius: 5px;
+    height: 40px;
+    width: 65%;
+    margin: 0.5rem;
+    margin-top:2rem;
+}
+
 .button.ui.first {
     background-color: #0894ec;
     color:#FFFFFF;
     border-radius: 5px;
     height: 40px;
     width: 65%;
-  }
-  
-  .button.ui.two {
+}
+ 
+.button.ui.first.wide {
+    background-color: #0894ec;
+    color:#FFFFFF;
+    border-radius: 5px;
+    height: 40px;
+    width: 80%;
+}
+
+.button.ui.two {
     background-color: #FFFFFF;
     color:black;
     border-radius: 15px;
-  }
+}
   
-  .button.ui.danger {
+.button.ui.danger {
     background-color: red;
     color:white;
     border-radius: 15px;
-  }
+}
   
-  .secondary-anchor {
+.secondary-anchor {
     color:black
-  }
+}
   
-  .textarea.ui.scaled {
+.textarea.ui.scaled {
     width:300px;
     height:180px;
     text-align: center;
-  }
+}
   
-  .mainlogo {
+.mainlogo {
     width:19vw;
     height:17vh;
-  }
+}
   
-  .mainheadline {
+.mainheadline {
     font-weight: 900;
-  }
+}
   
-  .subtext {
+.subtext {
     color:gray;
     margin-top:-10px;
-  }
+}
 
-  .mainlogocontainer {
+.mainlogocontainer {
     padding-bottom: 30px;
     padding-top: 45px;
-  }
+}
 
-  .firstbuttoncontainer {
+.mainlogocontainer.login {
+    padding-top: 80px;
+}
+
+.firstbuttoncontainer {
     padding-top: 2rem;
-  }
+}
 
 .headercontainer {
     padding-top: 6rem;
+}
+
+.tightHeaderContainer {
+    margin:1rem;
+    padding-top: 5rem;
+}
+
+.recoveryPhraseContainer {
+    display:flex;
+    flex-wrap:wrap;
+    justify-content:center;
+    background-color:#eef0f2;
+    border-radius: 5px;
+    padding-bottom: 1rem;
+    padding-top: 1rem;
+    margin-top: 1rem;
+    margin-bottom:1rem;
+    margin-left:3.2rem;
+    margin-right:3.2rem;
+}
+
+.recoveryPhraseWord {
+    flex-basis:20%;
+}
+
+.recoveryPhraseWord {
+    margin:0.2rem;
+}
+
+.wordListContainer {
+    border-radius: 5px;
+    display:flex;
+    flex-wrap:wrap;
+    justify-content:center;
+    border-color: #eef0f2;
+    height:9rem;
+    margin-left:1rem;
+    margin-right:1rem;
+    border-style: solid;
+    overflow-y: scroll;
+}
+
+.buttonListContainer {
+    border-radius: 5px;
+    display:flex;
+    flex-wrap:wrap;
+    justify-content:center;
+    height:7rem;
+    overflow-y: scroll;
+    margin:1rem;
+}
+
+.button.ui.buttonlist {
+    flex-basis:10%;
+    margin:0.2rem !important;
+    background-color: #FFFFFF;
+    border: 2px solid #eef0f2;
+    border-radius: 5px;
+    color:gray;
 }

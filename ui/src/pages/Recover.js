@@ -61,7 +61,37 @@ const Recover = (props) => {
 
   return (<>
 
-    {showNewPassPage ?
+    {!showNewPassPage && <>
+
+      <div className='tightHeaderContainer'>
+          <h1 className='mainheadline'>Reset Wallet</h1>
+          <p className='subtext'>
+            You can reset your password by entering your secret recovery phrase.
+          </p>
+        </div>
+
+      <Form>
+        <TextArea
+          onChange={(e) => {
+            setMnemonics(e.target.value);
+          }}
+          placeholder="Input Mnemonics"
+          className="textarea ui scaled"
+        />
+      </Form>
+
+      <div>
+        {validity ?
+          <Button primary className="button ui first" onClick={onClickNewPass}>Continue</Button> :
+          <Button disabled primary className="button ui first">Continue</Button>}
+        <Button className="button ui two" onClick={onClickCancel}>Cancel</Button>
+      </div>
+      {(!validity && mnemonics.length != 0) ? <Label color='red'>Invalid Seed Phrase!</Label> : <br></br>}
+    </>
+    }
+
+
+    {showNewPassPage &&
       <>
         <Header>Pick a new password</Header>
         <Input
@@ -77,25 +107,6 @@ const Recover = (props) => {
             <Button disabled primary className="button ui first">Start</Button>}
         </div>
         {(!newPassValidity && newPass.length != 0) ? <Label color='red'>Invalid Password Length!</Label> : <br></br>}
-      </> :
-      <>
-        <Form>
-          <TextArea
-            onChange={(e) => {
-              setMnemonics(e.target.value);
-            }}
-            placeholder="Input Mnemonics"
-            className="textarea ui scaled"
-          />
-        </Form>
-
-        <div>
-          {validity ?
-            <Button primary className="button ui first" onClick={onClickNewPass}>Continue</Button> :
-            <Button disabled primary className="button ui first">Continue</Button>}
-          <Button className="button ui two" onClick={onClickCancel}>Cancel</Button>
-        </div>
-        {(!validity && mnemonics.length != 0) ? <Label color='red'>Invalid Seed Phrase!</Label> : <br></br>}
       </>}
 
   </>);
