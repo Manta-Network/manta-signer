@@ -1,114 +1,256 @@
 import { useEffect, useState } from "react"
-import { Button, Input, Label, TextArea, Form, Header } from 'semantic-ui-react';
+import { Button, Input, Label, Form, Header, Dropdown } from 'semantic-ui-react';
 import "../App.css";
 
 const bip39 = require('bip39');
 
+const SEED_PHRASE_PAGE = 0;
+const NEW_PASSWORD_PAGE = 1;
+const FINISH_PAGE = 2;
+
+const MIN_PASSWORD_LENGTH = 8;
+
+const DROPDOWN_OPTIONS = [
+  {
+    text: "I have a 12 word phrase",
+    value: 12
+  },
+  {
+    text: "I have a 24 word phrase",
+    value: 24
+  },
+];
+
+const DEFAULT_PHRASES = {
+  12: ["", "", "", "", "", "", "", "", "", "", "", ""],
+  24: ["", "", "", "", "", "", "", "", "", "", "", "",
+    "", "", "", "", "", "", "", "", "", "", "", ""]
+}
+
+// By default this component will load using a 12 word phrase.
 const Recover = (props) => {
 
-  const [mnemonics, setMnemonics] = useState('');
-  const [validity, setValidity] = useState(false);
-  const [newPass, setNewPass] = useState('');
-  const [newPassValidity, setNewPassValidity] = useState(false)
+  // recovery phrase
+  const [mnemonics, setMnemonics] = useState(DEFAULT_PHRASES[12]);
+  const [mnemonicsValidity, setMnemonicsValidity] = useState(false);
+  const [validMnemonics, setValidMnemonics] = useState(null);
 
-  const [showNewPassPage, setShowNewPassPage] = useState(false);
+  // new passwords
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [passwordsMatch, setPasswordsMatch] = useState('');
+  const [isValidPassword, setIsValidPassword] = useState(false);
 
+  // currently active page
+  const [currentPage, setCurrentPage] = useState(SEED_PHRASE_PAGE);
 
-  const MIN_PASSWORD_LENGTH = 8;
+  // dropdown selection of how many currently active words
+  const [amountOfWords, setAmountOfWords] = useState(DROPDOWN_OPTIONS[0].value);
 
-  const onClickRecover = async () => {
-    await props.sendPassword(newPass);
-    props.endInitialConnectionPhase();
-    props.hideWindow();
-  }
-
-  const onClickNewPass = async () => {
-    setShowNewPassPage(true);
-    await props.sendMnemonic(mnemonics);
-  }
-
-  const onClickCancel = async () => {
-    props.restartServer();
-  }
-
-  const validateMnemonics = () => {
-    let is_valid = bip39.validateMnemonic(mnemonics);
-
-    if (is_valid && (!validity)) {
-      setValidity(true);
-    } else if (!is_valid && (validity)) {
-      setValidity(false);
+  const goBack = async () => {
+    if (currentPage == SEED_PHRASE_PAGE) {
+      props.finishRecovery();
+      await props.restartServer(props.payloadType == "Login");
+    } else if (currentPage == NEW_PASSWORD_PAGE) {
+      // we need to throw away the mnemonics that were already stored
+      setMnemonics(DEFAULT_PHRASES[12]);
+      setMnemonicsValidity(false);
+      setCurrentPage(SEED_PHRASE_PAGE);
     }
   }
 
-  const validateNewPass = () => {
-    let is_valid = newPass.length >= MIN_PASSWORD_LENGTH;
+  const goForward = async () => {
+    if (currentPage == SEED_PHRASE_PAGE) {
+      setCurrentPage(NEW_PASSWORD_PAGE);
+    } else if (currentPage == NEW_PASSWORD_PAGE) {
 
-    if (is_valid && (!newPassValidity)) {
-      setNewPassValidity(true);
-    } else if (!is_valid && (newPassValidity)) {
-      setNewPassValidity(false);
+      // If user came from the login page, it means we need to reset their 
+      // old account first by wiping their storage.
+      if (props.payloadType == "Login") {
+        await props.resetAccount(true);
+      }
+
+      await props.sendCreateOrRecover("Recover");
+      await props.sendMnemonic(validMnemonics);
+
+      setCurrentPage(FINISH_PAGE);
+
+    } else if (currentPage == FINISH_PAGE) {
+      await props.sendPassword(password);
+      await props.restartServer(true); // redirect to login page
     }
   }
 
-  useEffect(() => {
-    validateMnemonics();
-  }, [mnemonics])
+  const isValid = (password) => {
+    console.log("[INFO]: Check password validity.");
+    return password.length >= MIN_PASSWORD_LENGTH;
+  };
+
+  const onChangeDropDown = async (e, data) => {
+
+    const amount_of_words = data.value;
+    const new_words = [...DEFAULT_PHRASES[amount_of_words]];
+
+    console.log("[INFO]: Selected " + amount_of_words + " word recovery phrase.");
+
+    setMnemonics(new_words)
+  }
+
+  // update mnemonics state when text box has word changed
+  const onChangeWord = (e, textObj, index) => {
+
+    const word = textObj.value;
+    const new_words = [...mnemonics];
+    new_words[index] = word;
+    setMnemonics(new_words);
+
+  }
 
   useEffect(() => {
-    validateNewPass();
-  }, [newPass])
+
+    if ((password === confirmPassword) && !passwordsMatch) {
+      setPasswordsMatch(true);
+    } else if (!(password === confirmPassword) && (passwordsMatch)) {
+      setPasswordsMatch(false);
+    }
+
+    if (isValid(password) && !isValidPassword) {
+      setIsValidPassword(true);
+    } else if (!isValid(password) && isValidPassword) {
+      setPasswordsMatch(false);
+    }
+
+  }, [password, confirmPassword]);
+
+  useEffect(() => {
+
+    // we need to preprocess the mnemonics first for the bip39 library, 
+    // by removing any whitespace and setting all words to lowercase.
+    const trimmed_mnemonics = mnemonics.map(x => x.trim());
+    const lower_case_mnemonics = trimmed_mnemonics.map(x => x.toLowerCase());
+    const mnemonics_string = lower_case_mnemonics.join(" ");
+    const empty_strings = mnemonics.filter(x => x.length === 0).length;
+
+    // we only verify mnemonics validity if all strings have been filled.
+    if (empty_strings == 0) {
+
+      const is_valid = bip39.validateMnemonic(mnemonics_string);
+
+      if (is_valid && (!mnemonicsValidity)) {
+        console.log("[INFO]: Selected mnemonics are valid.")
+        setMnemonicsValidity(true);
+        setValidMnemonics(mnemonics_string);
+      } else if (!is_valid && (mnemonicsValidity)) {
+        console.log("[INFO]: Selected mnemonics are invalid.")
+        setMnemonicsValidity(false);
+        setValidMnemonics(null);
+      }
+
+    } else if (mnemonicsValidity) {
+      console.log("[INFO]: Selected mnemonics are valid.")
+      setMnemonicsValidity(false);
+      setValidMnemonics(null);
+    }
+
+  }, [mnemonics]);
 
   return (<>
 
-    {!showNewPassPage && <>
+    {currentPage == SEED_PHRASE_PAGE && <>
 
       <div className='tightHeaderContainer'>
-          <h1 className='mainheadline'>Reset Wallet</h1>
-          <p className='subtext'>
-            You can reset your password by entering your secret recovery phrase.
-          </p>
-        </div>
+        <h1 className='mainheadline'>Reset Wallet</h1>
+        <p className='subtext'>
+          You can reset your password by entering your secret recovery phrase.
+        </p>
+      </div>
 
-      <Form>
-        <TextArea
-          onChange={(e) => {
-            setMnemonics(e.target.value);
-          }}
-          placeholder="Input Mnemonics"
-          className="textarea ui scaled"
+      <div>
+        <Dropdown
+          className="ui fluid dropdown compressed"
+          fluid
+          selection
+          options={DROPDOWN_OPTIONS}
+          onChange={onChangeDropDown}
+          defaultValue={DROPDOWN_OPTIONS[0].value}
         />
+      </div>
+
+      <Form className="ui form adjusted">
+        {mnemonics.map(function (item, index) {
+          return (
+            <Form.Field
+              className="ui form field thin"
+              placeholder={(index + 1).toString() + "."}
+              control={Input}
+              key={index}
+              onChange={(e, textObj) => onChangeWord(e, textObj, index)}
+            />
+          )
+        })}
       </Form>
 
       <div>
-        {validity ?
-          <Button primary className="button ui first" onClick={onClickNewPass}>Continue</Button> :
-          <Button disabled primary className="button ui first">Continue</Button>}
-        <Button className="button ui two" onClick={onClickCancel}>Cancel</Button>
+        {mnemonicsValidity ?
+          <Button primary className="button ui first" onClick={goForward}>Next</Button> :
+          <Button disabled primary className="button ui first">Next</Button>}
       </div>
-      {(!validity && mnemonics.length != 0) ? <Label color='red'>Invalid Seed Phrase!</Label> : <br></br>}
+      <div>
+        <a onClick={goBack}>Go Back</a>
+      </div>
     </>
     }
 
 
-    {showNewPassPage &&
+    {currentPage == NEW_PASSWORD_PAGE && (
       <>
-        <Header>Pick a new password</Header>
-        <Input
-          placeholder="New Password"
-          type="password"
-          onChange={(e) => {
-            setNewPass(e.target.value);
-          }}
-        ></Input>
-        <div>
-          {newPassValidity ?
-            <Button primary className="button ui first" onClick={onClickRecover}>Start</Button> :
-            <Button disabled primary className="button ui first">Start</Button>}
+        <div className='headercontainer'>
+          <h1 className='mainheadline'>Create a password</h1>
+          <p className='subtext'>You will use it to unlock your wallet.</p>
         </div>
-        {(!newPassValidity && newPass.length != 0) ? <Label color='red'>Invalid Password Length!</Label> : <br></br>}
-      </>}
+        <br />
+        <br />
+        <div>
+          <Input
+            className='input ui password'
+            type="password"
+            placeholder="Password (8 characters min)"
+            onChange={(e) => setPassword(e.target.value)}
+          />
+        </div>
+        <div>
+          <Input
+            className='input ui password'
+            type="password"
+            placeholder="Confirm Password"
+            onChange={(e) => setConfirmPassword(e.target.value)}
+          />
+        </div>
+        <Button disabled={!(isValid(password) && passwordsMatch)} className="button ui first"
+          onClick={goForward}>
+          Next
+        </Button>
+        <div>
+          <a onClick={goBack}>Go Back</a>
+        </div>
 
+        {!isValidPassword && password.length > 0 ? <><br /><Label basic color='red' pointing>Please enter a minimum of {MIN_PASSWORD_LENGTH} characters.</Label></> : (
+          !passwordsMatch ? <><br /><Label basic color='red' pointing>Passwords do not match.</Label></> : <><br /><br /><br /></>
+        )}
+
+      </>
+    )}
+
+    {currentPage == FINISH_PAGE && (<>
+      <div className='headercontainerFat'>
+        <h1 className='mainheadline'>You're all done!</h1>
+        <h3 className='mediumSubText'>Press Finish and sign in to begin your ZK journey.</h3>
+      </div>
+      <Button className="button ui first wide" onClick={goForward}>
+        Finish
+      </Button>
+    </>
+    )}
   </>);
 }
 

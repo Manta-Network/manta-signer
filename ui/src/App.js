@@ -10,7 +10,7 @@ import { Container } from 'semantic-ui-react';
 import { appWindow } from '@tauri-apps/api/window';
 import { invoke } from '@tauri-apps/api/tauri';
 import { listen } from '@tauri-apps/api/event';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 
 
 const LOADING_PAGE = 0;
@@ -23,10 +23,12 @@ const RECOVER_PAGE = 7;
 
 function App() {
   const [currentPage, setCurrentPage] = useState(LOADING_PAGE);
+  const currentPageRef = useRef(currentPage);
   const [isConnected, setIsConnected] = useState(false);
+  const [payloadType, setPayloadType] = useState(null);
   const [recoveryPhrase, setRecoveryPhrase] = useState(null);
   const [authorizationSummary, setAuthorizationSummary] = useState(null);
-  const [activeListeners,setActiveListeners] = useState({
+  const [activeListeners, setActiveListeners] = useState({
     tx: false,
     connect: false,
     reset_tray: false
@@ -40,12 +42,22 @@ function App() {
         invoke('ui_connected');
         console.log("[INFO]: Connect Event: ", event);
         let payload = event.payload;
+
+        // We don't want to switch the page on reset during recovery process.
+        if (currentPageRef.current == RECOVER_PAGE) {
+          setPayloadType('CreateAccount');
+          setRecoveryPhrase(payload.content);
+          return;
+        }
+
         switch (payload.type) {
           case 'CreateAccount':
             setRecoveryPhrase(payload.content);
+            setPayloadType('CreateAccount');
             setCurrentPage(CREATE_OR_RECOVER_PAGE);
             break;
           case 'Login':
+            setPayloadType('Login');
             setCurrentPage(LOGIN_PAGE);
             break;
           default:
@@ -54,7 +66,7 @@ function App() {
       });
     };
     beginInitialConnectionPhase();
-    setActiveListeners({...activeListeners, connect:true});
+    setActiveListeners({ ...activeListeners, connect: true });
   }, [isConnected]);
 
   const hideWindow = () => {
@@ -103,9 +115,10 @@ function App() {
 
   const resetAccount = async () => {
     console.log("[INFO]: Resetting Account.");
+
     await invoke('ui_disconnected');
     await invoke('reset_account', { delete: true });
-    setCurrentPage(CREATE_OR_RECOVER_PAGE);
+
   }
 
   const restartServer = async (loginPage = false) => {
@@ -114,12 +127,12 @@ function App() {
     await invoke('reset_account', { delete: false });
 
     if (loginPage) {
-      setCurrentPage(LOGIN_PAGE); 
+      setCurrentPage(LOGIN_PAGE);
     } else {
       setCurrentPage(CREATE_OR_RECOVER_PAGE);
     }
-  } 
-  
+  }
+
   const endInitialConnectionPhase = async () => {
     console.log("[INFO]: End Initial Connection Phase");
     setIsConnected(true);
@@ -129,8 +142,8 @@ function App() {
     listenForResetTrayRequests();
     setActiveListeners({
       ...activeListeners,
-      tx:true,
-      reset_tray:true
+      tx: true,
+      reset_tray: true
     })
   };
 
@@ -153,6 +166,11 @@ function App() {
     console.log("[INFO]: Cancel reset process.")
     hideWindow();
   }
+
+  // keeps the connect listener in sync with currentPage state
+  useEffect(() => {
+    currentPageRef.current = currentPage;
+  }, [currentPage])
 
   return (
     <div className="App">
@@ -178,8 +196,11 @@ function App() {
         )}
         {currentPage === RECOVER_PAGE && (
           <Recover
+            payloadType={payloadType}
+            sendCreateOrRecover={sendCreateOrRecover}
             endInitialConnectionPhase={endInitialConnectionPhase}
             restartServer={restartServer}
+            resetAccount={resetAccount}
             hideWindow={hideWindow}
             sendPassword={sendPassword}
             sendMnemonic={sendMnemonic}

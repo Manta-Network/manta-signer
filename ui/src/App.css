@@ -219,3 +219,31 @@
 .headercontainerFat {
     margin: 4rem;
 }
+
+.ui.fluid.dropdown.compressed {
+    width: 65%;
+    display: inline-block;
+}
+
+
+.ui.form.field.thin {
+    flex-basis:30%;
+    background-color: #FFFFFF;
+    border: 2px solid #eef0f2;
+    border-radius: 5px;
+    color:gray;
+    max-height: 3rem;
+    width:6rem;
+}
+
+.ui.form.adjusted {
+    border-radius: 5px;
+    display:flex;
+    flex-wrap:wrap;
+    justify-content:space-evenly;
+    height:15rem;
+    overflow-y: scroll;
+    margin-top:1rem;
+    padding-left:3.5rem;
+    padding-right:3rem;
+}
