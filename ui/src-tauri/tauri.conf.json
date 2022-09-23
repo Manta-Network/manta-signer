@@ -58,6 +58,9 @@
             "window": {
                 "hide": true,
                 "show": true
+            },
+            "shell": {
+                "all": true
             }
         },
         "windows": [

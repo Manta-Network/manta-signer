@@ -16,7 +16,7 @@ const CreateOrRecover = (props) => {
   return (<>
 
     <div className='mainlogocontainer'>
-      <img className="mainlogo"src={mainLogo}/>
+      <img className="mainlogo" src={mainLogo} />
     </div>
 
     <div>
@@ -28,8 +28,16 @@ const CreateOrRecover = (props) => {
       <Button className="button ui first" onClick={onClickStartCreate}>Create New Wallet</Button>
     </div>
 
-    <div>
+    <div className='bottomButtonContainer'>
       <Button className="button ui first" onClick={onClickStartRecover}>I already have a wallet</Button>
+    </div>
+
+    <div className='learnAboutManta'>
+      <p>Learn more about &nbsp;
+        <a href='https://www.manta.network/' target="_blank">
+           Manta
+        </a>
+      </p>
     </div>
 
   </>);

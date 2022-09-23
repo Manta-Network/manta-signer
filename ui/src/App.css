@@ -251,3 +251,15 @@
 .hideImage {
     width: 10rem;
 }
+
+.bottomButtonContainer {
+    margin-bottom: 3rem;
+}
+
+.learnAboutManta {
+    margin-bottom:-6rem;
+}
+
+.learnAboutMantaSmall {
+    margin-bottom:-5rem;
+}

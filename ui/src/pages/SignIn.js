@@ -61,8 +61,16 @@ const SignIn = (props) => {
         <Button className="button ui first" onClick={onClickSignIn}>
           Unlock
         </Button>
-        <div>
+        <div className='bottomButtonContainer'>
           <a onClick={onClickForgotPassword}>Forgot Password?</a>
+        </div>
+
+        <div className='learnAboutMantaSmall'>
+          <p>Learn more about &nbsp;
+            <a href='https://www.manta.network/' target="_blank">
+              Manta
+            </a>
+          </p>
         </div>
       </div>
     }
