@@ -44,12 +44,8 @@ const Recover = (props) => {
   // currently active page
   const [currentPage, setCurrentPage] = useState(SEED_PHRASE_PAGE);
 
-  // dropdown selection of how many currently active words
-  const [amountOfWords, setAmountOfWords] = useState(DROPDOWN_OPTIONS[0].value);
-
   const goBack = async () => {
     if (currentPage == SEED_PHRASE_PAGE) {
-      props.finishRecovery();
       await props.restartServer(props.payloadType == "Login");
     } else if (currentPage == NEW_PASSWORD_PAGE) {
       // we need to throw away the mnemonics that were already stored

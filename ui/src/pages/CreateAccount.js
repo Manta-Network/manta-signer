@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Button, Input, Label, Header } from 'semantic-ui-react';
 import "../App.css";
+import hiddenImage from "../icons/eye-close.png";
 
 const MIN_PASSWORD_LENGTH = 8;
 const PASSWORD_TAB = 0;
@@ -70,6 +71,7 @@ const CreateAccount = (props) => {
       setPassword('');
       setConfirmPassword('');
       setIsValidPassword(false);
+      setRecoveryPhraseConfirmed(false);
       setCurrentTab(PASSWORD_TAB);
     } else if (currentTab == CONFIRM_PHRASE_TAB) {
       console.log("[INFO]: Going back to View Recovery Phrase Page.");
@@ -101,7 +103,7 @@ const CreateAccount = (props) => {
 
   // This function enables the Next button to continue in the account creation
   // process once the user has read the recovery phrase.
-  const confirmRecoveryPhrase = () => {
+  const onClickConfirmRecoveryPhrase = () => {
     setRecoveryPhraseConfirmed(true);
   }
 
@@ -218,16 +220,20 @@ const CreateAccount = (props) => {
           </div>
 
           <div className='recoveryPhraseContainer'>
-            {props.recoveryPhrase.split(" ").map(function (item, index) {
+            {recoveryPhraseConfirmed ? props.recoveryPhrase.split(" ").map(function (item, index) {
               return (
                 <div key={index} className='recoveryPhraseWord'>
                   <h4>{item}</h4>
                 </div>
               )
-            })}
+            }) :
+              <div>
+                <img className='hideImage' src={hiddenImage} onClick={onClickConfirmRecoveryPhrase} />
+              </div>
+            }
           </div>
 
-          <Button disabled={recoveryPhraseConfirmed} className="button ui first wide" onClick={goForward}>
+          <Button disabled={!recoveryPhraseConfirmed} className="button ui first wide" onClick={goForward}>
             Next
           </Button>
           <div>

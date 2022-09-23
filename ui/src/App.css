@@ -247,3 +247,7 @@
     padding-left:3.5rem;
     padding-right:3rem;
 }
+
+.hideImage {
+    width: 10rem;
+}
