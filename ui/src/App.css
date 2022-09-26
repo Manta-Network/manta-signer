@@ -377,3 +377,21 @@
     padding-top: 3rem;
     padding-bottom: 3rem;
 }
+
+.zkAddressContainer {
+    display: flex;
+    justify-content: center;
+}
+
+.button.ui.copy {
+    background-color: #FFFFFF;
+    display: flex;
+    justify-content: center;
+    margin: 0rem !important;
+    padding: 0rem !important;
+    height:1rem;
+}
+
+.copyIcon {
+    margin: 0rem !important;
+}

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Button, Input, Header, Form, Label } from 'semantic-ui-react';
+import { Button, Input, Header, Form, Label, Icon } from 'semantic-ui-react';
 import mantaLogo from "../icons/manta.png";
 import dolphinLogo from "../icons/Square150x150Logo.png";
 import calamariLogo from "../icons/calamari.png";
@@ -8,9 +8,10 @@ import "../App.css";
 const SignIn = (props) => {
   const [password, setPassword] = useState('');
   const [passwordInvalid, setPasswordInvalid] = useState(null);
-  const [badPasswordTried, setBadPasswordTried] = useState(false);
   const [loginSuccess, setLoginSuccess] = useState(false);
+  const [zkAddress, setZkAddress] = useState("***Address Placeholder***")
 
+  // @TODO: add zkAddress shortening
 
   const onClickSignIn = async () => {
     const shouldRetry = await props.sendPassword(password);
@@ -20,14 +21,16 @@ const SignIn = (props) => {
     } else {
       console.log("RETRY!");
       setPasswordInvalid(true);
-      setBadPasswordTried(true);
     }
   };
 
   const onChangePassword = password => {
-    setBadPasswordTried(false);
     setPassword(password)
     setPasswordInvalid(false)
+  }
+
+  const onClickCopyZkAddress = () => {
+    navigator.clipboard.writeText(zkAddress);
   }
 
   const onClickForgotPassword = async () => {
@@ -84,7 +87,12 @@ const SignIn = (props) => {
 
         <div>
           <h1 className='mainheadline'>Your zkAddress</h1>
-          <p className='subtext'>***Address Placeholder***</p>
+        </div>
+        <div className='zkAddressContainer'>
+          <p className='subtext'>{zkAddress}</p>
+          <Button onClick={onClickCopyZkAddress} className='button ui copy'>
+            <Icon className='copyIcon' name="copy outline" />
+          </Button>
         </div>
         <div className='supportedNetworksContainer'>
           <div className='supportedNetworksChild'>
