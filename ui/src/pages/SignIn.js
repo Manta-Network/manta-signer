@@ -1,6 +1,9 @@
 import React, { useState } from 'react';
 import { Button, Input, Header, Form, Label } from 'semantic-ui-react';
-import mainLogo from "../icons/manta.png";
+import mantaLogo from "../icons/manta.png";
+import dolphinLogo from "../icons/Square150x150Logo.png";
+import calamariLogo from "../icons/calamari.png";
+import newAccount from "../icons/new_account.png";
 import "../App.css";
 const SignIn = (props) => {
   const [password, setPassword] = useState('');
@@ -40,7 +43,7 @@ const SignIn = (props) => {
     {!loginSuccess &&
       <div>
         <div className='mainlogocontainer login'>
-          <img className="mainlogo" src={mainLogo} />
+          <img className="mainlogo" src={mantaLogo} />
         </div>
 
         <div>
@@ -57,7 +60,6 @@ const SignIn = (props) => {
             error={passwordInvalid}
           />
         </Form.Field>
-        {badPasswordTried && <><Label basic color='red' pointing>Wrong Password</Label><br /></>}
         <Button className="button ui first" onClick={onClickSignIn}>
           Unlock
         </Button>
@@ -76,13 +78,26 @@ const SignIn = (props) => {
     }
     {loginSuccess &&
       <div>
-        <div className='mainlogocontainer login'>
-          <img className="mainlogo" src={mainLogo} />
+        <div className='finishLogoContainer'>
+          <img className="mainlogo" src={newAccount} />
         </div>
 
         <div>
           <h1 className='mainheadline'>Your zkAddress</h1>
           <p className='subtext'>***Address Placeholder***</p>
+        </div>
+        <div className='supportedNetworksContainer'>
+          <div className='supportedNetworksChild'>
+            <div className='supportedNetworksHeader'>
+              <h4>Supported Networks</h4>
+            </div>
+            <img className='miniLogo' src={calamariLogo} />
+            <a className='soonTag'>(soon)</a>
+            <img className='miniLogo' src={dolphinLogo} />
+            <img className='miniMantaLogo' src={mantaLogo} />
+            <a className='soonTag'>(soon)</a>
+          </div>
+
         </div>
         <Button className="button ui first" onClick={onClickFinishSignIn}>
           Start

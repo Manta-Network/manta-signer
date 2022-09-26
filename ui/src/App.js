@@ -79,7 +79,25 @@ function App() {
     console.log("[INFO]: Setup listener.");
     listen('authorize', (event) => {
       console.log("[INFO]: Wake: ", event);
-      setAuthorizationSummary(event.payload);
+
+      // parsing authorization summary for easier legibility and rendering.
+      let split_summary = event.payload.split(" ");
+
+      const sendAmount = split_summary[1];
+      const currency = split_summary[2];
+      const toAddress = split_summary[4];
+
+      const toAddress_short = toAddress.substr(0, 10)
+        + "..." + toAddress.substr(toAddress.length - 10);
+
+      // @TODO: add support for multiple networks here
+      let parsed_authorization_summary = {
+        sendAmount: sendAmount,
+        currency: currency,
+        toAddress: toAddress_short
+      };
+
+      setAuthorizationSummary(parsed_authorization_summary);
       setCurrentPage(AUTHORIZE_PAGE);
       appWindow.show();
     });

@@ -1,6 +1,9 @@
 import { once } from '@tauri-apps/api/event';
 import React, { useState, useEffect } from 'react';
-import { Button, Header, Input } from 'semantic-ui-react';
+import { Button, Input } from 'semantic-ui-react';
+
+// Hardcoding current network for now until multi network support
+const CURRENT_NETWORK = "Dolphin";
 
 const Authorize = ({
   summary,
@@ -10,6 +13,7 @@ const Authorize = ({
 }) => {
   const [password, setPassword] = useState('');
   const [passwordInvalid, setPasswordInvalid] = useState(false);
+
 
   useEffect(() => {
     once("abort_auth", async () => {
@@ -44,21 +48,41 @@ const Authorize = ({
 
   return (
     <>
-      <Header>Authorize</Header>
-      <div className="authorize-summary">{summary}</div>
+      <div className='authTransactionHeader'>
+        <h1 className='mainheadline'>Authorize Transaction</h1>
+      </div>
+      <div className='transactionContainer'>
+        <div className='transactionDetail'>
+          <h5 className='transactionDescription'>Send</h5>
+          <div>
+            <h5 className='transactionValue'>{summary.sendAmount + " " + summary.currency}</h5>
+          </div>
+        </div>
+        <div className='transactionDetail'>
+          <h5 className='transactionDescription'>To</h5>
+          <h5 className='transactionValue'>{summary.toAddress}</h5>
+        </div>
+        <div className='transactionDetailPadded'>
+          <h5 className='transactionDescription'>Network</h5>
+          <h5 className='transactionValue'>{CURRENT_NETWORK}</h5>
+        </div>
+      </div>
       <Input
+        className='input ui password'
         type="password"
-        label="Password"
+        placeholder="Enter Password"
         value={password}
         onChange={(e) => onChangePassword(e.target.value)}
         error={passwordInvalid}
       />
-      <Button className="button" onClick={onClickAuthorize}>
-        Authorize
-      </Button>
-      <Button className="button" onClick={onClickDecline}>
-        Decline
-      </Button>
+      <div className='authButtonsContainer'>
+        <Button className="button ui cancel" onClick={onClickDecline}>
+          Cancel
+        </Button>
+        <Button className="button ui first thin" onClick={onClickAuthorize}>
+          Authorize
+        </Button>
+      </div>
     </>
   );
 };

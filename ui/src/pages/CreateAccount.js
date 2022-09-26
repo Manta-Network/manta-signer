@@ -95,7 +95,7 @@ const CreateAccount = (props) => {
   }
 
   // This function is called when the user clicks "Finish" at the final page
-  // This function will close the signer tab.
+  // This function will redirect the user to log in with the password they just made.
   const onClickFinishSetup = async () => {
     console.log("[INFO]: Finishing Setup.")
     await props.restartServer(true);

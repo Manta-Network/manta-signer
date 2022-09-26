@@ -91,6 +91,25 @@
     width: 65%;
 }
  
+.button.ui.first.thin {
+    background-color: #0894ec;
+    color:#FFFFFF;
+    border-radius: 5px;
+    height: 40px;
+    width: 29%;
+}
+
+.button.ui.cancel {
+    background-color: #FFFFFF;
+    border-color: #0894ec;
+    color: #0894ec;
+    border-radius: 5px;
+    height: 40px;
+    width: 29%;
+    border-style: solid;
+    border-width: thin;
+}
+
 .button.ui.first.wide {
     background-color: #0894ec;
     color:#FFFFFF;
@@ -262,4 +281,99 @@
 
 .learnAboutMantaSmall {
     margin-bottom:-5rem;
+}
+
+.supportedNetworksContainer {
+    display:flex;
+    flex-wrap:wrap;
+    justify-content:center;
+    padding-top:1rem;
+    margin-bottom: 3rem;
+}
+
+.supportedNetworksChild {
+    border-color: #0894ec;
+    border-style: solid;
+    border-radius: 5px;
+    border-width: thin;
+    width: 65%;
+}
+
+.supportedNetworksHeader {
+    margin-top: 1rem;
+    margin-bottom: 1rem;
+}
+
+.miniLogo {
+    width:3rem;
+    margin-left:1rem;
+    margin-right:1rem;
+    margin-bottom:0.5rem;
+}
+
+.miniMantaLogo {
+    width:2.5rem;
+    padding-bottom:3px;
+    margin-left:1rem;
+    margin-right:1rem;
+    margin-bottom:0.5rem;
+}
+
+.soonTag {
+    margin-left:-1rem;
+    margin-bottom:0.5rem;
+}
+
+.finishLogoContainer {
+    padding-top:6rem;
+}
+
+.transactionContainer {
+    display:flex;
+    flex-wrap:wrap;
+    justify-content:center;
+}
+
+.transactionDetail {
+    border-color: #e6ecf5;
+    border-style: solid;
+    border-radius: 5px;
+    border-width: thin;
+    background-color: #f8fcfc;
+    display: flex;
+    justify-content: space-between;
+    width: 65%;
+    height:2.7rem;
+}
+
+.transactionDetailPadded {
+    border-color: #e6ecf5;
+    border-style: solid;
+    border-radius: 5px;
+    border-width: thin;
+    margin-top:2rem;
+    background-color: #f8fcfc;
+    display: flex;
+    justify-content: space-between;
+    width: 65%;
+    height:2.7rem;
+    margin-bottom: 1.5rem;
+}
+
+.transactionDescription {
+    color:gray;
+    padding-left: 2rem;
+    margin-top: 0.5rem !important;
+    margin-bottom: 0.5rem !important;
+}
+
+.transactionValue {
+    padding-right:2rem;
+    margin-top: 0.5rem !important;
+    margin-bottom: 0.5rem !important;
+}
+
+.authTransactionHeader {
+    padding-top: 3rem;
+    padding-bottom: 3rem;
 }
