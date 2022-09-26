@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react"
 import { Button, Input, Label, Form, Header, Dropdown } from 'semantic-ui-react';
 import "../App.css";
+import { appWindow, LogicalSize } from '@tauri-apps/api/window';
 
 const bip39 = require('bip39');
 
@@ -9,6 +10,9 @@ const NEW_PASSWORD_PAGE = 1;
 const FINISH_PAGE = 2;
 
 const MIN_PASSWORD_LENGTH = 8;
+
+const DEFAULT_WINDOW_SIZE = new LogicalSize(460,500);
+const CONFIRM_PHRASE_WINDOW_SIZE = new LogicalSize(460,750);
 
 const DROPDOWN_OPTIONS = [
   {
@@ -46,6 +50,7 @@ const Recover = (props) => {
 
   const goBack = async () => {
     if (currentPage == SEED_PHRASE_PAGE) {
+      appWindow.setSize(DEFAULT_WINDOW_SIZE);
       await props.restartServer(props.payloadType == "Login");
     } else if (currentPage == NEW_PASSWORD_PAGE) {
       // we need to throw away the mnemonics that were already stored
@@ -57,6 +62,7 @@ const Recover = (props) => {
 
   const goForward = async () => {
     if (currentPage == SEED_PHRASE_PAGE) {
+      appWindow.setSize(DEFAULT_WINDOW_SIZE);
       setCurrentPage(NEW_PASSWORD_PAGE);
     } else if (currentPage == NEW_PASSWORD_PAGE) {
 
@@ -88,6 +94,12 @@ const Recover = (props) => {
     const new_words = [...DEFAULT_PHRASES[amount_of_words]];
 
     console.log("[INFO]: Selected " + amount_of_words + " word recovery phrase.");
+
+    if (amount_of_words == 12) {
+      appWindow.setSize(DEFAULT_WINDOW_SIZE);
+    } else if (amount_of_words == 24) {
+      appWindow.setSize(CONFIRM_PHRASE_WINDOW_SIZE);
+    }
 
     setMnemonics(new_words)
   }
@@ -154,7 +166,7 @@ const Recover = (props) => {
 
     {currentPage == SEED_PHRASE_PAGE && <>
 
-      <div className='tightHeaderContainer'>
+      <div className='recoverHeaderContainer'>
         <h1 className='mainheadline'>Reset Wallet</h1>
         <p className='subtext'>
           You can reset your password by entering your secret recovery phrase.

@@ -57,7 +57,8 @@
         "allowlist": {
             "window": {
                 "hide": true,
-                "show": true
+                "show": true,
+                "setSize": true
             },
             "shell": {
                 "all": true

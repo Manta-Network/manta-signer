@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Button, Input, Label, Header } from 'semantic-ui-react';
 import "../App.css";
 import hiddenImage from "../icons/eye-close.png";
+import { appWindow, LogicalSize } from '@tauri-apps/api/window';
 
 const MIN_PASSWORD_LENGTH = 8;
 const PASSWORD_TAB = 0;
@@ -9,6 +10,8 @@ const SHOW_PHRASE_TAB = 1;
 const CONFIRM_PHRASE_TAB = 2;
 const FINAL_TAB = 3;
 
+const DEFAULT_WINDOW_SIZE = new LogicalSize(460,500);
+const CONFIRM_PHRASE_WINDOW_SIZE = new LogicalSize(460,900);
 
 const CreateAccount = (props) => {
   const [password, setPassword] = useState('');
@@ -76,6 +79,7 @@ const CreateAccount = (props) => {
     } else if (currentTab == CONFIRM_PHRASE_TAB) {
       console.log("[INFO]: Going back to View Recovery Phrase Page.");
       setSelectedRecoveryPhrase([]);
+      appWindow.setSize(DEFAULT_WINDOW_SIZE);
       setCurrentTab(SHOW_PHRASE_TAB);
     }
   }
@@ -85,11 +89,13 @@ const CreateAccount = (props) => {
     if (currentTab == PASSWORD_TAB) {
       setCurrentTab(SHOW_PHRASE_TAB);
     } else if (currentTab == SHOW_PHRASE_TAB) {
+      appWindow.setSize(CONFIRM_PHRASE_WINDOW_SIZE);
       setCurrentTab(CONFIRM_PHRASE_TAB);
     } else if (currentTab == CONFIRM_PHRASE_TAB) {
       // Recovery Phrase has already been confirmed here, the button will stop being disabled
       // Once the user has entered it in the correct order.
       onClickCreateAccount();
+      appWindow.setSize(DEFAULT_WINDOW_SIZE);
       setCurrentTab(FINAL_TAB);
     }
   }
@@ -242,7 +248,7 @@ const CreateAccount = (props) => {
         </>
       )}
       {currentTab == CONFIRM_PHRASE_TAB && (<>
-        <div className='tightHeaderContainer'>
+        <div className='tallHeaderContainer'>
           <h1 className='mainheadline'>Confirm Your Secret Recovery Phrase</h1>
           <p className='subtext'>
             Please select each word in order to make sure it is correct.

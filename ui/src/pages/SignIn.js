@@ -5,6 +5,7 @@ import dolphinLogo from "../icons/Square150x150Logo.png";
 import calamariLogo from "../icons/calamari.png";
 import newAccount from "../icons/new_account.png";
 import "../App.css";
+
 const SignIn = (props) => {
   const [password, setPassword] = useState('');
   const [passwordInvalid, setPasswordInvalid] = useState(null);
@@ -91,7 +92,7 @@ const SignIn = (props) => {
         <div className='zkAddressContainer'>
           <p className='subtext'>{zkAddress}</p>
           <Button onClick={onClickCopyZkAddress} className='button ui copy'>
-            <Icon className='copyIcon' name="copy outline" />
+            <Icon name="copy outline" />
           </Button>
         </div>
         <div className='supportedNetworksContainer'>

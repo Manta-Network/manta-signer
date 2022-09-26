@@ -176,6 +176,16 @@
     padding-top: 5rem;
 }
 
+.recoverHeaderContainer {
+    margin:1rem;
+    padding-top: 7rem;
+}
+
+.tallHeaderContainer {
+    margin:1rem;
+    padding-top: 10rem;
+}
+
 .recoveryPhraseContainer {
     display:flex;
     flex-wrap:wrap;
@@ -204,11 +214,10 @@
     flex-wrap:wrap;
     justify-content:left;
     border-color: #eef0f2;
-    height:9rem;
+    height:22rem;
     margin-left:1rem;
     margin-right:1rem;
     border-style: solid;
-    overflow-y: scroll;
 }
 
 .buttonListContainer {
@@ -216,8 +225,7 @@
     display:flex;
     flex-wrap:wrap;
     justify-content:space-evenly;
-    height:7rem;
-    overflow-y: scroll;
+    height:22rem;
     margin:1rem;
 }
 
@@ -260,8 +268,7 @@
     display:flex;
     flex-wrap:wrap;
     justify-content:space-evenly;
-    height:15rem;
-    overflow-y: scroll;
+    max-height:32rem;
     margin-top:1rem;
     padding-left:3.5rem;
     padding-right:3rem;
@@ -390,8 +397,4 @@
     margin: 0rem !important;
     padding: 0rem !important;
     height:1rem;
-}
-
-.copyIcon {
-    margin: 0rem !important;
 }
