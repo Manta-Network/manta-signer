@@ -71,8 +71,8 @@ jobs:
         env:
           cache-name: cache-target
         with:
-          path: ui/src-tauri/target
-          key: ${{ matrix.os }}-build-${{ env.cache-name }}-${{ hashFiles('./ui/src-tauri/Cargo.lock') }}
+          path: target
+          key: ${{ matrix.os }}-build-${{ env.cache-name }}-${{ hashFiles('./Cargo.lock') }}
           restore-keys: |
             ${{ matrix.os }}-build-${{ env.cache-name }}-
             ${{ matrix.os }}-build-
@@ -117,7 +117,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.get_release.outputs.upload_url }}
-          asset_path: ui/src-tauri/target/release/bundle/deb/manta-signer_${{ steps.suffixed.outputs.SUFFIXED }}_amd64.deb
+          asset_path: target/release/bundle/deb/manta-signer_${{ steps.suffixed.outputs.SUFFIXED }}_amd64.deb
           asset_name: manta-signer-${{ matrix.os }}_${{ needs.setup.outputs.release_version }}_amd64.deb
           asset_content_type: application/binary
         if: matrix.os_type == 'ubuntu' && github.event_name == 'release' && github.event.action == 'published'
@@ -133,7 +133,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.get_release.outputs.upload_url }}
-          asset_path: "ui/src-tauri/target/release/bundle/${{ steps.release_vars.outputs.IMAGE }}"
+          asset_path: "target/release/bundle/${{ steps.release_vars.outputs.IMAGE }}"
           asset_name: "${{ steps.release_vars.outputs.RELEASE_IMAGE }}" 
           asset_content_type: application/binary
         if: github.event_name == 'release' && github.event.action == 'published'
@@ -141,7 +141,7 @@ jobs:
         id: content_hash
         run: echo "::set-output name=HASH::${{ hashFiles( env.FILE ) }}"
         env:
-          FILE: 'ui/src-tauri/target/release/bundle/${{ steps.release_vars.outputs.IMAGE }}'
+          FILE: 'target/release/bundle/${{ steps.release_vars.outputs.IMAGE }}'
       - name: Upload Updater package
         id: updater
         uses: actions/upload-release-asset@v1
@@ -149,7 +149,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.get_release.outputs.upload_url }}
-          asset_path: "ui/src-tauri/target/release/bundle/${{ steps.release_vars.outputs.IMAGE_UPDATE }}"
+          asset_path: "target/release/bundle/${{ steps.release_vars.outputs.IMAGE_UPDATE }}"
           asset_name: "${{ steps.release_vars.outputs.RELEASE_IMAGE_UPDATE }}"
           asset_content_type: application/binary
         if: github.event_name == 'release' && github.event.action == 'published'
@@ -160,7 +160,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.get_release.outputs.upload_url }}
-          asset_path: "ui/src-tauri/target/release/bundle/${{ steps.release_vars.outputs.UPDATE_SIG }}"
+          asset_path: "target/release/bundle/${{ steps.release_vars.outputs.UPDATE_SIG }}"
           asset_name: "${{ steps.release_vars.outputs.RELEASE_UPDATE_SIG }}"
           asset_content_type: application/binary
         if: github.event_name == 'release' && github.event.action == 'published'
