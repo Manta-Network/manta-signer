@@ -202,7 +202,7 @@ impl Authorizer for User {
     }
 
     #[inline]
-    fn setup<'s>(&'s mut self, data_exists: bool) -> SetupFuture<'s> {
+    fn setup(& mut self, data_exists: bool) -> SetupFuture {
         let window = self.window.clone();
         Box::pin(async move {
             // creating a new mnemonic in case user will create a new account.
