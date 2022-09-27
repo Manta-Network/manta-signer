@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Button, Input, Header, Form, Label } from 'semantic-ui-react';
+import { Button, Input, Form, Label } from 'semantic-ui-react';
 import mainLogo from "../icons/Square150x150Logo.png"
 import "../fonts/ibm-plex/css/styles.css";
 const SignIn = ({ sendPassword, endInitialConnectionPhase }) => {
@@ -29,7 +29,7 @@ const SignIn = ({ sendPassword, endInitialConnectionPhase }) => {
   return (
     <div>
       <div>
-        <img draggable="false" unselectable="on" dragstart="false" src={mainLogo} />
+        <img draggable="false" unselectable="on" dragstart="false" src={mainLogo} alt={"Manta Logo"} />
       </div>
       <Form.Field>
         <Input

@@ -20,11 +20,11 @@
 
 use crate::config::Setup;
 use futures::future::BoxFuture;
+use manta_crypto::rand::OsRng;
 use manta_pay::key::Mnemonic;
 use manta_util::serde::Serialize;
 use password_hash::{PasswordHashString, SaltString};
 use tokio::sync::mpsc::{channel, Receiver, Sender};
-use manta_crypto::rand::OsRng;
 
 pub use password_hash::{Error as PasswordHashError, PasswordHasher, PasswordVerifier};
 pub use secrecy::{ExposeSecret, Secret, SecretString};
@@ -83,13 +83,11 @@ impl Default for Password {
 pub type UnitFuture<'t> = BoxFuture<'t, ()>;
 
 /// Setup Future
-/// 
+///
 /// This `type` is used by the [`setup`] method of [`Authorizer`]. See its documentation for more.
-/// 
+///
 /// [`setup`]: Authorizer::setup
-pub type SetupFuture<'t> = BoxFuture<'t,Setup>;
-
-
+pub type SetupFuture<'t> = BoxFuture<'t, Setup>;
 
 /// Password Future
 ///
@@ -104,7 +102,7 @@ pub enum UserSelection {
     Create,
 
     /// Recover an old account by providing a recovery phrase
-    Recover
+    Recover,
 }
 
 /// Authorizer
@@ -121,8 +119,7 @@ pub trait Authorizer: 'static + Send {
     /// The [`Server::start`] function already calls this method internally.
     ///
     /// [`Server::start`]: crate::service::Server::start
-    fn setup<'s>(&'s mut self, data_exists : bool ) -> SetupFuture<'s>;
-
+    fn setup<'s>(&'s mut self, data_exists: bool) -> SetupFuture<'s>;
 
     /// Prompts the authorizer with `prompt` so that they can be notified that their password is
     /// requested.
@@ -243,8 +240,16 @@ pub struct MnemonicSender {
 impl MnemonicSender {
     /// Builds a new [`MnemonicSender`] from `mnemonic` and `retry`.
     #[inline]
-    pub fn new(mnemonic: Sender<Mnemonic>, selection: Sender<UserSelection>, retry: Receiver<bool>) -> Self {
-        Self { mnemonic, selection, retry }
+    pub fn new(
+        mnemonic: Sender<Mnemonic>,
+        selection: Sender<UserSelection>,
+        retry: Receiver<bool>,
+    ) -> Self {
+        Self {
+            mnemonic,
+            selection,
+            retry,
+        }
     }
 
     /// Loads the mnemonic with `mnemonic` waiting for a retry message.
@@ -260,7 +265,8 @@ impl MnemonicSender {
     /// Loads the mnemonic with `mnemonic` without requesting a retry message.
     #[inline]
     pub async fn load_exact(&mut self, mnemonic: Mnemonic) {
-        let mnemonic_instance = Mnemonic::new(mnemonic).expect("Unable to generate mnemonic object using given seed.");
+        let mnemonic_instance =
+            Mnemonic::new(mnemonic).expect("Unable to generate mnemonic object using given seed.");
         let _ = self.mnemonic.send(mnemonic_instance).await;
     }
 
@@ -277,7 +283,6 @@ impl MnemonicSender {
         let _ = self.mnemonic.send(random_mnemonic).await;
     }
 }
-
 
 impl PasswordSender {
     /// Builds a new [`PasswordSender`] from `password` and `retry`.
@@ -316,7 +321,6 @@ pub struct PasswordReceiver {
 
     /// Retry Sender
     pub retry: Sender<bool>,
-    
 }
 
 /// Mnemonic Receiver
@@ -360,8 +364,16 @@ impl PasswordReceiver {
 impl MnemonicReceiver {
     /// Builds a new [`MnemonicReceiver`] from `mnemonic` and `retry`.
     #[inline]
-    pub fn new(mnemonic: Receiver<Mnemonic>, selection: Receiver<UserSelection>, retry: Sender<bool>) -> Self {
-        Self { mnemonic, selection, retry }
+    pub fn new(
+        mnemonic: Receiver<Mnemonic>,
+        selection: Receiver<UserSelection>,
+        retry: Sender<bool>,
+    ) -> Self {
+        Self {
+            mnemonic,
+            selection,
+            retry,
+        }
     }
 
     /// Sends the message `retry` across the retry channel.
@@ -386,10 +398,9 @@ impl MnemonicReceiver {
     #[inline]
     pub async fn selection(&mut self) -> UserSelection {
         self.selection
-        .recv()
-        .await
-        .expect("Failed to load user selection.")
-
+            .recv()
+            .await
+            .expect("Failed to load user selection.")
     }
 }
 
@@ -409,9 +420,9 @@ pub fn password_channel() -> (PasswordSender, PasswordReceiver) {
 pub fn mnemonic_channel() -> (MnemonicSender, MnemonicReceiver) {
     let (mnemonic_sender, mnemonic_receiver) = channel(1);
     let (retry_sender, retry_receiver) = channel(1);
-    let (selection_sender,selection_receiver) = channel(1);
+    let (selection_sender, selection_receiver) = channel(1);
     (
-        MnemonicSender::new(mnemonic_sender,selection_sender, retry_receiver),
-        MnemonicReceiver::new(mnemonic_receiver,selection_receiver, retry_sender),
+        MnemonicSender::new(mnemonic_sender, selection_sender, retry_receiver),
+        MnemonicReceiver::new(mnemonic_receiver, selection_receiver, retry_sender),
     )
 }

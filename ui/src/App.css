@@ -64,3 +64,17 @@
 .recovery-phrase-header {
     margin-bottom: 0.5rem !important;
 }
+
+.ui.button.recoverWallet {
+    background-color: #FFFFFF;
+    color:black;
+} 
+
+.ui.button.recoverWallet:hover {
+    color:gray;
+    background-color: #FFFFFF;
+}
+
+.recoverWalletContainer {
+    margin-top:-2rem;
+}

@@ -1,4 +1,4 @@
-import { Button, Input, Label, Header } from 'semantic-ui-react';
+import { Button } from 'semantic-ui-react';
 import mainLogo from "../icons/Square150x150Logo.png"
 import "../fonts/ibm-plex/css/styles.css";
 
@@ -15,7 +15,7 @@ const SignInOrReset = (props) => {
 
   return (<>
     <div>
-      <img draggable="false" unselectable="on" dragstart="false" src={mainLogo} />
+      <img draggable="false" unselectable="on" dragstart="false" src={mainLogo} alt={"Manta Logo"} />
     </div>
 
     <Button className="button ui first" onClick={onClickStartSignIn}>Log In</Button>

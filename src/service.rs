@@ -64,7 +64,6 @@ pub use manta_pay::{
     },
 };
 
-
 /// Password Retry Interval
 pub const PASSWORD_RETRY_INTERVAL: Duration = Duration::from_millis(1000);
 
@@ -201,7 +200,6 @@ impl<A> Server<A>
 where
     A: Authorizer,
 {
-
     /// Builds a new [`Server`] from `config` and `authorizer`.
     #[inline]
     pub async fn build(config: Config, mut authorizer: A) -> Result<Self> {

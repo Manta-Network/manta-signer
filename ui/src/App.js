@@ -57,7 +57,7 @@ function App() {
     };
     beginInitialConnectionPhase();
     setActiveListeners({...activeListeners, connect:true});
-  }, [isConnected]);
+  }, [isConnected,activeListeners]);
 
   const hideWindow = () => {
     console.log("[INFO]: HIDE.");

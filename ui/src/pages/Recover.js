@@ -31,7 +31,8 @@ const Recover = (props) => {
     props.restartServer();
   }
 
-  const validateMnemonics = () => {
+
+  useEffect(() => {
     let is_valid = bip39.validateMnemonic(mnemonics);
 
     if (is_valid && (!validity)) {
@@ -39,9 +40,9 @@ const Recover = (props) => {
     } else if (!is_valid && (validity)) {
       setValidity(false);
     }
-  }
+  }, [mnemonics,validity])
 
-  const validateNewPass = () => {
+  useEffect(() => {
     let is_valid = newPass.length >= MIN_PASSWORD_LENGTH;
 
     if (is_valid && (!newPassValidity)) {
@@ -49,15 +50,7 @@ const Recover = (props) => {
     } else if (!is_valid && (newPassValidity)) {
       setNewPassValidity(false);
     }
-  }
-
-  useEffect(() => {
-    validateMnemonics();
-  }, [mnemonics])
-
-  useEffect(() => {
-    validateNewPass();
-  }, [newPass])
+  }, [newPass,newPassValidity])
 
   return (<>
 
@@ -76,7 +69,7 @@ const Recover = (props) => {
             <Button primary className="button ui first" onClick={onClickRecover}>Start</Button> :
             <Button disabled primary className="button ui first">Start</Button>}
         </div>
-        {(!newPassValidity && newPass.length != 0) ? <Label color='red'>Invalid Password Length!</Label> : <br></br>}
+        {(!newPassValidity && newPass.length !== 0) ? <Label color='red'>Invalid Password Length!</Label> : <br></br>}
       </> :
       <>
         <Form>
@@ -95,7 +88,7 @@ const Recover = (props) => {
             <Button disabled primary className="button ui first">Continue</Button>}
           <Button className="button ui two" onClick={onClickCancel}>Cancel</Button>
         </div>
-        {(!validity && mnemonics.length != 0) ? <Label color='red'>Invalid Seed Phrase!</Label> : <br></br>}
+        {(!validity && mnemonics.length !== 0) ? <Label color='red'>Invalid Seed Phrase!</Label> : <br></br>}
       </>}
 
   </>);
