@@ -28,6 +28,8 @@ function App() {
   const [payloadType, setPayloadType] = useState(null);
   const [recoveryPhrase, setRecoveryPhrase] = useState(null);
   const [authorizationSummary, setAuthorizationSummary] = useState(null);
+  const [receivingKey,setReceivingKey] = useState(null);
+  const [receivingKeyDisplay,setReceivingKeyDisplay] = useState(null);
   const [activeListeners, setActiveListeners] = useState({
     tx: false,
     connect: false,
@@ -185,6 +187,16 @@ function App() {
     hideWindow();
   }
 
+  const getReceivingKeys = async () => {
+    const newReceivingKeys = await invoke('receiving_keys');
+    const newReceivingKey = newReceivingKeys[0];
+    setReceivingKey(newReceivingKey);
+    const newReceivingKeyDisplay = newReceivingKey ?
+      `${newReceivingKey.slice(0, 10)}...${newReceivingKey.slice(-10)}` :
+      '';
+    setReceivingKeyDisplay(newReceivingKeyDisplay);
+  }
+
   // keeps the connect listener in sync with currentPage state
   useEffect(() => {
     currentPageRef.current = currentPage;
@@ -234,6 +246,9 @@ function App() {
         )}
         {currentPage === LOGIN_PAGE && (
           <SignIn
+            getReceivingKeys={getReceivingKeys}
+            receivingKey={receivingKey}
+            receivingKeyDisplay={receivingKeyDisplay}
             sendPassword={sendPassword}
             endInitialConnectionPhase={endInitialConnectionPhase}
             startRecover={startRecover}

@@ -32,6 +32,7 @@ use core::{
 };
 use manta_signer::{
     config::{Config, Setup},
+    query::get_receiving_keys,
     secret::{
         password_channel, Authorizer, Password, PasswordFuture, PasswordReceiver, PasswordSender,
         Secret, UnitFuture, SetupFuture, MnemonicSender, MnemonicReceiver, mnemonic_channel, UserSelection
@@ -446,6 +447,16 @@ async fn reset_account(
 }
 
 
+/// Returns receiving keys to front end to display once user is logged in.
+#[tauri::command]
+async fn receiving_keys() -> Result<Vec<String>,()> {
+    let config =
+        Config::try_default().expect("Unable to generate the default server configuration.");
+    let keys = get_receiving_keys(&config.service_url).await;
+    keys
+}
+
+
 /// Returns the window with the given `label` from `app`.
 ///
 /// # Panics
@@ -533,7 +544,8 @@ fn main() {
             send_mnemonic,
             reset_account,
             ui_connected,
-            ui_disconnected
+            ui_disconnected,
+            receiving_keys
         ])
         .build(tauri::generate_context!())
         .expect("Error while building UI.");

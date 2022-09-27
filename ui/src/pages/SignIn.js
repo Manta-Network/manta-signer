@@ -10,12 +10,16 @@ const SignIn = (props) => {
   const [password, setPassword] = useState('');
   const [passwordInvalid, setPasswordInvalid] = useState(null);
   const [loginSuccess, setLoginSuccess] = useState(false);
-  const [zkAddress, setZkAddress] = useState("***Address Placeholder***")
 
   // @TODO: add zkAddress shortening
 
   const onClickSignIn = async () => {
     const shouldRetry = await props.sendPassword(password);
+
+    if (!shouldRetry) {
+      await props.getReceivingKeys();
+    }
+
     if (!shouldRetry) {
       setPassword('');
       setLoginSuccess(true);
@@ -31,7 +35,7 @@ const SignIn = (props) => {
   }
 
   const onClickCopyZkAddress = () => {
-    navigator.clipboard.writeText(zkAddress);
+    navigator.clipboard.writeText(props.receivingKey);
   }
 
   const onClickForgotPassword = async () => {
@@ -90,9 +94,9 @@ const SignIn = (props) => {
           <h1 className='mainheadline'>Your zkAddress</h1>
         </div>
         <div className='zkAddressContainer'>
-          <p className='subtext'>{zkAddress}</p>
+          <p className='subtext'>{props.receivingKeyDisplay}</p>
           <Button onClick={onClickCopyZkAddress} className='button ui copy'>
-            <Icon name="copy outline" />
+            <Icon name="copy outline" className='specific' />
           </Button>
         </div>
         <div className='supportedNetworksContainer'>

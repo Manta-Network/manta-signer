@@ -398,3 +398,7 @@
     padding: 0rem !important;
     height:1rem;
 }
+
+.ui.button:not(.icon)>.icon:not(.button):not(.dropdown).specific {
+    margin:0rem;
+}

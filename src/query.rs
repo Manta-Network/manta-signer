@@ -14,28 +14,25 @@
 // You should have received a copy of the GNU General Public License
 // along with manta-signer. If not, see <http://www.gnu.org/licenses/>.
 
-//! Manta Signer
+//! Queries to Manta Signer Server
 
-#![cfg_attr(doc_cfg, feature(doc_cfg))]
-#![forbid(rustdoc::broken_intra_doc_links)]
-#![forbid(missing_docs)]
+use manta_pay::config::{ReceivingKey, receiving_key_to_base58};
 
-extern crate alloc;
+/// Queries signer server to get all receiving keys
+pub async fn get_receiving_keys(service_url: &str) -> Result<Vec<String>, ()> {
+    let client = reqwest::Client::new();
+    let url = format!("http://{}{}", service_url , "/receivingKeys");
+    let keys: Vec<String> = client.post(url)
+        .json(&String::from("GetAll"))
+        .send()
+        .await
+        .expect("Failed to get receiving keys")
+        .json::<Vec<ReceivingKey>>()
+        .await
+        .expect("Failed to deserialize receiving keys")
+        .into_iter()
+        .map(|key| receiving_key_to_base58(&key))
+        .collect();
 
-pub mod config;
-pub mod http;
-pub mod log;
-pub mod parameters;
-pub mod secret;
-pub mod service;
-pub mod storage;
-pub mod query;
-
-#[doc(inline)]
-pub use manta_util::serde;
-
-#[doc(inline)]
-pub use tokio;
-
-/// Manta Signer Server Version
-pub const VERSION: &str = env!("CARGO_PKG_VERSION");
+    Ok(keys)
+}
