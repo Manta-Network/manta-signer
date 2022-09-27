@@ -216,11 +216,10 @@ where
         let setup = authorizer.setup(data_exists).await;
         let (password_hash, signer) = match setup {
             Setup::CreateAccount(mnemonic) => loop {
-                if let Some((password, password_hash)) = Self::load_password(&mut authorizer).await
+                if let Some((_password, password_hash)) = Self::load_password(&mut authorizer).await
                 {
                     let state = Self::create_state(
                         &config.data_path,
-                        &password,
                         &password_hash,
                         mnemonic,
                         parameters,
@@ -289,14 +288,13 @@ where
     #[inline]
     async fn create_state(
         data_path: &Path,
-        password: &SecretString,
         password_hash: &PasswordHash<Argon2>,
         mnemonic: Mnemonic,
         parameters: SignerParameters,
     ) -> Result<Signer> {
         info!("creating signer state")?;
         let state = SignerState::new(
-            TestnetKeySecret::new(mnemonic, password.expose_secret())
+            TestnetKeySecret::new(mnemonic, "")
                 .map(HierarchicalKeyDerivationFunction::default()),
             UtxoAccumulator::new(
                 task::spawn_blocking(crate::parameters::load_utxo_accumulator_model)
