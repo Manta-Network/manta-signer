@@ -4,8 +4,8 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
-
 ### Added
+- [\#154](https://github.com/Manta-Network/manta-signer/pull/154) Add storage abstractions and add server storage hook
 
 ### Changed
 
@@ -14,16 +14,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 ### Removed
 
 ### Fixed
-
-### Security
-
-## [0.7.4] - 2022-09-27
-### Added
-- [\#154](https://github.com/Manta-Network/manta-signer/pull/154) Add storage abstractions and add server storage hook
-
-### Fixed
 - [\#166](https://github.com/Manta-Network/manta-signer/pull/166) Stop close button[X] on Authorization prompt(Private to Anything) from closing manta-signer
 - [\#164](https://github.com/Manta-Network/manta-signer/pull/164) Adding some communication between UI and backend to ensure sync at connection start
+
+### Security
 
 ## [0.7.3] - 2022-07-11T17:25:22Z
 ### Fixed
