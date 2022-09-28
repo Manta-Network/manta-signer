@@ -6,6 +6,7 @@ import SignIn from './pages/SignIn';
 import Reset from "./pages/Reset";
 import CreateOrRecover from './pages/CreateOrRecover';
 import Recover from './pages/Recover';
+import ViewSecretPhrase from './pages/ViewSecretPhrase';
 import { Container } from 'semantic-ui-react';
 import { appWindow } from '@tauri-apps/api/window';
 import { invoke } from '@tauri-apps/api/tauri';
@@ -13,13 +14,15 @@ import { listen } from '@tauri-apps/api/event';
 import { useState, useEffect, useRef } from 'react';
 
 
+
 const LOADING_PAGE = 0;
 const CREATE_ACCOUNT_PAGE = 1;
 const LOGIN_PAGE = 2;
 const AUTHORIZE_PAGE = 3;
-const RESET_PAGE = 5;
-const CREATE_OR_RECOVER_PAGE = 6;
-const RECOVER_PAGE = 7;
+const RESET_PAGE = 4;
+const CREATE_OR_RECOVER_PAGE = 5;
+const RECOVER_PAGE = 6;
+const EXPORT_RECOVERY_PHRASE_PAGE = 7;
 
 function App() {
   const [currentPage, setCurrentPage] = useState(LOADING_PAGE);
@@ -28,8 +31,8 @@ function App() {
   const [payloadType, setPayloadType] = useState(null);
   const [recoveryPhrase, setRecoveryPhrase] = useState(null);
   const [authorizationSummary, setAuthorizationSummary] = useState(null);
-  const [receivingKey,setReceivingKey] = useState(null);
-  const [receivingKeyDisplay,setReceivingKeyDisplay] = useState(null);
+  const [receivingKey, setReceivingKey] = useState(null);
+  const [receivingKeyDisplay, setReceivingKeyDisplay] = useState(null);
   const [activeListeners, setActiveListeners] = useState({
     tx: false,
     connect: false,
@@ -182,6 +185,11 @@ function App() {
     setCurrentPage(RECOVER_PAGE);
   }
 
+  const startShowRecoveryPhrase = async () => {
+    console.log("[INFO]: Start recovery process.")
+    setCurrentPage(EXPORT_RECOVERY_PHRASE_PAGE);
+  }
+
   const cancelReset = async () => {
     console.log("[INFO]: Cancel reset process.")
     hideWindow();
@@ -260,6 +268,12 @@ function App() {
             sendPassword={sendPassword}
             stopPasswordPrompt={stopPasswordPrompt}
             hideWindow={hideWindow}
+          />
+        )}
+        {currentPage === EXPORT_RECOVERY_PHRASE_PAGE && (
+          <ViewSecretPhrase
+            hideWindow={hideWindow}
+            recoveryPhrase={recoveryPhrase}
           />
         )}
       </Container>

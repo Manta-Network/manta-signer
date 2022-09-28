@@ -83,6 +83,14 @@
     margin-top:2rem;
 }
 
+.input.ui.password.tall.wide {
+    border-radius: 5px;
+    height: 40px;
+    width: 80%;
+    margin: 0.5rem;
+    margin-top:2rem;
+}
+
 .button.ui.first {
     background-color: #0894ec;
     color:#FFFFFF;
@@ -108,6 +116,10 @@
     width: 29%;
     border-style: solid;
     border-width: thin;
+}
+
+.button.ui.cancel:hover {
+    border:none;
 }
 
 .button.ui.first.wide {
@@ -401,4 +413,27 @@
 
 .ui.button:not(.icon)>.icon:not(.button):not(.dropdown).specific {
     margin:0rem;
+}
+
+.secretPhraseWarning {
+    background-color: #ffece4;
+    width: 80%;
+    text-align: left;
+}
+
+.secretPhraseWarningText {
+    padding: 1rem;
+    color: #FFBC2C;
+}
+
+.secretPhraseWarningContainer {
+    display: flex;
+    flex-wrap:wrap;
+    justify-content: center;
+    padding-top: 1rem;
+}
+
+.cancelShowRecoveryButtonContainer {
+    margin-bottom: -5rem;
+    margin-top: -1rem;
 }
