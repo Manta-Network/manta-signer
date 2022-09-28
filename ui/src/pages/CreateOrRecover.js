@@ -16,7 +16,7 @@ const CreateOrRecover = (props) => {
   return (<>
 
     <div className='mainlogocontainer'>
-      <img className="mainlogo" src={mainLogo} />
+      <img className="mainlogo" alt="Manta Logo" src={mainLogo} />
     </div>
 
     <div>

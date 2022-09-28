@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Button, Input, Header, Form, Label, Icon } from 'semantic-ui-react';
+import { Button, Input, Form, Icon } from 'semantic-ui-react';
 import mantaLogo from "../icons/manta.png";
 import dolphinLogo from "../icons/Square150x150Logo.png";
 import calamariLogo from "../icons/calamari.png";
@@ -51,7 +51,7 @@ const SignIn = (props) => {
     {!loginSuccess &&
       <div>
         <div className='mainlogocontainer login'>
-          <img className="mainlogo" src={mantaLogo} />
+          <img className="mainlogo" alt="Manta Logo" src={mantaLogo} />
         </div>
 
         <div>
@@ -87,7 +87,7 @@ const SignIn = (props) => {
     {loginSuccess &&
       <div>
         <div className='finishLogoContainer'>
-          <img className="mainlogo" src={newAccount} />
+          <img className="mainlogo" alt="Manta Logo" src={newAccount} />
         </div>
 
         <div>
@@ -104,10 +104,10 @@ const SignIn = (props) => {
             <div className='supportedNetworksHeader'>
               <h4>Supported Networks</h4>
             </div>
-            <img className='miniLogo' src={calamariLogo} />
+            <img className='miniLogo' alt="Calamari Logo" src={calamariLogo} />
             <a className='soonTag'>(soon)</a>
-            <img className='miniLogo' src={dolphinLogo} />
-            <img className='miniMantaLogo' src={mantaLogo} />
+            <img className='miniLogo' alt="Dolphin Logo" src={dolphinLogo} />
+            <img className='miniMantaLogo' alt="Manta Logo" src={mantaLogo} />
             <a className='soonTag'>(soon)</a>
           </div>
 

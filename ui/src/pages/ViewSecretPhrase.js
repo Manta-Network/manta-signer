@@ -43,7 +43,7 @@ const ViewSecretPhrase = (props) => {
     {!showSecretPhrase && (<>
 
       <div className='mainlogocontainer'>
-        <img className="mainlogo" src={mainLogo} />
+        <img className="mainlogo" alt="Manta Logo" src={mainLogo} />
       </div>
 
       <div>
@@ -90,7 +90,7 @@ const ViewSecretPhrase = (props) => {
           )
         }) :
           <div>
-            <img className='hideImage' src={hiddenImage} onClick={onClickConfirmRecoveryPhrase} />
+            <img className='hideImage' src={hiddenImage} alt="Hide Logo" onClick={onClickConfirmRecoveryPhrase} />
           </div>
         }
       </div>

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Button, Input, Label, Header } from 'semantic-ui-react';
+import { Button, Input, Label } from 'semantic-ui-react';
 import "../App.css";
 import hiddenImage from "../icons/eye-close.png";
 import { appWindow, LogicalSize } from '@tauri-apps/api/window';
@@ -66,17 +66,17 @@ const CreateAccount = (props) => {
 
   // This function navigates back depending on the current page.
   const goBack = async () => {
-    if (currentTab == PASSWORD_TAB) {
+    if (currentTab === PASSWORD_TAB) {
       console.log("[INFO]: Going back to Create or Recovery Page.")
       await props.restartServer();
-    } else if (currentTab == SHOW_PHRASE_TAB) {
+    } else if (currentTab === SHOW_PHRASE_TAB) {
       console.log("[INFO]: Going back to Password Page.")
       setPassword('');
       setConfirmPassword('');
       setIsValidPassword(false);
       setRecoveryPhraseConfirmed(false);
       setCurrentTab(PASSWORD_TAB);
-    } else if (currentTab == CONFIRM_PHRASE_TAB) {
+    } else if (currentTab === CONFIRM_PHRASE_TAB) {
       console.log("[INFO]: Going back to View Recovery Phrase Page.");
       setSelectedRecoveryPhrase([]);
       appWindow.setSize(DEFAULT_WINDOW_SIZE);
@@ -86,12 +86,12 @@ const CreateAccount = (props) => {
 
   const goForward = async () => {
 
-    if (currentTab == PASSWORD_TAB) {
+    if (currentTab === PASSWORD_TAB) {
       setCurrentTab(SHOW_PHRASE_TAB);
-    } else if (currentTab == SHOW_PHRASE_TAB) {
+    } else if (currentTab === SHOW_PHRASE_TAB) {
       appWindow.setSize(CONFIRM_PHRASE_WINDOW_SIZE);
       setCurrentTab(CONFIRM_PHRASE_TAB);
-    } else if (currentTab == CONFIRM_PHRASE_TAB) {
+    } else if (currentTab === CONFIRM_PHRASE_TAB) {
       // Recovery Phrase has already been confirmed here, the button will stop being disabled
       // Once the user has entered it in the correct order.
       onClickCreateAccount();
@@ -127,7 +127,7 @@ const CreateAccount = (props) => {
       setPasswordsMatch(false);
     }
 
-  }, [password, confirmPassword]);
+  }, [password, confirmPassword, isValidPassword, passwordsMatch]);
 
   useEffect(() => {
 
@@ -141,18 +141,18 @@ const CreateAccount = (props) => {
     }
     let stringed_selected = JSON.stringify(selectedRecoveryPhrase_copy);
 
-    if (selectedRecoveryPhrase.length != props.recoveryPhrase.split(" ").length) return;
+    if (selectedRecoveryPhrase.length !== props.recoveryPhrase.split(" ").length) return;
     if ((!isValidSelectedPhrase) &&
-      (stringed_selected == stringed_actual)) {
+      (stringed_selected === stringed_actual)) {
       console.log("[INFO]: Valid phrase chosen.");
       setIsValidSelectedPhrase(true);
     } else if ((isValidSelectedPhrase) &&
-      (stringed_selected != stringed_actual)) {
+      (stringed_selected !== stringed_actual)) {
       console.log("[INFO]: Invalid phrase chosen.")
       setIsValidSelectedPhrase(false);
     }
 
-  }, [selectedRecoveryPhrase]);
+  }, [selectedRecoveryPhrase, actualPhrase, isValidSelectedPhrase]);
 
 
   useEffect(() => {
@@ -177,7 +177,7 @@ const CreateAccount = (props) => {
 
   return (
     <>
-      {currentTab == PASSWORD_TAB && (
+      {currentTab === PASSWORD_TAB && (
         <>
           <div className='headercontainer'>
             <h1 className='mainheadline'>Create a password</h1>
@@ -215,7 +215,7 @@ const CreateAccount = (props) => {
 
         </>
       )}
-      {currentTab == SHOW_PHRASE_TAB && (
+      {currentTab === SHOW_PHRASE_TAB && (
         <>
           <div className='headercontainer'>
             <h1 className='mainheadline'>Secret Recovery Phrase</h1>
@@ -234,7 +234,7 @@ const CreateAccount = (props) => {
               )
             }) :
               <div>
-                <img className='hideImage' src={hiddenImage} onClick={onClickConfirmRecoveryPhrase} />
+                <img className='hideImage' src={hiddenImage} alt="hide image" onClick={onClickConfirmRecoveryPhrase} />
               </div>
             }
           </div>
@@ -247,7 +247,7 @@ const CreateAccount = (props) => {
           </div>
         </>
       )}
-      {currentTab == CONFIRM_PHRASE_TAB && (<>
+      {currentTab === CONFIRM_PHRASE_TAB && (<>
         <div className='tallHeaderContainer'>
           <h1 className='mainheadline'>Confirm Your Secret Recovery Phrase</h1>
           <p className='subtext'>
@@ -283,7 +283,7 @@ const CreateAccount = (props) => {
         </div>
 
       </>)}
-      {currentTab == FINAL_TAB && (<>
+      {currentTab === FINAL_TAB && (<>
         <div className='headercontainerFat'>
           <h1 className='mainheadline'>You're all done!</h1>
           <h3 className='mediumSubText'>Press Finish and sign in to begin your ZK journey.</h3>

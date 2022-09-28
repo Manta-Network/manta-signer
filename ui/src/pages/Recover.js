@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react"
-import { Button, Input, Label, Form, Header, Dropdown } from 'semantic-ui-react';
+import { Button, Input, Label, Form, Dropdown } from 'semantic-ui-react';
 import "../App.css";
 import { appWindow, LogicalSize } from '@tauri-apps/api/window';
 
@@ -49,10 +49,10 @@ const Recover = (props) => {
   const [currentPage, setCurrentPage] = useState(SEED_PHRASE_PAGE);
 
   const goBack = async () => {
-    if (currentPage == SEED_PHRASE_PAGE) {
+    if (currentPage === SEED_PHRASE_PAGE) {
       appWindow.setSize(DEFAULT_WINDOW_SIZE);
-      await props.restartServer(props.payloadType == "Login");
-    } else if (currentPage == NEW_PASSWORD_PAGE) {
+      await props.restartServer(props.payloadType === "Login");
+    } else if (currentPage === NEW_PASSWORD_PAGE) {
       // we need to throw away the mnemonics that were already stored
       setMnemonics(DEFAULT_PHRASES[12]);
       setMnemonicsValidity(false);
@@ -61,14 +61,14 @@ const Recover = (props) => {
   }
 
   const goForward = async () => {
-    if (currentPage == SEED_PHRASE_PAGE) {
+    if (currentPage === SEED_PHRASE_PAGE) {
       appWindow.setSize(DEFAULT_WINDOW_SIZE);
       setCurrentPage(NEW_PASSWORD_PAGE);
-    } else if (currentPage == NEW_PASSWORD_PAGE) {
+    } else if (currentPage === NEW_PASSWORD_PAGE) {
 
       // If user came from the login page, it means we need to reset their 
       // old account first by wiping their storage.
-      if (props.payloadType == "Login") {
+      if (props.payloadType === "Login") {
         await props.resetAccount(true);
       }
 
@@ -77,7 +77,7 @@ const Recover = (props) => {
 
       setCurrentPage(FINISH_PAGE);
 
-    } else if (currentPage == FINISH_PAGE) {
+    } else if (currentPage === FINISH_PAGE) {
       await props.sendPassword(password);
       await props.restartServer(true); // redirect to login page
     }
@@ -95,9 +95,9 @@ const Recover = (props) => {
 
     console.log("[INFO]: Selected " + amount_of_words + " word recovery phrase.");
 
-    if (amount_of_words == 12) {
+    if (amount_of_words === 12) {
       appWindow.setSize(DEFAULT_WINDOW_SIZE);
-    } else if (amount_of_words == 24) {
+    } else if (amount_of_words === 24) {
       appWindow.setSize(CONFIRM_PHRASE_WINDOW_SIZE);
     }
 
@@ -128,7 +128,7 @@ const Recover = (props) => {
       setPasswordsMatch(false);
     }
 
-  }, [password, confirmPassword]);
+  }, [password, confirmPassword, isValidPassword, passwordsMatch]);
 
   useEffect(() => {
 
@@ -140,7 +140,7 @@ const Recover = (props) => {
     const empty_strings = mnemonics.filter(x => x.length === 0).length;
 
     // we only verify mnemonics validity if all strings have been filled.
-    if (empty_strings == 0) {
+    if (empty_strings === 0) {
 
       const is_valid = bip39.validateMnemonic(mnemonics_string);
 
@@ -155,16 +155,16 @@ const Recover = (props) => {
       }
 
     } else if (mnemonicsValidity) {
-      console.log("[INFO]: Selected mnemonics are valid.")
+      console.log("[INFO]: Selected mnemonics are invalid.")
       setMnemonicsValidity(false);
       setValidMnemonics(null);
     }
 
-  }, [mnemonics]);
+  }, [mnemonics, mnemonicsValidity]);
 
   return (<>
 
-    {currentPage == SEED_PHRASE_PAGE && <>
+    {currentPage === SEED_PHRASE_PAGE && <>
 
       <div className='recoverHeaderContainer'>
         <h1 className='mainheadline'>Reset Wallet</h1>
@@ -210,7 +210,7 @@ const Recover = (props) => {
     }
 
 
-    {currentPage == NEW_PASSWORD_PAGE && (
+    {currentPage === NEW_PASSWORD_PAGE && (
       <>
         <div className='headercontainer'>
           <h1 className='mainheadline'>Create a password</h1>
@@ -249,7 +249,7 @@ const Recover = (props) => {
       </>
     )}
 
-    {currentPage == FINISH_PAGE && (<>
+    {currentPage === FINISH_PAGE && (<>
       <div className='headercontainerFat'>
         <h1 className='mainheadline'>You're all done!</h1>
         <h3 className='mediumSubText'>Press Finish and sign in to begin your ZK journey.</h3>

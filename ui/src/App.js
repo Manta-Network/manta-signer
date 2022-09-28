@@ -13,8 +13,6 @@ import { invoke } from '@tauri-apps/api/tauri';
 import { listen } from '@tauri-apps/api/event';
 import { useState, useEffect, useRef } from 'react';
 
-
-
 const LOADING_PAGE = 0;
 const CREATE_ACCOUNT_PAGE = 1;
 const LOGIN_PAGE = 2;
@@ -49,7 +47,7 @@ function App() {
         let payload = event.payload;
 
         // We don't want to switch the page on reset during recovery process.
-        if (currentPageRef.current == RECOVER_PAGE) {
+        if (currentPageRef.current === RECOVER_PAGE) {
           setPayloadType('CreateAccount');
           setRecoveryPhrase(payload.content);
           return;
@@ -72,7 +70,7 @@ function App() {
     };
     beginInitialConnectionPhase();
     setActiveListeners({ ...activeListeners, connect: true });
-  }, [isConnected]);
+  }, [isConnected,activeListeners]);
 
   const hideWindow = () => {
     console.log("[INFO]: HIDE.");
@@ -183,11 +181,6 @@ function App() {
   const startRecover = async () => {
     console.log("[INFO]: Start recovery process.")
     setCurrentPage(RECOVER_PAGE);
-  }
-
-  const startShowRecoveryPhrase = async () => {
-    console.log("[INFO]: Start recovery process.")
-    setCurrentPage(EXPORT_RECOVERY_PHRASE_PAGE);
   }
 
   const cancelReset = async () => {
