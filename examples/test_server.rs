@@ -18,10 +18,11 @@
 
 use manta_crypto::rand::{CryptoRng, OsRng, RngCore, Sample};
 use manta_signer::{
-    config::Config,
-    secret::{Authorizer, Password, PasswordFuture, SecretString},
+    config::{Config,Setup},
+    secret::{Authorizer, Password, PasswordFuture, SecretString, SetupFuture},
     service::{Error, Server},
 };
+use manta_pay::key::Mnemonic;
 
 /// Mock User
 pub struct MockUser {
@@ -46,6 +47,20 @@ impl Authorizer for MockUser {
     #[inline]
     fn password(&mut self) -> PasswordFuture {
         Box::pin(async move { Password::from_known(self.password.clone()) })
+    }
+
+    #[inline]
+    fn setup(& mut self, data_exists: bool) -> SetupFuture {
+        let new_mnemonic = Mnemonic::sample(&mut OsRng);
+        if data_exists {
+            Box::pin(async move {
+                Setup::Login
+            })
+        } else {
+            Box::pin(async move {
+                Setup::CreateAccount(new_mnemonic)
+            })
+        }
     }
 }
 

@@ -37,8 +37,8 @@ unsafe-disable-cors = ["manta-signer/unsafe-disable-cors"]
 [dependencies]
 manta-signer = { path = "../../", default-features = false }
 tauri = { version = "1.0.2", default-features = false, features = ["reqwest-client", "shell-all", "system-tray", "updater", "window-hide", "window-set-size", "window-show", "wry"] }
-manta-crypto = { git = "https://github.com/manta-network/manta-rs", tag = "v0.5.2", default-features = false, features = ["getrandom"] }
-manta-pay = { git = "https://github.com/manta-network/manta-rs", tag = "v0.5.2", default-features = false, features = ["bs58", "groth16", "serde", "wallet"] }
+manta-crypto = { git = "https://github.com/manta-network/manta-rs", rev = "4d6274f", default-features = false, features = ["getrandom"] }
+manta-pay = { git = "https://github.com/manta-network/manta-rs", rev = "4d6274f", default-features = false, features = ["bs58", "groth16", "serde", "wallet"] }
 
 [build-dependencies]
 tauri-build = { version = "1.0.2", default-features = false, features = [] }

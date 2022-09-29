@@ -39,7 +39,7 @@ use manta_pay::{
         HierarchicalKeyDerivationFunction, Signer, SignerParameters, SignerState, UtxoAccumulator,
     },
 };
-use manta_util::{from_variant_impl, serde::Serialize};
+use manta_util::{from_variant, serde::Serialize, serde::Deserialize};
 use parking_lot::Mutex;
 use std::{
     io,
@@ -96,10 +96,10 @@ pub enum Error {
     AuthorizationError,
 }
 
-from_variant_impl!(Error, AddrParseError, AddrParseError);
-from_variant_impl!(Error, JoinError, JoinError);
-from_variant_impl!(Error, SaveError, SaveError<File>);
-from_variant_impl!(Error, Io, io::Error);
+from_variant!(Error, AddrParseError, AddrParseError);
+from_variant!(Error, JoinError, JoinError);
+from_variant!(Error, SaveError, SaveError<File>);
+from_variant!(Error, Io, io::Error);
 
 impl From<Error> for tide::Error {
     #[inline]
@@ -128,6 +128,41 @@ impl Display for Error {
             Self::AuthorizationError => write!(f, "Authorization Error"),
         }
     }
+}
+
+/// Signer Version: Keeps track of features
+#[derive(Clone, Deserialize, Serialize)]
+#[serde(
+    content = "content",
+    crate = "manta_util::serde",
+    deny_unknown_fields,
+    tag = "type"
+)]
+pub enum Version {
+    /// Version One of the SignerState does not include a mnemonic phrase stored
+    /// because it was implemented before the mnemonic export feature.
+    ///
+    /// This version is added after failure to read the file using the Versioned scheme.
+    One,
+
+    /// Version Two of the SignerState includes a mnemonic phrase stored, thus if a new
+    /// account will be created, it will be stored with this version along with the mnemonic phrase.
+    Two
+}
+
+/// Versioned wrapped for SignerState
+#[derive(Clone, Deserialize, Serialize)]
+#[serde(
+    crate = "manta_util::serde",
+    deny_unknown_fields,
+    tag = "type"
+)]
+pub struct Versioned<T> {
+    /// The current version of the type T.
+    pub version: Version,
+
+    /// Item being marked with a Version.
+    pub value: T,
 }
 
 /// Result Type
@@ -181,6 +216,9 @@ struct State {
 
     /// Signer
     signer: Signer,
+
+    /// SignerState Version
+    version: Version
 }
 
 /// Signer Server
@@ -194,7 +232,7 @@ where
     state: Arc<Mutex<State>>,
 
     /// Authorizer
-    authorizer: Arc<AsyncMutex<CheckedAuthorizer<A>>>,
+    authorizer: Arc<AsyncMutex<CheckedAuthorizer<A>>>
 }
 
 impl<A> Server<A>
@@ -214,6 +252,7 @@ where
         info!("setting up configuration")?;
         let data_exists = config.does_data_exist().await?;
         let setup = authorizer.setup(data_exists).await;
+        let version: Version;
         let (password_hash, signer) = match setup {
             Setup::CreateAccount(mnemonic) => loop {
                 if let Some((_password, password_hash)) = Self::load_password(&mut authorizer).await
@@ -225,6 +264,7 @@ where
                         parameters,
                     )
                     .await?;
+                    version = Version::Two;
                     break (password_hash, state);
                 }
                 delay_password_retry().await;
@@ -233,7 +273,8 @@ where
                 if let Some((_, password_hash)) = Self::load_password(&mut authorizer).await {
                     if let Some(state) = Self::load_state(&config.data_path, &password_hash).await?
                     {
-                        break (password_hash, Signer::from_parts(parameters, state));
+                        version = state.1;
+                        break (password_hash, Signer::from_parts(parameters, state.0));
                     }
                 }
                 delay_password_retry().await;
@@ -242,7 +283,7 @@ where
         info!("telling authorizer to sleep")?;
         authorizer.sleep().await;
         Ok(Self {
-            state: Arc::new(Mutex::new(State { config, signer })),
+            state: Arc::new(Mutex::new(State { config, signer, version })),
             authorizer: Arc::new(AsyncMutex::new(CheckedAuthorizer {
                 password_hash,
                 authorizer,
@@ -316,14 +357,21 @@ where
     async fn load_state(
         data_path: &Path,
         password_hash: &PasswordHash<Argon2>,
-    ) -> Result<Option<SignerState>> {
+    ) -> Result<Option<(SignerState,Version)>> {
         info!("loading signer state from disk")?;
         let data_path = data_path.to_owned();
         let password_hash_bytes = password_hash.as_bytes();
+        let data_path_2 = data_path.to_owned();
+        let password_hash_bytes_2 = password_hash.as_bytes();
+
         if let Ok(state) =
-            task::spawn_blocking(move || File::load(&data_path, &password_hash_bytes)).await?
+            task::spawn_blocking(move || File::load(&data_path ,&password_hash_bytes)).await? 
         {
             Ok(Some(state))
+        } else if let Ok(state) =
+            task::spawn_blocking(move || File::load(&data_path_2 ,&password_hash_bytes_2)).await? {
+            // If we were not able to read using a Versioned Schema we will set the Version to One.
+            Ok(Some((state,Version::One)))
         } else {
             Ok(None)
         }
@@ -339,7 +387,8 @@ where
         let password_hash_bytes = self.authorizer.lock().await.password_hash.as_bytes();
         task::spawn_blocking(move || {
             let lock = self.state.lock();
-            File::save(path, &password_hash_bytes, lock.signer.state())
+            let current_version = lock.version.clone();
+            File::save(path, &password_hash_bytes, Versioned {version:current_version, value:lock.signer.state()})
         })
         .await??;
         fs::remove_file(backup).await?;
@@ -393,6 +442,13 @@ where
         let response = self.state.lock().signer.sign(transaction);
         info!("[RESPONSE] responding to `sign` with: {:?}.", response)?;
         Ok(response)
+    }
+
+    /// Gets the mnemonic stored on disk
+    #[inline]
+    pub async fn get_stored_mnemonic(self) -> Mnemonic {
+        let stored_mnemonic = self.state.lock().signer.state().accounts().keys().get_base().expose_mnemonic().clone();
+        stored_mnemonic
     }
 
     /// Runs the receiving key sampling protocol on the signer.
