@@ -97,7 +97,7 @@ const ViewSecretPhrase = (props) => {
 
       <div className="secretPhraseWarningContainer">
         <div className="secretPhraseWarning">
-          <p className="secretPhraseWarningText">Warning: Never share your secret recovery phrase. {<br />} Anyone with your secret recovery phrase can steal your assets in your wallet.</p>
+          <p className="secretPhraseWarningText">Warning: Never share your secret recovery phrase. {<br />} Anyone with your secret recovery phrase can steal assets in your wallet.</p>
         </div>
       </div>
 

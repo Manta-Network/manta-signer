@@ -416,9 +416,12 @@
 }
 
 .secretPhraseWarning {
-    background-color: #ffece4;
+    border-color: #ffece4;
+    background-color:#FFFFFF;
     width: 80%;
     text-align: left;
+    border-width: medium;
+    border-style: solid;
 }
 
 .secretPhraseWarningText {

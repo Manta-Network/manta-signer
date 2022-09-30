@@ -21,7 +21,7 @@ const CreateOrRecover = (props) => {
 
     <div>
       <h1 className='mainheadline'>Welcome to Manta Signer</h1>
-      <p className='subtext'>Use signer to generate zkAddress and control it.</p>
+      <p className='subtext'>The signer is a secret manager and zero-knowledge proof generator.</p>
     </div>
 
     <div className='firstbuttoncontainer'>

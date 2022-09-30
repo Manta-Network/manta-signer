@@ -56,7 +56,7 @@ const SignIn = (props) => {
 
         <div>
           <h1 className='mainheadline'>Welcome Back!</h1>
-          <p className='subtext'>Connect to ZK world!</p>
+          <p className='subtext'>Let`s connect you to the Web3 privacy hub.</p>
         </div>
         <Form.Field>
           <Input

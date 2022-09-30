@@ -10,8 +10,8 @@ const SHOW_PHRASE_TAB = 1;
 const CONFIRM_PHRASE_TAB = 2;
 const FINAL_TAB = 3;
 
-const DEFAULT_WINDOW_SIZE = new LogicalSize(460,500);
-const CONFIRM_PHRASE_WINDOW_SIZE = new LogicalSize(460,900);
+const DEFAULT_WINDOW_SIZE = new LogicalSize(460, 500);
+const CONFIRM_PHRASE_WINDOW_SIZE = new LogicalSize(460, 900);
 
 const CreateAccount = (props) => {
   const [password, setPassword] = useState('');
@@ -179,11 +179,13 @@ const CreateAccount = (props) => {
     <>
       {currentTab === PASSWORD_TAB && (
         <>
-          <div className='headercontainer'>
-            <h1 className='mainheadline'>Create a password</h1>
-            <p className='subtext'>You will use it to unlock your wallet.</p>
+          <div className='tightHeaderContainer'>
+            <h1 className='mainheadline'>Create your password</h1>
+            <p className='subtext'>
+              This is important. Your password will unlock the Manta Signer software in order
+              to utilize your zkAddress and to sign transactions.
+            </p>
           </div>
-          <br />
           <br />
           <div>
             <Input
@@ -251,7 +253,7 @@ const CreateAccount = (props) => {
         <div className='tallHeaderContainer'>
           <h1 className='mainheadline'>Confirm Your Secret Recovery Phrase</h1>
           <p className='subtext'>
-            Please select each word in order to make sure it is correct.
+            Please select the appropriate phrase in the correct order.
           </p>
         </div>
 
@@ -286,7 +288,7 @@ const CreateAccount = (props) => {
       {currentTab === FINAL_TAB && (<>
         <div className='headercontainerFat'>
           <h1 className='mainheadline'>You're all done!</h1>
-          <h3 className='mediumSubText'>Press Finish and sign in to begin your ZK journey.</h3>
+          <h3 className='mediumSubText'>It's time to start using the Manta Signer.</h3>
         </div>
         <Button className="button ui first wide" onClick={onClickFinishSetup}>
           Finish

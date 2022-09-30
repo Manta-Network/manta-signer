@@ -214,7 +214,7 @@ const Recover = (props) => {
       <>
         <div className='headercontainer'>
           <h1 className='mainheadline'>Create a password</h1>
-          <p className='subtext'>You will use it to unlock your wallet.</p>
+          <p className='subtext'>Your password will unlock the Manta Signer.</p>
         </div>
         <br />
         <br />
