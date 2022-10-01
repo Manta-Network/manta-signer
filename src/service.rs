@@ -424,6 +424,7 @@ where
         let SignRequest {
             transaction,
             metadata,
+            network
         } = request;
         match transaction.shape() {
             TransferShape::Mint => {
@@ -434,7 +435,7 @@ where
             _ => {
                 info!("[AUTH] asking for transaction authorization")?;
                 let summary = metadata
-                    .map(|m| transaction.display(&m, receiving_key_to_base58))
+                    .map(|m| transaction.display(&m, &network, receiving_key_to_base58))
                     .unwrap_or_default();
                 self.authorizer.lock().await.check(&summary).await?
             }
@@ -447,7 +448,7 @@ where
     /// Gets the mnemonic stored on disk
     #[inline]
     pub async fn get_stored_mnemonic(self) -> Mnemonic {
-        let stored_mnemonic = self.state.lock().signer.state().accounts().keys().get_base().expose_mnemonic().clone();
+        let stored_mnemonic = self.state.lock().signer.state().accounts().keys().base().expose_mnemonic().clone();
         stored_mnemonic
     }
 

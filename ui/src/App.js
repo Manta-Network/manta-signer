@@ -22,6 +22,9 @@ const CREATE_OR_RECOVER_PAGE = 5;
 const RECOVER_PAGE = 6;
 const EXPORT_RECOVERY_PHRASE_PAGE = 7;
 
+const SEND = "Send";
+const WITHDRAW = "Withdraw";
+
 function App() {
   const [currentPage, setCurrentPage] = useState(LOADING_PAGE);
   const currentPageRef = useRef(currentPage);
@@ -70,7 +73,7 @@ function App() {
     };
     beginInitialConnectionPhase();
     setActiveListeners({ ...activeListeners, connect: true });
-  }, [isConnected,activeListeners]);
+  }, [isConnected, activeListeners]);
 
   const hideWindow = () => {
     console.log("[INFO]: HIDE.");
@@ -86,18 +89,30 @@ function App() {
       // parsing authorization summary for easier legibility and rendering.
       let split_summary = event.payload.split(" ");
 
-      const sendAmount = split_summary[1];
-      const currency = split_summary[2];
-      const toAddress = split_summary[4];
+      let sendAmount = split_summary[1];
+      let currency = split_summary[2];
+      let toAddress;
+      let network;
 
-      const toAddress_short = toAddress.substr(0, 10)
-        + "..." + toAddress.substr(toAddress.length - 10);
+      if (split_summary[0] === SEND) {
 
-      // @TODO: add support for multiple networks here
+        // Send {} to {} on {} network
+        toAddress = split_summary[4];
+        toAddress = toAddress.substr(0, 10)
+          + "..." + toAddress.substr(toAddress.length - 10);
+        network = split_summary[6];
+      } else if (split_summary[0] === WITHDRAW) {
+
+        // Withdraw {} on {} network
+        toAddress = "Your Polkadot Address";
+        network = split_summary[4];
+      }
+
       let parsed_authorization_summary = {
         sendAmount: sendAmount,
         currency: currency,
-        toAddress: toAddress_short
+        toAddress: toAddress,
+        network: network
       };
 
       setAuthorizationSummary(parsed_authorization_summary);

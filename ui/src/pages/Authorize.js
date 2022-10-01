@@ -2,9 +2,6 @@ import { once } from '@tauri-apps/api/event';
 import React, { useState, useEffect } from 'react';
 import { Button, Input } from 'semantic-ui-react';
 
-// Hardcoding current network for now until multi network support
-const CURRENT_NETWORK = "Dolphin";
-
 const Authorize = ({
   summary,
   sendPassword,
@@ -64,7 +61,7 @@ const Authorize = ({
         </div>
         <div className='transactionDetailPadded'>
           <h5 className='transactionDescription'>Network</h5>
-          <h5 className='transactionValue'>{CURRENT_NETWORK}</h5>
+          <h5 className='transactionValue'>{summary.network}</h5>
         </div>
       </div>
       <Input
