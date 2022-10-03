@@ -252,7 +252,7 @@ const Recover = (props) => {
     {currentPage === FINISH_PAGE && (<>
       <div className='headercontainerFat'>
         <h1 className='mainheadline'>You're all done!</h1>
-        <h3 className='mediumSubText'>Press Finish and sign in to begin your ZK journey.</h3>
+        <h3 className='mediumSubText'>It's time to start using the Manta Signer.</h3>
       </div>
       <Button className="button ui first wide" onClick={goForward}>
         Finish
