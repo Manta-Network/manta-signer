@@ -224,12 +224,14 @@
     border-radius: 5px;
     display:flex;
     flex-wrap:wrap;
-    justify-content:left;
+    justify-content:center;
     border-color: #eef0f2;
     height:22rem;
     margin-left:1rem;
     margin-right:1rem;
     border-style: solid;
+    align-content: flex-start;
+    padding-top:1rem;
 }
 
 .buttonListContainer {
@@ -249,6 +251,7 @@
     border-radius: 5px;
     color:gray;
     max-height: 3rem;
+    min-width: 7rem;
 }
 
 .mediumSubText {
