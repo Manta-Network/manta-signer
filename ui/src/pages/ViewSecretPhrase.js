@@ -8,7 +8,6 @@ const ViewSecretPhrase = (props) => {
 
   const [password, setPassword] = useState("");
   const [passwordInvalid, setPasswordInvalid] = useState(false);
-  const [showSecretPhrase, setShowSecretPhrase] = useState(false);
   const [recoveryPhraseConfirmed, setRecoveryPhraseConfirmed] = useState(false);
 
   const onChangePassword = password => {
@@ -16,13 +15,21 @@ const ViewSecretPhrase = (props) => {
     setPasswordInvalid(false)
   }
 
-  const onClickCancel = () => {
-    props.hideWindow();
+  const onClickCancel = async () => {
+    await props.stopPasswordPrompt();
+    props.endExportPhrase();
   }
 
-  const onClickSubmitPassword = () => {
-    // @TODO: implement password verification and recovery phrase retrival.
-    setShowSecretPhrase(true);
+  const onClickSubmitPassword = async () => {
+    const shouldRetry = await props.sendPassword(password);
+
+    if (!shouldRetry) {
+      setPassword('');
+      setPasswordInvalid(false);
+    } else {
+      console.log("RETRY!");
+      setPasswordInvalid(true);
+    }
   }
 
   // This function enables the Next button to continue in the account creation
@@ -32,15 +39,12 @@ const ViewSecretPhrase = (props) => {
   }
 
   const onClickFinish = () => {
-    setPassword("");
-    setPassword(false);
-    setShowSecretPhrase(false);
     setRecoveryPhraseConfirmed(false);
-    props.hideWindow();
+    props.endExportPhrase();
   }
 
   return (<>
-    {!showSecretPhrase && (<>
+    {!props.exportedSecretPhrase && (<>
 
       <div className='mainlogocontainer'>
         <img className="mainlogo" alt="Manta Logo" src={mainLogo} />
@@ -76,13 +80,13 @@ const ViewSecretPhrase = (props) => {
       </div>
 
     </>)}
-    {showSecretPhrase && (<>
+    {props.exportedSecretPhrase && (<>
       <div className='headercontainer'>
         <h1 className='mainheadline'>Secret Recovery Phrase</h1>
       </div>
 
       <div className='recoveryPhraseContainer'>
-        {recoveryPhraseConfirmed ? props.recoveryPhrase.split(" ").map(function (item, index) {
+        {recoveryPhraseConfirmed ? props.exportedSecretPhrase.split(" ").map(function (item, index) {
           return (
             <div key={index} className='recoveryPhraseWord'>
               <h4>{item}</h4>
@@ -101,7 +105,7 @@ const ViewSecretPhrase = (props) => {
         </div>
       </div>
 
-      <Button className="button ui first wide" onClick={onClickFinish}>Done</Button>
+      <Button disabled={!recoveryPhraseConfirmed} className="button ui first wide" onClick={onClickFinish}>Done</Button>
     </>)}
   </>);
 }

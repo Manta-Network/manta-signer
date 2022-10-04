@@ -24,6 +24,7 @@ const EXPORT_RECOVERY_PHRASE_PAGE = 7;
 
 const SEND = "Send";
 const WITHDRAW = "Withdraw";
+const GET_RECOVERY_PHRASE = "GET_RECOVERY_PHRASE";
 
 function App() {
   const [currentPage, setCurrentPage] = useState(LOADING_PAGE);
@@ -37,8 +38,12 @@ function App() {
   const [activeListeners, setActiveListeners] = useState({
     tx: false,
     connect: false,
-    reset_tray: false
+    reset_tray: false,
+    show_secret_phrase: false
   });
+  const [exportedSecretPhrase, setExportedSecretPhrase] = useState(null);
+  const [exportingPhrase, setExportingPhrase] = useState(false);
+  const exportingPhraseRef = useRef(exportingPhrase);
 
   useEffect(() => {
     if (isConnected) return;
@@ -85,6 +90,12 @@ function App() {
     console.log("[INFO]: Setup listener.");
     listen('authorize', (event) => {
       console.log("[INFO]: Wake: ", event);
+      if (event.payload === GET_RECOVERY_PHRASE) {
+        console.log("[INFO]: Wake: ", event);
+        setCurrentPage(EXPORT_RECOVERY_PHRASE_PAGE);
+        appWindow.show();
+        return;
+      }
 
       // parsing authorization summary for easier legibility and rendering.
       let split_summary = event.payload.split(" ");
@@ -127,6 +138,29 @@ function App() {
       console.log("[INFO]: Wake: ", event);
       setCurrentPage(RESET_PAGE);
     })
+  }
+
+  const listenForShowSecretPhraseRequests = async () => {
+    console.log("[INFO]: Setup tray show secret phrase listener.");
+    listen('show_secret_phrase', (event) => {
+      getSecretRecoveryPhrase();
+    })
+  }
+
+  const getSecretRecoveryPhrase = async () => {
+
+    if (exportingPhraseRef.current) {
+      return;
+    } else {
+      setExportingPhrase(true);
+    }
+    
+    console.log("[INFO]: Send request to export recovery phrase.");
+    let phrase = await invoke('get_recovery_phrase', { prompt: GET_RECOVERY_PHRASE });
+
+    if (phrase) {
+      setExportedSecretPhrase(phrase);
+    }
   }
 
   const sendCreateOrRecover = async (selection) => {
@@ -176,10 +210,12 @@ function App() {
     if (activeListeners.tx || activeListeners.reset_tray) return;
     listenForTxAuthorizationRequests();
     listenForResetTrayRequests();
+    listenForShowSecretPhraseRequests();
     setActiveListeners({
       ...activeListeners,
       tx: true,
-      reset_tray: true
+      reset_tray: true,
+      show_secret_phrase: true
     })
   };
 
@@ -203,6 +239,13 @@ function App() {
     hideWindow();
   }
 
+  const endExportPhrase = async () => {
+    console.log("[INFO]: Ending export recovery phrase process.")
+    setExportingPhrase(false);
+    setExportedSecretPhrase(null);
+    hideWindow();
+  }
+
   const getReceivingKeys = async () => {
     const newReceivingKeys = await invoke('receiving_keys');
     const newReceivingKey = newReceivingKeys[0];
@@ -217,6 +260,12 @@ function App() {
   useEffect(() => {
     currentPageRef.current = currentPage;
   }, [currentPage])
+
+  // keeps show secret phrae listener in sync with exportingPhrase state
+  // whether or not we are currently exporting the phrase.
+  useEffect(() => {
+    exportingPhraseRef.current = exportingPhrase;
+  },[exportingPhrase])
 
   return (
     <div className="App">
@@ -280,8 +329,10 @@ function App() {
         )}
         {currentPage === EXPORT_RECOVERY_PHRASE_PAGE && (
           <ViewSecretPhrase
-            hideWindow={hideWindow}
-            recoveryPhrase={recoveryPhrase}
+            endExportPhrase={endExportPhrase}
+            exportedSecretPhrase={exportedSecretPhrase}
+            sendPassword={sendPassword}
+            stopPasswordPrompt={stopPasswordPrompt}
           />
         )}
       </Container>

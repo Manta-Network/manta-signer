@@ -399,9 +399,11 @@ where
 
     /// Gets the mnemonic stored on disk
     #[inline]
-    pub async fn get_stored_mnemonic(self) -> Mnemonic {
+    pub async fn get_stored_mnemonic(&mut self, prompt: &String) -> Result<Mnemonic> {
+
+        self.authorizer.lock().await.check(prompt).await?;
         let stored_mnemonic = self.state.lock().signer.state().accounts().keys().base().expose_mnemonic().clone();
-        stored_mnemonic
+        Ok(stored_mnemonic)
     }
 
     /// Runs the receiving key sampling protocol on the signer.

@@ -48,7 +48,6 @@ const CreateAccount = (props) => {
       console.log("[INFO]: Pushed ", word);
     }
 
-    console.log(selectedRecoveryPhrase);
   }
 
 

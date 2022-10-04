@@ -329,7 +329,8 @@ async fn send_password(
     }
 }
 
-/// Adds or removes the reset option on the menu tray depending on the value of `reset`.
+/// Adds or removes the reset option and view secret phrase option on the menu tray
+///  depending on the value of `reset`.
 async fn set_tray_reset(tray_handle:SystemTrayHandle, reset:bool) {
 
     let new_menu: SystemTrayMenu = if reset {
@@ -337,7 +338,8 @@ async fn set_tray_reset(tray_handle:SystemTrayHandle, reset:bool) {
         let menu = SystemTrayMenu::new()
         .add_item(CustomMenuItem::new("about", "About"))
         .add_item(CustomMenuItem::new("exit", "Quit"))
-        .add_item(CustomMenuItem::new("reset","Reset"));
+        .add_item(CustomMenuItem::new("reset","Reset"))
+        .add_item(CustomMenuItem::new("view secret recovery phrase","View Secret Recovery Phrase"));
         menu
     } else {
         // remove it
@@ -428,11 +430,16 @@ async fn reset_account(
     let tray_handle = app_handle.tray_handle();
     let new_window = app_handle.get_window("main").expect("Unable to open option");
 
+    let server_store_clone = app_handle.state::<ServerStore>().inner().clone();
+
+
     let new_handle = spawn(async move {
 
         let new_server = Server::build(config, User::new(new_window, password_receiver, mnemonic_receiver))
         .await
         .expect("Unable to build manta-signer");
+
+        server_store_clone.set(new_server.clone()).await;
 
         new_server.start().await.expect("Unable to start manta-signer");
     });
@@ -454,6 +461,21 @@ async fn receiving_keys() -> Result<Vec<String>,()> {
         Config::try_default().expect("Unable to generate the default server configuration.");
     let keys = get_receiving_keys(&config.service_url).await;
     keys
+}
+
+/// Exports the user recovery phrase upon successful password match
+#[tauri::command]
+async fn get_recovery_phrase(
+    prompt: String,
+    server_store: State<'_,ServerStore>
+) -> Result<Mnemonic,()> {
+
+    if let Some(store) = &mut *server_store.lock().await {
+        let mnemonic = store.get_stored_mnemonic(&prompt).await.expect("Unable to fetch mnemonic");
+        Ok(mnemonic)
+    } else {
+        Err(())
+    }
 }
 
 
@@ -494,6 +516,9 @@ fn main() {
                     "reset" => {
                         window(app,"main").show().expect("Unable to show window");
                         window(app,"main").emit("tray_reset_account",{}).expect("Unable to emit reset tray event to window.");
+                    },
+                    "view secret recovery phrase" => {
+                        window(app,"main").emit("show_secret_phrase",{}).expect("Unable to emit reset tray event to window.");
                     },
                     "exit" => app.exit(0),
                     _ => {}
@@ -545,7 +570,8 @@ fn main() {
             reset_account,
             ui_connected,
             ui_disconnected,
-            receiving_keys
+            receiving_keys,
+            get_recovery_phrase
         ])
         .build(tauri::generate_context!())
         .expect("Error while building UI.");
