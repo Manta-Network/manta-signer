@@ -74,11 +74,10 @@ const Recover = (props) => {
 
       await props.sendCreateOrRecover("Recover");
       await props.sendMnemonic(validMnemonics);
-
+      await props.sendPassword(password);
       setCurrentPage(FINISH_PAGE);
 
     } else if (currentPage === FINISH_PAGE) {
-      await props.sendPassword(password);
       await props.restartServer(true); // redirect to login page
     }
   }
