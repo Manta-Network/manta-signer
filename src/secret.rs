@@ -153,6 +153,12 @@ pub trait Authorizer: 'static + Send {
     fn sleep(&mut self) -> UnitFuture {
         Box::pin(async move {})
     }
+
+    /// Removes outdated password storage file.
+    #[inline] 
+    fn delete_old_account(&mut self) -> UnitFuture {
+        Box::pin(async move {})
+    }
 }
 
 /// Argon2 Hasher Type

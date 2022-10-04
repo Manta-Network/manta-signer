@@ -64,6 +64,8 @@ pub use manta_pay::{
     },
 };
 
+use manta_pay_old::signer::base::SignerState as OldSignerState;
+
 
 /// Password Retry Interval
 pub const PASSWORD_RETRY_INTERVAL: Duration = Duration::from_millis(1000);
@@ -231,7 +233,7 @@ where
             },
             Setup::Login => loop {
                 if let Some((_, password_hash)) = Self::load_password(&mut authorizer).await {
-                    if let Some(state) = Self::load_state(&config.data_path, &password_hash).await?
+                    if let Some(state) = Self::load_state(&config.data_path, &password_hash, &mut authorizer).await?
                     {
                         break (password_hash, Signer::from_parts(parameters, state));
                     }
@@ -316,16 +318,27 @@ where
     async fn load_state(
         data_path: &Path,
         password_hash: &PasswordHash<Argon2>,
+        authorizer: &mut A
     ) -> Result<Option<SignerState>> {
         info!("loading signer state from disk")?;
         let data_path = data_path.to_owned();
         let password_hash_bytes = password_hash.as_bytes();
-
+        let data_path_copy = data_path.to_owned();
+        let password_hash_bytes_copy = password_hash.as_bytes();
+        
         if let Ok(state) =
-            task::spawn_blocking(move || File::load(&data_path ,&password_hash_bytes)).await? 
+            task::spawn_blocking(move || File::load::<_,SignerState>(&data_path ,&password_hash_bytes)).await? 
         {
             Ok(Some(state))
-        } else {
+        }
+        else if let Ok(_state ) = 
+            task::spawn_blocking(move || File::load::<_,OldSignerState>(&data_path_copy ,&password_hash_bytes_copy)).await?
+        {
+            authorizer.delete_old_account();
+            Ok(None)
+        }
+        else
+        {
             Ok(None)
         }
     }

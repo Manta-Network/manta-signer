@@ -251,6 +251,14 @@ impl Authorizer for User {
 
 
     #[inline]
+    fn delete_old_account(&mut self) -> UnitFuture {
+
+        let window = self.window.clone();
+        let _res = window.emit("outdated_account",{}).expect("The `outdated_account` command failed to be emitted to the window.");
+        return Box::pin(async move {});
+    }
+
+    #[inline]
     fn wake<T>(&mut self, prompt: &T) -> UnitFuture
     where
         T: Serialize,
