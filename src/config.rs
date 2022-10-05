@@ -72,7 +72,7 @@ impl Config {
             origin_urls: vec![],
             #[cfg(not(feature = "unsafe-disable-cors"))]
             origin_urls: vec![
-                "https://app.manta.network",
+                "https://app.manta.network".into(),
                 "https://app.dolphin.manta.network".into(),
             ],
         })
