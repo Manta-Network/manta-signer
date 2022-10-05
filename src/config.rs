@@ -50,10 +50,15 @@ pub struct Config {
     pub data_path: PathBuf,
 
     /// Service URL
+    ///
+    /// This URL defines the listening URL for the service.
     pub service_url: String,
 
-    /// Origin URL
-    pub origin_url: Option<String>,
+    /// Origin URLs
+    ///
+    /// These URLs are the allowed origins that can send requests to the service. An empty list
+    /// means any origin is allowed to send requests to the service.
+    pub origin_urls: Vec<String>,
 }
 
 impl Config {
@@ -64,9 +69,12 @@ impl Config {
             data_path: file(dirs_next::config_dir(), "storage.dat")?,
             service_url: "127.0.0.1:29987".into(),
             #[cfg(feature = "unsafe-disable-cors")]
-            origin_url: None,
+            origin_urls: vec![],
             #[cfg(not(feature = "unsafe-disable-cors"))]
-            origin_url: Some("https://app.dolphin.manta.network".into()),
+            origin_urls: vec![
+                "https://app.manta.network".into(),
+                "https://app.dolphin.manta.network".into(),
+            ],
         })
     }
 

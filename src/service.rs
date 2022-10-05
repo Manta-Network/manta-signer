@@ -257,9 +257,10 @@ where
         let socket_address = config.service_url.parse::<SocketAddr>()?;
         let cors = CorsMiddleware::new()
             .allow_methods("GET, POST".parse::<HeaderValue>().unwrap())
-            .allow_origin(match &config.origin_url {
-                Some(origin_url) => Origin::from(origin_url.as_str()),
-                _ => Origin::from("*"),
+            .allow_origin(if config.origin_urls.is_empty() {
+                Origin::Any
+            } else {
+                Origin::List(config.origin_urls)
             })
             .allow_credentials(false);
         let mut api = tide::Server::with_state(self);
