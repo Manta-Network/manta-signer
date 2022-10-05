@@ -6,6 +6,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 ## [Unreleased]
 
 ### Added
+- [\#180](https://github.com/Manta-Network/manta-signer/pull/180) Add support for mutliple CORS allowed origins
 
 ### Changed
 
