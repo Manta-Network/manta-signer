@@ -2,17 +2,19 @@ import { useEffect, useState } from "react"
 import { Button, Input, Label, Form, Dropdown } from 'semantic-ui-react';
 import "../App.css";
 import { appWindow, LogicalSize } from '@tauri-apps/api/window';
+import Loading from './Loading';
 
 const bip39 = require('bip39');
 
 const SEED_PHRASE_PAGE = 0;
 const NEW_PASSWORD_PAGE = 1;
 const FINISH_PAGE = 2;
+const LOADING_TAB = 3;
 
 const MIN_PASSWORD_LENGTH = 8;
 
-const DEFAULT_WINDOW_SIZE = new LogicalSize(460,500);
-const CONFIRM_PHRASE_WINDOW_SIZE = new LogicalSize(460,750);
+const DEFAULT_WINDOW_SIZE = new LogicalSize(460, 500);
+const CONFIRM_PHRASE_WINDOW_SIZE = new LogicalSize(460, 750);
 
 const DROPDOWN_OPTIONS = [
   {
@@ -66,6 +68,7 @@ const Recover = (props) => {
       setCurrentPage(NEW_PASSWORD_PAGE);
     } else if (currentPage === NEW_PASSWORD_PAGE) {
 
+      setCurrentPage(LOADING_TAB);
       // If user came from the login page, it means we need to reset their 
       // old account first by wiping their storage.
       if (props.payloadType === "Login") {
@@ -257,6 +260,11 @@ const Recover = (props) => {
         Finish
       </Button>
     </>
+    )}
+    {currentPage === LOADING_TAB && (
+      <>
+        <Loading />
+      </>
     )}
   </>);
 }

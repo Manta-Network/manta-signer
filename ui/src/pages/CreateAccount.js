@@ -3,12 +3,14 @@ import { Button, Input, Label } from 'semantic-ui-react';
 import "../App.css";
 import hiddenImage from "../icons/eye-close.png";
 import { appWindow, LogicalSize } from '@tauri-apps/api/window';
+import Loading from './Loading';
 
 const MIN_PASSWORD_LENGTH = 8;
 const PASSWORD_TAB = 0;
 const SHOW_PHRASE_TAB = 1;
 const CONFIRM_PHRASE_TAB = 2;
 const FINAL_TAB = 3;
+const LOADING_TAB = 4;
 
 const DEFAULT_WINDOW_SIZE = new LogicalSize(460, 500);
 const CONFIRM_PHRASE_WINDOW_SIZE = new LogicalSize(460, 900);
@@ -50,7 +52,6 @@ const CreateAccount = (props) => {
 
   }
 
-
   const isValid = (password) => {
     console.log("[INFO]: Check password validity.");
     return password.length >= MIN_PASSWORD_LENGTH;
@@ -61,6 +62,7 @@ const CreateAccount = (props) => {
     console.log("[INFO]: Creating account.");
     await props.sendPassword(password);
     setPassword('');
+    setCurrentTab(FINAL_TAB);
   };
 
   // This function navigates back depending on the current page.
@@ -95,7 +97,7 @@ const CreateAccount = (props) => {
       // Once the user has entered it in the correct order.
       onClickCreateAccount();
       appWindow.setSize(DEFAULT_WINDOW_SIZE);
-      setCurrentTab(FINAL_TAB);
+      setCurrentTab(LOADING_TAB);
     }
   }
 
@@ -293,6 +295,11 @@ const CreateAccount = (props) => {
           Finish
         </Button>
       </>
+      )}
+      {currentTab === LOADING_TAB && (
+        <>
+          <Loading />
+        </>
       )}
     </>
   );

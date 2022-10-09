@@ -239,6 +239,10 @@ function App() {
     hideWindow();
   }
 
+  const startLoading = async () => {
+    setCurrentPage(LOADING_PAGE);
+  }
+
   const endExportPhrase = async () => {
     console.log("[INFO]: Ending export recovery phrase process.")
     setExportingPhrase(false);

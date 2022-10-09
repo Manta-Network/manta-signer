@@ -69,7 +69,7 @@ async fn main() -> Result<(), Error> {
     let test_dir = tempfile::tempdir()?;
     let mut config =
         Config::try_default().expect("Unable to generate the default server configuration.");
-    config.data_path = test_dir.path().join("storage.dat");
+    config.data_path_dolphin = test_dir.path().join("storage-dolphin.dat");
     if let Some(url) = std::env::args().nth(1) {
         config.service_url = url;
     }
