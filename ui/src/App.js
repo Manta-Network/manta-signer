@@ -39,8 +39,7 @@ function App() {
     tx: false,
     connect: false,
     reset_tray: false,
-    show_secret_phrase: false,
-    outdated_accounts: false
+    show_secret_phrase: false
   });
   const [exportedSecretPhrase, setExportedSecretPhrase] = useState(null);
   const [exportingPhrase, setExportingPhrase] = useState(false);
@@ -78,10 +77,6 @@ function App() {
       });
     };
     beginInitialConnectionPhase();
-    if (!activeListeners.outdated_accounts) {
-      listenForOutdatedAccounts();
-      setActiveListeners({...activeListeners, outdated_accounts: true})
-    }
     setActiveListeners({ ...activeListeners, connect: true});
   }, [isConnected, activeListeners]);
 
@@ -136,14 +131,6 @@ function App() {
       appWindow.show();
     });
   };
-
-  const listenForOutdatedAccounts = () => {
-    console.log("[INFO]: Setup listener for outdated account storage file.");
-    listen('outdated_account', (event) => {
-      console.log("[INFO]: Removing outdated account storage file and redirecting to account creation page.");
-      resetAccount();
-    });
-  }
 
   const listenForResetTrayRequests = () => {
     console.log("[INFO]: Setup tray reset listener.");

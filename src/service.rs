@@ -65,8 +65,6 @@ pub use manta_pay::{
     },
 };
 
-use manta_pay_old::signer::base::SignerState as OldSignerState;
-
 
 /// Password Retry Interval
 pub const PASSWORD_RETRY_INTERVAL: Duration = Duration::from_millis(1000);
@@ -381,14 +379,6 @@ where
         {
             Ok(Some(state))
         }
-        else if let Ok(_state ) = 
-            task::spawn_blocking(move || File::load::<_,OldSignerState>(&data_path_copy ,&password_hash_bytes_copy)).await?
-        {
-            // @TODO: Can get rid of this? Since we are using files that are named differently, the old storage.dat will never be
-            // used/read again.
-            authorizer.delete_old_account();
-            Ok(None)
-        }
         else
         {
             Ok(None)
@@ -452,7 +442,9 @@ where
     pub async fn sync(self, request: SyncRequest) -> Result<Result<SyncResponse, SyncError>> {
         info!("[REQUEST] processing `sync`:  {:?}.", request)?;
 
-        let response = match request.network {
+        let network = request.network.clone();
+
+        let response = match network {
             NetworkType::Dolphin => {
                 self.state.lock().dolphin_signer.sync(request)
             }, 
@@ -463,9 +455,9 @@ where
                 self.state.lock().manta_signer.sync(request)
             } 
         };
-    
-        task::spawn(async {
-            if self.save(request.network).await.is_err() {
+
+        task::spawn(async move {
+            if self.save(network).await.is_err() {
                 let _ = warn!("unable to save current signer state");
             }
         });

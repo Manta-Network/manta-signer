@@ -251,15 +251,6 @@ impl Authorizer for User {
         })
     } 
 
-
-    #[inline]
-    fn delete_old_account(&mut self) -> UnitFuture {
-
-        let window = self.window.clone();
-        let _res = window.emit("outdated_account",{}).expect("The `outdated_account` command failed to be emitted to the window.");
-        return Box::pin(async move {});
-    }
-
     #[inline]
     fn wake<T>(&mut self, prompt: &T) -> UnitFuture
     where
@@ -421,9 +412,11 @@ async fn reset_account(
 
     let config = Config::try_default().expect("Unable to generate the default server configuration.");
 
-    // delete flag is present in case user wants to restart the setup process, but there is no storage file to delete.
+    // delete flag is present in case user wants to restart the setup process, but there is no storage files to delete.
     if delete {
-        remove_file(config.data_path.clone()).await.expect("File removal failed.");
+        remove_file(config.data_path_dolphin.clone()).await.expect("Dolphin file removal failed.");
+        remove_file(config.data_path_calamari.clone()).await.expect("Calamari file removal failed.");
+        remove_file(config.data_path_manta.clone()).await.expect("Manta file removal failed.");
     }
 
     if let Some(handle) = &mut *abort_handle_store.lock().await {

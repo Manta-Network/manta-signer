@@ -44,7 +44,6 @@ manta-accounting = { git = "https://github.com/manta-network/manta-rs", branch =
 manta-crypto = { git = "https://github.com/manta-network/manta-rs", branch = "signer_redesign", default-features = false, features = ["getrandom"] }
 manta-parameters = { git = "https://github.com/manta-network/manta-rs", branch = "signer_redesign", default-features = false, features = ["download"] }
 manta-pay = { git = "https://github.com/manta-network/manta-rs", branch = "signer_redesign", default-features = false, features = ["bs58", "groth16", "serde", "wallet"] }
-manta-pay-old = { git = "https://github.com/manta-network/manta-rs", package = "manta-pay", tag = "v0.5.2", default-features = false, features = ["bs58", "groth16", "serde", "wallet"] }
 manta-util = { git = "https://github.com/manta-network/manta-rs", branch = "signer_redesign", default-features = false }
 parking_lot = { version = "0.12.1", default-features = false }
 password-hash = { version = "0.4.2", default-features = false, features = ["alloc"] }
