@@ -10,7 +10,7 @@ import ViewSecretPhrase from './pages/ViewSecretPhrase';
 import { Container } from 'semantic-ui-react';
 import { appWindow } from '@tauri-apps/api/window';
 import { invoke } from '@tauri-apps/api/tauri';
-import { emit, listen } from '@tauri-apps/api/event';
+import { listen } from '@tauri-apps/api/event';
 import { useState, useEffect, useRef } from 'react';
 
 const LOADING_PAGE = 0;

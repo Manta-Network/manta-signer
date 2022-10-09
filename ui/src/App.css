@@ -443,3 +443,18 @@
     margin-bottom: -5rem;
     margin-top: -1rem;
 }
+
+.ui.button.hrefButton {
+    background-color: #FFFFFF;
+    color:#0894ec;
+    font-weight:300;
+} 
+
+.ui.button.hrefButton:hover {
+    color:gray;
+    background-color: #FFFFFF;
+}
+
+.hrefButtonContainer {
+    margin-top:-2rem;
+}

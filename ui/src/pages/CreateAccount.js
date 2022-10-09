@@ -4,6 +4,7 @@ import "../App.css";
 import hiddenImage from "../icons/eye-close.png";
 import { appWindow, LogicalSize } from '@tauri-apps/api/window';
 import Loading from './Loading';
+import HyperLinkButton from '../components/HyperLinkButton';
 
 const MIN_PASSWORD_LENGTH = 8;
 const PASSWORD_TAB = 0;
@@ -153,7 +154,7 @@ const CreateAccount = (props) => {
       setIsValidSelectedPhrase(false);
     }
 
-  }, [selectedRecoveryPhrase, actualPhrase, isValidSelectedPhrase]);
+  }, [selectedRecoveryPhrase, actualPhrase, isValidSelectedPhrase, props.recoveryPhrase]);
 
 
   useEffect(() => {
@@ -174,7 +175,7 @@ const CreateAccount = (props) => {
     setShuffledRecoveryPhrase(shuffled);
     setActualPhrase(actualRecoveryPhrase);
 
-  }, []);
+  }, [props.recoveryPhrase]);
 
   return (
     <>
@@ -208,10 +209,9 @@ const CreateAccount = (props) => {
             onClick={goForward}>
             Next
           </Button>
-          <div>
-            <a onClick={goBack}>Go Back</a>
-          </div>
-
+          <HyperLinkButton
+            goBack={goBack}
+          />
           {!isValidPassword && password.length > 0 ? <><br /><Label basic color='red' pointing>Please enter a minimum of {MIN_PASSWORD_LENGTH} characters.</Label></> : (
             !passwordsMatch ? <><br /><Label basic color='red' pointing>Passwords do not match.</Label></> : <><br /><br /><br /></>
           )}
@@ -237,7 +237,7 @@ const CreateAccount = (props) => {
               )
             }) :
               <div>
-                <img className='hideImage' src={hiddenImage} alt="hide image" onClick={onClickConfirmRecoveryPhrase} />
+                <img className='hideImage' src={hiddenImage} alt="hidden" onClick={onClickConfirmRecoveryPhrase} />
               </div>
             }
           </div>
@@ -245,9 +245,9 @@ const CreateAccount = (props) => {
           <Button disabled={!recoveryPhraseConfirmed} className="button ui first wide" onClick={goForward}>
             Next
           </Button>
-          <div>
-            <a onClick={goBack}>Go Back</a>
-          </div>
+          <HyperLinkButton
+            goBack={goBack}
+          />
         </>
       )}
       {currentTab === CONFIRM_PHRASE_TAB && (<>
@@ -281,9 +281,9 @@ const CreateAccount = (props) => {
         <Button disabled={!isValidSelectedPhrase} className="button ui first wide" onClick={goForward}>
           Confirm
         </Button>
-        <div>
-          <a onClick={goBack}>Go Back</a>
-        </div>
+        <HyperLinkButton
+            goBack={goBack}
+          />
 
       </>)}
       {currentTab === FINAL_TAB && (<>

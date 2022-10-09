@@ -3,6 +3,7 @@ import { Button, Input, Label, Form, Dropdown } from 'semantic-ui-react';
 import "../App.css";
 import { appWindow, LogicalSize } from '@tauri-apps/api/window';
 import Loading from './Loading';
+import HyperLinkButton from "../components/HyperLinkButton";
 
 const bip39 = require('bip39');
 
@@ -205,9 +206,9 @@ const Recover = (props) => {
           <Button primary className="button ui first" onClick={goForward}>Next</Button> :
           <Button disabled primary className="button ui first">Next</Button>}
       </div>
-      <div>
-        <a onClick={goBack}>Go Back</a>
-      </div>
+      <HyperLinkButton
+        goBack={goBack}
+      />
     </>
     }
 
@@ -240,9 +241,9 @@ const Recover = (props) => {
           onClick={goForward}>
           Next
         </Button>
-        <div>
-          <a onClick={goBack}>Go Back</a>
-        </div>
+        <HyperLinkButton
+          goBack={goBack}
+        />
 
         {!isValidPassword && password.length > 0 ? <><br /><Label basic color='red' pointing>Please enter a minimum of {MIN_PASSWORD_LENGTH} characters.</Label></> : (
           !passwordsMatch ? <><br /><Label basic color='red' pointing>Passwords do not match.</Label></> : <><br /><br /><br /></>
