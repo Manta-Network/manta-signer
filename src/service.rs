@@ -187,7 +187,10 @@ struct State {
     calamari_signer: Signer,
 
     /// Manta Signer
-    manta_signer: Signer
+    manta_signer: Signer,
+
+    /// Currently signing a transaction
+    currently_signing: bool
 }
 
 /// Signer Server
@@ -222,6 +225,7 @@ where
         let data_exists = config.does_data_exist().await;
         let does_all_data_exist = data_exists.dolphin && data_exists.calamari && data_exists.manta;
         let does_one_data_exist = data_exists.dolphin || data_exists.calamari || data_exists.manta;
+        let currently_signing = false;
         let setup = authorizer.setup(does_one_data_exist).await;
         let (password_hash, dolphin_signer, calamari_signer, manta_signer) = match setup {
             Setup::CreateAccount(mnemonic) => loop {
@@ -352,7 +356,7 @@ where
         info!("telling authorizer to sleep")?;
         authorizer.sleep().await;
         Ok(Self {
-            state: Arc::new(Mutex::new(State { config, dolphin_signer, calamari_signer, manta_signer })),
+            state: Arc::new(Mutex::new(State { config, dolphin_signer, calamari_signer, manta_signer, currently_signing })),
             authorizer: Arc::new(AsyncMutex::new(CheckedAuthorizer {
                 password_hash,
                 authorizer,
@@ -510,10 +514,23 @@ where
         Ok(response)
     }
 
+    /// Sets the current signing status
+    #[inline]
+    async fn set_signing(self, signing: bool) {
+        self.state.lock().currently_signing = signing;
+    }
+
     /// Runs the transaction signing protocol on the signer.
     #[inline]
     pub async fn sign(self, request: SignRequest) -> Result<Result<SignResponse, SignError>> {
         info!("[REQUEST] processing `sign`: {:?}.", request)?;
+
+        if self.state.lock().currently_signing {
+            return Ok(Err(SignError::SignerBusy))
+        } else {
+            self.set_signing(true);
+        }
+
         let SignRequest {
             transaction,
             metadata,
@@ -546,6 +563,7 @@ where
             } 
         };
         info!("[RESPONSE] responding to `sign` with: {:?}.", response)?;
+        self.set_signing(false);
         Ok(response)
     }
 

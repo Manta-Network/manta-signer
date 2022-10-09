@@ -11,8 +11,6 @@ const SignIn = (props) => {
   const [passwordInvalid, setPasswordInvalid] = useState(null);
   const [loginSuccess, setLoginSuccess] = useState(false);
 
-  // @TODO: add zkAddress shortening
-
   const onClickSignIn = async () => {
     const shouldRetry = await props.sendPassword(password);
 
