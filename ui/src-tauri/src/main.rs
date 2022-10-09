@@ -30,6 +30,8 @@ use core::{
     sync::atomic::{AtomicBool, Ordering},
     time::Duration,
 };
+
+use manta_accounting::wallet::signer::NetworkType;
 use manta_signer::{
     config::{Config, Setup},
     query::get_receiving_keys,
@@ -471,7 +473,7 @@ async fn receiving_keys() -> Result<Vec<String>,()> {
     keys
 }
 
-/// Exports the user recovery phrase upon successful password match
+/// Exports the user recovery phrase upon successful password match.
 #[tauri::command]
 async fn get_recovery_phrase(
     prompt: String,
@@ -479,7 +481,7 @@ async fn get_recovery_phrase(
 ) -> Result<Mnemonic,()> {
 
     if let Some(store) = &mut *server_store.lock().await {
-        let mnemonic = store.get_stored_mnemonic(&prompt).await.expect("Unable to fetch mnemonic");
+        let mnemonic = store.get_stored_mnemonic(&prompt, NetworkType::Dolphin).await.expect("Unable to fetch mnemonic");
         Ok(mnemonic)
     } else {
         Err(())

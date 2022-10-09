@@ -16,7 +16,7 @@
 
 //! Manta Signer Configuration
 
-use manta_pay::key::Mnemonic;
+use manta_pay::{key::Mnemonic};
 use manta_util::serde::{Deserialize, Serialize};
 use std::{
     io,
@@ -45,8 +45,14 @@ where
 #[derive(Clone, Debug, Deserialize, Eq, Hash, PartialEq, Serialize)]
 #[serde(crate = "manta_util::serde", deny_unknown_fields)]
 pub struct Config {
-    /// Data File Path
-    pub data_path: PathBuf,
+    /// Data File Path - Dolphin
+    pub data_path_dolphin: PathBuf,
+
+    /// Data File Path - Calamari
+    pub data_path_calamari: PathBuf,
+
+    /// Data File Path - Manta
+    pub data_path_manta: PathBuf,
 
     /// Service URL
     pub service_url: String,
@@ -60,7 +66,9 @@ impl Config {
     #[inline]
     pub fn try_default() -> Option<Self> {
         Some(Self {
-            data_path: file(dirs_next::config_dir(), "storage.dat")?,
+            data_path_dolphin: file(dirs_next::config_dir(), "storage-dolphin.dat")?,
+            data_path_calamari: file(dirs_next::config_dir(), "storage-calamari.dat")?,
+            data_path_manta: file(dirs_next::config_dir(), "storage-manta.dat")?,
             service_url: "127.0.0.1:29987".into(),
             #[cfg(feature = "unsafe-disable-cors")]
             origin_url: None,
@@ -69,10 +77,11 @@ impl Config {
         })
     }
 
-    /// Returns the data directory path.
+    /// Returns the data directory path. All files will be in same directory
+    /// so it suffices to check on one file i.e. Dolphin.
     #[inline]
     pub fn data_directory(&self) -> &Path {
-        self.data_path
+        self.data_path_dolphin
             .parent()
             .expect("The data path file must always have a parent.")
     }
@@ -81,7 +90,7 @@ impl Config {
     #[inline]
     pub async fn does_data_exist(&self) -> io::Result<bool> {
         fs::create_dir_all(self.data_directory()).await?;
-        match fs::metadata(&self.data_path).await {
+        match fs::metadata(&self.data_path_dolphin).await {
             Ok(metadata) if metadata.is_file() => Ok(true),
             Ok(metadata) => Err(io::Error::new(
                 io::ErrorKind::Other,
