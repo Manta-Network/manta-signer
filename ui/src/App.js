@@ -10,7 +10,7 @@ import ViewSecretPhrase from './pages/ViewSecretPhrase';
 import { Container } from 'semantic-ui-react';
 import { appWindow } from '@tauri-apps/api/window';
 import { invoke } from '@tauri-apps/api/tauri';
-import { listen } from '@tauri-apps/api/event';
+import { emit, listen } from '@tauri-apps/api/event';
 import { useState, useEffect, useRef } from 'react';
 
 const LOADING_PAGE = 0;
@@ -239,8 +239,9 @@ function App() {
     hideWindow();
   }
 
-  const startLoading = async () => {
-    setCurrentPage(LOADING_PAGE);
+  const cancelSign = async () => {
+    console.log("[INFO]: Cancelling signing current transaction.");
+    await invoke('cancel_sign');
   }
 
   const endExportPhrase = async () => {
@@ -325,6 +326,7 @@ function App() {
         )}
         {currentPage === AUTHORIZE_PAGE && (
           <Authorize
+            cancelSign={cancelSign}
             summary={authorizationSummary}
             sendPassword={sendPassword}
             stopPasswordPrompt={stopPasswordPrompt}

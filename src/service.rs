@@ -189,8 +189,9 @@ struct State {
     /// Manta Signer
     manta_signer: Signer,
 
-    /// Currently signing a transaction
-    currently_signing: bool
+    /// The NetworkType of the corresponding `Signer` that
+    /// is currently signing a transaction.
+    currently_signing: Option<NetworkType>
 }
 
 /// Signer Server
@@ -225,7 +226,7 @@ where
         let data_exists = config.does_data_exist().await;
         let does_all_data_exist = data_exists.dolphin && data_exists.calamari && data_exists.manta;
         let does_one_data_exist = data_exists.dolphin || data_exists.calamari || data_exists.manta;
-        let currently_signing = false;
+        let currently_signing = None;
         let setup = authorizer.setup(does_one_data_exist).await;
         let (password_hash, dolphin_signer, calamari_signer, manta_signer) = match setup {
             Setup::CreateAccount(mnemonic) => loop {
@@ -362,6 +363,12 @@ where
                 authorizer,
             })),
         })
+    }
+
+    /// If users cancels a transaction, this method will be called by front-end
+    /// to indicate that signer can now start signing new transactions.
+    pub async fn cancel_signing(&mut self) {
+        self.state.lock().currently_signing = None;
     }
 
     /// Starts the signer server with `config` and `authorizer`.
@@ -514,22 +521,17 @@ where
         Ok(response)
     }
 
-    /// Sets the current signing status
-    #[inline]
-    async fn set_signing(self, signing: bool) {
-        self.state.lock().currently_signing = signing;
-    }
 
     /// Runs the transaction signing protocol on the signer.
     #[inline]
     pub async fn sign(self, request: SignRequest) -> Result<Result<SignResponse, SignError>> {
         info!("[REQUEST] processing `sign`: {:?}.", request)?;
 
-        if self.state.lock().currently_signing {
+        if let Some(_net) = self.state.lock().currently_signing {
             return Ok(Err(SignError::SignerBusy))
-        } else {
-            self.set_signing(true);
         }
+        
+        self.state.lock().currently_signing = Some(request.network.clone());
 
         let SignRequest {
             transaction,
@@ -563,7 +565,7 @@ where
             } 
         };
         info!("[RESPONSE] responding to `sign` with: {:?}.", response)?;
-        self.set_signing(false);
+        self.state.lock().currently_signing = None;
         Ok(response)
     }
 

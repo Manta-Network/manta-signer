@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Button, Input } from 'semantic-ui-react';
 
 const Authorize = ({
+  cancelSign,
   summary,
   sendPassword,
   stopPasswordPrompt,
@@ -35,6 +36,7 @@ const Authorize = ({
     setPassword('');
     setPasswordInvalid(false)
     await stopPasswordPrompt();
+    await cancelSign();
     hideWindow();
   };
 

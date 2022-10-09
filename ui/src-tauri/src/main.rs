@@ -481,6 +481,19 @@ async fn get_recovery_phrase(
     }
 }
 
+/// Cancels the current signing transaction within the server, allowing for
+/// new signing transactions to be sent.
+#[tauri::command]
+async fn cancel_sign(
+    server_store: State<'_,ServerStore>
+) -> Result<(),()> {
+
+    if let Some(store) = &mut *server_store.lock().await {
+        store.cancel_signing().await;
+    }
+    Ok(())
+}
+
 
 /// Returns the window with the given `label` from `app`.
 ///
@@ -574,7 +587,8 @@ fn main() {
             ui_connected,
             ui_disconnected,
             receiving_keys,
-            get_recovery_phrase
+            get_recovery_phrase,
+            cancel_sign
         ])
         .build(tauri::generate_context!())
         .expect("Error while building UI.");
