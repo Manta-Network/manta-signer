@@ -16,6 +16,7 @@
 
 //! Manta Signer Configuration
 
+use manta_accounting::wallet::signer::NetworkType;
 use manta_pay::{key::Mnemonic};
 use manta_util::serde::{Deserialize, Serialize};
 use std::{
@@ -61,6 +62,20 @@ pub struct Config {
     pub origin_url: Option<String>,
 }
 
+/// Response for the does_data_exist() function of [`Config`].
+/// Contains whether or not each respective network data file exists or not.
+pub struct DataExistenceResponse {
+
+    /// Dolphin Network (storage-dolphin.dat)
+    pub dolphin: bool,
+    
+    /// Calamari Network (storage-calamari.dat)
+    pub calamari: bool,
+
+    /// Manta Network (storage-manta.dat)
+    pub manta: bool,
+}
+
 impl Config {
     /// Tries to build a default [`Config`].
     #[inline]
@@ -86,11 +101,10 @@ impl Config {
             .expect("The data path file must always have a parent.")
     }
 
-    /// Returns whether or not storage file exists already on the filesystem resources.
+    /// Returns whether storage file exists for a particular data path.
     #[inline]
-    pub async fn does_data_exist(&self) -> io::Result<bool> {
-        fs::create_dir_all(self.data_directory()).await?;
-        match fs::metadata(&self.data_path_dolphin).await {
+    async fn does_data_exist_at(&self, path: &PathBuf) -> io::Result<bool> {
+        match fs::metadata(path).await {
             Ok(metadata) if metadata.is_file() => Ok(true),
             Ok(metadata) => Err(io::Error::new(
                 io::ErrorKind::Other,
@@ -98,6 +112,35 @@ impl Config {
             )),
             _ => Ok(false)
         }
+    }
+
+    /// Returns whether or not storage files exist already on the filesystem resources.
+    #[inline]
+    pub async fn does_data_exist(&self) -> DataExistenceResponse {
+        let _ = fs::create_dir_all(self.data_directory()).await;
+
+        let dolphin_exists = self.does_data_exist_at(&self.data_path_dolphin).await.expect("Unable to read dolphin file.");
+        let calamari_exists = self.does_data_exist_at(&self.data_path_calamari).await.expect("Unable to read calamari file.");
+        let manta_exists = self.does_data_exist_at(&self.data_path_manta).await.expect("Unable to read manta file.");
+
+        let result = DataExistenceResponse { dolphin: dolphin_exists, calamari: calamari_exists, manta: manta_exists };
+        result
+    }
+
+    /// Returns the path corresponding to a particular `NetworkType`.
+    pub fn get_path_for_network(&self, network: NetworkType) -> PathBuf {
+        let path = match network {
+            NetworkType::Dolphin => {
+                self.data_path_dolphin.clone()
+            }, 
+            NetworkType::Calamari => {
+                self.data_path_calamari.clone()
+            },
+            NetworkType::Manta => {
+                self.data_path_manta.clone()
+            } 
+        };
+        path
     }
 
 }

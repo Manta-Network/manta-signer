@@ -31,7 +31,7 @@ use core::{
     time::Duration,
 };
 
-use manta_accounting::wallet::signer::NetworkType;
+
 use manta_signer::{
     config::{Config, Setup},
     query::get_receiving_keys,
@@ -474,7 +474,7 @@ async fn get_recovery_phrase(
 ) -> Result<Mnemonic,()> {
 
     if let Some(store) = &mut *server_store.lock().await {
-        let mnemonic = store.get_stored_mnemonic(&prompt, NetworkType::Dolphin).await.expect("Unable to fetch mnemonic");
+        let mnemonic = store.get_stored_mnemonic(&prompt).await.expect("Unable to fetch mnemonic");
         Ok(mnemonic)
     } else {
         Err(())
