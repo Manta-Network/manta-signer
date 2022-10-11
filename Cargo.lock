@@ -2597,7 +2597,7 @@ dependencies = [
  "derivative",
  "derive_more",
  "manta-crypto",
- "manta-util",
+ "manta-util 0.5.2",
  "rand_chacha 0.3.1",
 ]
 
@@ -2607,7 +2607,7 @@ version = "0.5.2"
 source = "git+https://github.com/manta-network/manta-rs?tag=v0.5.2#7c8d6c45bfd2c5ce1b1ceb70af824de0fb0bc609"
 dependencies = [
  "derivative",
- "manta-util",
+ "manta-util 0.5.2",
  "rand_core 0.6.4",
 ]
 
@@ -2645,7 +2645,7 @@ dependencies = [
  "derivative",
  "manta-accounting",
  "manta-crypto",
- "manta-util",
+ "manta-util 0.5.2",
  "rand_chacha 0.3.1",
 ]
 
@@ -2664,7 +2664,7 @@ dependencies = [
  "manta-crypto",
  "manta-parameters",
  "manta-pay",
- "manta-util",
+ "manta-util 0.5.5",
  "parking_lot",
  "password-hash",
  "secrecy",
@@ -2692,6 +2692,11 @@ dependencies = [
  "serde",
  "serde_with",
 ]
+
+[[package]]
+name = "manta-util"
+version = "0.5.5"
+source = "git+https://github.com/manta-network/manta-rs?tag=v0.5.5#153b356ef2a40d81ae3bcc3b7e6fce6aee57e2ab"
 
 [[package]]
 name = "markup5ever"
