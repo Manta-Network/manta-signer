@@ -56,10 +56,15 @@ pub struct Config {
     pub data_path_manta: PathBuf,
 
     /// Service URL
+    ///
+    /// This URL defines the listening URL for the service.
     pub service_url: String,
 
-    /// Origin URL
-    pub origin_url: Option<String>,
+    /// Origin URLs
+    ///
+    /// These URLs are the allowed origins that can send requests to the service. An empty list
+    /// means any origin is allowed to send requests to the service.
+    pub origin_urls: Vec<String>,
 }
 
 /// Response for the does_data_exist() function of [`Config`].
@@ -86,9 +91,12 @@ impl Config {
             data_path_manta: file(dirs_next::config_dir(), "storage-manta.dat")?,
             service_url: "127.0.0.1:29987".into(),
             #[cfg(feature = "unsafe-disable-cors")]
-            origin_url: None,
+            origin_urls: vec![],
             #[cfg(not(feature = "unsafe-disable-cors"))]
-            origin_url: Some("https://app.dolphin.manta.network".into()),
+            origin_urls: vec![
+                "https://app.manta.network".into(),
+                "https://app.dolphin.manta.network".into(),
+            ],
         })
     }
 

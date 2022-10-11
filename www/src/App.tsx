@@ -76,10 +76,10 @@ function App() {
           className='px-6 py-4 text-white text-2xl bg-button rounded-full mt-12 cursor-pointer'
           href={
             os === 'Mac'
-              ? 'https://github.com/Manta-Network/manta-signer/releases/download/v0.7.3/manta-signer-macos-latest_0.7.3-103_x64.dmg'
+              ? 'https://github.com/Manta-Network/manta-signer/releases/download/v0.8.0/manta-signer-macos-latest_0.8.0-103_x64.dmg'
               : os === 'Windows'
-              ? 'https://github.com/Manta-Network/manta-signer/releases/download/v0.7.3/manta-signer-windows-2019_0.7.3_x64.msi'
-              : 'https://github.com/Manta-Network/manta-signer/releases/download/v0.7.3/manta-signer-ubuntu-18.04_0.7.3_amd64.deb'
+              ? 'https://github.com/Manta-Network/manta-signer/releases/download/v0.8.0/manta-signer-windows-2019_0.8.0_x64.msi'
+              : 'https://github.com/Manta-Network/manta-signer/releases/download/v0.8.0/manta-signer-ubuntu-18.04_0.8.0_amd64.deb'
           }
           title={
             os === 'Mac'
