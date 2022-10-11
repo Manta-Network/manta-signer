@@ -1,2 +1,0 @@
-cargo:rustc-env=TYPENUM_BUILD_CONSTS=/Users/alex/Desktop/work/manta-signer/ui/src-tauri/target/debug/build/typenum-fc4f338b2c0471c1/out/consts.rs
-cargo:rustc-env=TYPENUM_BUILD_OP=/Users/alex/Desktop/work/manta-signer/ui/src-tauri/target/debug/build/typenum-fc4f338b2c0471c1/out/op.rs

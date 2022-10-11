@@ -1,2 +1,0 @@
-cargo:rerun-if-changed=data
-out_dir: "/Users/alex/Desktop/work/manta-signer/ui/src-tauri/target/debug/build/manta-parameters-46f76ec38c9a2488/out"

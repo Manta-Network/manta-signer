@@ -1,7 +1,0 @@
-cargo:rustc-cfg=dev
-cargo:rustc-cfg=updater
-cargo:rustc-cfg=window_show
-cargo:rustc-cfg=window_hide
-cargo:rustc-cfg=window_any
-cargo:rustc-cfg=dialog_ask
-cargo:rustc-cfg=dialog_any

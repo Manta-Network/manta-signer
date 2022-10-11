@@ -1,4 +1,0 @@
-cargo:rerun-if-env-changed=TAURI_CONFIG
-cargo:rerun-if-changed=tauri.conf.json
-cargo:rustc-cfg=dev
-cargo:rustc-env=MACOSX_DEPLOYMENT_TARGET=10.13
