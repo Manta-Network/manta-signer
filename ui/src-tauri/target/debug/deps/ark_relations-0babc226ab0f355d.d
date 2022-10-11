@@ -1,0 +1,11 @@
+/Users/alex/Desktop/work/manta-signer/ui/src-tauri/target/debug/deps/ark_relations-0babc226ab0f355d.rmeta: /Users/alex/.cargo/registry/src/github.com-1ecc6299db9ec823/ark-relations-0.3.0/src/lib.rs /Users/alex/.cargo/registry/src/github.com-1ecc6299db9ec823/ark-relations-0.3.0/src/r1cs/mod.rs /Users/alex/.cargo/registry/src/github.com-1ecc6299db9ec823/ark-relations-0.3.0/src/r1cs/impl_lc.rs /Users/alex/.cargo/registry/src/github.com-1ecc6299db9ec823/ark-relations-0.3.0/src/r1cs/constraint_system.rs /Users/alex/.cargo/registry/src/github.com-1ecc6299db9ec823/ark-relations-0.3.0/src/r1cs/error.rs
+
+/Users/alex/Desktop/work/manta-signer/ui/src-tauri/target/debug/deps/libark_relations-0babc226ab0f355d.rlib: /Users/alex/.cargo/registry/src/github.com-1ecc6299db9ec823/ark-relations-0.3.0/src/lib.rs /Users/alex/.cargo/registry/src/github.com-1ecc6299db9ec823/ark-relations-0.3.0/src/r1cs/mod.rs /Users/alex/.cargo/registry/src/github.com-1ecc6299db9ec823/ark-relations-0.3.0/src/r1cs/impl_lc.rs /Users/alex/.cargo/registry/src/github.com-1ecc6299db9ec823/ark-relations-0.3.0/src/r1cs/constraint_system.rs /Users/alex/.cargo/registry/src/github.com-1ecc6299db9ec823/ark-relations-0.3.0/src/r1cs/error.rs
+
+/Users/alex/Desktop/work/manta-signer/ui/src-tauri/target/debug/deps/ark_relations-0babc226ab0f355d.d: /Users/alex/.cargo/registry/src/github.com-1ecc6299db9ec823/ark-relations-0.3.0/src/lib.rs /Users/alex/.cargo/registry/src/github.com-1ecc6299db9ec823/ark-relations-0.3.0/src/r1cs/mod.rs /Users/alex/.cargo/registry/src/github.com-1ecc6299db9ec823/ark-relations-0.3.0/src/r1cs/impl_lc.rs /Users/alex/.cargo/registry/src/github.com-1ecc6299db9ec823/ark-relations-0.3.0/src/r1cs/constraint_system.rs /Users/alex/.cargo/registry/src/github.com-1ecc6299db9ec823/ark-relations-0.3.0/src/r1cs/error.rs
+
+/Users/alex/.cargo/registry/src/github.com-1ecc6299db9ec823/ark-relations-0.3.0/src/lib.rs:
+/Users/alex/.cargo/registry/src/github.com-1ecc6299db9ec823/ark-relations-0.3.0/src/r1cs/mod.rs:
+/Users/alex/.cargo/registry/src/github.com-1ecc6299db9ec823/ark-relations-0.3.0/src/r1cs/impl_lc.rs:
+/Users/alex/.cargo/registry/src/github.com-1ecc6299db9ec823/ark-relations-0.3.0/src/r1cs/constraint_system.rs:
+/Users/alex/.cargo/registry/src/github.com-1ecc6299db9ec823/ark-relations-0.3.0/src/r1cs/error.rs:

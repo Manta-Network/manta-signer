@@ -1,0 +1,13 @@
+/Users/alex/Desktop/work/manta-signer/ui/src-tauri/target/debug/deps/ecdsa-53f9717a8ea7d638.rmeta: /Users/alex/.cargo/registry/src/github.com-1ecc6299db9ec823/ecdsa-0.13.4/src/lib.rs /Users/alex/.cargo/registry/src/github.com-1ecc6299db9ec823/ecdsa-0.13.4/src/recovery.rs /Users/alex/.cargo/registry/src/github.com-1ecc6299db9ec823/ecdsa-0.13.4/src/der.rs /Users/alex/.cargo/registry/src/github.com-1ecc6299db9ec823/ecdsa-0.13.4/src/hazmat.rs /Users/alex/.cargo/registry/src/github.com-1ecc6299db9ec823/ecdsa-0.13.4/src/sign.rs /Users/alex/.cargo/registry/src/github.com-1ecc6299db9ec823/ecdsa-0.13.4/src/verify.rs /Users/alex/.cargo/registry/src/github.com-1ecc6299db9ec823/ecdsa-0.13.4/src/../README.md
+
+/Users/alex/Desktop/work/manta-signer/ui/src-tauri/target/debug/deps/libecdsa-53f9717a8ea7d638.rlib: /Users/alex/.cargo/registry/src/github.com-1ecc6299db9ec823/ecdsa-0.13.4/src/lib.rs /Users/alex/.cargo/registry/src/github.com-1ecc6299db9ec823/ecdsa-0.13.4/src/recovery.rs /Users/alex/.cargo/registry/src/github.com-1ecc6299db9ec823/ecdsa-0.13.4/src/der.rs /Users/alex/.cargo/registry/src/github.com-1ecc6299db9ec823/ecdsa-0.13.4/src/hazmat.rs /Users/alex/.cargo/registry/src/github.com-1ecc6299db9ec823/ecdsa-0.13.4/src/sign.rs /Users/alex/.cargo/registry/src/github.com-1ecc6299db9ec823/ecdsa-0.13.4/src/verify.rs /Users/alex/.cargo/registry/src/github.com-1ecc6299db9ec823/ecdsa-0.13.4/src/../README.md
+
+/Users/alex/Desktop/work/manta-signer/ui/src-tauri/target/debug/deps/ecdsa-53f9717a8ea7d638.d: /Users/alex/.cargo/registry/src/github.com-1ecc6299db9ec823/ecdsa-0.13.4/src/lib.rs /Users/alex/.cargo/registry/src/github.com-1ecc6299db9ec823/ecdsa-0.13.4/src/recovery.rs /Users/alex/.cargo/registry/src/github.com-1ecc6299db9ec823/ecdsa-0.13.4/src/der.rs /Users/alex/.cargo/registry/src/github.com-1ecc6299db9ec823/ecdsa-0.13.4/src/hazmat.rs /Users/alex/.cargo/registry/src/github.com-1ecc6299db9ec823/ecdsa-0.13.4/src/sign.rs /Users/alex/.cargo/registry/src/github.com-1ecc6299db9ec823/ecdsa-0.13.4/src/verify.rs /Users/alex/.cargo/registry/src/github.com-1ecc6299db9ec823/ecdsa-0.13.4/src/../README.md
+
+/Users/alex/.cargo/registry/src/github.com-1ecc6299db9ec823/ecdsa-0.13.4/src/lib.rs:
+/Users/alex/.cargo/registry/src/github.com-1ecc6299db9ec823/ecdsa-0.13.4/src/recovery.rs:
+/Users/alex/.cargo/registry/src/github.com-1ecc6299db9ec823/ecdsa-0.13.4/src/der.rs:
+/Users/alex/.cargo/registry/src/github.com-1ecc6299db9ec823/ecdsa-0.13.4/src/hazmat.rs:
+/Users/alex/.cargo/registry/src/github.com-1ecc6299db9ec823/ecdsa-0.13.4/src/sign.rs:
+/Users/alex/.cargo/registry/src/github.com-1ecc6299db9ec823/ecdsa-0.13.4/src/verify.rs:
+/Users/alex/.cargo/registry/src/github.com-1ecc6299db9ec823/ecdsa-0.13.4/src/../README.md:

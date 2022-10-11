@@ -1,0 +1,11 @@
+/Users/alex/Desktop/work/manta-signer/ui/src-tauri/target/debug/deps/libtime_macros_impl-a5273f060b5e7bb0.dylib: /Users/alex/.cargo/registry/src/github.com-1ecc6299db9ec823/time-macros-impl-0.1.2/src/lib.rs /Users/alex/.cargo/registry/src/github.com-1ecc6299db9ec823/time-macros-impl-0.1.2/src/date.rs /Users/alex/.cargo/registry/src/github.com-1ecc6299db9ec823/time-macros-impl-0.1.2/src/ext.rs /Users/alex/.cargo/registry/src/github.com-1ecc6299db9ec823/time-macros-impl-0.1.2/src/offset.rs /Users/alex/.cargo/registry/src/github.com-1ecc6299db9ec823/time-macros-impl-0.1.2/src/time.rs /Users/alex/.cargo/registry/src/github.com-1ecc6299db9ec823/time-macros-impl-0.1.2/src/time_crate/mod.rs /Users/alex/.cargo/registry/src/github.com-1ecc6299db9ec823/time-macros-impl-0.1.2/src/time_crate/date.rs
+
+/Users/alex/Desktop/work/manta-signer/ui/src-tauri/target/debug/deps/time_macros_impl-a5273f060b5e7bb0.d: /Users/alex/.cargo/registry/src/github.com-1ecc6299db9ec823/time-macros-impl-0.1.2/src/lib.rs /Users/alex/.cargo/registry/src/github.com-1ecc6299db9ec823/time-macros-impl-0.1.2/src/date.rs /Users/alex/.cargo/registry/src/github.com-1ecc6299db9ec823/time-macros-impl-0.1.2/src/ext.rs /Users/alex/.cargo/registry/src/github.com-1ecc6299db9ec823/time-macros-impl-0.1.2/src/offset.rs /Users/alex/.cargo/registry/src/github.com-1ecc6299db9ec823/time-macros-impl-0.1.2/src/time.rs /Users/alex/.cargo/registry/src/github.com-1ecc6299db9ec823/time-macros-impl-0.1.2/src/time_crate/mod.rs /Users/alex/.cargo/registry/src/github.com-1ecc6299db9ec823/time-macros-impl-0.1.2/src/time_crate/date.rs
+
+/Users/alex/.cargo/registry/src/github.com-1ecc6299db9ec823/time-macros-impl-0.1.2/src/lib.rs:
+/Users/alex/.cargo/registry/src/github.com-1ecc6299db9ec823/time-macros-impl-0.1.2/src/date.rs:
+/Users/alex/.cargo/registry/src/github.com-1ecc6299db9ec823/time-macros-impl-0.1.2/src/ext.rs:
+/Users/alex/.cargo/registry/src/github.com-1ecc6299db9ec823/time-macros-impl-0.1.2/src/offset.rs:
+/Users/alex/.cargo/registry/src/github.com-1ecc6299db9ec823/time-macros-impl-0.1.2/src/time.rs:
+/Users/alex/.cargo/registry/src/github.com-1ecc6299db9ec823/time-macros-impl-0.1.2/src/time_crate/mod.rs:
+/Users/alex/.cargo/registry/src/github.com-1ecc6299db9ec823/time-macros-impl-0.1.2/src/time_crate/date.rs:

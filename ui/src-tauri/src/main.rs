@@ -31,23 +31,24 @@ use core::{
     time::Duration,
 };
 
-
 use manta_signer::{
     config::{Config, Setup},
     query::get_receiving_keys,
     secret::{
-        password_channel, Authorizer, Password, PasswordFuture, PasswordReceiver, PasswordSender,
-        Secret, UnitFuture, SetupFuture, MnemonicSender, MnemonicReceiver, mnemonic_channel, UserSelection
+        mnemonic_channel, password_channel, Authorizer, MnemonicReceiver, MnemonicSender, Password,
+        PasswordFuture, PasswordReceiver, PasswordSender, Secret, SetupFuture, UnitFuture,
+        UserSelection,
     },
     serde::Serialize,
     service::Server,
     storage::Store,
-    tokio::fs::{remove_file}
+    tokio::fs::remove_file,
 };
 use std::time::Instant;
 use tauri::{
-    async_runtime::{spawn, JoinHandle}, CustomMenuItem, Manager, RunEvent, Runtime, State, SystemTray,
-    SystemTrayEvent, SystemTrayMenu, Window, WindowEvent, AppHandle, SystemTrayHandle,
+    async_runtime::{spawn, JoinHandle},
+    AppHandle, CustomMenuItem, Manager, RunEvent, Runtime, State, SystemTray, SystemTrayEvent,
+    SystemTrayHandle, SystemTrayMenu, Window, WindowEvent,
 };
 
 use manta_crypto::rand::OsRng;
@@ -138,7 +139,11 @@ pub struct User {
 impl User {
     /// Builds a new [`User`] from `window` and `password_receiver`.
     #[inline]
-    pub fn new(window: Window, password_receiver: PasswordReceiver, mnemonic_receiver: MnemonicReceiver) -> Self {
+    pub fn new(
+        window: Window,
+        password_receiver: PasswordReceiver,
+        mnemonic_receiver: MnemonicReceiver,
+    ) -> Self {
         Self {
             window,
             password_receiver,
@@ -199,17 +204,16 @@ impl Authorizer for User {
     }
 
     #[inline]
-    fn setup<'s>(&'s mut self, data_exists : bool ) -> SetupFuture<'s> {
+    fn setup<'s>(&'s mut self, data_exists: bool) -> SetupFuture<'s> {
         let window = self.window.clone();
         Box::pin(async move {
-
             // creating a new mnemonic in case user will create a new account.
             let new_mnemonic = Mnemonic::sample(&mut OsRng);
 
             let payload = if data_exists {
                 Setup::Login
             } else {
-                // Mnemonic created here 
+                // Mnemonic created here
                 Setup::CreateAccount(new_mnemonic)
             };
 
@@ -243,13 +247,11 @@ impl Authorizer for User {
                 // now we have to wait again until we get the user's seed phrase.
 
                 let user_seed_phrase = self.request_mnemonic().await;
-                
+
                 Setup::CreateAccount(user_seed_phrase)
             }
-
-
         })
-    } 
+    }
 
     #[inline]
     fn wake<T>(&mut self, prompt: &T) -> UnitFuture
@@ -293,7 +295,7 @@ fn ui_connected() {
 }
 
 /// Called when user wants to cancel recovery or when user wants to proceed with recovery
-/// in either case, server needs to restart and setup function needs to be called again to 
+/// in either case, server needs to restart and setup function needs to be called again to
 /// emit new `connect` event with new payload.
 #[tauri::command]
 fn ui_disconnected() {
@@ -304,11 +306,10 @@ fn ui_disconnected() {
 #[tauri::command]
 async fn send_password(
     password_store: State<'_, PasswordStore>,
-    app_handle_store: State<'_,AppHandleStore>,
+    app_handle_store: State<'_, AppHandleStore>,
     password: String,
 ) -> Result<bool, ()> {
     if let Some(store) = &mut *password_store.lock().await {
-
         let result = store.load(Secret::new(password)).await;
 
         if !result {
@@ -318,10 +319,9 @@ async fn send_password(
 
             // if result == true, it means user has successfully signed in, so we can now add the tray
             // menu item to reset account. Which will emit "reset_account" to the front-end, and will trigger
-            // the load of the delete page. 
-            
-            set_tray_reset(tray_handle,true).await;
-            
+            // the load of the delete page.
+
+            set_tray_reset(tray_handle, true).await;
         }
 
         Ok(result)
@@ -332,26 +332,29 @@ async fn send_password(
 
 /// Adds or removes the reset option and view secret phrase option on the menu tray
 ///  depending on the value of `reset`.
-async fn set_tray_reset(tray_handle:SystemTrayHandle, reset:bool) {
-
+async fn set_tray_reset(tray_handle: SystemTrayHandle, reset: bool) {
     let new_menu: SystemTrayMenu = if reset {
         // add the reset option
         let menu = SystemTrayMenu::new()
-        .add_item(CustomMenuItem::new("about", "About"))
-        .add_item(CustomMenuItem::new("exit", "Quit"))
-        .add_item(CustomMenuItem::new("reset","Reset"))
-        .add_item(CustomMenuItem::new("view secret recovery phrase","View Secret Recovery Phrase"));
+            .add_item(CustomMenuItem::new("about", "About"))
+            .add_item(CustomMenuItem::new("exit", "Quit"))
+            .add_item(CustomMenuItem::new("reset", "Reset"))
+            .add_item(CustomMenuItem::new(
+                "view secret recovery phrase",
+                "View Secret Recovery Phrase",
+            ));
         menu
     } else {
         // remove it
         let menu = SystemTrayMenu::new()
-        .add_item(CustomMenuItem::new("about", "About"))
-        .add_item(CustomMenuItem::new("exit", "Quit"));
+            .add_item(CustomMenuItem::new("about", "About"))
+            .add_item(CustomMenuItem::new("exit", "Quit"));
         menu
     };
 
-    tray_handle.set_menu(new_menu).expect("Unable to update tray menu");
-
+    tray_handle
+        .set_menu(new_menu)
+        .expect("Unable to update tray menu");
 }
 
 /// Stops the server from prompting for the password.
@@ -363,28 +366,29 @@ async fn stop_password_prompt(password_store: State<'_, PasswordStore>) -> Resul
     Ok(())
 }
 
-
 /// Sends the current `mnemonic` into storage from the UI.
 #[tauri::command]
-async fn send_mnemonic(mnemonic_store: State<'_,MnemonicStore>,mnemonic: String) -> Result<(),()> {
-
+async fn send_mnemonic(
+    mnemonic_store: State<'_, MnemonicStore>,
+    mnemonic: String,
+) -> Result<(), ()> {
     // Mnemonic is assumed to be valid because it is validated by front end bip39 library.
 
     if let Some(store) = &mut *mnemonic_store.lock().await {
-
-        let recovered_mnemonic = Mnemonic::new(mnemonic).expect("Unable to generate recovered Mnemonic.");
+        let recovered_mnemonic =
+            Mnemonic::new(mnemonic).expect("Unable to generate recovered Mnemonic.");
         store.load_exact(recovered_mnemonic).await;
     }
     Ok(())
-
 }
-
 
 /// Sets the user's selection of whether to create a new account or recover
 /// using a seed phrase.
 #[tauri::command]
-async fn create_or_recover(mnemonic_store: State<'_, MnemonicStore>, selection:String) -> Result<(),()> {
-
+async fn create_or_recover(
+    mnemonic_store: State<'_, MnemonicStore>,
+    selection: String,
+) -> Result<(), ()> {
     let selected_option = if selection == "Create" {
         UserSelection::Create
     } else {
@@ -398,25 +402,30 @@ async fn create_or_recover(mnemonic_store: State<'_, MnemonicStore>, selection:S
     Ok(())
 }
 
-
 /// Restarts the server in case of account reset. This feature can be used to implement the cancel button
 /// once recovery has started.
 #[tauri::command]
 async fn reset_account(
     delete: bool,
-    app_handle_store: State<'_,AppHandleStore>,
-    abort_handle_store: State<'_,AbortHandleStore>,
+    app_handle_store: State<'_, AppHandleStore>,
+    abort_handle_store: State<'_, AbortHandleStore>,
     password_store: State<'_, PasswordStore>,
-    mnemonic_store: State<'_, MnemonicStore>
-) -> Result<(),()> {
-
-    let config = Config::try_default().expect("Unable to generate the default server configuration.");
+    mnemonic_store: State<'_, MnemonicStore>,
+) -> Result<(), ()> {
+    let config =
+        Config::try_default().expect("Unable to generate the default server configuration.");
 
     // delete flag is present in case user wants to restart the setup process, but there is no storage files to delete.
     if delete {
-        remove_file(config.data_path_dolphin.clone()).await.expect("Dolphin file removal failed.");
-        remove_file(config.data_path_calamari.clone()).await.expect("Calamari file removal failed.");
-        remove_file(config.data_path_manta.clone()).await.expect("Manta file removal failed.");
+        remove_file(config.data_path_dolphin.clone())
+            .await
+            .expect("Dolphin file removal failed.");
+        remove_file(config.data_path_calamari.clone())
+            .await
+            .expect("Calamari file removal failed.");
+        remove_file(config.data_path_manta.clone())
+            .await
+            .expect("Manta file removal failed.");
     }
 
     if let Some(handle) = &mut *abort_handle_store.lock().await {
@@ -424,42 +433,47 @@ async fn reset_account(
     }
 
     let (password_sender, password_receiver) = password_channel();
-    let (mnemonic_sender,mnemonic_receiver) = mnemonic_channel();
+    let (mnemonic_sender, mnemonic_receiver) = mnemonic_channel();
     password_store.set(password_sender).await;
     mnemonic_store.set(mnemonic_sender).await;
 
     let app_handle_guard = app_handle_store.lock().await;
     let app_handle = app_handle_guard.as_ref().unwrap();
     let tray_handle = app_handle.tray_handle();
-    let new_window = app_handle.get_window("main").expect("Unable to open option");
+    let new_window = app_handle
+        .get_window("main")
+        .expect("Unable to open option");
 
     let server_store_clone = app_handle.state::<ServerStore>().inner().clone();
 
-
     let new_handle = spawn(async move {
-
-        let new_server = Server::build(config, User::new(new_window, password_receiver, mnemonic_receiver))
+        let new_server = Server::build(
+            config,
+            User::new(new_window, password_receiver, mnemonic_receiver),
+        )
         .await
         .expect("Unable to build manta-signer");
 
         server_store_clone.set(new_server.clone()).await;
 
-        new_server.start().await.expect("Unable to start manta-signer");
+        new_server
+            .start()
+            .await
+            .expect("Unable to start manta-signer");
     });
 
     // Removing the reset account menu tray item.
 
-    set_tray_reset(tray_handle,false).await;
+    set_tray_reset(tray_handle, false).await;
 
     abort_handle_store.set(new_handle).await;
 
     Ok(())
 }
 
-
 /// Returns receiving keys to front end to display once user is logged in.
 #[tauri::command]
-async fn receiving_keys() -> Result<Vec<String>,()> {
+async fn receiving_keys() -> Result<Vec<String>, ()> {
     let config =
         Config::try_default().expect("Unable to generate the default server configuration.");
     let keys = get_receiving_keys(&config.service_url).await;
@@ -470,11 +484,13 @@ async fn receiving_keys() -> Result<Vec<String>,()> {
 #[tauri::command]
 async fn get_recovery_phrase(
     prompt: String,
-    server_store: State<'_,ServerStore>
-) -> Result<Mnemonic,()> {
-
+    server_store: State<'_, ServerStore>,
+) -> Result<Mnemonic, ()> {
     if let Some(store) = &mut *server_store.lock().await {
-        let mnemonic = store.get_stored_mnemonic(&prompt).await.expect("Unable to fetch mnemonic");
+        let mnemonic = store
+            .get_stored_mnemonic(&prompt)
+            .await
+            .expect("Unable to fetch mnemonic");
         Ok(mnemonic)
     } else {
         Err(())
@@ -484,16 +500,12 @@ async fn get_recovery_phrase(
 /// Cancels the current signing transaction within the server, allowing for
 /// new signing transactions to be sent.
 #[tauri::command]
-async fn cancel_sign(
-    server_store: State<'_,ServerStore>
-) -> Result<(),()> {
-
+async fn cancel_sign(server_store: State<'_, ServerStore>) -> Result<(), ()> {
     if let Some(store) = &mut *server_store.lock().await {
         store.cancel_signing().await;
     }
     Ok(())
 }
-
 
 /// Returns the window with the given `label` from `app`.
 ///
@@ -530,12 +542,16 @@ fn main() {
                 match id.as_str() {
                     "about" => window(app, "about").show().expect("Unable to show window."),
                     "reset" => {
-                        window(app,"main").show().expect("Unable to show window");
-                        window(app,"main").emit("tray_reset_account",{}).expect("Unable to emit reset tray event to window.");
-                    },
+                        window(app, "main").show().expect("Unable to show window");
+                        window(app, "main")
+                            .emit("tray_reset_account", {})
+                            .expect("Unable to emit reset tray event to window.");
+                    }
                     "view secret recovery phrase" => {
-                        window(app,"main").emit("show_secret_phrase",{}).expect("Unable to emit reset tray event to window.");
-                    },
+                        window(app, "main")
+                            .emit("show_secret_phrase", {})
+                            .expect("Unable to emit reset tray event to window.");
+                    }
                     "exit" => app.exit(0),
                     _ => {}
                 }
@@ -557,7 +573,7 @@ fn main() {
 
             let join_handle = spawn(async move {
                 let (password_sender, password_receiver) = password_channel();
-                let (mnemonic_sender,mnemonic_receiver) = mnemonic_channel();
+                let (mnemonic_sender, mnemonic_receiver) = mnemonic_channel();
                 let user = User::new(window, password_receiver, mnemonic_receiver);
                 password_store.set(password_sender).await;
                 mnemonic_store.set(mnemonic_sender).await;

@@ -32,7 +32,7 @@ use manta_accounting::{
     fs::{cocoon::File, File as _, SaveError},
     key::HierarchicalKeyDerivationScheme,
     transfer::canonical::TransferShape,
-    wallet::signer::NetworkType
+    wallet::signer::NetworkType,
 };
 use manta_pay::{
     key::{Mnemonic, TestnetKeySecret},
@@ -64,7 +64,6 @@ pub use manta_pay::{
         SyncResponse,
     },
 };
-
 
 /// Password Retry Interval
 pub const PASSWORD_RETRY_INTERVAL: Duration = Duration::from_millis(1000);
@@ -191,7 +190,7 @@ struct State {
 
     /// The NetworkType of the corresponding `Signer` that
     /// is currently signing a transaction.
-    currently_signing: Option<NetworkType>
+    currently_signing: Option<NetworkType>,
 }
 
 /// Signer Server
@@ -205,14 +204,13 @@ where
     state: Arc<Mutex<State>>,
 
     /// Authorizer
-    authorizer: Arc<AsyncMutex<CheckedAuthorizer<A>>>
+    authorizer: Arc<AsyncMutex<CheckedAuthorizer<A>>>,
 }
 
 impl<A> Server<A>
 where
     A: Authorizer,
 {
-
     /// Builds a new [`Server`] from `config` and `authorizer`.
     #[inline]
     pub async fn build(config: Config, mut authorizer: A) -> Result<Self> {
@@ -240,7 +238,7 @@ where
                         parameters.clone(),
                     )
                     .await?;
-                    
+
                     info!("creating calamari state.")?;
                     let calamari_state = Self::create_state(
                         &config.data_path_calamari,
@@ -265,35 +263,61 @@ where
             },
             Setup::Login => loop {
                 if let Some((_, password_hash)) = Self::load_password(&mut authorizer).await {
-
                     // Edge case: 1 or 2 out of 3 storage.dat files are missing.
-                    // We need to get the mnemonic from one of the existing files 
+                    // We need to get the mnemonic from one of the existing files
                     // and use it to recreate the missing files.
 
                     let mut recovery_mnemonic: Option<Mnemonic> = None;
                     if !does_all_data_exist {
                         info!("not all data files were found, starting re-creation process from existing file's seed phrase.")?;
                         if data_exists.dolphin {
-                            let dolphin_state = 
-                            Self::load_state(&config.data_path_dolphin, &password_hash)
-                            .await?
-                            .expect("Unable to get dolphin state");
-                            let dolphin_signer = Signer::from_parts(parameters.clone(), dolphin_state);
-                            recovery_mnemonic = Some(dolphin_signer.state().accounts().keys().base().expose_mnemonic().clone());
+                            let dolphin_state =
+                                Self::load_state(&config.data_path_dolphin, &password_hash)
+                                    .await?
+                                    .expect("Unable to get dolphin state");
+                            let dolphin_signer =
+                                Signer::from_parts(parameters.clone(), dolphin_state);
+                            recovery_mnemonic = Some(
+                                dolphin_signer
+                                    .state()
+                                    .accounts()
+                                    .keys()
+                                    .base()
+                                    .expose_mnemonic()
+                                    .clone(),
+                            );
                         } else if data_exists.calamari {
-                            let calamari_state = 
-                            Self::load_state(&config.data_path_calamari, &password_hash)
-                            .await?
-                            .expect("Unable to get dolphin state");
-                            let calamari_signer = Signer::from_parts(parameters.clone(), calamari_state);
-                            recovery_mnemonic = Some(calamari_signer.state().accounts().keys().base().expose_mnemonic().clone());
+                            let calamari_state =
+                                Self::load_state(&config.data_path_calamari, &password_hash)
+                                    .await?
+                                    .expect("Unable to get dolphin state");
+                            let calamari_signer =
+                                Signer::from_parts(parameters.clone(), calamari_state);
+                            recovery_mnemonic = Some(
+                                calamari_signer
+                                    .state()
+                                    .accounts()
+                                    .keys()
+                                    .base()
+                                    .expose_mnemonic()
+                                    .clone(),
+                            );
                         } else {
-                            let manta_state = 
-                            Self::load_state(&config.data_path_manta, &password_hash)
-                            .await?
-                            .expect("Unable to get dolphin state");
-                            let calamari_signer = Signer::from_parts(parameters.clone(), manta_state);
-                            recovery_mnemonic = Some(calamari_signer.state().accounts().keys().base().expose_mnemonic().clone());
+                            let manta_state =
+                                Self::load_state(&config.data_path_manta, &password_hash)
+                                    .await?
+                                    .expect("Unable to get dolphin state");
+                            let calamari_signer =
+                                Signer::from_parts(parameters.clone(), manta_state);
+                            recovery_mnemonic = Some(
+                                calamari_signer
+                                    .state()
+                                    .accounts()
+                                    .keys()
+                                    .base()
+                                    .expose_mnemonic()
+                                    .clone(),
+                            );
                         }
                     }
 
@@ -302,33 +326,36 @@ where
                         Self::create_state(
                             &config.data_path_dolphin,
                             &password_hash,
-                            recovery_mnemonic.clone().expect("Unable to fetch mnemonic for account re-creation."),
+                            recovery_mnemonic
+                                .clone()
+                                .expect("Unable to fetch mnemonic for account re-creation."),
                             parameters.clone(),
                         )
                         .await?
                     } else {
-                        let dolphin_state = 
-                        Self::load_state(&config.data_path_dolphin, &password_hash)
-                        .await?
-                        .expect("Unable to get dolphin state");
+                        let dolphin_state =
+                            Self::load_state(&config.data_path_dolphin, &password_hash)
+                                .await?
+                                .expect("Unable to get dolphin state");
                         Signer::from_parts(parameters.clone(), dolphin_state)
                     };
-
 
                     let calamari_signer = if !data_exists.calamari {
                         info!("calamari state missing! recreating state.")?;
                         Self::create_state(
                             &config.data_path_calamari,
                             &password_hash,
-                            recovery_mnemonic.clone().expect("Unable to fetch mnemonic for account re-creation."),
+                            recovery_mnemonic
+                                .clone()
+                                .expect("Unable to fetch mnemonic for account re-creation."),
                             parameters.clone(),
                         )
                         .await?
                     } else {
-                        let calamari_state = 
-                        Self::load_state(&config.data_path_calamari, &password_hash)
-                        .await?
-                        .expect("Unable to get calamari state");
+                        let calamari_state =
+                            Self::load_state(&config.data_path_calamari, &password_hash)
+                                .await?
+                                .expect("Unable to get calamari state");
                         Signer::from_parts(parameters.clone(), calamari_state)
                     };
 
@@ -337,15 +364,16 @@ where
                         Self::create_state(
                             &config.data_path_manta,
                             &password_hash,
-                            recovery_mnemonic.clone().expect("Unable to fetch mnemonic for account re-creation."),
+                            recovery_mnemonic
+                                .clone()
+                                .expect("Unable to fetch mnemonic for account re-creation."),
                             parameters.clone(),
                         )
                         .await?
                     } else {
-                        let manta_state = 
-                        Self::load_state(&config.data_path_manta, &password_hash)
-                        .await?
-                        .expect("Unable to get manta state");
+                        let manta_state = Self::load_state(&config.data_path_manta, &password_hash)
+                            .await?
+                            .expect("Unable to get manta state");
                         Signer::from_parts(parameters.clone(), manta_state)
                     };
 
@@ -357,7 +385,13 @@ where
         info!("telling authorizer to sleep")?;
         authorizer.sleep().await;
         Ok(Self {
-            state: Arc::new(Mutex::new(State { config, dolphin_signer, calamari_signer, manta_signer, currently_signing })),
+            state: Arc::new(Mutex::new(State {
+                config,
+                dolphin_signer,
+                calamari_signer,
+                manta_signer,
+                currently_signing,
+            })),
             authorizer: Arc::new(AsyncMutex::new(CheckedAuthorizer {
                 password_hash,
                 authorizer,
@@ -416,8 +450,7 @@ where
     ) -> Result<Signer> {
         info!("creating signer state")?;
         let state = SignerState::new(
-            TestnetKeySecret::new(mnemonic, "")
-                .map(HierarchicalKeyDerivationFunction::default()),
+            TestnetKeySecret::new(mnemonic, "").map(HierarchicalKeyDerivationFunction::default()),
             UtxoAccumulator::new(
                 task::spawn_blocking(crate::parameters::load_utxo_accumulator_model)
                     .await?
@@ -437,19 +470,19 @@ where
     #[inline]
     async fn load_state(
         data_path: &Path,
-        password_hash: &PasswordHash<Argon2>
+        password_hash: &PasswordHash<Argon2>,
     ) -> Result<Option<SignerState>> {
         info!("loading signer state from disk")?;
         let data_path = data_path.to_owned();
         let password_hash_bytes = password_hash.as_bytes();
-        
-        if let Ok(state) =
-            task::spawn_blocking(move || File::load::<_,SignerState>(&data_path ,&password_hash_bytes)).await? 
+
+        if let Ok(state) = task::spawn_blocking(move || {
+            File::load::<_, SignerState>(&data_path, &password_hash_bytes)
+        })
+        .await?
         {
             Ok(Some(state))
-        }
-        else
-        {
+        } else {
             Ok(None)
         }
     }
@@ -457,7 +490,10 @@ where
     /// Saves the signer state corresponding to `NetworkType` to disk.
     #[inline]
     async fn save(self, network: NetworkType) -> Result<()> {
-        info!("starting signer state save to disk for {}", network.display())?;
+        info!(
+            "starting signer state save to disk for {}",
+            network.display()
+        )?;
         let path = self.state.lock().config.get_path_for_network(network);
         let backup = path.with_extension("backup");
         fs::rename(&path, &backup).await?;
@@ -467,15 +503,9 @@ where
             let lock = self.state.lock();
 
             let state_to_save = match network_copy {
-                NetworkType::Dolphin => {
-                    lock.dolphin_signer.state()
-                }, 
-                NetworkType::Calamari => {
-                    lock.calamari_signer.state()
-                },
-                NetworkType::Manta => {
-                    lock.manta_signer.state()
-                } 
+                NetworkType::Dolphin => lock.dolphin_signer.state(),
+                NetworkType::Calamari => lock.calamari_signer.state(),
+                NetworkType::Manta => lock.manta_signer.state(),
             };
 
             File::save(path, &password_hash_bytes, state_to_save)
@@ -493,7 +523,6 @@ where
         Ok(crate::VERSION)
     }
 
-
     /// Runs the synchronization protocol on the signer.
     #[inline]
     pub async fn sync(self, request: SyncRequest) -> Result<Result<SyncResponse, SyncError>> {
@@ -502,15 +531,9 @@ where
         let network = request.network.clone();
 
         let response = match network {
-            NetworkType::Dolphin => {
-                self.state.lock().dolphin_signer.sync(request)
-            }, 
-            NetworkType::Calamari => {
-                self.state.lock().calamari_signer.sync(request)
-            },
-            NetworkType::Manta => {
-                self.state.lock().manta_signer.sync(request)
-            } 
+            NetworkType::Dolphin => self.state.lock().dolphin_signer.sync(request),
+            NetworkType::Calamari => self.state.lock().calamari_signer.sync(request),
+            NetworkType::Manta => self.state.lock().manta_signer.sync(request),
         };
 
         task::spawn(async move {
@@ -522,22 +545,21 @@ where
         Ok(response)
     }
 
-
     /// Runs the transaction signing protocol on the signer.
     #[inline]
     pub async fn sign(self, request: SignRequest) -> Result<Result<SignResponse, SignError>> {
         info!("[REQUEST] processing `sign`: {:?}.", request)?;
 
         if let Some(_net) = self.state.lock().currently_signing {
-            return Ok(Err(SignError::SignerBusy))
+            return Ok(Err(SignError::SignerBusy));
         }
-        
+
         self.state.lock().currently_signing = Some(request.network.clone());
 
         let SignRequest {
             transaction,
             metadata,
-            network
+            network,
         } = request;
         match transaction.shape() {
             TransferShape::Mint => {
@@ -555,15 +577,9 @@ where
         }
 
         let response = match network {
-            NetworkType::Dolphin => {
-                self.state.lock().dolphin_signer.sign(transaction)
-            }, 
-            NetworkType::Calamari => {
-                self.state.lock().calamari_signer.sign(transaction)
-            },
-            NetworkType::Manta => {
-                self.state.lock().manta_signer.sign(transaction)
-            } 
+            NetworkType::Dolphin => self.state.lock().dolphin_signer.sign(transaction),
+            NetworkType::Calamari => self.state.lock().calamari_signer.sign(transaction),
+            NetworkType::Manta => self.state.lock().manta_signer.sign(transaction),
         };
         info!("[RESPONSE] responding to `sign` with: {:?}.", response)?;
         self.state.lock().currently_signing = None;
@@ -574,7 +590,16 @@ where
     #[inline]
     pub async fn get_stored_mnemonic(&mut self, prompt: &String) -> Result<Mnemonic> {
         self.authorizer.lock().await.check(prompt).await?;
-        let stored_mnemonic = self.state.lock().dolphin_signer.state().accounts().keys().base().expose_mnemonic().clone();
+        let stored_mnemonic = self
+            .state
+            .lock()
+            .dolphin_signer
+            .state()
+            .accounts()
+            .keys()
+            .base()
+            .expose_mnemonic()
+            .clone();
         Ok(stored_mnemonic)
     }
 

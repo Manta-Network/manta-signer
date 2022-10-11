@@ -1,0 +1,12 @@
+/Users/alex/Desktop/work/manta-signer/ui/src-tauri/target/debug/deps/httparse-64dbe3c344c19ad5.rmeta: /Users/alex/.cargo/registry/src/github.com-1ecc6299db9ec823/httparse-1.7.1/src/lib.rs /Users/alex/.cargo/registry/src/github.com-1ecc6299db9ec823/httparse-1.7.1/src/iter.rs /Users/alex/.cargo/registry/src/github.com-1ecc6299db9ec823/httparse-1.7.1/src/macros.rs /Users/alex/.cargo/registry/src/github.com-1ecc6299db9ec823/httparse-1.7.1/src/simd/mod.rs /Users/alex/.cargo/registry/src/github.com-1ecc6299db9ec823/httparse-1.7.1/src/simd/sse42.rs /Users/alex/.cargo/registry/src/github.com-1ecc6299db9ec823/httparse-1.7.1/src/simd/avx2.rs
+
+/Users/alex/Desktop/work/manta-signer/ui/src-tauri/target/debug/deps/libhttparse-64dbe3c344c19ad5.rlib: /Users/alex/.cargo/registry/src/github.com-1ecc6299db9ec823/httparse-1.7.1/src/lib.rs /Users/alex/.cargo/registry/src/github.com-1ecc6299db9ec823/httparse-1.7.1/src/iter.rs /Users/alex/.cargo/registry/src/github.com-1ecc6299db9ec823/httparse-1.7.1/src/macros.rs /Users/alex/.cargo/registry/src/github.com-1ecc6299db9ec823/httparse-1.7.1/src/simd/mod.rs /Users/alex/.cargo/registry/src/github.com-1ecc6299db9ec823/httparse-1.7.1/src/simd/sse42.rs /Users/alex/.cargo/registry/src/github.com-1ecc6299db9ec823/httparse-1.7.1/src/simd/avx2.rs
+
+/Users/alex/Desktop/work/manta-signer/ui/src-tauri/target/debug/deps/httparse-64dbe3c344c19ad5.d: /Users/alex/.cargo/registry/src/github.com-1ecc6299db9ec823/httparse-1.7.1/src/lib.rs /Users/alex/.cargo/registry/src/github.com-1ecc6299db9ec823/httparse-1.7.1/src/iter.rs /Users/alex/.cargo/registry/src/github.com-1ecc6299db9ec823/httparse-1.7.1/src/macros.rs /Users/alex/.cargo/registry/src/github.com-1ecc6299db9ec823/httparse-1.7.1/src/simd/mod.rs /Users/alex/.cargo/registry/src/github.com-1ecc6299db9ec823/httparse-1.7.1/src/simd/sse42.rs /Users/alex/.cargo/registry/src/github.com-1ecc6299db9ec823/httparse-1.7.1/src/simd/avx2.rs
+
+/Users/alex/.cargo/registry/src/github.com-1ecc6299db9ec823/httparse-1.7.1/src/lib.rs:
+/Users/alex/.cargo/registry/src/github.com-1ecc6299db9ec823/httparse-1.7.1/src/iter.rs:
+/Users/alex/.cargo/registry/src/github.com-1ecc6299db9ec823/httparse-1.7.1/src/macros.rs:
+/Users/alex/.cargo/registry/src/github.com-1ecc6299db9ec823/httparse-1.7.1/src/simd/mod.rs:
+/Users/alex/.cargo/registry/src/github.com-1ecc6299db9ec823/httparse-1.7.1/src/simd/sse42.rs:
+/Users/alex/.cargo/registry/src/github.com-1ecc6299db9ec823/httparse-1.7.1/src/simd/avx2.rs:

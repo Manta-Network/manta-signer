@@ -205,6 +205,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "ark-bn254"
+version = "0.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ea691771ebbb28aea556c044e2e5c5227398d840cee0c34d4d20fa8eb2689e8c"
+dependencies = [
+ "ark-ec",
+ "ark-ff",
+ "ark-std",
+]
+
+[[package]]
 name = "ark-crypto-primitives"
 version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -242,6 +253,19 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "43b7ada17db3854f5994e74e60b18e10e818594935ee7e1d329800c117b32970"
 dependencies = [
  "ark-bls12-381",
+ "ark-ec",
+ "ark-ff",
+ "ark-r1cs-std",
+ "ark-std",
+]
+
+[[package]]
+name = "ark-ed-on-bn254"
+version = "0.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7fdc786b806fdbff4abebb08ec2fcb50cfe3941918e57120ab121228452903fd"
+dependencies = [
+ "ark-bn254",
  "ark-ec",
  "ark-ff",
  "ark-r1cs-std",
@@ -341,6 +365,7 @@ dependencies = [
  "ark-ff",
  "ark-std",
  "tracing",
+ "tracing-subscriber 0.2.25",
 ]
 
 [[package]]
@@ -610,21 +635,6 @@ name = "atomic-waker"
 version = "1.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "065374052e7df7ee4047b1160cca5e1467a12351a40b3da123c870ba0b8eda2a"
-
-[[package]]
-name = "attohttpc"
-version = "0.19.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "262c3f7f5d61249d8c00e5546e2685cd15ebeeb1bc0f3cc5449350a1cb07319e"
-dependencies = [
- "flate2",
- "http",
- "log",
- "native-tls",
- "openssl",
- "url",
- "wildmatch",
-]
 
 [[package]]
 name = "attohttpc"
@@ -1293,6 +1303,19 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b365fabc795046672053e29c954733ec3b05e4be654ab130fe8f1f94d7051f35"
 
 [[package]]
+name = "curve25519-dalek"
+version = "3.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0b9fdf9972b2bd6af2d913799d9ebc165ea4d2e65878e329d9c6b372c4491b61"
+dependencies = [
+ "byteorder",
+ "digest 0.9.0",
+ "rand_core 0.5.1",
+ "subtle",
+ "zeroize",
+]
+
+[[package]]
 name = "darling"
 version = "0.13.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1448,6 +1471,30 @@ dependencies = [
  "elliptic-curve",
  "rfc6979",
  "signature",
+]
+
+[[package]]
+name = "ed25519"
+version = "1.5.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1e9c280362032ea4203659fc489832d0204ef09f247a0506f170dafcac08c369"
+dependencies = [
+ "serde",
+ "signature",
+]
+
+[[package]]
+name = "ed25519-dalek"
+version = "1.0.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c762bae6dcaf24c4c84667b8579785430908723d5c889f469d76a41d59cc7a9d"
+dependencies = [
+ "curve25519-dalek",
+ "ed25519",
+ "serde",
+ "serde_bytes",
+ "sha2 0.9.9",
+ "zeroize",
 ]
 
 [[package]]
@@ -1864,6 +1911,15 @@ dependencies = [
  "libc",
  "system-deps 6.0.2",
  "winapi",
+]
+
+[[package]]
+name = "gitignore"
+version = "1.0.7"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "78aa90e4620c1498ac434c06ba6e521b525794bbdacf085d490cc794b4a2f9a4"
+dependencies = [
+ "glob",
 ]
 
 [[package]]
@@ -2569,7 +2625,7 @@ dependencies = [
  "serde",
  "serde_json",
  "tracing",
- "tracing-subscriber",
+ "tracing-subscriber 0.3.15",
 ]
 
 [[package]]
@@ -2589,8 +2645,8 @@ dependencies = [
 
 [[package]]
 name = "manta-accounting"
-version = "0.5.2"
-source = "git+https://github.com/manta-network/manta-rs?tag=v0.5.2#7c8d6c45bfd2c5ce1b1ceb70af824de0fb0bc609"
+version = "0.5.4"
+source = "git+https://github.com/manta-network/manta-rs?branch=signer_redesign#00074524fdd811b5d7410812f78ce1363304dab3"
 dependencies = [
  "bitflags",
  "cocoon",
@@ -2603,40 +2659,45 @@ dependencies = [
 
 [[package]]
 name = "manta-crypto"
-version = "0.5.2"
-source = "git+https://github.com/manta-network/manta-rs?tag=v0.5.2#7c8d6c45bfd2c5ce1b1ceb70af824de0fb0bc609"
+version = "0.5.4"
+source = "git+https://github.com/manta-network/manta-rs?branch=signer_redesign#00074524fdd811b5d7410812f78ce1363304dab3"
 dependencies = [
+ "ark-bls12-381",
+ "ark-bn254",
+ "ark-ec",
+ "ark-ed-on-bls12-381",
+ "ark-ed-on-bn254",
+ "ark-ff",
+ "ark-r1cs-std",
+ "ark-relations",
+ "ark-serialize",
  "derivative",
+ "ed25519-dalek",
  "manta-util",
+ "rand_chacha 0.3.1",
  "rand_core 0.6.4",
 ]
 
 [[package]]
 name = "manta-parameters"
-version = "0.5.2"
-source = "git+https://github.com/manta-network/manta-rs?tag=v0.5.2#7c8d6c45bfd2c5ce1b1ceb70af824de0fb0bc609"
+version = "0.5.4"
+source = "git+https://github.com/manta-network/manta-rs?branch=signer_redesign#00074524fdd811b5d7410812f78ce1363304dab3"
 dependencies = [
  "anyhow",
- "attohttpc 0.19.1",
+ "attohttpc",
  "blake3",
+ "gitignore",
  "hex",
  "walkdir",
 ]
 
 [[package]]
 name = "manta-pay"
-version = "0.5.2"
-source = "git+https://github.com/manta-network/manta-rs?tag=v0.5.2#7c8d6c45bfd2c5ce1b1ceb70af824de0fb0bc609"
+version = "0.5.4"
+source = "git+https://github.com/manta-network/manta-rs?branch=signer_redesign#00074524fdd811b5d7410812f78ce1363304dab3"
 dependencies = [
  "aes-gcm 0.9.4",
- "ark-bls12-381",
- "ark-ec",
- "ark-ed-on-bls12-381",
- "ark-ff",
  "ark-groth16",
- "ark-r1cs-std",
- "ark-relations",
- "ark-serialize",
  "ark-snark",
  "ark-std",
  "bip32",
@@ -2646,7 +2707,6 @@ dependencies = [
  "manta-accounting",
  "manta-crypto",
  "manta-util",
- "rand_chacha 0.3.1",
 ]
 
 [[package]]
@@ -2667,6 +2727,7 @@ dependencies = [
  "manta-util",
  "parking_lot",
  "password-hash",
+ "reqwest",
  "secrecy",
  "serde_json",
  "subtle",
@@ -2679,6 +2740,9 @@ dependencies = [
 name = "manta-signer-ui"
 version = "0.8.0"
 dependencies = [
+ "manta-accounting",
+ "manta-crypto",
+ "manta-pay",
  "manta-signer",
  "tauri",
  "tauri-build",
@@ -2686,9 +2750,10 @@ dependencies = [
 
 [[package]]
 name = "manta-util"
-version = "0.5.2"
-source = "git+https://github.com/manta-network/manta-rs?tag=v0.5.2#7c8d6c45bfd2c5ce1b1ceb70af824de0fb0bc609"
+version = "0.5.4"
+source = "git+https://github.com/manta-network/manta-rs?branch=signer_redesign#00074524fdd811b5d7410812f78ce1363304dab3"
 dependencies = [
+ "crossbeam-channel",
  "serde",
  "serde_with",
 ]
@@ -2962,6 +3027,16 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "624a8340c38c1b80fd549087862da4ba43e08858af025b236e509b6649fc13d5"
 
 [[package]]
+name = "open"
+version = "3.0.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b4a3100141f1733ea40b53381b0ae3117330735ef22309a190ac57b9576ea716"
+dependencies = [
+ "pathdiff",
+ "windows-sys",
+]
+
+[[package]]
 name = "openssl"
 version = "0.10.42"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3004,6 +3079,16 @@ dependencies = [
  "libc",
  "pkg-config",
  "vcpkg",
+]
+
+[[package]]
+name = "os_pipe"
+version = "1.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0dceb7e43f59c35ee1548045b2c72945a5a3bb6ce6d6f07cdc13dc8f6bc4930a"
+dependencies = [
+ "libc",
+ "winapi",
 ]
 
 [[package]]
@@ -3076,6 +3161,12 @@ name = "paste"
 version = "1.0.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b1de2e551fb905ac83f73f7aedf2f0cb4a0da7e35efa24a202a936269f1f18e1"
+
+[[package]]
+name = "pathdiff"
+version = "0.2.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8835116a5c179084a830efb3adc117ab007512b535bc1a21c991d3b32a6b44dd"
 
 [[package]]
 name = "pbkdf2"
@@ -3458,6 +3549,7 @@ checksum = "e6c10a63a0fa32252be49d21e7709d4d4baf8d231c2dbce1eaa8141b9b127d88"
 dependencies = [
  "ppv-lite86",
  "rand_core 0.6.4",
+ "serde",
 ]
 
 [[package]]
@@ -3842,6 +3934,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "serde_bytes"
+version = "0.11.7"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "cfc50e8183eeeb6178dcb167ae34a8051d63535023ae38b5d8d12beae193d37b"
+dependencies = [
+ "serde",
+]
+
+[[package]]
 name = "serde_derive"
 version = "1.0.145"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4009,6 +4110,16 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "900fba806f70c630b0a382d0d825e17a0f19fcd059a2ade1ff237bcddf446b31"
 dependencies = [
  "lazy_static",
+]
+
+[[package]]
+name = "shared_child"
+version = "1.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b0d94659ad3c2137fef23ae75b03d5241d633f8acded53d672decfa0e6e0caef"
+dependencies = [
+ "libc",
+ "winapi",
 ]
 
 [[package]]
@@ -4340,7 +4451,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "efbf22abd61d95ca9b2becd77f9db4c093892f73e8a07d21d8b0b2bf71a7bcea"
 dependencies = [
  "anyhow",
- "attohttpc 0.22.0",
+ "attohttpc",
  "base64",
  "bytes",
  "cocoa",
@@ -4358,9 +4469,12 @@ dependencies = [
  "minisign-verify",
  "objc",
  "once_cell",
+ "open",
+ "os_pipe",
  "percent-encoding",
  "rand 0.8.5",
  "raw-window-handle",
+ "regex",
  "reqwest",
  "rfd",
  "semver 1.0.14",
@@ -4368,6 +4482,7 @@ dependencies = [
  "serde_json",
  "serde_repr",
  "serialize-to-javascript",
+ "shared_child",
  "state",
  "tar",
  "tauri-macros",
@@ -4415,6 +4530,7 @@ dependencies = [
  "png 0.17.6",
  "proc-macro2",
  "quote",
+ "regex",
  "semver 1.0.14",
  "serde",
  "serde_json",
@@ -4750,6 +4866,15 @@ checksum = "78ddad33d2d10b1ed7eb9d1f518a5674713876e97e5bb9b7345a7984fbb4f922"
 dependencies = [
  "lazy_static",
  "log",
+ "tracing-core",
+]
+
+[[package]]
+name = "tracing-subscriber"
+version = "0.2.25"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0e0d2eaa99c3c2e41547cfa109e910a68ea03823cccad4a0525dcbc9b01e8c71"
+dependencies = [
  "tracing-core",
 ]
 
@@ -5133,12 +5258,6 @@ checksum = "d743fdedc5c64377b5fc2bc036b01c7fd642205a0d96356034ae3404d49eb7fb"
 dependencies = [
  "cc",
 ]
-
-[[package]]
-name = "wildmatch"
-version = "2.1.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ee583bdc5ff1cf9db20e9db5bb3ff4c3089a8f6b8b31aff265c9aba85812db86"
 
 [[package]]
 name = "winapi"

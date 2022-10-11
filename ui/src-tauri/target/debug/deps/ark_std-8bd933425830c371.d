@@ -1,0 +1,12 @@
+/Users/alex/Desktop/work/manta-signer/ui/src-tauri/target/debug/deps/ark_std-8bd933425830c371.rmeta: /Users/alex/.cargo/registry/src/github.com-1ecc6299db9ec823/ark-std-0.3.0/src/lib.rs /Users/alex/.cargo/registry/src/github.com-1ecc6299db9ec823/ark-std-0.3.0/src/io/mod.rs /Users/alex/.cargo/registry/src/github.com-1ecc6299db9ec823/ark-std-0.3.0/src/io/error.rs /Users/alex/.cargo/registry/src/github.com-1ecc6299db9ec823/ark-std-0.3.0/src/error.rs /Users/alex/.cargo/registry/src/github.com-1ecc6299db9ec823/ark-std-0.3.0/src/rand_helper.rs /Users/alex/.cargo/registry/src/github.com-1ecc6299db9ec823/ark-std-0.3.0/src/perf_trace.rs
+
+/Users/alex/Desktop/work/manta-signer/ui/src-tauri/target/debug/deps/libark_std-8bd933425830c371.rlib: /Users/alex/.cargo/registry/src/github.com-1ecc6299db9ec823/ark-std-0.3.0/src/lib.rs /Users/alex/.cargo/registry/src/github.com-1ecc6299db9ec823/ark-std-0.3.0/src/io/mod.rs /Users/alex/.cargo/registry/src/github.com-1ecc6299db9ec823/ark-std-0.3.0/src/io/error.rs /Users/alex/.cargo/registry/src/github.com-1ecc6299db9ec823/ark-std-0.3.0/src/error.rs /Users/alex/.cargo/registry/src/github.com-1ecc6299db9ec823/ark-std-0.3.0/src/rand_helper.rs /Users/alex/.cargo/registry/src/github.com-1ecc6299db9ec823/ark-std-0.3.0/src/perf_trace.rs
+
+/Users/alex/Desktop/work/manta-signer/ui/src-tauri/target/debug/deps/ark_std-8bd933425830c371.d: /Users/alex/.cargo/registry/src/github.com-1ecc6299db9ec823/ark-std-0.3.0/src/lib.rs /Users/alex/.cargo/registry/src/github.com-1ecc6299db9ec823/ark-std-0.3.0/src/io/mod.rs /Users/alex/.cargo/registry/src/github.com-1ecc6299db9ec823/ark-std-0.3.0/src/io/error.rs /Users/alex/.cargo/registry/src/github.com-1ecc6299db9ec823/ark-std-0.3.0/src/error.rs /Users/alex/.cargo/registry/src/github.com-1ecc6299db9ec823/ark-std-0.3.0/src/rand_helper.rs /Users/alex/.cargo/registry/src/github.com-1ecc6299db9ec823/ark-std-0.3.0/src/perf_trace.rs
+
+/Users/alex/.cargo/registry/src/github.com-1ecc6299db9ec823/ark-std-0.3.0/src/lib.rs:
+/Users/alex/.cargo/registry/src/github.com-1ecc6299db9ec823/ark-std-0.3.0/src/io/mod.rs:
+/Users/alex/.cargo/registry/src/github.com-1ecc6299db9ec823/ark-std-0.3.0/src/io/error.rs:
+/Users/alex/.cargo/registry/src/github.com-1ecc6299db9ec823/ark-std-0.3.0/src/error.rs:
+/Users/alex/.cargo/registry/src/github.com-1ecc6299db9ec823/ark-std-0.3.0/src/rand_helper.rs:
+/Users/alex/.cargo/registry/src/github.com-1ecc6299db9ec823/ark-std-0.3.0/src/perf_trace.rs:

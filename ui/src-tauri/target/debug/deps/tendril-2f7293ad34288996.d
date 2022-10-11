@@ -1,0 +1,13 @@
+/Users/alex/Desktop/work/manta-signer/ui/src-tauri/target/debug/deps/tendril-2f7293ad34288996.rmeta: /Users/alex/.cargo/registry/src/github.com-1ecc6299db9ec823/tendril-0.4.3/src/lib.rs /Users/alex/.cargo/registry/src/github.com-1ecc6299db9ec823/tendril-0.4.3/src/fmt.rs /Users/alex/.cargo/registry/src/github.com-1ecc6299db9ec823/tendril-0.4.3/src/stream.rs /Users/alex/.cargo/registry/src/github.com-1ecc6299db9ec823/tendril-0.4.3/src/buf32.rs /Users/alex/.cargo/registry/src/github.com-1ecc6299db9ec823/tendril-0.4.3/src/tendril.rs /Users/alex/.cargo/registry/src/github.com-1ecc6299db9ec823/tendril-0.4.3/src/utf8_decode.rs /Users/alex/.cargo/registry/src/github.com-1ecc6299db9ec823/tendril-0.4.3/src/util.rs
+
+/Users/alex/Desktop/work/manta-signer/ui/src-tauri/target/debug/deps/libtendril-2f7293ad34288996.rlib: /Users/alex/.cargo/registry/src/github.com-1ecc6299db9ec823/tendril-0.4.3/src/lib.rs /Users/alex/.cargo/registry/src/github.com-1ecc6299db9ec823/tendril-0.4.3/src/fmt.rs /Users/alex/.cargo/registry/src/github.com-1ecc6299db9ec823/tendril-0.4.3/src/stream.rs /Users/alex/.cargo/registry/src/github.com-1ecc6299db9ec823/tendril-0.4.3/src/buf32.rs /Users/alex/.cargo/registry/src/github.com-1ecc6299db9ec823/tendril-0.4.3/src/tendril.rs /Users/alex/.cargo/registry/src/github.com-1ecc6299db9ec823/tendril-0.4.3/src/utf8_decode.rs /Users/alex/.cargo/registry/src/github.com-1ecc6299db9ec823/tendril-0.4.3/src/util.rs
+
+/Users/alex/Desktop/work/manta-signer/ui/src-tauri/target/debug/deps/tendril-2f7293ad34288996.d: /Users/alex/.cargo/registry/src/github.com-1ecc6299db9ec823/tendril-0.4.3/src/lib.rs /Users/alex/.cargo/registry/src/github.com-1ecc6299db9ec823/tendril-0.4.3/src/fmt.rs /Users/alex/.cargo/registry/src/github.com-1ecc6299db9ec823/tendril-0.4.3/src/stream.rs /Users/alex/.cargo/registry/src/github.com-1ecc6299db9ec823/tendril-0.4.3/src/buf32.rs /Users/alex/.cargo/registry/src/github.com-1ecc6299db9ec823/tendril-0.4.3/src/tendril.rs /Users/alex/.cargo/registry/src/github.com-1ecc6299db9ec823/tendril-0.4.3/src/utf8_decode.rs /Users/alex/.cargo/registry/src/github.com-1ecc6299db9ec823/tendril-0.4.3/src/util.rs
+
+/Users/alex/.cargo/registry/src/github.com-1ecc6299db9ec823/tendril-0.4.3/src/lib.rs:
+/Users/alex/.cargo/registry/src/github.com-1ecc6299db9ec823/tendril-0.4.3/src/fmt.rs:
+/Users/alex/.cargo/registry/src/github.com-1ecc6299db9ec823/tendril-0.4.3/src/stream.rs:
+/Users/alex/.cargo/registry/src/github.com-1ecc6299db9ec823/tendril-0.4.3/src/buf32.rs:
+/Users/alex/.cargo/registry/src/github.com-1ecc6299db9ec823/tendril-0.4.3/src/tendril.rs:
+/Users/alex/.cargo/registry/src/github.com-1ecc6299db9ec823/tendril-0.4.3/src/utf8_decode.rs:
+/Users/alex/.cargo/registry/src/github.com-1ecc6299db9ec823/tendril-0.4.3/src/util.rs:

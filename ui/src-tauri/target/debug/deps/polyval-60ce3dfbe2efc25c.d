@@ -1,0 +1,12 @@
+/Users/alex/Desktop/work/manta-signer/ui/src-tauri/target/debug/deps/polyval-60ce3dfbe2efc25c.rmeta: /Users/alex/.cargo/registry/src/github.com-1ecc6299db9ec823/polyval-0.5.3/src/lib.rs /Users/alex/.cargo/registry/src/github.com-1ecc6299db9ec823/polyval-0.5.3/src/backend.rs /Users/alex/.cargo/registry/src/github.com-1ecc6299db9ec823/polyval-0.5.3/src/backend/soft64.rs /Users/alex/.cargo/registry/src/github.com-1ecc6299db9ec823/polyval-0.5.3/src/mulx.rs /Users/alex/.cargo/registry/src/github.com-1ecc6299db9ec823/polyval-0.5.3/src/backend/autodetect.rs /Users/alex/.cargo/registry/src/github.com-1ecc6299db9ec823/polyval-0.5.3/src/backend/clmul.rs
+
+/Users/alex/Desktop/work/manta-signer/ui/src-tauri/target/debug/deps/libpolyval-60ce3dfbe2efc25c.rlib: /Users/alex/.cargo/registry/src/github.com-1ecc6299db9ec823/polyval-0.5.3/src/lib.rs /Users/alex/.cargo/registry/src/github.com-1ecc6299db9ec823/polyval-0.5.3/src/backend.rs /Users/alex/.cargo/registry/src/github.com-1ecc6299db9ec823/polyval-0.5.3/src/backend/soft64.rs /Users/alex/.cargo/registry/src/github.com-1ecc6299db9ec823/polyval-0.5.3/src/mulx.rs /Users/alex/.cargo/registry/src/github.com-1ecc6299db9ec823/polyval-0.5.3/src/backend/autodetect.rs /Users/alex/.cargo/registry/src/github.com-1ecc6299db9ec823/polyval-0.5.3/src/backend/clmul.rs
+
+/Users/alex/Desktop/work/manta-signer/ui/src-tauri/target/debug/deps/polyval-60ce3dfbe2efc25c.d: /Users/alex/.cargo/registry/src/github.com-1ecc6299db9ec823/polyval-0.5.3/src/lib.rs /Users/alex/.cargo/registry/src/github.com-1ecc6299db9ec823/polyval-0.5.3/src/backend.rs /Users/alex/.cargo/registry/src/github.com-1ecc6299db9ec823/polyval-0.5.3/src/backend/soft64.rs /Users/alex/.cargo/registry/src/github.com-1ecc6299db9ec823/polyval-0.5.3/src/mulx.rs /Users/alex/.cargo/registry/src/github.com-1ecc6299db9ec823/polyval-0.5.3/src/backend/autodetect.rs /Users/alex/.cargo/registry/src/github.com-1ecc6299db9ec823/polyval-0.5.3/src/backend/clmul.rs
+
+/Users/alex/.cargo/registry/src/github.com-1ecc6299db9ec823/polyval-0.5.3/src/lib.rs:
+/Users/alex/.cargo/registry/src/github.com-1ecc6299db9ec823/polyval-0.5.3/src/backend.rs:
+/Users/alex/.cargo/registry/src/github.com-1ecc6299db9ec823/polyval-0.5.3/src/backend/soft64.rs:
+/Users/alex/.cargo/registry/src/github.com-1ecc6299db9ec823/polyval-0.5.3/src/mulx.rs:
+/Users/alex/.cargo/registry/src/github.com-1ecc6299db9ec823/polyval-0.5.3/src/backend/autodetect.rs:
+/Users/alex/.cargo/registry/src/github.com-1ecc6299db9ec823/polyval-0.5.3/src/backend/clmul.rs:
