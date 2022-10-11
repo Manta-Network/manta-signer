@@ -210,7 +210,8 @@ const CreateAccount = (props) => {
             Next
           </Button>
           <HyperLinkButton
-            goBack={goBack}
+            text={"Go Back"}
+            onclick={goBack}
           />
           {!isValidPassword && password.length > 0 ? <><br /><Label basic color='red' pointing>Please enter a minimum of {MIN_PASSWORD_LENGTH} characters.</Label></> : (
             !passwordsMatch ? <><br /><Label basic color='red' pointing>Passwords do not match.</Label></> : <><br /><br /><br /></>
@@ -246,7 +247,8 @@ const CreateAccount = (props) => {
             Next
           </Button>
           <HyperLinkButton
-            goBack={goBack}
+            text={"Go Back"}
+            onclick={goBack}
           />
         </>
       )}
@@ -282,8 +284,9 @@ const CreateAccount = (props) => {
           Confirm
         </Button>
         <HyperLinkButton
-            goBack={goBack}
-          />
+          text={"Go Back"}
+          onclick={goBack}
+        />
 
       </>)}
       {currentTab === FINAL_TAB && (<>

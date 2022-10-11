@@ -34,7 +34,7 @@ const CreateOrRecover = (props) => {
 
     <div className='learnAboutManta'>
       <p>Learn more about &nbsp;
-        <a href='https://www.manta.network/' target="_blank">
+        <a href='https://www.manta.network/' target="_blank" rel="noreferrer">
            Manta
         </a>
       </p>

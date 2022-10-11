@@ -207,7 +207,8 @@ const Recover = (props) => {
           <Button disabled primary className="button ui first">Next</Button>}
       </div>
       <HyperLinkButton
-        goBack={goBack}
+        text={"Go Back"}
+        onclick={goBack}
       />
     </>
     }
@@ -242,7 +243,8 @@ const Recover = (props) => {
           Next
         </Button>
         <HyperLinkButton
-          goBack={goBack}
+          text={"Go Back"}
+          onclick={goBack}
         />
 
         {!isValidPassword && password.length > 0 ? <><br /><Label basic color='red' pointing>Please enter a minimum of {MIN_PASSWORD_LENGTH} characters.</Label></> : (

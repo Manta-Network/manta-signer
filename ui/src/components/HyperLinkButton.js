@@ -5,7 +5,7 @@ const HyperLinkButton = (props) => {
 
   return (
     <div className='hrefButtonContainer'>
-      <Button className='button ui hrefButton' onClick={props.goBack}>Go Back</Button>
+      <Button className='button ui hrefButton' onClick={props.onclick}>{props.text}</Button>
     </div>
   )
 }

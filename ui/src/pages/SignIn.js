@@ -5,6 +5,7 @@ import dolphinLogo from "../icons/Square150x150Logo.png";
 import calamariLogo from "../icons/calamari.png";
 import newAccount from "../icons/new_account.png";
 import "../App.css";
+import HyperLinkButton from '../components/HyperLinkButton';
 
 const SignIn = (props) => {
   const [password, setPassword] = useState('');
@@ -69,13 +70,14 @@ const SignIn = (props) => {
         <Button className="button ui first" onClick={onClickSignIn}>
           Unlock
         </Button>
-        <div className='bottomButtonContainer'>
-          <a onClick={onClickForgotPassword}>Forgot Password?</a>
-        </div>
+        <HyperLinkButton
+          text={"Forgot Password?"}
+          onclick={onClickForgotPassword}
+        />
 
         <div className='learnAboutMantaSmall'>
           <p>Learn more about &nbsp;
-            <a href='https://www.manta.network/' target="_blank">
+            <a href='https://www.manta.network/' target="_blank" rel="noreferrer">
               Manta
             </a>
           </p>
@@ -103,10 +105,10 @@ const SignIn = (props) => {
               <h4>Supported Networks</h4>
             </div>
             <img className='miniLogo' alt="Calamari Logo" src={calamariLogo} />
-            <a className='soonTag'>(soon)</a>
+            <a className='soonTag' href='https://calamari.network/' target="_blank" rel="noreferrer">(soon)</a>
             <img className='miniLogo' alt="Dolphin Logo" src={dolphinLogo} />
             <img className='miniMantaLogo' alt="Manta Logo" src={mantaLogo} />
-            <a className='soonTag'>(soon)</a>
+            <a className='soonTag' href='https://www.manta.network/' target="_blank" rel="noreferrer">(soon)</a>
           </div>
 
         </div>
