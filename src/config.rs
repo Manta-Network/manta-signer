@@ -139,22 +139,20 @@ impl Config {
             .await
             .expect("Unable to read manta file.");
 
-        let result = DataExistenceResponse {
+        DataExistenceResponse {
             dolphin: dolphin_exists,
             calamari: calamari_exists,
             manta: manta_exists,
-        };
-        result
+        }
     }
 
     /// Returns the path corresponding to a particular `NetworkType`.
     pub fn get_path_for_network(&self, network: NetworkType) -> PathBuf {
-        let path = match network {
+        match network {
             NetworkType::Dolphin => self.data_path_dolphin.clone(),
             NetworkType::Calamari => self.data_path_calamari.clone(),
             NetworkType::Manta => self.data_path_manta.clone(),
-        };
-        path
+        }
     }
 }
 

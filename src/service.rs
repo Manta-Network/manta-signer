@@ -498,7 +498,7 @@ where
         let backup = path.with_extension("backup");
         fs::rename(&path, &backup).await?;
         let password_hash_bytes = self.authorizer.lock().await.password_hash.as_bytes();
-        let network_copy = network.clone();
+        let network_copy = network;
         task::spawn_blocking(move || {
             let lock = self.state.lock();
 
@@ -528,7 +528,7 @@ where
     pub async fn sync(self, request: SyncRequest) -> Result<Result<SyncResponse, SyncError>> {
         info!("[REQUEST] processing `sync`:  {:?}.", request)?;
 
-        let network = request.network.clone();
+        let network = request.network;
 
         let response = match network {
             NetworkType::Dolphin => self.state.lock().dolphin_signer.sync(request),
@@ -554,7 +554,7 @@ where
             return Ok(Err(SignError::SignerBusy));
         }
 
-        self.state.lock().currently_signing = Some(request.network.clone());
+        self.state.lock().currently_signing = Some(request.network);
 
         let SignRequest {
             transaction,

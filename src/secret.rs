@@ -119,7 +119,7 @@ pub trait Authorizer: 'static + Send {
     /// The [`Server::start`] function already calls this method internally.
     ///
     /// [`Server::start`]: crate::service::Server::start
-    fn setup<'s>(&'s mut self, data_exists: bool) -> SetupFuture<'s>;
+    fn setup(& mut self, data_exists: bool) -> SetupFuture;
 
     /// Prompts the authorizer with `prompt` so that they can be notified that their password is
     /// requested.
