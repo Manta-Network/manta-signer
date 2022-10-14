@@ -387,7 +387,7 @@ impl MnemonicReceiver {
 
     /// Loads the mnemonic from the mnemonic channel.
     #[inline]
-    pub async fn mnemonic(&mut self) -> Mnemonic {
+    pub async fn load_mnemonic(&mut self) -> Mnemonic {
         self.mnemonic
             .recv()
             .await
@@ -396,7 +396,7 @@ impl MnemonicReceiver {
 
     /// Loads the selection from the selection channel.
     #[inline]
-    pub async fn selection(&mut self) -> UserSelection {
+    pub async fn load_selection(&mut self) -> UserSelection {
         self.selection
             .recv()
             .await

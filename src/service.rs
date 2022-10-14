@@ -17,7 +17,7 @@
 //! Manta Signer Service Implementation
 
 use crate::{
-    config::{Config, Setup},
+    config::{Config, DataExistenceResponse, Setup},
     http,
     log::{info, trace, warn},
     secret::{Argon2, Authorizer, ExposeSecret, PasswordHash, SecretString},
@@ -45,7 +45,7 @@ use parking_lot::Mutex;
 use std::{
     io,
     net::{AddrParseError, SocketAddr},
-    path::Path,
+    path::{Path, PathBuf},
 };
 use tide::{
     security::{CorsMiddleware, Origin},
@@ -263,119 +263,47 @@ where
             },
             Setup::Login => loop {
                 if let Some((_, password_hash)) = Self::load_password(&mut authorizer).await {
-                    // Edge case: 1 or 2 out of 3 storage.dat files are missing.
-                    // We need to get the mnemonic from one of the existing files
-                    // and use it to recreate the missing files.
-
                     let mut recovery_mnemonic: Option<Mnemonic> = None;
                     if !does_all_data_exist {
+                        // Edge case: 1 or 2 out of 3 storage.dat files are missing.
+                        // We need to get the mnemonic from one of the existing files
+                        // and use it to recreate the missing files.
                         info!("not all data files were found, starting re-creation process from existing file's seed phrase.")?;
-                        if data_exists.dolphin {
-                            let dolphin_state =
-                                Self::load_state(&config.data_path_dolphin, &password_hash)
-                                    .await?
-                                    .expect("Unable to get dolphin state");
-                            let dolphin_signer =
-                                Signer::from_parts(parameters.clone(), dolphin_state);
-                            recovery_mnemonic = Some(
-                                dolphin_signer
-                                    .state()
-                                    .accounts()
-                                    .keys()
-                                    .base()
-                                    .expose_mnemonic()
-                                    .clone(),
-                            );
-                        } else if data_exists.calamari {
-                            let calamari_state =
-                                Self::load_state(&config.data_path_calamari, &password_hash)
-                                    .await?
-                                    .expect("Unable to get dolphin state");
-                            let calamari_signer =
-                                Signer::from_parts(parameters.clone(), calamari_state);
-                            recovery_mnemonic = Some(
-                                calamari_signer
-                                    .state()
-                                    .accounts()
-                                    .keys()
-                                    .base()
-                                    .expose_mnemonic()
-                                    .clone(),
-                            );
-                        } else {
-                            let manta_state =
-                                Self::load_state(&config.data_path_manta, &password_hash)
-                                    .await?
-                                    .expect("Unable to get dolphin state");
-                            let calamari_signer =
-                                Signer::from_parts(parameters.clone(), manta_state);
-                            recovery_mnemonic = Some(
-                                calamari_signer
-                                    .state()
-                                    .accounts()
-                                    .keys()
-                                    .base()
-                                    .expose_mnemonic()
-                                    .clone(),
-                            );
-                        }
+                        recovery_mnemonic = Self::get_mnemonic_for_missing_file(
+                            data_exists,
+                            &config,
+                            &password_hash,
+                            parameters.clone(),
+                        )
+                        .await;
                     }
 
-                    let dolphin_signer = if !data_exists.dolphin {
-                        info!("dolphin state missing! recreating state.")?;
-                        Self::create_state(
-                            &config.data_path_dolphin,
-                            &password_hash,
-                            recovery_mnemonic
-                                .clone()
-                                .expect("Unable to fetch mnemonic for account re-creation."),
-                            parameters.clone(),
-                        )
-                        .await?
-                    } else {
-                        let dolphin_state =
-                            Self::load_state(&config.data_path_dolphin, &password_hash)
-                                .await?
-                                .expect("Unable to get dolphin state");
-                        Signer::from_parts(parameters.clone(), dolphin_state)
-                    };
+                    let dolphin_signer = Self::create_or_load_state(
+                        !data_exists.dolphin,
+                        &config.data_path_dolphin,
+                        &password_hash,
+                        recovery_mnemonic.clone(),
+                        parameters.clone(),
+                    )
+                    .await;
 
-                    let calamari_signer = if !data_exists.calamari {
-                        info!("calamari state missing! recreating state.")?;
-                        Self::create_state(
-                            &config.data_path_calamari,
-                            &password_hash,
-                            recovery_mnemonic
-                                .clone()
-                                .expect("Unable to fetch mnemonic for account re-creation."),
-                            parameters.clone(),
-                        )
-                        .await?
-                    } else {
-                        let calamari_state =
-                            Self::load_state(&config.data_path_calamari, &password_hash)
-                                .await?
-                                .expect("Unable to get calamari state");
-                        Signer::from_parts(parameters.clone(), calamari_state)
-                    };
+                    let calamari_signer = Self::create_or_load_state(
+                        !data_exists.calamari,
+                        &config.data_path_dolphin,
+                        &password_hash,
+                        recovery_mnemonic.clone(),
+                        parameters.clone(),
+                    )
+                    .await;
 
-                    let manta_signer = if !data_exists.manta {
-                        info!("manta state missing! recreating state.")?;
-                        Self::create_state(
-                            &config.data_path_manta,
-                            &password_hash,
-                            recovery_mnemonic
-                                .clone()
-                                .expect("Unable to fetch mnemonic for account re-creation."),
-                            parameters.clone(),
-                        )
-                        .await?
-                    } else {
-                        let manta_state = Self::load_state(&config.data_path_manta, &password_hash)
-                            .await?
-                            .expect("Unable to get manta state");
-                        Signer::from_parts(parameters.clone(), manta_state)
-                    };
+                    let manta_signer = Self::create_or_load_state(
+                        !data_exists.calamari,
+                        &config.data_path_dolphin,
+                        &password_hash,
+                        recovery_mnemonic.clone(),
+                        parameters.clone(),
+                    )
+                    .await;
 
                     break (password_hash, dolphin_signer, calamari_signer, manta_signer);
                 }
@@ -399,8 +327,73 @@ where
         })
     }
 
+    /// If one of the network storage files is missing, we need to load an existing network
+    /// state and use it's recovery phrase to re-create the missing file. This function
+    /// returns the seed phrase from an existing state file.
+    #[inline]
+    async fn get_mnemonic_for_missing_file(
+        data_exists: DataExistenceResponse,
+        config: &Config,
+        password_hash: &PasswordHash<Argon2>,
+        parameters: SignerParameters,
+    ) -> Option<Mnemonic> {
+        let existing_state_path = if data_exists.dolphin {
+            &config.data_path_dolphin
+        } else if data_exists.calamari {
+            &config.data_path_calamari
+        } else {
+            &config.data_path_manta
+        };
+
+        let exisitng_signer = Signer::from_parts(
+            parameters.clone(),
+            Self::load_state(existing_state_path, &password_hash)
+                .await
+                .expect("Unable to get dolphin state")?,
+        );
+        Some(
+            exisitng_signer
+                .state()
+                .accounts()
+                .keys()
+                .base()
+                .expose_mnemonic()
+                .clone(),
+        )
+    }
+
+    /// Recreates a new state from a mnemonic of an existing state
+    /// if file was deleted or loads an existing state during login.
+    #[inline]
+    async fn create_or_load_state(
+        should_recreate: bool,
+        data_path: &PathBuf,
+        password_hash: &PasswordHash<Argon2>,
+        recovery_mnemonic: Option<Mnemonic>,
+        parameters: SignerParameters,
+    ) -> Signer {
+        if should_recreate {
+            info!("state missing! recreating state.")?;
+            let signer = Self::create_state(
+                data_path,
+                &password_hash,
+                recovery_mnemonic.expect("unable to retrieve mnemonic for account recreation."),
+                parameters,
+            )
+            .await
+            .expect("Unable to recreate signer instance from exisitng mnemonic.");
+            return signer;
+        } else {
+            let manta_state = Self::load_state(&data_path, password_hash)
+                .await
+                .expect("Unable to load signer state.")?;
+            return Signer::from_parts(parameters.clone(), manta_state);
+        };
+    }
+
     /// If users cancels a transaction, this method will be called by front-end
     /// to indicate that signer can now start signing new transactions.
+    #[inline]
     pub async fn cancel_signing(&mut self) {
         self.state.lock().currently_signing = None;
     }
@@ -586,7 +579,8 @@ where
         Ok(response)
     }
 
-    /// Gets the mnemonic stored on disk for a specific `NetworkType`.
+    /// Gets the mnemonic stored on disk for a specific `NetworkType` for front-end export
+    /// requiring password authorization.
     #[inline]
     pub async fn get_stored_mnemonic(&mut self, prompt: &String) -> Result<Mnemonic> {
         self.authorizer.lock().await.check(prompt).await?;
@@ -619,10 +613,15 @@ where
     /// Runs the receiving key sampling protocol on a mutable reference
     /// of the signer, and formats the result to base 58.
     #[inline]
-    pub async fn get_receiving_keys(&mut self, request: ReceivingKeyRequest) -> Result<Vec<String>,()> {
+    pub async fn get_receiving_keys(
+        &mut self,
+        request: ReceivingKeyRequest,
+    ) -> Result<Vec<String>, ()> {
         let response = self.state.lock().dolphin_signer.receiving_keys(request);
-        let keys = response.into_iter().map(|key| receiving_key_to_base58(&key))
-        .collect();
+        let keys = response
+            .into_iter()
+            .map(|key| receiving_key_to_base58(&key))
+            .collect();
         Ok(keys)
     }
 }

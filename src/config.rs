@@ -69,6 +69,7 @@ pub struct Config {
 
 /// Response for the does_data_exist() function of [`Config`].
 /// Contains whether or not each respective network data file exists or not.
+#[derive(Clone, Copy)]
 pub struct DataExistenceResponse {
     /// Dolphin Network (storage-dolphin.dat)
     pub dolphin: bool,

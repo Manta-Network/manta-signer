@@ -50,9 +50,9 @@ use tauri::{
     SystemTrayHandle, SystemTrayMenu, Window, WindowEvent,
 };
 
+use manta_accounting::wallet::signer::ReceivingKeyRequest;
 use manta_crypto::rand::OsRng;
 use manta_pay::key::Mnemonic;
-use manta_accounting::wallet::signer::ReceivingKeyRequest;
 
 /// App State
 ///
@@ -178,14 +178,14 @@ impl User {
     /// Requests selection from user, either to create account or recover old account.
     #[inline]
     async fn request_selection(&mut self) -> UserSelection {
-        let user_selection = self.mnemonic_receiver.selection().await;
+        let user_selection = self.mnemonic_receiver.load_selection().await;
         user_selection
     }
 
     /// Requests mnemonic from user
     #[inline]
     async fn request_mnemonic(&mut self) -> Mnemonic {
-        let mnemonic = self.mnemonic_receiver.mnemonic().await;
+        let mnemonic = self.mnemonic_receiver.load_mnemonic().await;
         mnemonic
     }
 
@@ -476,7 +476,7 @@ async fn reset_account(
 async fn receiving_keys(server_store: State<'_, ServerStore>) -> Result<Vec<String>, ()> {
     if let Some(store) = &mut *server_store.lock().await {
         let keys = store.get_receiving_keys(ReceivingKeyRequest::GetAll).await;
-        return keys
+        return keys;
     }
     Err(())
 }
