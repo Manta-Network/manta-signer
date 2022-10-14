@@ -4,7 +4,12 @@ import mainLogo from "../icons/manta.png";
 import hiddenImage from "../icons/eye-close.png";
 import "../App.css";
 
-const ViewSecretPhrase = (props) => {
+const ViewSecretPhrase = ({
+  endExportPhrase,
+  exportedSecretPhrase,
+  sendPassword,
+  stopPasswordPrompt
+}) => {
 
   const [password, setPassword] = useState("");
   const [passwordInvalid, setPasswordInvalid] = useState(false);
@@ -16,12 +21,12 @@ const ViewSecretPhrase = (props) => {
   }
 
   const onClickCancel = async () => {
-    await props.stopPasswordPrompt();
-    props.endExportPhrase();
+    await stopPasswordPrompt();
+    endExportPhrase();
   }
 
   const onClickSubmitPassword = async () => {
-    const shouldRetry = await props.sendPassword(password);
+    const shouldRetry = await sendPassword(password);
 
     if (!shouldRetry) {
       setPassword('');
@@ -40,11 +45,11 @@ const ViewSecretPhrase = (props) => {
 
   const onClickFinish = () => {
     setRecoveryPhraseConfirmed(false);
-    props.endExportPhrase();
+    endExportPhrase();
   }
 
   return (<>
-    {!props.exportedSecretPhrase && (<>
+    {!exportedSecretPhrase && (<>
 
       <div className='mainlogocontainer'>
         <img className="mainlogo" alt="Manta Logo" src={mainLogo} />
@@ -80,13 +85,13 @@ const ViewSecretPhrase = (props) => {
       </div>
 
     </>)}
-    {props.exportedSecretPhrase && (<>
+    {exportedSecretPhrase && (<>
       <div className='headercontainer'>
         <h1 className='mainheadline'>Secret Recovery Phrase</h1>
       </div>
 
       <div className='recoveryPhraseContainer'>
-        {recoveryPhraseConfirmed ? props.exportedSecretPhrase.split(" ").map(function (item, index) {
+        {recoveryPhraseConfirmed ? exportedSecretPhrase.split(" ").map(function (item, index) {
           return (
             <div key={index} className='recoveryPhraseWord'>
               <h4>{item}</h4>

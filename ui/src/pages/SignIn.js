@@ -7,16 +7,23 @@ import newAccount from "../icons/new_account.png";
 import "../App.css";
 import HyperLinkButton from '../components/HyperLinkButton';
 
-const SignIn = (props) => {
+const SignIn = ({
+  getReceivingKeys,
+  receivingKey,
+  receivingKeyDisplay,
+  sendPassword,
+  endInitialConnectionPhase,
+  startRecover
+}) => {
   const [password, setPassword] = useState('');
   const [passwordInvalid, setPasswordInvalid] = useState(null);
   const [loginSuccess, setLoginSuccess] = useState(false);
 
   const onClickSignIn = async () => {
-    const shouldRetry = await props.sendPassword(password);
+    const shouldRetry = await sendPassword(password);
 
     if (!shouldRetry) {
-      await props.getReceivingKeys();
+      await getReceivingKeys();
     }
 
     if (!shouldRetry) {
@@ -34,16 +41,16 @@ const SignIn = (props) => {
   }
 
   const onClickCopyZkAddress = () => {
-    navigator.clipboard.writeText(props.receivingKey);
+    navigator.clipboard.writeText(receivingKey);
   }
 
   const onClickForgotPassword = async () => {
-    props.startRecover();
+    startRecover();
   }
 
   const onClickFinishSignIn = async () => {
     console.log("[INFO]: End Initial Connection Phase");
-    await props.endInitialConnectionPhase();
+    await endInitialConnectionPhase();
   }
 
   return (<>
@@ -94,7 +101,7 @@ const SignIn = (props) => {
           <h1 className='mainheadline'>Your zkAddress</h1>
         </div>
         <div className='zkAddressContainer'>
-          <p className='subtext'>{props.receivingKeyDisplay}</p>
+          <p className='subtext'>{receivingKeyDisplay}</p>
           <Button onClick={onClickCopyZkAddress} className='button ui copy'>
             <Icon name="copy outline" className='specific' />
           </Button>

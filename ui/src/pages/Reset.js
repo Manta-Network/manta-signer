@@ -1,19 +1,25 @@
 import { Button } from 'semantic-ui-react';
 import "../App.css";
 
-const Reset = (props) => {
+const Reset = ({
+  isConnected,
+  hideWindow,
+  endConnection,
+  resetAccount,
+  cancelReset
+}) => {
 
   const onClickReset = async () => {
-    await props.endConnection();
-    props.resetAccount();
+    await endConnection();
+    resetAccount();
   }
 
   const onClickCancel = async () => {
 
-    if (props.isConnected) {
-      props.hideWindow();
+    if (isConnected) {
+      hideWindow();
     } else {
-      props.cancelReset();
+      cancelReset();
     }
   }
 

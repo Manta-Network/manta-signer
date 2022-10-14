@@ -16,7 +16,11 @@ const LOADING_TAB = 4;
 const DEFAULT_WINDOW_SIZE = new LogicalSize(460, 500);
 const CONFIRM_PHRASE_WINDOW_SIZE = new LogicalSize(460, 900);
 
-const CreateAccount = (props) => {
+const CreateAccount = ({
+  recoveryPhrase,
+  sendPassword,
+  restartServer
+}) => {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [passwordsMatch, setPasswordsMatch] = useState(false);
@@ -28,9 +32,9 @@ const CreateAccount = (props) => {
   const [selectedRecoveryPhrase, setSelectedRecoveryPhrase] = useState([]);
   const [actualPhrase, setActualPhrase] = useState(null);
 
-  // onClickButton is called whenever a selection button gets clicked when
-  // the user is reciting their seed phrase.
-  const onClickButton = (e, word) => {
+  // onClickSelectWordButton is called whenever a word selection button
+  // gets clicked when the user is reciting their seed phrase.
+  const onClickSelectWordButton = (e, word) => {
 
     if (selectedRecoveryPhrase.includes(word)) {
 
@@ -61,7 +65,7 @@ const CreateAccount = (props) => {
   // This function will be called after the user confirms their secret recovery phrase.
   const onClickCreateAccount = async () => {
     console.log("[INFO]: Creating account.");
-    await props.sendPassword(password);
+    await sendPassword(password);
     setPassword('');
     setCurrentTab(FINAL_TAB);
   };
@@ -70,7 +74,7 @@ const CreateAccount = (props) => {
   const goBack = async () => {
     if (currentTab === PASSWORD_TAB) {
       console.log("[INFO]: Going back to Create or Recovery Page.")
-      await props.restartServer();
+      await restartServer();
     } else if (currentTab === SHOW_PHRASE_TAB) {
       console.log("[INFO]: Going back to Password Page.")
       setPassword('');
@@ -106,7 +110,7 @@ const CreateAccount = (props) => {
   // This function will redirect the user to log in with the password they just made.
   const onClickFinishSetup = async () => {
     console.log("[INFO]: Finishing Setup.")
-    await props.restartServer(true);
+    await restartServer(true);
   };
 
   // This function enables the Next button to continue in the account creation
@@ -143,7 +147,7 @@ const CreateAccount = (props) => {
     }
     let stringed_selected = JSON.stringify(selectedRecoveryPhrase_copy);
 
-    if (selectedRecoveryPhrase.length !== props.recoveryPhrase.split(" ").length) return;
+    if (selectedRecoveryPhrase.length !== recoveryPhrase.split(" ").length) return;
     if ((!isValidSelectedPhrase) &&
       (stringed_selected === stringed_actual)) {
       console.log("[INFO]: Valid phrase chosen.");
@@ -154,12 +158,12 @@ const CreateAccount = (props) => {
       setIsValidSelectedPhrase(false);
     }
 
-  }, [selectedRecoveryPhrase, actualPhrase, isValidSelectedPhrase, props.recoveryPhrase]);
+  }, [selectedRecoveryPhrase, actualPhrase, isValidSelectedPhrase, recoveryPhrase]);
 
 
   useEffect(() => {
     // shuffles array so that user gets recovery phrase in a different order.
-    let actualRecoveryPhrase = props.recoveryPhrase.split(" ");
+    let actualRecoveryPhrase = recoveryPhrase.split(" ");
 
     let shuffled = actualRecoveryPhrase
       .map(value => ({ value, sort: Math.random() }))
@@ -175,7 +179,7 @@ const CreateAccount = (props) => {
     setShuffledRecoveryPhrase(shuffled);
     setActualPhrase(actualRecoveryPhrase);
 
-  }, [props.recoveryPhrase]);
+  }, [recoveryPhrase]);
 
   return (
     <>
@@ -230,7 +234,7 @@ const CreateAccount = (props) => {
           </div>
 
           <div className='recoveryPhraseContainer'>
-            {recoveryPhraseConfirmed ? props.recoveryPhrase.split(" ").map(function (item, index) {
+            {recoveryPhraseConfirmed ? recoveryPhrase.split(" ").map(function (item, index) {
               return (
                 <div key={index} className='recoveryPhraseWord'>
                   <h4>{item}</h4>
@@ -272,7 +276,7 @@ const CreateAccount = (props) => {
             let word = item.split("_")[0];
             return (
               <Button
-                onClick={(e) => onClickButton(e, item)}
+                onClick={(e) => onClickSelectWordButton(e, item)}
                 className="button ui buttonlist"
                 key={item}>
                 {word}

@@ -35,7 +35,14 @@ const DEFAULT_PHRASES = {
 }
 
 // By default this component will load using a 12 word phrase.
-const Recover = (props) => {
+const Recover = ({
+  payloadType,
+  sendCreateOrRecover,
+  restartServer,
+  resetAccount,
+  sendPassword,
+  sendMnemonic
+}) => {
 
   // recovery phrase
   const [mnemonics, setMnemonics] = useState(DEFAULT_PHRASES[12]);
@@ -54,7 +61,7 @@ const Recover = (props) => {
   const goBack = async () => {
     if (currentPage === SEED_PHRASE_PAGE) {
       appWindow.setSize(DEFAULT_WINDOW_SIZE);
-      await props.restartServer(props.payloadType === "Login");
+      await restartServer(payloadType === "Login");
     } else if (currentPage === NEW_PASSWORD_PAGE) {
       // we need to throw away the mnemonics that were already stored
       setMnemonics(DEFAULT_PHRASES[12]);
@@ -72,17 +79,17 @@ const Recover = (props) => {
       setCurrentPage(LOADING_TAB);
       // If user came from the login page, it means we need to reset their 
       // old account first by wiping their storage.
-      if (props.payloadType === "Login") {
-        await props.resetAccount(true);
+      if (payloadType === "Login") {
+        await resetAccount(true);
       }
 
-      await props.sendCreateOrRecover("Recover");
-      await props.sendMnemonic(validMnemonics);
-      await props.sendPassword(password);
+      await sendCreateOrRecover("Recover");
+      await sendMnemonic(validMnemonics);
+      await sendPassword(password);
       setCurrentPage(FINISH_PAGE);
 
     } else if (currentPage === FINISH_PAGE) {
-      await props.restartServer(true); // redirect to login page
+      await restartServer(true); // redirect to login page
     }
   }
 

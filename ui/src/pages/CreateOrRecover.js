@@ -1,16 +1,20 @@
 import { Button } from 'semantic-ui-react';
 import mainLogo from "../icons/manta.png";
 import "../App.css";
-const CreateOrRecover = (props) => {
+const CreateOrRecover = ({
+  sendCreateOrRecover,
+  startCreate,
+  startRecover
+}) => {
 
   const onClickStartCreate = async () => {
-    await props.sendCreateOrRecover("Create");
-    props.startCreate();
+    await sendCreateOrRecover("Create");
+    startCreate();
   }
 
   const onClickStartRecover = async () => {
-    await props.sendCreateOrRecover("Recover");
-    props.startRecover();
+    await sendCreateOrRecover("Recover");
+    startRecover();
   }
 
   return (<>
@@ -35,7 +39,7 @@ const CreateOrRecover = (props) => {
     <div className='learnAboutManta'>
       <p>Learn more about &nbsp;
         <a href='https://www.manta.network/' target="_blank" rel="noreferrer">
-           Manta
+          Manta
         </a>
       </p>
     </div>

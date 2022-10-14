@@ -80,6 +80,17 @@ function App() {
     setActiveListeners({ ...activeListeners, connect: true});
   }, [isConnected, activeListeners]);
 
+  // keeps the connect listener in sync with currentPage state
+  useEffect(() => {
+    currentPageRef.current = currentPage;
+  }, [currentPage])
+
+  // keeps show secret phrase listener in sync with exportingPhrase state
+  // whether or not we are currently exporting the phrase.
+  useEffect(() => {
+    exportingPhraseRef.current = exportingPhrase;
+  },[exportingPhrase])
+
   const hideWindow = () => {
     console.log("[INFO]: HIDE.");
     appWindow.hide();
@@ -90,7 +101,7 @@ function App() {
   // on the type of transaction: TransferShape::PrivateTransfer, TransferShape::Reclaim
   const parseTransactionSummary = (summary) => {
 
-    let parsed_authorization_summary = {
+    let parsedAuthorizationSummary = {
       sendAmount: summary[1],
       currency: summary[2],
       toAddress: null,
@@ -103,16 +114,16 @@ function App() {
       let toAddress = summary[4];
       toAddress = toAddress.substr(0, 10)
         + "..." + toAddress.substr(toAddress.length - 10);
-      parsed_authorization_summary.toAddress = toAddress;
-      parsed_authorization_summary.network = summary[6];
+        parsedAuthorizationSummary.toAddress = toAddress;
+      parsedAuthorizationSummary.network = summary[6];
     } else if (summary[0] === WITHDRAW) {
 
       // Withdraw {} on {} network
-      parsed_authorization_summary.toAddress = "Your Public Address";
-      parsed_authorization_summary.network = summary[4];
+      parsedAuthorizationSummary.toAddress = "Your Public Address";
+      parsedAuthorizationSummary.network = summary[4];
     }
 
-    return parsed_authorization_summary;
+    return parsedAuthorizationSummary;
   }
 
   const listenForAuthorizationRequests = () => {
@@ -128,9 +139,9 @@ function App() {
       }
 
       // Case 2: we need authorization for signing a transaction.
-      let parsed_authorization_summary = parseTransactionSummary(event.payload.split(" "));
+      let parsedAuthorizationSummary = parseTransactionSummary(event.payload.split(" "));
 
-      setAuthorizationSummary(parsed_authorization_summary);
+      setAuthorizationSummary(parsedAuthorizationSummary);
       setCurrentPage(AUTHORIZE_PAGE);
       appWindow.show();
     });
@@ -265,17 +276,6 @@ function App() {
     setReceivingKeyDisplay(newReceivingKeyDisplay);
   }
 
-  // keeps the connect listener in sync with currentPage state
-  useEffect(() => {
-    currentPageRef.current = currentPage;
-  }, [currentPage])
-
-  // keeps show secret phrae listener in sync with exportingPhrase state
-  // whether or not we are currently exporting the phrase.
-  useEffect(() => {
-    exportingPhraseRef.current = exportingPhrase;
-  },[exportingPhrase])
-
   return (
     <div className="App">
       <Container className="page">
@@ -302,10 +302,8 @@ function App() {
           <Recover
             payloadType={payloadType}
             sendCreateOrRecover={sendCreateOrRecover}
-            endInitialConnectionPhase={endInitialConnectionPhase}
             restartServer={restartServer}
             resetAccount={resetAccount}
-            hideWindow={hideWindow}
             sendPassword={sendPassword}
             sendMnemonic={sendMnemonic}
           />
@@ -314,7 +312,6 @@ function App() {
           <CreateAccount
             recoveryPhrase={recoveryPhrase}
             sendPassword={sendPassword}
-            endInitialConnectionPhase={endInitialConnectionPhase}
             restartServer={restartServer}
           />
         )}
