@@ -24,7 +24,7 @@ const EXPORT_RECOVERY_PHRASE_PAGE = 7;
 
 const SEND = "Send";
 const WITHDRAW = "Withdraw";
-const GET_RECOVERY_PHRASE = "GET_RECOVERY_PHRASE";
+const GET_RECOVERY_PHRASE = "GetRecoveryPhrase";
 
 function App() {
   const [currentPage, setCurrentPage] = useState(LOADING_PAGE);
@@ -50,7 +50,7 @@ function App() {
     if (activeListeners.connect) return;
     const beginInitialConnectionPhase = async () => {
       await listen('connect', (event) => {
-        invoke('ui_connected');
+        invoke('connect_ui');
         console.log("[INFO]: Connect Event: ", event);
         let payload = event.payload;
 
@@ -86,45 +86,49 @@ function App() {
     setCurrentPage(LOADING_PAGE);
   };
 
-  const listenForTxAuthorizationRequests = () => {
+  // This function parses the transaction summary message depending
+  // on the type of transaction: TransferShape::PrivateTransfer, TransferShape::Reclaim
+  const parseTransactionSummary = (summary) => {
+
+    let parsed_authorization_summary = {
+      sendAmount: summary[1],
+      currency: summary[2],
+      toAddress: null,
+      network: null
+    };
+
+    if (summary[0] === SEND) {
+
+      // Send {} to {} on {} network
+      let toAddress = summary[4];
+      toAddress = toAddress.substr(0, 10)
+        + "..." + toAddress.substr(toAddress.length - 10);
+      parsed_authorization_summary.toAddress = toAddress;
+      parsed_authorization_summary.network = summary[6];
+    } else if (summary[0] === WITHDRAW) {
+
+      // Withdraw {} on {} network
+      parsed_authorization_summary.toAddress = "Your Public Address";
+      parsed_authorization_summary.network = summary[4];
+    }
+
+    return parsed_authorization_summary;
+  }
+
+  const listenForAuthorizationRequests = () => {
     console.log("[INFO]: Setup listener.");
     listen('authorize', (event) => {
       console.log("[INFO]: Wake: ", event);
+
+      // Case 1: we need authorization for exporting the recovery phrase.
       if (event.payload === GET_RECOVERY_PHRASE) {
-        console.log("[INFO]: Wake: ", event);
         setCurrentPage(EXPORT_RECOVERY_PHRASE_PAGE);
         appWindow.show();
         return;
       }
 
-      // parsing authorization summary for easier legibility and rendering.
-      let split_summary = event.payload.split(" ");
-
-      let sendAmount = split_summary[1];
-      let currency = split_summary[2];
-      let toAddress;
-      let network;
-
-      if (split_summary[0] === SEND) {
-
-        // Send {} to {} on {} network
-        toAddress = split_summary[4];
-        toAddress = toAddress.substr(0, 10)
-          + "..." + toAddress.substr(toAddress.length - 10);
-        network = split_summary[6];
-      } else if (split_summary[0] === WITHDRAW) {
-
-        // Withdraw {} on {} network
-        toAddress = "Your Polkadot Address";
-        network = split_summary[4];
-      }
-
-      let parsed_authorization_summary = {
-        sendAmount: sendAmount,
-        currency: currency,
-        toAddress: toAddress,
-        network: network
-      };
+      // Case 2: we need authorization for signing a transaction.
+      let parsed_authorization_summary = parseTransactionSummary(event.payload.split(" "));
 
       setAuthorizationSummary(parsed_authorization_summary);
       setCurrentPage(AUTHORIZE_PAGE);
@@ -186,14 +190,14 @@ function App() {
   const resetAccount = async () => {
     console.log("[INFO]: Resetting Account.");
 
-    await invoke('ui_disconnected');
+    await invoke('disconnect_ui');
     await invoke('reset_account', { delete: true });
 
   }
 
   const restartServer = async (loginPage = false) => {
     console.log("[INFO]: Restarting Server.");
-    await invoke('ui_disconnected');
+    await invoke('disconnect_ui');
     await invoke('reset_account', { delete: false });
 
     if (loginPage) {
@@ -208,7 +212,7 @@ function App() {
     setIsConnected(true);
     hideWindow();
     if (activeListeners.tx || activeListeners.reset_tray) return;
-    listenForTxAuthorizationRequests();
+    listenForAuthorizationRequests();
     listenForResetTrayRequests();
     listenForShowSecretPhraseRequests();
     setActiveListeners({

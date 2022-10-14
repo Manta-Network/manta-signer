@@ -284,13 +284,14 @@ pub type AppHandleStore = Store<AppHandle>;
 
 /// Abort Handle Store
 pub type AbortHandleStore = Store<JoinHandle<()>>;
+
 /// Called from the UI after it recieves a `connect` event.
 ///
 /// To ensure proper connection you should emit `connect` continuously until the
 /// [`AppState::ui_connected`] flag is `true` then stop. This is the only way for now to ensure they
 /// are synchronized. Tauri is working on a better way.
 #[tauri::command]
-fn ui_connected() {
+fn connect_ui() {
     APP_STATE.set_ui_connected(true);
 }
 
@@ -298,7 +299,7 @@ fn ui_connected() {
 /// in either case, server needs to restart and setup function needs to be called again to
 /// emit new `connect` event with new payload.
 #[tauri::command]
-fn ui_disconnected() {
+fn disconnect_ui() {
     APP_STATE.set_ui_connected(false);
 }
 
@@ -601,8 +602,8 @@ fn main() {
             create_or_recover,
             send_mnemonic,
             reset_account,
-            ui_connected,
-            ui_disconnected,
+            connect_ui,
+            disconnect_ui,
             receiving_keys,
             get_recovery_phrase,
             cancel_sign
