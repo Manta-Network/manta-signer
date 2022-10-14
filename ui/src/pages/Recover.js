@@ -23,6 +23,10 @@ const DROPDOWN_OPTIONS = [
     value: 12
   },
   {
+    text: "I have a 18 word phrase",
+    value: 18
+  },
+  {
     text: "I have a 24 word phrase",
     value: 24
   },
@@ -30,6 +34,8 @@ const DROPDOWN_OPTIONS = [
 
 const DEFAULT_PHRASES = {
   12: ["", "", "", "", "", "", "", "", "", "", "", ""],
+  18: ["", "", "", "", "", "", "", "", "", "", "", "",
+    "", "", "", "", "", ""],
   24: ["", "", "", "", "", "", "", "", "", "", "", "",
     "", "", "", "", "", "", "", "", "", "", "", ""]
 }
@@ -107,7 +113,7 @@ const Recover = ({
 
     if (amount_of_words === 12) {
       appWindow.setSize(DEFAULT_WINDOW_SIZE);
-    } else if (amount_of_words === 24) {
+    } else if ((amount_of_words === 24) || (amount_of_words === 18)) {
       appWindow.setSize(CONFIRM_PHRASE_WINDOW_SIZE);
     }
 
@@ -115,7 +121,7 @@ const Recover = ({
   }
 
   // update mnemonics state when text box has word changed
-  const onChangeWord = (e, textObj, index) => {
+  const onChangeWord = (_e, textObj, index) => {
 
     const word = textObj.value;
     const new_words = [...mnemonics];
