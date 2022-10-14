@@ -285,7 +285,7 @@ where
                         recovery_mnemonic.clone(),
                         parameters.clone(),
                     )
-                    .await;
+                    .await.expect("unable to load dolphin signer state");
 
                     let calamari_signer = Self::create_or_load_state(
                         !data_exists.calamari,
@@ -294,7 +294,7 @@ where
                         recovery_mnemonic.clone(),
                         parameters.clone(),
                     )
-                    .await;
+                    .await.expect("unable to load calamari signer state");
 
                     let manta_signer = Self::create_or_load_state(
                         !data_exists.calamari,
@@ -303,7 +303,7 @@ where
                         recovery_mnemonic.clone(),
                         parameters.clone(),
                     )
-                    .await;
+                    .await.expect("unable to load manta signer state");
 
                     break (password_hash, dolphin_signer, calamari_signer, manta_signer);
                 }
@@ -371,7 +371,7 @@ where
         password_hash: &PasswordHash<Argon2>,
         recovery_mnemonic: Option<Mnemonic>,
         parameters: SignerParameters,
-    ) -> Signer {
+    ) -> Result<Signer> {
         if should_recreate {
             info!("state missing! recreating state.")?;
             let signer = Self::create_state(
@@ -382,12 +382,12 @@ where
             )
             .await
             .expect("Unable to recreate signer instance from exisitng mnemonic.");
-            return signer;
+            return Ok(signer);
         } else {
             let manta_state = Self::load_state(&data_path, password_hash)
-                .await
-                .expect("Unable to load signer state.")?;
-            return Signer::from_parts(parameters.clone(), manta_state);
+                .await?
+                .expect("Unable to load signer state.");
+            return Ok(Signer::from_parts(parameters.clone(), manta_state));
         };
     }
 
