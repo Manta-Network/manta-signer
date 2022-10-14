@@ -32,6 +32,86 @@ const CreateAccount = ({
   const [selectedRecoveryPhrase, setSelectedRecoveryPhrase] = useState([]);
   const [actualPhrase, setActualPhrase] = useState(null);
 
+  useEffect(() => {
+
+    const checkPasswordValidity = () => {
+      if (isValid(password)) {
+        setIsValidPassword(true);
+      } else {
+        setIsValidPassword(false);
+      }
+    }
+
+    const checkPasswordMatch = () => {
+      if (password === confirmPassword) {
+        setPasswordsMatch(true);
+      } else {
+        setPasswordsMatch(false);
+      }
+    }
+
+    checkPasswordValidity();
+    checkPasswordMatch();
+
+  }, [password, confirmPassword, isValidPassword, passwordsMatch]);
+
+  // determines whether or not the inputted recovery phrase matches the one
+  // originally provided.
+  useEffect(() => {
+
+    const isValidPhraseSelection = () => {
+      // converting both arrays to strings in order to compare them
+      let stringedActual = JSON.stringify(actualPhrase);
+      let selectedRecoveryPhraseCopy = [...selectedRecoveryPhrase];
+
+      // removing indexes from words to compare properly in case of duplicate words.
+      for (let i = 0; i < selectedRecoveryPhraseCopy.length; i++) {
+        selectedRecoveryPhraseCopy[i] = selectedRecoveryPhraseCopy[i].split("_")[0];
+      }
+      let stringedSelected = JSON.stringify(selectedRecoveryPhraseCopy);
+
+      if (selectedRecoveryPhrase.length !== recoveryPhrase.split(" ").length) return;
+      if ((!isValidSelectedPhrase) &&
+        (stringedSelected === stringedActual)) {
+        console.log("[INFO]: Valid phrase chosen.");
+        setIsValidSelectedPhrase(true);
+      } else if ((isValidSelectedPhrase) &&
+        (stringedSelected !== stringedActual)) {
+        console.log("[INFO]: Invalid phrase chosen.")
+        setIsValidSelectedPhrase(false);
+      }
+    }
+
+    isValidPhraseSelection();
+
+  }, [selectedRecoveryPhrase, actualPhrase, isValidSelectedPhrase, recoveryPhrase]);
+
+
+  useEffect(() => {
+
+    const shuffleRecoveryPhrase = () => {
+      // shuffles array so that user gets recovery phrase in a different order.
+      let actualRecoveryPhrase = recoveryPhrase.split(" ");
+
+      let shuffled = actualRecoveryPhrase
+        .map(value => ({ value, sort: Math.random() }))
+        .sort((a, b) => a.sort - b.sort)
+        .map(({ value }) => value);
+
+      for (let i = 0; i < shuffled.length; i++) {
+        shuffled[i] = shuffled[i] + "_" + i;
+      }
+
+      // adding the item index so that we can distinguish between duplicate words.
+
+      setShuffledRecoveryPhrase(shuffled);
+      setActualPhrase(actualRecoveryPhrase);
+    }
+
+    shuffleRecoveryPhrase();
+
+  }, [recoveryPhrase]);
+
   // onClickSelectWordButton is called whenever a word selection button
   // gets clicked when the user is reciting their seed phrase.
   const onClickSelectWordButton = (e, word) => {
@@ -118,68 +198,6 @@ const CreateAccount = ({
   const onClickConfirmRecoveryPhrase = () => {
     setRecoveryPhraseConfirmed(true);
   }
-
-  useEffect(() => {
-
-    if ((password === confirmPassword) && !passwordsMatch) {
-      setPasswordsMatch(true);
-    } else if (!(password === confirmPassword) && (passwordsMatch)) {
-      setPasswordsMatch(false);
-    }
-
-    if (isValid(password) && !isValidPassword) {
-      setIsValidPassword(true);
-    } else if (!isValid(password) && isValidPassword) {
-      setPasswordsMatch(false);
-    }
-
-  }, [password, confirmPassword, isValidPassword, passwordsMatch]);
-
-  useEffect(() => {
-
-    // converting both arrays to strings in order to compare them
-    let stringedActual = JSON.stringify(actualPhrase);
-    let selectedRecoveryPhraseCopy = [...selectedRecoveryPhrase];
-
-    // removing indexes from words to compare properly in case of duplicate words.
-    for (let i = 0; i < selectedRecoveryPhraseCopy.length; i++) {
-      selectedRecoveryPhraseCopy[i] = selectedRecoveryPhraseCopy[i].split("_")[0];
-    }
-    let stringedSelected = JSON.stringify(selectedRecoveryPhraseCopy);
-
-    if (selectedRecoveryPhrase.length !== recoveryPhrase.split(" ").length) return;
-    if ((!isValidSelectedPhrase) &&
-      (stringedSelected === stringedActual)) {
-      console.log("[INFO]: Valid phrase chosen.");
-      setIsValidSelectedPhrase(true);
-    } else if ((isValidSelectedPhrase) &&
-      (stringedSelected !== stringedActual)) {
-      console.log("[INFO]: Invalid phrase chosen.")
-      setIsValidSelectedPhrase(false);
-    }
-
-  }, [selectedRecoveryPhrase, actualPhrase, isValidSelectedPhrase, recoveryPhrase]);
-
-
-  useEffect(() => {
-    // shuffles array so that user gets recovery phrase in a different order.
-    let actualRecoveryPhrase = recoveryPhrase.split(" ");
-
-    let shuffled = actualRecoveryPhrase
-      .map(value => ({ value, sort: Math.random() }))
-      .sort((a, b) => a.sort - b.sort)
-      .map(({ value }) => value);
-
-    for (let i = 0; i < shuffled.length; i++) {
-      shuffled[i] = shuffled[i] + "_" + i;
-    }
-
-    // adding the item index so that we can distinguish between duplicate words.
-
-    setShuffledRecoveryPhrase(shuffled);
-    setActualPhrase(actualRecoveryPhrase);
-
-  }, [recoveryPhrase]);
 
   return (
     <>

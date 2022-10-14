@@ -64,6 +64,65 @@ const Recover = ({
   // currently active page
   const [currentPage, setCurrentPage] = useState(SEED_PHRASE_PAGE);
 
+  useEffect(() => {
+
+    const checkPasswordMatch = () => {
+      if (password === confirmPassword) {
+        setPasswordsMatch(true);
+      } else {
+        setPasswordsMatch(false);
+      }
+    }
+
+    const checkPasswordValidity = () => {
+      if (isValid(password)) {
+        setIsValidPassword(true);
+      } else {
+        setIsValidPassword(false);
+      }
+    }
+
+    checkPasswordMatch();
+    checkPasswordValidity();
+
+  }, [password, confirmPassword, isValidPassword, passwordsMatch]);
+
+  useEffect(() => {
+
+    const validateSelectedMnemonic = () => {
+      // we need to preprocess the mnemonics first for the bip39 library, 
+      // by removing any whitespace and setting all words to lowercase.
+      const trimmedMnemonics = mnemonics.map(x => x.trim());
+      const lowerCaseMnemonics = trimmedMnemonics.map(x => x.toLowerCase());
+      const mnemonicsString = lowerCaseMnemonics.join(" ");
+      const emptyStrings = mnemonics.filter(x => x.length === 0).length;
+
+      // we only verify mnemonics validity if all strings have been filled.
+      if (emptyStrings === 0) {
+
+        const isValid = bip39.validateMnemonic(mnemonicsString);
+
+        if (isValid && (!mnemonicsValidity)) {
+          console.log("[INFO]: Selected mnemonics are valid.")
+          setMnemonicsValidity(true);
+          setValidMnemonics(mnemonicsString);
+        } else if (!isValid && (mnemonicsValidity)) {
+          console.log("[INFO]: Selected mnemonics are invalid.")
+          setMnemonicsValidity(false);
+          setValidMnemonics(null);
+        }
+
+      } else if (mnemonicsValidity) {
+        console.log("[INFO]: Selected mnemonics are invalid.")
+        setMnemonicsValidity(false);
+        setValidMnemonics(null);
+      }
+    }
+
+    validateSelectedMnemonic();
+
+  }, [mnemonics, mnemonicsValidity]);
+
   const goBack = async () => {
     if (currentPage === SEED_PHRASE_PAGE) {
       appWindow.setSize(DEFAULT_WINDOW_SIZE);
@@ -129,54 +188,6 @@ const Recover = ({
     setMnemonics(newWords);
 
   }
-
-  useEffect(() => {
-
-    if ((password === confirmPassword) && !passwordsMatch) {
-      setPasswordsMatch(true);
-    } else if (!(password === confirmPassword) && (passwordsMatch)) {
-      setPasswordsMatch(false);
-    }
-
-    if (isValid(password) && !isValidPassword) {
-      setIsValidPassword(true);
-    } else if (!isValid(password) && isValidPassword) {
-      setPasswordsMatch(false);
-    }
-
-  }, [password, confirmPassword, isValidPassword, passwordsMatch]);
-
-  useEffect(() => {
-
-    // we need to preprocess the mnemonics first for the bip39 library, 
-    // by removing any whitespace and setting all words to lowercase.
-    const trimmedMnemonics = mnemonics.map(x => x.trim());
-    const lowerCaseMnemonics = trimmedMnemonics.map(x => x.toLowerCase());
-    const mnemonicsString = lowerCaseMnemonics.join(" ");
-    const emptyStrings = mnemonics.filter(x => x.length === 0).length;
-
-    // we only verify mnemonics validity if all strings have been filled.
-    if (emptyStrings === 0) {
-
-      const isValid = bip39.validateMnemonic(mnemonicsString);
-
-      if (isValid && (!mnemonicsValidity)) {
-        console.log("[INFO]: Selected mnemonics are valid.")
-        setMnemonicsValidity(true);
-        setValidMnemonics(mnemonicsString);
-      } else if (!isValid && (mnemonicsValidity)) {
-        console.log("[INFO]: Selected mnemonics are invalid.")
-        setMnemonicsValidity(false);
-        setValidMnemonics(null);
-      }
-
-    } else if (mnemonicsValidity) {
-      console.log("[INFO]: Selected mnemonics are invalid.")
-      setMnemonicsValidity(false);
-      setValidMnemonics(null);
-    }
-
-  }, [mnemonics, mnemonicsValidity]);
 
   return (<>
 
