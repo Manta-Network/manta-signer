@@ -33,7 +33,6 @@ use core::{
 
 use manta_signer::{
     config::{Config, Setup},
-    query::get_receiving_keys,
     secret::{
         mnemonic_channel, password_channel, Authorizer, MnemonicReceiver, MnemonicSender, Password,
         PasswordFuture, PasswordReceiver, PasswordSender, Secret, SetupFuture, UnitFuture,
@@ -52,7 +51,11 @@ use tauri::{
 };
 
 use manta_crypto::rand::OsRng;
-use manta_pay::key::Mnemonic;
+use manta_pay::{
+    key::Mnemonic,
+    config::receiving_key_to_base58
+};
+use manta_accounting::wallet::signer::ReceivingKeyRequest;
 
 /// App State
 ///
@@ -473,11 +476,12 @@ async fn reset_account(
 
 /// Returns receiving keys to front end to display once user is logged in.
 #[tauri::command]
-async fn receiving_keys() -> Result<Vec<String>, ()> {
-    let config =
-        Config::try_default().expect("Unable to generate the default server configuration.");
-    let keys = get_receiving_keys(&config.service_url).await;
-    keys
+async fn receiving_keys(server_store: State<'_, ServerStore>) -> Result<Vec<String>, ()> {
+    if let Some(store) = &mut *server_store.lock().await {
+        let keys = store.get_receiving_keys(ReceivingKeyRequest::GetAll).await;
+        return keys
+    }
+    Err(())
 }
 
 /// Exports the user recovery phrase upon successful password match.

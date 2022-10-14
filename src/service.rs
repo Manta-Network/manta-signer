@@ -615,4 +615,14 @@ where
         )?;
         Ok(response)
     }
+
+    /// Runs the receiving key sampling protocol on a mutable reference
+    /// of the signer, and formats the result to base 58.
+    #[inline]
+    pub async fn get_receiving_keys(&mut self, request: ReceivingKeyRequest) -> Result<Vec<String>,()> {
+        let response = self.state.lock().dolphin_signer.receiving_keys(request);
+        let keys = response.into_iter().map(|key| receiving_key_to_base58(&key))
+        .collect();
+        Ok(keys)
+    }
 }

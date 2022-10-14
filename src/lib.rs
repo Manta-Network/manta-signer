@@ -26,7 +26,6 @@ pub mod config;
 pub mod http;
 pub mod log;
 pub mod parameters;
-pub mod query;
 pub mod secret;
 pub mod service;
 pub mod storage;
