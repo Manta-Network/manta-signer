@@ -36,9 +36,9 @@ function App() {
   const [receivingKey, setReceivingKey] = useState(null);
   const [receivingKeyDisplay, setReceivingKeyDisplay] = useState(null);
   const [activeListeners, setActiveListeners] = useState({
-    tx: false,
+    authorize: false,
     connect: false,
-    reset_tray: false,
+    tray_reset_account: false,
     show_secret_phrase: false
   });
   const [exportedSecretPhrase, setExportedSecretPhrase] = useState(null);
@@ -228,8 +228,8 @@ function App() {
     listenForShowSecretPhraseRequests();
     setActiveListeners({
       ...activeListeners,
-      tx: true,
-      reset_tray: true,
+      authorize: true,
+      tray_reset_account: true,
       show_secret_phrase: true
     })
   };

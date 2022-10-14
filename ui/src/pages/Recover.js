@@ -104,29 +104,29 @@ const Recover = ({
     return password.length >= MIN_PASSWORD_LENGTH;
   };
 
-  const onChangeDropDown = async (e, data) => {
+  const onChangeDropDown = async (_e, data) => {
 
-    const amount_of_words = data.value;
-    const new_words = [...DEFAULT_PHRASES[amount_of_words]];
+    const amountOfWords = data.value;
+    const newWords = [...DEFAULT_PHRASES[amountOfWords]];
 
-    console.log("[INFO]: Selected " + amount_of_words + " word recovery phrase.");
+    console.log("[INFO]: Selected " + amountOfWords + " word recovery phrase.");
 
-    if (amount_of_words === 12) {
+    if (amountOfWords === 12) {
       appWindow.setSize(DEFAULT_WINDOW_SIZE);
-    } else if ((amount_of_words === 24) || (amount_of_words === 18)) {
+    } else if ((amountOfWords === 24) || (amountOfWords === 18)) {
       appWindow.setSize(CONFIRM_PHRASE_WINDOW_SIZE);
     }
 
-    setMnemonics(new_words)
+    setMnemonics(newWords)
   }
 
   // update mnemonics state when text box has word changed
   const onChangeWord = (_e, textObj, index) => {
 
     const word = textObj.value;
-    const new_words = [...mnemonics];
-    new_words[index] = word;
-    setMnemonics(new_words);
+    const newWords = [...mnemonics];
+    newWords[index] = word;
+    setMnemonics(newWords);
 
   }
 
@@ -150,21 +150,21 @@ const Recover = ({
 
     // we need to preprocess the mnemonics first for the bip39 library, 
     // by removing any whitespace and setting all words to lowercase.
-    const trimmed_mnemonics = mnemonics.map(x => x.trim());
-    const lower_case_mnemonics = trimmed_mnemonics.map(x => x.toLowerCase());
-    const mnemonics_string = lower_case_mnemonics.join(" ");
-    const empty_strings = mnemonics.filter(x => x.length === 0).length;
+    const trimmedMnemonics = mnemonics.map(x => x.trim());
+    const lowerCaseMnemonics = trimmedMnemonics.map(x => x.toLowerCase());
+    const mnemonicsString = lowerCaseMnemonics.join(" ");
+    const emptyStrings = mnemonics.filter(x => x.length === 0).length;
 
     // we only verify mnemonics validity if all strings have been filled.
-    if (empty_strings === 0) {
+    if (emptyStrings === 0) {
 
-      const is_valid = bip39.validateMnemonic(mnemonics_string);
+      const isValid = bip39.validateMnemonic(mnemonicsString);
 
-      if (is_valid && (!mnemonicsValidity)) {
+      if (isValid && (!mnemonicsValidity)) {
         console.log("[INFO]: Selected mnemonics are valid.")
         setMnemonicsValidity(true);
-        setValidMnemonics(mnemonics_string);
-      } else if (!is_valid && (mnemonicsValidity)) {
+        setValidMnemonics(mnemonicsString);
+      } else if (!isValid && (mnemonicsValidity)) {
         console.log("[INFO]: Selected mnemonics are invalid.")
         setMnemonicsValidity(false);
         setValidMnemonics(null);
@@ -201,7 +201,7 @@ const Recover = ({
       </div>
 
       <Form className="ui form adjusted">
-        {mnemonics.map(function (item, index) {
+        {mnemonics.map(function (_item, index) {
           return (
             <Form.Field
               className="ui form field thin"

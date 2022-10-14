@@ -138,22 +138,22 @@ const CreateAccount = ({
   useEffect(() => {
 
     // converting both arrays to strings in order to compare them
-    let stringed_actual = JSON.stringify(actualPhrase);
-    let selectedRecoveryPhrase_copy = [...selectedRecoveryPhrase];
+    let stringedActual = JSON.stringify(actualPhrase);
+    let selectedRecoveryPhraseCopy = [...selectedRecoveryPhrase];
 
     // removing indexes from words to compare properly in case of duplicate words.
-    for (let i = 0; i < selectedRecoveryPhrase_copy.length; i++) {
-      selectedRecoveryPhrase_copy[i] = selectedRecoveryPhrase_copy[i].split("_")[0];
+    for (let i = 0; i < selectedRecoveryPhraseCopy.length; i++) {
+      selectedRecoveryPhraseCopy[i] = selectedRecoveryPhraseCopy[i].split("_")[0];
     }
-    let stringed_selected = JSON.stringify(selectedRecoveryPhrase_copy);
+    let stringedSelected = JSON.stringify(selectedRecoveryPhraseCopy);
 
     if (selectedRecoveryPhrase.length !== recoveryPhrase.split(" ").length) return;
     if ((!isValidSelectedPhrase) &&
-      (stringed_selected === stringed_actual)) {
+      (stringedSelected === stringedActual)) {
       console.log("[INFO]: Valid phrase chosen.");
       setIsValidSelectedPhrase(true);
     } else if ((isValidSelectedPhrase) &&
-      (stringed_selected !== stringed_actual)) {
+      (stringedSelected !== stringedActual)) {
       console.log("[INFO]: Invalid phrase chosen.")
       setIsValidSelectedPhrase(false);
     }
