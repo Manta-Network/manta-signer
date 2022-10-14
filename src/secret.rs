@@ -344,7 +344,7 @@ impl PasswordReceiver {
 
     /// Sends the message `retry` across the retry channel.
     #[inline]
-    pub async fn should_retry(&mut self, retry: bool) {
+    pub async fn send_retry(&mut self, retry: bool) {
         self.retry
             .send(retry)
             .await
@@ -378,7 +378,7 @@ impl MnemonicReceiver {
 
     /// Sends the message `retry` across the retry channel.
     #[inline]
-    pub async fn should_retry(&mut self, retry: bool) {
+    pub async fn send_retry(&mut self, retry: bool) {
         self.retry
             .send(retry)
             .await

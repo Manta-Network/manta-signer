@@ -51,10 +51,7 @@ use tauri::{
 };
 
 use manta_crypto::rand::OsRng;
-use manta_pay::{
-    key::Mnemonic,
-    config::receiving_key_to_base58
-};
+use manta_pay::key::Mnemonic;
 use manta_accounting::wallet::signer::ReceivingKeyRequest;
 
 /// App State
@@ -171,7 +168,7 @@ impl User {
     #[inline]
     async fn request_password(&mut self) -> Password {
         if self.waiting {
-            self.password_receiver.should_retry(true).await;
+            self.password_receiver.send_retry(true).await;
         }
         let password = self.password_receiver.password().await;
         self.waiting = password.is_known();
@@ -196,7 +193,7 @@ impl User {
     #[inline]
     async fn validate_password(&mut self) {
         self.waiting = false;
-        self.password_receiver.should_retry(false).await;
+        self.password_receiver.send_retry(false).await;
     }
 }
 
