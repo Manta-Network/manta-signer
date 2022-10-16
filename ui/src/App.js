@@ -12,23 +12,13 @@ import { appWindow } from '@tauri-apps/api/window';
 import { invoke } from '@tauri-apps/api/tauri';
 import { listen } from '@tauri-apps/api/event';
 import { useState, useEffect, useRef } from 'react';
-
-const LOADING_PAGE = 0;
-const CREATE_ACCOUNT_PAGE = 1;
-const LOGIN_PAGE = 2;
-const AUTHORIZE_PAGE = 3;
-const RESET_PAGE = 4;
-const CREATE_OR_RECOVER_PAGE = 5;
-const RECOVER_PAGE = 6;
-const EXPORT_RECOVERY_PHRASE_PAGE = 7;
+import { Navigate, useNavigate, useLocation, Route, Routes } from 'react-router-dom';
 
 const SEND = "Send";
 const WITHDRAW = "Withdraw";
 const GET_RECOVERY_PHRASE = "GetRecoveryPhrase";
 
 function App() {
-  const [currentPage, setCurrentPage] = useState(LOADING_PAGE);
-  const currentPageRef = useRef(currentPage);
   const [isConnected, setIsConnected] = useState(false);
   const [payloadType, setPayloadType] = useState(null);
   const [recoveryPhrase, setRecoveryPhrase] = useState(null);
@@ -45,6 +35,9 @@ function App() {
   const [exportingPhrase, setExportingPhrase] = useState(false);
   const exportingPhraseRef = useRef(exportingPhrase);
 
+  const navigate = useNavigate();
+  const location = useLocation();
+
   useEffect(() => {
     if (isConnected) return;
     if (activeListeners.connect) return;
@@ -55,7 +48,7 @@ function App() {
         let payload = event.payload;
 
         // We don't want to switch the page on reset during recovery process.
-        if (currentPageRef.current === RECOVER_PAGE) {
+        if (location.pathname === "/recover") {
           setPayloadType('CreateAccount');
           setRecoveryPhrase(payload.content);
           return;
@@ -65,11 +58,11 @@ function App() {
           case 'CreateAccount':
             setRecoveryPhrase(payload.content);
             setPayloadType('CreateAccount');
-            setCurrentPage(CREATE_OR_RECOVER_PAGE);
+            navigate("/create-or-recover")
             break;
           case 'Login':
             setPayloadType('Login');
-            setCurrentPage(LOGIN_PAGE);
+            navigate("/sign-in");
             break;
           default:
             break;
@@ -77,24 +70,19 @@ function App() {
       });
     };
     beginInitialConnectionPhase();
-    setActiveListeners({ ...activeListeners, connect: true});
+    setActiveListeners({ ...activeListeners, connect: true });
   }, [isConnected, activeListeners]);
-
-  // keeps the connect listener in sync with currentPage state
-  useEffect(() => {
-    currentPageRef.current = currentPage;
-  }, [currentPage])
 
   // keeps show secret phrase listener in sync with exportingPhrase state
   // whether or not we are currently exporting the phrase.
   useEffect(() => {
     exportingPhraseRef.current = exportingPhrase;
-  },[exportingPhrase])
+  }, [exportingPhrase])
 
   const hideWindow = () => {
     console.log("[INFO]: HIDE.");
     appWindow.hide();
-    setCurrentPage(LOADING_PAGE);
+    navigate("/loading");
   };
 
   // This function parses the transaction summary message depending
@@ -114,7 +102,7 @@ function App() {
       let toAddress = summary[4];
       toAddress = toAddress.substr(0, 10)
         + "..." + toAddress.substr(toAddress.length - 10);
-        parsedAuthorizationSummary.toAddress = toAddress;
+      parsedAuthorizationSummary.toAddress = toAddress;
       parsedAuthorizationSummary.network = summary[6];
     } else if (summary[0] === WITHDRAW) {
 
@@ -133,7 +121,7 @@ function App() {
 
       // Case 1: we need authorization for exporting the recovery phrase.
       if (event.payload === GET_RECOVERY_PHRASE) {
-        setCurrentPage(EXPORT_RECOVERY_PHRASE_PAGE);
+        navigate("/view-secret-phrase");
         appWindow.show();
         return;
       }
@@ -142,7 +130,7 @@ function App() {
       let parsedAuthorizationSummary = parseTransactionSummary(event.payload.split(" "));
 
       setAuthorizationSummary(parsedAuthorizationSummary);
-      setCurrentPage(AUTHORIZE_PAGE);
+      navigate("/authorize");
       appWindow.show();
     });
   };
@@ -151,7 +139,7 @@ function App() {
     console.log("[INFO]: Setup tray reset listener.");
     listen('tray_reset_account', (event) => {
       console.log("[INFO]: Wake: ", event);
-      setCurrentPage(RESET_PAGE);
+      navigate("/reset");
     })
   }
 
@@ -169,7 +157,7 @@ function App() {
     } else {
       setExportingPhrase(true);
     }
-    
+
     console.log("[INFO]: Send request to export recovery phrase.");
     let phrase = await invoke('get_recovery_phrase', { prompt: GET_RECOVERY_PHRASE });
 
@@ -212,26 +200,42 @@ function App() {
     await invoke('reset_account', { delete: false });
 
     if (loginPage) {
-      setCurrentPage(LOGIN_PAGE);
+      navigate("/sign-in");
     } else {
-      setCurrentPage(CREATE_OR_RECOVER_PAGE);
+      navigate("/create-or-recover");
     }
   }
 
   const endInitialConnectionPhase = async () => {
     console.log("[INFO]: End Initial Connection Phase");
     setIsConnected(true);
+    navigate("/loading");
     hideWindow();
-    if (activeListeners.tx || activeListeners.reset_tray) return;
-    listenForAuthorizationRequests();
-    listenForResetTrayRequests();
-    listenForShowSecretPhraseRequests();
-    setActiveListeners({
-      ...activeListeners,
-      authorize: true,
-      tray_reset_account: true,
-      show_secret_phrase: true
-    })
+
+    if (!activeListeners.authorize) {
+      listenForAuthorizationRequests();
+      setActiveListeners({
+        ...activeListeners,
+        authorize: true,
+      })
+    }
+
+    if (!activeListeners.tray_reset_account) {
+      listenForResetTrayRequests();
+      setActiveListeners({
+        ...activeListeners,
+        tray_reset_account: true,
+      })
+    }
+
+    if (!activeListeners.show_secret_phrase) {
+      listenForShowSecretPhraseRequests();
+      setActiveListeners({
+        ...activeListeners,
+        show_secret_phrase: true
+      })
+    }
+
   };
 
   const endConnection = async () => {
@@ -241,12 +245,12 @@ function App() {
 
   const startCreate = async () => {
     console.log("[INFO]: Start wallet creation process.")
-    setCurrentPage(CREATE_ACCOUNT_PAGE);
+    navigate("/create-account");
   }
 
   const startRecover = async () => {
     console.log("[INFO]: Start recovery process.")
-    setCurrentPage(RECOVER_PAGE);
+    navigate("/recover");
   }
 
   const cancelReset = async () => {
@@ -276,72 +280,82 @@ function App() {
     setReceivingKeyDisplay(newReceivingKeyDisplay);
   }
 
+  const views = [
+    {
+      component: () => <Loading />, path: '/loading', name: "Loading"
+    },
+    {
+      component: () => <CreateOrRecover
+        sendCreateOrRecover={sendCreateOrRecover}
+        startCreate={startCreate}
+        startRecover={startRecover}
+      />, path: '/create-or-recover', name: "CreateOrRecover"
+    },
+    {
+      component: () => <Reset
+        isConnected={isConnected}
+        hideWindow={hideWindow}
+        endConnection={endConnection}
+        resetAccount={resetAccount}
+        cancelReset={cancelReset}
+      />, path: '/reset', name: "Reset"
+    },
+    {
+      component: () => <Recover
+        payloadType={payloadType}
+        sendCreateOrRecover={sendCreateOrRecover}
+        restartServer={restartServer}
+        resetAccount={resetAccount}
+        sendPassword={sendPassword}
+        sendMnemonic={sendMnemonic}
+      />, path: '/recover', name: "Recover"
+    },
+    {
+      component: () => <CreateAccount
+        recoveryPhrase={recoveryPhrase}
+        sendPassword={sendPassword}
+        restartServer={restartServer}
+      />, path: '/create-account', name: "CreateAccount"
+    },
+    {
+      component: () => <SignIn
+        getReceivingKeys={getReceivingKeys}
+        receivingKey={receivingKey}
+        receivingKeyDisplay={receivingKeyDisplay}
+        sendPassword={sendPassword}
+        endInitialConnectionPhase={endInitialConnectionPhase}
+        startRecover={startRecover}
+      />, path: '/sign-in', name: "SignIn"
+    },
+    {
+      component: () => <Authorize
+        cancelSign={cancelSign}
+        summary={authorizationSummary}
+        sendPassword={sendPassword}
+        stopPasswordPrompt={stopPasswordPrompt}
+        hideWindow={hideWindow}
+      />, path: '/authorize', name: "Authorize"
+    },
+    {
+      component: () => <ViewSecretPhrase
+        endExportPhrase={endExportPhrase}
+        exportedSecretPhrase={exportedSecretPhrase}
+        sendPassword={sendPassword}
+        stopPasswordPrompt={stopPasswordPrompt}
+      />, path: '/view-secret-phrase', name: "ViewSecretPhrase"
+    },
+  ];
+
   return (
     <div className="App">
       <Container className="page">
-        {currentPage === LOADING_PAGE && (
-          <Loading />
-        )}
-        {currentPage === CREATE_OR_RECOVER_PAGE && (
-          <CreateOrRecover
-            sendCreateOrRecover={sendCreateOrRecover}
-            startCreate={startCreate}
-            startRecover={startRecover}
-          />
-        )}
-        {currentPage === RESET_PAGE && (
-          <Reset
-            isConnected={isConnected}
-            hideWindow={hideWindow}
-            endConnection={endConnection}
-            resetAccount={resetAccount}
-            cancelReset={cancelReset}
-          />
-        )}
-        {currentPage === RECOVER_PAGE && (
-          <Recover
-            payloadType={payloadType}
-            sendCreateOrRecover={sendCreateOrRecover}
-            restartServer={restartServer}
-            resetAccount={resetAccount}
-            sendPassword={sendPassword}
-            sendMnemonic={sendMnemonic}
-          />
-        )}
-        {currentPage === CREATE_ACCOUNT_PAGE && (
-          <CreateAccount
-            recoveryPhrase={recoveryPhrase}
-            sendPassword={sendPassword}
-            restartServer={restartServer}
-          />
-        )}
-        {currentPage === LOGIN_PAGE && (
-          <SignIn
-            getReceivingKeys={getReceivingKeys}
-            receivingKey={receivingKey}
-            receivingKeyDisplay={receivingKeyDisplay}
-            sendPassword={sendPassword}
-            endInitialConnectionPhase={endInitialConnectionPhase}
-            startRecover={startRecover}
-          />
-        )}
-        {currentPage === AUTHORIZE_PAGE && (
-          <Authorize
-            cancelSign={cancelSign}
-            summary={authorizationSummary}
-            sendPassword={sendPassword}
-            stopPasswordPrompt={stopPasswordPrompt}
-            hideWindow={hideWindow}
-          />
-        )}
-        {currentPage === EXPORT_RECOVERY_PHRASE_PAGE && (
-          <ViewSecretPhrase
-            endExportPhrase={endExportPhrase}
-            exportedSecretPhrase={exportedSecretPhrase}
-            sendPassword={sendPassword}
-            stopPasswordPrompt={stopPasswordPrompt}
-          />
-        )}
+        <Routes>
+          <Route exact path='/' element={<Navigate to={views[0].path} />} />
+          {views.map((view, index) => <Route key={index} exact={view.exact}
+            path={view.path} element={
+              <view.component />
+            } />)}
+        </Routes>
       </Container>
     </div>
   );
