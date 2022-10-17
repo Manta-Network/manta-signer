@@ -234,8 +234,7 @@ where
                     let dolphin_state = Self::create_state(
                         &config.data_path_dolphin,
                         &password_hash,
-                        mnemonic.clone(),
-                        parameters.clone(),
+                        mnemonic.clone()
                     )
                     .await?;
 
@@ -243,8 +242,7 @@ where
                     let calamari_state = Self::create_state(
                         &config.data_path_calamari,
                         &password_hash,
-                        mnemonic.clone(),
-                        parameters.clone(),
+                        mnemonic.clone()
                     )
                     .await?;
 
@@ -252,12 +250,15 @@ where
                     let manta_state = Self::create_state(
                         &config.data_path_manta,
                         &password_hash,
-                        mnemonic.clone(),
-                        parameters.clone(),
+                        mnemonic.clone()
                     )
                     .await?;
 
-                    break (password_hash, dolphin_state, calamari_state, manta_state);
+                    break (password_hash, 
+                        Signer::from_parts(parameters.clone(), dolphin_state), 
+                        Signer::from_parts(parameters.clone(), calamari_state), 
+                        Signer::from_parts(parameters.clone(), manta_state)
+                    );
                 }
                 delay_password_retry().await;
             },
@@ -278,34 +279,39 @@ where
                         .await;
                     }
 
-                    let dolphin_signer = Self::create_or_load_state(
+                    let dolphin_state = Self::create_or_load_state(
                         !data_exists.dolphin,
                         &config.data_path_dolphin,
                         &password_hash,
                         recovery_mnemonic.clone(),
-                        parameters.clone(),
                     )
-                    .await.expect("unable to load dolphin signer state");
+                    .await?;
 
-                    let calamari_signer = Self::create_or_load_state(
+                    let calamari_state = Self::create_or_load_state(
                         !data_exists.calamari,
                         &config.data_path_dolphin,
                         &password_hash,
                         recovery_mnemonic.clone(),
-                        parameters.clone(),
                     )
-                    .await.expect("unable to load calamari signer state");
+                    .await?;
 
-                    let manta_signer = Self::create_or_load_state(
+                    let manta_state = Self::create_or_load_state(
                         !data_exists.calamari,
                         &config.data_path_dolphin,
                         &password_hash,
                         recovery_mnemonic.clone(),
-                        parameters.clone(),
                     )
-                    .await.expect("unable to load manta signer state");
+                    .await?;
 
-                    break (password_hash, dolphin_signer, calamari_signer, manta_signer);
+                    if let (Some(dol_state),Some(cal_state),Some(man_state))
+                     = (dolphin_state, calamari_state, manta_state) {
+                        break (
+                            password_hash,
+                            Signer::from_parts(parameters.clone(), dol_state),
+                            Signer::from_parts(parameters.clone(), cal_state),
+                            Signer::from_parts(parameters.clone(), man_state)
+                        );
+                    }
                 }
                 delay_password_retry().await;
             },
@@ -370,24 +376,20 @@ where
         data_path: &PathBuf,
         password_hash: &PasswordHash<Argon2>,
         recovery_mnemonic: Option<Mnemonic>,
-        parameters: SignerParameters,
-    ) -> Result<Signer> {
+    ) -> Result<Option<SignerState>> {
         if should_recreate {
             info!("state missing! recreating state.")?;
-            let signer = Self::create_state(
+            let state = Self::create_state(
                 data_path,
                 &password_hash,
                 recovery_mnemonic.expect("unable to retrieve mnemonic for account recreation."),
-                parameters,
             )
             .await
             .expect("Unable to recreate signer instance from exisitng mnemonic.");
-            return Ok(signer);
+            return Ok(Some(state));
         } else {
-            let manta_state = Self::load_state(&data_path, password_hash)
-                .await?
-                .expect("Unable to load signer state.");
-            return Ok(Signer::from_parts(parameters.clone(), manta_state));
+            let state = Self::load_state(&data_path, password_hash).await;
+            return state;
         };
     }
 
@@ -439,8 +441,7 @@ where
         data_path: &Path,
         password_hash: &PasswordHash<Argon2>,
         mnemonic: Mnemonic,
-        parameters: SignerParameters,
-    ) -> Result<Signer> {
+    ) -> Result<SignerState> {
         info!("creating signer state")?;
         let state = SignerState::new(
             TestnetKeySecret::new(mnemonic, "").map(HierarchicalKeyDerivationFunction::default()),
@@ -456,7 +457,7 @@ where
         let cloned_state = state.clone();
         task::spawn_blocking(move || File::save(&data_path, &password_hash_bytes, cloned_state))
             .await??;
-        Ok(Signer::from_parts(parameters, state))
+        Ok(state)
     }
 
     /// Loads the signer state from the data path.
