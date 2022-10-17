@@ -1,16 +1,8 @@
 import { useEffect, useState } from "react"
-import { Button, Input, Label, Form, Dropdown } from 'semantic-ui-react';
-import "../App.css";
 import { appWindow, LogicalSize } from '@tauri-apps/api/window';
-import Loading from './Loading';
-import HyperLinkButton from "../components/HyperLinkButton";
-
+import { Outlet } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 const bip39 = require('bip39');
-
-const SEED_PHRASE_PAGE = 0;
-const NEW_PASSWORD_PAGE = 1;
-const FINISH_PAGE = 2;
-const LOADING_TAB = 3;
 
 const MIN_PASSWORD_LENGTH = 8;
 
@@ -61,8 +53,8 @@ const Recover = ({
   const [passwordsMatch, setPasswordsMatch] = useState('');
   const [isValidPassword, setIsValidPassword] = useState(false);
 
-  // currently active page
-  const [currentPage, setCurrentPage] = useState(SEED_PHRASE_PAGE);
+  const navigate = useNavigate();
+  const location = useLocation();
 
   useEffect(() => {
 
@@ -124,24 +116,25 @@ const Recover = ({
   }, [mnemonics, mnemonicsValidity]);
 
   const goBack = async () => {
-    if (currentPage === SEED_PHRASE_PAGE) {
+    if (location.pathname === "/recover/seed-phrase") {
       appWindow.setSize(DEFAULT_WINDOW_SIZE);
-      await restartServer(payloadType === "Login");
-    } else if (currentPage === NEW_PASSWORD_PAGE) {
+      const backToLogin = payloadType === "Login";
+      await restartServer(backToLogin);
+    } else if (location.pathname === "/recover/new-password") {
       // we need to throw away the mnemonics that were already stored
       setMnemonics(DEFAULT_PHRASES[12]);
       setMnemonicsValidity(false);
-      setCurrentPage(SEED_PHRASE_PAGE);
+      navigate("/recover/seed-phrase");
     }
   }
 
   const goForward = async () => {
-    if (currentPage === SEED_PHRASE_PAGE) {
+    if (location.pathname === "/recover/seed-phrase") {
       appWindow.setSize(DEFAULT_WINDOW_SIZE);
-      setCurrentPage(NEW_PASSWORD_PAGE);
-    } else if (currentPage === NEW_PASSWORD_PAGE) {
+      navigate("/recover/new-password");
+    } else if (location.pathname === "/recover/new-password") {
 
-      setCurrentPage(LOADING_TAB);
+      navigate("/recover/loading");
       // If user came from the login page, it means we need to reset their 
       // old account first by wiping their storage.
       if (payloadType === "Login") {
@@ -151,9 +144,9 @@ const Recover = ({
       await sendCreateOrRecover("Recover");
       await sendMnemonic(validMnemonics);
       await sendPassword(password);
-      setCurrentPage(FINISH_PAGE);
+      navigate("/recover/finish");
 
-    } else if (currentPage === FINISH_PAGE) {
+    } else if (location.pathname === "/recover/finish") {
       await restartServer(true); // redirect to login page
     }
   }
@@ -189,110 +182,30 @@ const Recover = ({
 
   }
 
+  const onChangePassword = (e) => {
+    setPassword(e.target.value);
+  }
+
+  const onChangeConfirmPassword = (e) => {
+    setConfirmPassword(e.target.value);
+  }
+
   return (<>
-
-    {currentPage === SEED_PHRASE_PAGE && <>
-
-      <div className='recoverHeaderContainer'>
-        <h1 className='mainheadline'>Reset Wallet</h1>
-        <p className='subtext'>
-          You can reset your password by entering your secret recovery phrase.
-        </p>
-      </div>
-
-      <div>
-        <Dropdown
-          className="ui fluid dropdown compressed"
-          fluid
-          selection
-          options={DROPDOWN_OPTIONS}
-          onChange={onChangeDropDown}
-          defaultValue={DROPDOWN_OPTIONS[0].value}
-        />
-      </div>
-
-      <Form className="ui form adjusted">
-        {mnemonics.map(function (_item, index) {
-          return (
-            <Form.Field
-              className="ui form field thin"
-              placeholder={(index + 1).toString() + "."}
-              control={Input}
-              key={index}
-              onChange={(e, textObj) => onChangeWord(e, textObj, index)}
-            />
-          )
-        })}
-      </Form>
-
-      <div>
-        {mnemonicsValidity ?
-          <Button primary className="button ui first" onClick={goForward}>Next</Button> :
-          <Button disabled primary className="button ui first">Next</Button>}
-      </div>
-      <HyperLinkButton
-        text={"Go Back"}
-        onclick={goBack}
-      />
-    </>
-    }
-
-
-    {currentPage === NEW_PASSWORD_PAGE && (
-      <>
-        <div className='headercontainer'>
-          <h1 className='mainheadline'>Create a password</h1>
-          <p className='subtext'>Your password will unlock the Manta Signer.</p>
-        </div>
-        <br />
-        <br />
-        <div>
-          <Input
-            className='input ui password'
-            type="password"
-            placeholder="Password (8 characters min)"
-            onChange={(e) => setPassword(e.target.value)}
-          />
-        </div>
-        <div>
-          <Input
-            className='input ui password'
-            type="password"
-            placeholder="Confirm Password"
-            onChange={(e) => setConfirmPassword(e.target.value)}
-          />
-        </div>
-        <Button disabled={!(isValid(password) && passwordsMatch)} className="button ui first"
-          onClick={goForward}>
-          Next
-        </Button>
-        <HyperLinkButton
-          text={"Go Back"}
-          onclick={goBack}
-        />
-
-        {!isValidPassword && password.length > 0 ? <><br /><Label basic color='red' pointing>Please enter a minimum of {MIN_PASSWORD_LENGTH} characters.</Label></> : (
-          !passwordsMatch ? <><br /><Label basic color='red' pointing>Passwords do not match.</Label></> : <><br /><br /><br /></>
-        )}
-
-      </>
-    )}
-
-    {currentPage === FINISH_PAGE && (<>
-      <div className='headercontainerFat'>
-        <h1 className='mainheadline'>You're all done!</h1>
-        <h3 className='mediumSubText'>It's time to start using the Manta Signer.</h3>
-      </div>
-      <Button className="button ui first wide" onClick={goForward}>
-        Finish
-      </Button>
-    </>
-    )}
-    {currentPage === LOADING_TAB && (
-      <>
-        <Loading />
-      </>
-    )}
+    <Outlet context={{
+      onChangeDropDown,
+      onChangeWord,
+      goBack,
+      goForward,
+      onChangePassword,
+      onChangeConfirmPassword,
+      DROPDOWN_OPTIONS,
+      MIN_PASSWORD_LENGTH,
+      isValidPassword,
+      passwordsMatch,
+      password,
+      mnemonicsValidity,
+      mnemonics
+    }} />
   </>);
 }
 

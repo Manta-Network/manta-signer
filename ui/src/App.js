@@ -1,11 +1,11 @@
 import './App.css';
 import Authorize from './pages/Authorize';
-import CreateAccount from './pages/CreateAccount';
+import CreateAccount from './pages/AccountCreation/CreateAccount';
 import Loading from './pages/Loading';
 import SignIn from './pages/SignIn';
 import Reset from "./pages/Reset";
 import CreateOrRecover from './pages/CreateOrRecover';
-import Recover from './pages/Recover';
+import Recover from './pages/Recovery/Recover';
 import ViewSecretPhrase from './pages/ViewSecretPhrase';
 import { Container } from 'semantic-ui-react';
 import { appWindow } from '@tauri-apps/api/window';
@@ -13,6 +13,11 @@ import { invoke } from '@tauri-apps/api/tauri';
 import { listen } from '@tauri-apps/api/event';
 import { useState, useEffect, useRef } from 'react';
 import { Navigate, useNavigate, useLocation, Route, Routes } from 'react-router-dom';
+import SeedPhrase from './pages/Recovery/SeedPhrase';
+import NewPassword from './pages/Recovery/NewPassword';
+import Finish from './pages/Recovery/Finish';
+import ShowPhrase from './pages/AccountCreation/ShowPhrase';
+import ConfirmPhrase from './pages/AccountCreation/ConfirmPhrase';
 
 const SEND = "Send";
 const WITHDRAW = "Withdraw";
@@ -48,7 +53,7 @@ function App() {
         let payload = event.payload;
 
         // We don't want to switch the page on reset during recovery process.
-        if (location.pathname === "/recover") {
+        if (location.pathname === ("/recover/loading")) {
           setPayloadType('CreateAccount');
           setRecoveryPhrase(payload.content);
           return;
@@ -196,14 +201,16 @@ function App() {
 
   const restartServer = async (loginPage = false) => {
     console.log("[INFO]: Restarting Server.");
-    await invoke('disconnect_ui');
-    await invoke('reset_account', { delete: false });
 
+    // for faster redirection
     if (loginPage) {
       navigate("/sign-in");
     } else {
       navigate("/create-or-recover");
     }
+
+    await invoke('disconnect_ui');
+    await invoke('reset_account', { delete: false });
   }
 
   const endInitialConnectionPhase = async () => {
@@ -245,12 +252,12 @@ function App() {
 
   const startCreate = async () => {
     console.log("[INFO]: Start wallet creation process.")
-    navigate("/create-account");
+    navigate("/create-account/new-password");
   }
 
   const startRecover = async () => {
     console.log("[INFO]: Start recovery process.")
-    navigate("/recover");
+    navigate("/recover/seed-phrase");
   }
 
   const cancelSign = async () => {
@@ -281,7 +288,7 @@ function App() {
       <Container className="page">
         <Routes>
           <Route exact path='/' element={<Navigate to={"/loading"} />} />
-          <Route path='/loading' element={<Loading/>} />
+          <Route path='/loading' element={<Loading />} />
           <Route path='/create-or-recover' element={
             <CreateOrRecover
               sendCreateOrRecover={sendCreateOrRecover}
@@ -306,14 +313,25 @@ function App() {
               sendPassword={sendPassword}
               sendMnemonic={sendMnemonic}
             />
-          } />
+          }>
+            <Route path='seed-phrase' element={<SeedPhrase />}></Route>
+            <Route path='new-password' element={<NewPassword />}></Route>
+            <Route path='finish' element={<Finish />}></Route>
+            <Route path='loading' element={<Loading />}></Route>
+          </Route>
           <Route path='/create-account' element={
             <CreateAccount
               recoveryPhrase={recoveryPhrase}
               sendPassword={sendPassword}
               restartServer={restartServer}
             />
-          } />
+          }>
+            <Route path='new-password' element={<NewPassword />}></Route>
+            <Route path='show-phrase' element={<ShowPhrase />}></Route>
+            <Route path='confirm-phrase' element={<ConfirmPhrase />}></Route>
+            <Route path='finish' element={<Finish />}></Route>
+            <Route path='loading' element={<Loading />}></Route>
+          </Route>
           <Route path='/sign-in' element={
             <SignIn
               getReceivingKeys={getReceivingKeys}

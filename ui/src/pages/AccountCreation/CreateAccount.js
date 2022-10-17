@@ -1,17 +1,10 @@
 import { useEffect, useState } from 'react';
-import { Button, Input, Label } from 'semantic-ui-react';
-import "../App.css";
-import hiddenImage from "../icons/eye-close.png";
+import "../../App.css";
 import { appWindow, LogicalSize } from '@tauri-apps/api/window';
-import Loading from './Loading';
-import HyperLinkButton from '../components/HyperLinkButton';
+import { Outlet } from 'react-router-dom';
+import { useNavigate, useLocation } from "react-router-dom";
 
 const MIN_PASSWORD_LENGTH = 8;
-const PASSWORD_TAB = 0;
-const SHOW_PHRASE_TAB = 1;
-const CONFIRM_PHRASE_TAB = 2;
-const FINAL_TAB = 3;
-const LOADING_TAB = 4;
 
 const DEFAULT_WINDOW_SIZE = new LogicalSize(460, 500);
 const CONFIRM_PHRASE_WINDOW_SIZE = new LogicalSize(460, 900);
@@ -25,12 +18,14 @@ const CreateAccount = ({
   const [confirmPassword, setConfirmPassword] = useState('');
   const [passwordsMatch, setPasswordsMatch] = useState(false);
   const [isValidPassword, setIsValidPassword] = useState(false);
-  const [currentTab, setCurrentTab] = useState(PASSWORD_TAB);
   const [recoveryPhraseConfirmed, setRecoveryPhraseConfirmed] = useState(false);
   const [isValidSelectedPhrase, setIsValidSelectedPhrase] = useState(false);
   const [shuffledRecoveryPhrase, setShuffledRecoveryPhrase] = useState(null);
   const [selectedRecoveryPhrase, setSelectedRecoveryPhrase] = useState([]);
   const [actualPhrase, setActualPhrase] = useState(null);
+
+  const navigate = useNavigate();
+  const location = useLocation();
 
   useEffect(() => {
 
@@ -147,42 +142,44 @@ const CreateAccount = ({
     console.log("[INFO]: Creating account.");
     await sendPassword(password);
     setPassword('');
-    setCurrentTab(FINAL_TAB);
+    navigate("/create-account/finish");
   };
 
   // This function navigates back depending on the current page.
   const goBack = async () => {
-    if (currentTab === PASSWORD_TAB) {
+    if (location.pathname === "/create-account/new-password") {
       console.log("[INFO]: Going back to Create or Recovery Page.")
       await restartServer();
-    } else if (currentTab === SHOW_PHRASE_TAB) {
+    } else if (location.pathname === "/create-account/show-phrase") {
       console.log("[INFO]: Going back to Password Page.")
       setPassword('');
       setConfirmPassword('');
       setIsValidPassword(false);
       setRecoveryPhraseConfirmed(false);
-      setCurrentTab(PASSWORD_TAB);
-    } else if (currentTab === CONFIRM_PHRASE_TAB) {
+      navigate("/create-account/new-password");
+    } else if (location.pathname === "/create-account/confirm-phrase") {
       console.log("[INFO]: Going back to View Recovery Phrase Page.");
       setSelectedRecoveryPhrase([]);
       appWindow.setSize(DEFAULT_WINDOW_SIZE);
-      setCurrentTab(SHOW_PHRASE_TAB);
+      navigate("/create-account/show-phrase");
     }
   }
 
   const goForward = async () => {
 
-    if (currentTab === PASSWORD_TAB) {
-      setCurrentTab(SHOW_PHRASE_TAB);
-    } else if (currentTab === SHOW_PHRASE_TAB) {
+    if (location.pathname === "/create-account/new-password") {
+      navigate("/create-account/show-phrase");
+    } else if (location.pathname === "/create-account/show-phrase") {
       appWindow.setSize(CONFIRM_PHRASE_WINDOW_SIZE);
-      setCurrentTab(CONFIRM_PHRASE_TAB);
-    } else if (currentTab === CONFIRM_PHRASE_TAB) {
+      navigate("/create-account/confirm-phrase");
+    } else if (location.pathname === "/create-account/confirm-phrase") {
       // Recovery Phrase has already been confirmed here, the button will stop being disabled
       // Once the user has entered it in the correct order.
       onClickCreateAccount();
       appWindow.setSize(DEFAULT_WINDOW_SIZE);
-      setCurrentTab(LOADING_TAB);
+      navigate("/create-account/loading");
+    } else if (location.pathname === "/create-account/finish") {
+      onClickFinishSetup();
     }
   }
 
@@ -199,133 +196,33 @@ const CreateAccount = ({
     setRecoveryPhraseConfirmed(true);
   }
 
+  const onChangePassword = (e) => {
+    setPassword(e.target.value);
+  }
+
+  const onChangeConfirmPassword = (e) => {
+    setConfirmPassword(e.target.value);
+  }
+
   return (
     <>
-      {currentTab === PASSWORD_TAB && (
-        <>
-          <div className='tightHeaderContainer'>
-            <h1 className='mainheadline'>Create your password</h1>
-            <p className='subtext'>
-              This is important. Your password will unlock the Manta Signer software in order
-              to utilize your zkAddress and to sign transactions.
-            </p>
-          </div>
-          <br />
-          <div>
-            <Input
-              className='input ui password'
-              type="password"
-              placeholder="Password (8 characters min)"
-              onChange={(e) => setPassword(e.target.value)}
-            />
-          </div>
-          <div>
-            <Input
-              className='input ui password'
-              type="password"
-              placeholder="Confirm Password"
-              onChange={(e) => setConfirmPassword(e.target.value)}
-            />
-          </div>
-          <Button disabled={!(isValid(password) && passwordsMatch)} className="button ui first"
-            onClick={goForward}>
-            Next
-          </Button>
-          <HyperLinkButton
-            text={"Go Back"}
-            onclick={goBack}
-          />
-          {!isValidPassword && password.length > 0 ? <><br /><Label basic color='red' pointing>Please enter a minimum of {MIN_PASSWORD_LENGTH} characters.</Label></> : (
-            !passwordsMatch ? <><br /><Label basic color='red' pointing>Passwords do not match.</Label></> : <><br /><br /><br /></>
-          )}
-
-        </>
-      )}
-      {currentTab === SHOW_PHRASE_TAB && (
-        <>
-          <div className='headercontainer'>
-            <h1 className='mainheadline'>Secret Recovery Phrase</h1>
-          </div>
-          <div className="recovery-phrase-info">
-            <p>Please write down your secret recovery phrase and keep it in a safe place.</p>
-            <p>This phrase is the only way to recover your wallet. Do not share it with anyone!</p>
-          </div>
-
-          <div className='recoveryPhraseContainer'>
-            {recoveryPhraseConfirmed ? recoveryPhrase.split(" ").map(function (item, index) {
-              return (
-                <div key={index} className='recoveryPhraseWord'>
-                  <h4>{item}</h4>
-                </div>
-              )
-            }) :
-              <div>
-                <img className='hideImage' src={hiddenImage} alt="hidden" onClick={onClickConfirmRecoveryPhrase} />
-              </div>
-            }
-          </div>
-
-          <Button disabled={!recoveryPhraseConfirmed} className="button ui first wide" onClick={goForward}>
-            Next
-          </Button>
-          <HyperLinkButton
-            text={"Go Back"}
-            onclick={goBack}
-          />
-        </>
-      )}
-      {currentTab === CONFIRM_PHRASE_TAB && (<>
-        <div className='tallHeaderContainer'>
-          <h1 className='mainheadline'>Confirm Your Secret Recovery Phrase</h1>
-          <p className='subtext'>
-            Please select the appropriate phrase in the correct order.
-          </p>
-        </div>
-
-        <div className='wordListContainer'>
-          {selectedRecoveryPhrase.map(function (item, index) {
-            let word = item.split("_")[0];
-            return <div className='button ui buttonlist' key={index}>{word}</div>
-          })}
-        </div>
-
-        <div className='buttonListContainer'>
-          {shuffledRecoveryPhrase.map(function (item) {
-            let word = item.split("_")[0];
-            return (
-              <Button
-                onClick={(e) => onClickSelectWordButton(e, item)}
-                className="button ui buttonlist"
-                key={item}>
-                {word}
-              </Button>
-            )
-          })}
-        </div>
-        <Button disabled={!isValidSelectedPhrase} className="button ui first wide" onClick={goForward}>
-          Confirm
-        </Button>
-        <HyperLinkButton
-          text={"Go Back"}
-          onclick={goBack}
-        />
-
-      </>)}
-      {currentTab === FINAL_TAB && (<>
-        <div className='headercontainerFat'>
-          <h1 className='mainheadline'>You're all done!</h1>
-          <h3 className='mediumSubText'>It's time to start using the Manta Signer.</h3>
-        </div>
-        <Button className="button ui first wide" onClick={onClickFinishSetup}>
-          Finish
-        </Button>
-      </>
-      )}
-      {currentTab === LOADING_TAB && (
-        <>
-          <Loading />
-        </>
-      )}
+      <Outlet context={{
+        goBack,
+        goForward,
+        onChangePassword,
+        onChangeConfirmPassword,
+        onClickConfirmRecoveryPhrase,
+        onClickSelectWordButton,
+        isValidSelectedPhrase,
+        shuffledRecoveryPhrase,
+        selectedRecoveryPhrase,
+        recoveryPhraseConfirmed,
+        recoveryPhrase,
+        MIN_PASSWORD_LENGTH,
+        isValidPassword,
+        passwordsMatch,
+        password
+      }} />
     </>
   );
 };
