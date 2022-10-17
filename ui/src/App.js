@@ -253,11 +253,6 @@ function App() {
     navigate("/recover");
   }
 
-  const cancelReset = async () => {
-    console.log("[INFO]: Cancel reset process.")
-    hideWindow();
-  }
-
   const cancelSign = async () => {
     console.log("[INFO]: Cancelling signing current transaction.");
     await invoke('cancel_sign');
@@ -271,6 +266,7 @@ function App() {
   }
 
   const getReceivingKeys = async () => {
+    console.log("[INFO]: Getting receiving keys.")
     const newReceivingKeys = await invoke('receiving_keys');
     const newReceivingKey = newReceivingKeys[0];
     setReceivingKey(newReceivingKey);
@@ -280,81 +276,70 @@ function App() {
     setReceivingKeyDisplay(newReceivingKeyDisplay);
   }
 
-  const views = [
-    {
-      component: () => <Loading />, path: '/loading', name: "Loading"
-    },
-    {
-      component: () => <CreateOrRecover
-        sendCreateOrRecover={sendCreateOrRecover}
-        startCreate={startCreate}
-        startRecover={startRecover}
-      />, path: '/create-or-recover', name: "CreateOrRecover"
-    },
-    {
-      component: () => <Reset
-        isConnected={isConnected}
-        hideWindow={hideWindow}
-        endConnection={endConnection}
-        resetAccount={resetAccount}
-        cancelReset={cancelReset}
-      />, path: '/reset', name: "Reset"
-    },
-    {
-      component: () => <Recover
-        payloadType={payloadType}
-        sendCreateOrRecover={sendCreateOrRecover}
-        restartServer={restartServer}
-        resetAccount={resetAccount}
-        sendPassword={sendPassword}
-        sendMnemonic={sendMnemonic}
-      />, path: '/recover', name: "Recover"
-    },
-    {
-      component: () => <CreateAccount
-        recoveryPhrase={recoveryPhrase}
-        sendPassword={sendPassword}
-        restartServer={restartServer}
-      />, path: '/create-account', name: "CreateAccount"
-    },
-    {
-      component: () => <SignIn
-        getReceivingKeys={getReceivingKeys}
-        receivingKey={receivingKey}
-        receivingKeyDisplay={receivingKeyDisplay}
-        sendPassword={sendPassword}
-        endInitialConnectionPhase={endInitialConnectionPhase}
-        startRecover={startRecover}
-      />, path: '/sign-in', name: "SignIn"
-    },
-    {
-      component: () => <Authorize
-        cancelSign={cancelSign}
-        summary={authorizationSummary}
-        sendPassword={sendPassword}
-        stopPasswordPrompt={stopPasswordPrompt}
-        hideWindow={hideWindow}
-      />, path: '/authorize', name: "Authorize"
-    },
-    {
-      component: () => <ViewSecretPhrase
-        endExportPhrase={endExportPhrase}
-        exportedSecretPhrase={exportedSecretPhrase}
-        sendPassword={sendPassword}
-        stopPasswordPrompt={stopPasswordPrompt}
-      />, path: '/view-secret-phrase', name: "ViewSecretPhrase"
-    },
-  ];
-
   return (
     <div className="App">
       <Container className="page">
         <Routes>
-          <Route exact path='/' element={<Navigate to={views[0].path} />} />
-          {views.map((view, index) => <Route key={index} exact={view.exact}
-            path={view.path} element={
-              <view.component />
-            } />)}
+          <Route exact path='/' element={<Navigate to={"/loading"} />} />
+          <Route path='/loading' element={<Loading/>} />
+          <Route path='/create-or-recover' element={
+            <CreateOrRecover
+              sendCreateOrRecover={sendCreateOrRecover}
+              startCreate={startCreate}
+              startRecover={startRecover}
+            />
+          } />
+          <Route path='/reset' element={
+            <Reset
+              isConnected={isConnected}
+              hideWindow={hideWindow}
+              endConnection={endConnection}
+              resetAccount={resetAccount}
+            />
+          } />
+          <Route path='/recover' element={
+            <Recover
+              payloadType={payloadType}
+              sendCreateOrRecover={sendCreateOrRecover}
+              restartServer={restartServer}
+              resetAccount={resetAccount}
+              sendPassword={sendPassword}
+              sendMnemonic={sendMnemonic}
+            />
+          } />
+          <Route path='/create-account' element={
+            <CreateAccount
+              recoveryPhrase={recoveryPhrase}
+              sendPassword={sendPassword}
+              restartServer={restartServer}
+            />
+          } />
+          <Route path='/sign-in' element={
+            <SignIn
+              getReceivingKeys={getReceivingKeys}
+              receivingKey={receivingKey}
+              receivingKeyDisplay={receivingKeyDisplay}
+              sendPassword={sendPassword}
+              endInitialConnectionPhase={endInitialConnectionPhase}
+              startRecover={startRecover}
+            />
+          } />
+          <Route path='/authorize' element={
+            <Authorize
+              cancelSign={cancelSign}
+              summary={authorizationSummary}
+              sendPassword={sendPassword}
+              stopPasswordPrompt={stopPasswordPrompt}
+              hideWindow={hideWindow}
+            />} />
+          <Route path='/view-secret-phrase' element={
+            <ViewSecretPhrase
+              endExportPhrase={endExportPhrase}
+              exportedSecretPhrase={exportedSecretPhrase}
+              sendPassword={sendPassword}
+              stopPasswordPrompt={stopPasswordPrompt}
+            />
+          } />
         </Routes>
       </Container>
     </div>

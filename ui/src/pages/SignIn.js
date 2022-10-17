@@ -23,12 +23,11 @@ const SignIn = ({
     const shouldRetry = await sendPassword(password);
 
     if (!shouldRetry) {
+      
       await getReceivingKeys();
-    }
-
-    if (!shouldRetry) {
       setPassword('');
       setLoginSuccess(true);
+      console.log(receivingKey);
     } else {
       console.log("RETRY!");
       setPasswordInvalid(true);
