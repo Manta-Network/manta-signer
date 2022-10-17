@@ -45,7 +45,7 @@ use parking_lot::Mutex;
 use std::{
     io,
     net::{AddrParseError, SocketAddr},
-    path::{Path, PathBuf},
+    path::Path,
 };
 use tide::{
     security::{CorsMiddleware, Origin},
@@ -375,7 +375,7 @@ where
     #[inline]
     async fn create_or_load_state(
         should_recreate: bool,
-        data_path: &PathBuf,
+        data_path: &Path,
         password_hash: &PasswordHash<Argon2>,
         recovery_mnemonic: Option<Mnemonic>,
     ) -> Result<Option<SignerState>> {
