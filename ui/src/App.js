@@ -76,7 +76,7 @@ function App() {
     };
     beginInitialConnectionPhase();
     setActiveListeners({ ...activeListeners, connect: true });
-  }, [isConnected, activeListeners]);
+  }, [isConnected, activeListeners, location.pathname, navigate]);
 
   // keeps show secret phrase listener in sync with exportingPhrase state
   // whether or not we are currently exporting the phrase.

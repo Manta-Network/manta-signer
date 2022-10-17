@@ -234,7 +234,7 @@ where
                     let dolphin_state = Self::create_state(
                         &config.data_path_dolphin,
                         &password_hash,
-                        mnemonic.clone()
+                        mnemonic.clone(),
                     )
                     .await?;
 
@@ -242,7 +242,7 @@ where
                     let calamari_state = Self::create_state(
                         &config.data_path_calamari,
                         &password_hash,
-                        mnemonic.clone()
+                        mnemonic.clone(),
                     )
                     .await?;
 
@@ -250,14 +250,15 @@ where
                     let manta_state = Self::create_state(
                         &config.data_path_manta,
                         &password_hash,
-                        mnemonic.clone()
+                        mnemonic.clone(),
                     )
                     .await?;
 
-                    break (password_hash, 
-                        Signer::from_parts(parameters.clone(), dolphin_state), 
-                        Signer::from_parts(parameters.clone(), calamari_state), 
-                        Signer::from_parts(parameters.clone(), manta_state)
+                    break (
+                        password_hash,
+                        Signer::from_parts(parameters.clone(), dolphin_state),
+                        Signer::from_parts(parameters.clone(), calamari_state),
+                        Signer::from_parts(parameters.clone(), manta_state),
                     );
                 }
                 delay_password_retry().await;
@@ -303,13 +304,14 @@ where
                     )
                     .await?;
 
-                    if let (Some(dol_state),Some(cal_state),Some(man_state))
-                     = (dolphin_state, calamari_state, manta_state) {
+                    if let (Some(dol_state), Some(cal_state), Some(man_state)) =
+                        (dolphin_state, calamari_state, manta_state)
+                    {
                         break (
                             password_hash,
                             Signer::from_parts(parameters.clone(), dol_state),
                             Signer::from_parts(parameters.clone(), cal_state),
-                            Signer::from_parts(parameters.clone(), man_state)
+                            Signer::from_parts(parameters.clone(), man_state),
                         );
                     }
                 }
