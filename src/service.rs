@@ -355,7 +355,7 @@ where
 
         let exisitng_signer = Signer::from_parts(
             parameters.clone(),
-            Self::load_state(existing_state_path, &password_hash)
+            Self::load_state(existing_state_path, password_hash)
                 .await
                 .expect("Unable to get dolphin state")?,
         );
@@ -383,16 +383,15 @@ where
             info!("state missing! recreating state.")?;
             let state = Self::create_state(
                 data_path,
-                &password_hash,
+                password_hash,
                 recovery_mnemonic.expect("unable to retrieve mnemonic for account recreation."),
             )
             .await
             .expect("Unable to recreate signer instance from exisitng mnemonic.");
-            return Ok(Some(state));
+            Ok(Some(state))
         } else {
-            let state = Self::load_state(&data_path, password_hash).await;
-            return state;
-        };
+            Self::load_state(data_path, password_hash).await
+        }
     }
 
     /// If users cancels a transaction, this method will be called by front-end
