@@ -20,6 +20,7 @@ use crate::{
     config::{Config, DataExistenceResponse, Setup},
     http,
     log::{info, trace, warn},
+    network::{Message, Network, NetworkSpecific},
     secret::{Argon2, Authorizer, ExposeSecret, PasswordHash, SecretString},
 };
 use alloc::sync::Arc;
@@ -29,12 +30,13 @@ use core::{
 };
 use http_types::headers::HeaderValue;
 use manta_accounting::{
+    asset::{Asset, AssetMetadata},
     fs::{cocoon::File, File as _, SaveError},
     key::HierarchicalKeyDerivationScheme,
     transfer::canonical::TransferShape,
-    wallet::signer::NetworkType,
 };
 use manta_pay::{
+    config::Transaction,
     key::{Mnemonic, TestnetKeySecret},
     signer::base::{
         HierarchicalKeyDerivationFunction, Signer, SignerParameters, SignerState, UtxoAccumulator,
@@ -59,11 +61,17 @@ use tokio::{
 
 pub use manta_pay::{
     config::{receiving_key_to_base58, ReceivingKey},
-    signer::{
-        ReceivingKeyRequest, SignError, SignRequest, SignResponse, SyncError, SyncRequest,
-        SyncResponse,
-    },
+    signer::{self, SignError, SignResponse, SyncError, SyncResponse},
 };
+
+/// Synchronization Request
+pub type SyncRequest = Message<signer::SyncRequest>;
+
+/// Signing Request
+pub type SignRequest = Message<signer::SignRequest>;
+
+/// Receiving Key Request
+pub type ReceivingKeyRequest = Message<signer::ReceivingKeyRequest>;
 
 /// Password Retry Interval
 pub const PASSWORD_RETRY_INTERVAL: Duration = Duration::from_millis(1000);
@@ -94,6 +102,11 @@ pub enum Error {
 
     /// Authorization Error
     AuthorizationError,
+
+    /// Signer Delay Error
+    ///
+    /// The signer could not process the request at this time.
+    Delayed,
 }
 
 from_variant!(Error, AddrParseError, AddrParseError);
@@ -108,6 +121,10 @@ impl From<Error> for tide::Error {
             Error::AuthorizationError => {
                 Self::from_str(StatusCode::Unauthorized, "request was not authorized")
             }
+            Error::Delayed => Self::from_str(
+                StatusCode::Accepted,
+                "another process is currently signing and this request should be tried again later",
+            ),
             _ => Self::from_str(
                 StatusCode::InternalServerError,
                 "unable to complete request",
@@ -126,12 +143,42 @@ impl Display for Error {
             Self::SaveError(err) => write!(f, "Save Error: {}", err),
             Self::Io(err) => write!(f, "I/O Error: {}", err),
             Self::AuthorizationError => write!(f, "Authorization Error"),
+            Self::Delayed => write!(f, "Delay Error"),
         }
     }
 }
 
 /// Result Type
 pub type Result<T, E = Error> = core::result::Result<T, E>;
+
+///
+#[inline]
+pub fn display_transaction(
+    transaction: &Transaction,
+    metadata: &AssetMetadata,
+    network: Network,
+) -> String {
+    match transaction {
+        Transaction::Mint(Asset { value, .. }) => format!(
+            "Deposit {} on {} network",
+            metadata.display(*value),
+            network
+        ),
+        Transaction::PrivateTransfer(Asset { value, .. }, receiving_key) => {
+            format!(
+                "Send {} to {} on {} network",
+                metadata.display(*value),
+                receiving_key_to_base58(receiving_key),
+                network
+            )
+        }
+        Transaction::Reclaim(Asset { value, .. }) => format!(
+            "Withdraw {} on {} network",
+            metadata.display(*value),
+            network
+        ),
+    }
+}
 
 /// Checked Authorizer
 struct CheckedAuthorizer<A>
@@ -179,18 +226,11 @@ struct State {
     /// Configuration
     config: Config,
 
-    /// Dolphin Signer
-    dolphin_signer: Signer,
+    /// Signer
+    signer: NetworkSpecific<Signer>,
 
-    /// Calamari Signer
-    calamari_signer: Signer,
-
-    /// Manta Signer
-    manta_signer: Signer,
-
-    /// The NetworkType of the corresponding `Signer` that
-    /// is currently signing a transaction.
-    currently_signing: Option<NetworkType>,
+    /// Signing Flag
+    currently_signing: bool,
 }
 
 /// Signer Server
@@ -224,7 +264,6 @@ where
         let data_exists = config.does_data_exist().await;
         let does_all_data_exist = data_exists.dolphin && data_exists.calamari && data_exists.manta;
         let does_one_data_exist = data_exists.dolphin || data_exists.calamari || data_exists.manta;
-        let currently_signing = None;
         let setup = authorizer.setup(does_one_data_exist).await;
         let (password_hash, dolphin_signer, calamari_signer, manta_signer) = match setup {
             Setup::CreateAccount(mnemonic) => loop {
@@ -232,7 +271,7 @@ where
                 {
                     info!("creating dolphin state.")?;
                     let dolphin_state = Self::create_state(
-                        &config.data_path_dolphin,
+                        &config.data_path.dolphin,
                         &password_hash,
                         mnemonic.clone(),
                     )
@@ -240,7 +279,7 @@ where
 
                     info!("creating calamari state.")?;
                     let calamari_state = Self::create_state(
-                        &config.data_path_calamari,
+                        &config.data_path.calamari,
                         &password_hash,
                         mnemonic.clone(),
                     )
@@ -248,7 +287,7 @@ where
 
                     info!("creating manta state.")?;
                     let manta_state = Self::create_state(
-                        &config.data_path_manta,
+                        &config.data_path.manta,
                         &password_hash,
                         mnemonic.clone(),
                     )
@@ -282,7 +321,7 @@ where
 
                     let dolphin_state = Self::create_or_load_state(
                         !data_exists.dolphin,
-                        &config.data_path_dolphin,
+                        &config.data_path.dolphin,
                         &password_hash,
                         recovery_mnemonic.clone(),
                     )
@@ -290,7 +329,7 @@ where
 
                     let calamari_state = Self::create_or_load_state(
                         !data_exists.calamari,
-                        &config.data_path_dolphin,
+                        &config.data_path.dolphin,
                         &password_hash,
                         recovery_mnemonic.clone(),
                     )
@@ -298,20 +337,20 @@ where
 
                     let manta_state = Self::create_or_load_state(
                         !data_exists.calamari,
-                        &config.data_path_dolphin,
+                        &config.data_path.dolphin,
                         &password_hash,
                         recovery_mnemonic.clone(),
                     )
                     .await?;
 
-                    if let (Some(dol_state), Some(cal_state), Some(man_state)) =
+                    if let (Some(dolphin_state), Some(calamari_state), Some(manta_state)) =
                         (dolphin_state, calamari_state, manta_state)
                     {
                         break (
                             password_hash,
-                            Signer::from_parts(parameters.clone(), dol_state),
-                            Signer::from_parts(parameters.clone(), cal_state),
-                            Signer::from_parts(parameters.clone(), man_state),
+                            Signer::from_parts(parameters.clone(), dolphin_state),
+                            Signer::from_parts(parameters.clone(), calamari_state),
+                            Signer::from_parts(parameters.clone(), manta_state),
                         );
                     }
                 }
@@ -323,10 +362,12 @@ where
         Ok(Self {
             state: Arc::new(Mutex::new(State {
                 config,
-                dolphin_signer,
-                calamari_signer,
-                manta_signer,
-                currently_signing,
+                signer: NetworkSpecific {
+                    dolphin: dolphin_signer,
+                    calamari: calamari_signer,
+                    manta: manta_signer,
+                },
+                currently_signing: false,
             })),
             authorizer: Arc::new(AsyncMutex::new(CheckedAuthorizer {
                 password_hash,
@@ -346,13 +387,12 @@ where
         parameters: SignerParameters,
     ) -> Option<Mnemonic> {
         let existing_state_path = if data_exists.dolphin {
-            &config.data_path_dolphin
+            &config.data_path.dolphin
         } else if data_exists.calamari {
-            &config.data_path_calamari
+            &config.data_path.calamari
         } else {
-            &config.data_path_manta
+            &config.data_path.manta
         };
-
         let exisitng_signer = Signer::from_parts(
             parameters.clone(),
             Self::load_state(existing_state_path, password_hash)
@@ -394,11 +434,11 @@ where
         }
     }
 
-    /// If users cancels a transaction, this method will be called by front-end
-    /// to indicate that signer can now start signing new transactions.
+    /// If users cancels a transaction, this method will be called by front-end to indicate that
+    /// the signer can now start signing new transactions.
     #[inline]
     pub async fn cancel_signing(&mut self) {
-        self.state.lock().currently_signing = None;
+        self.state.lock().currently_signing = false;
     }
 
     /// Starts the signer server with `config` and `authorizer`.
@@ -482,32 +522,22 @@ where
         }
     }
 
-    /// Saves the signer state corresponding to `NetworkType` to disk.
+    /// Saves the signer state corresponding to `network` to disk.
     #[inline]
-    async fn save(self, network: NetworkType) -> Result<()> {
-        info!(
-            "starting signer state save to disk for {}",
-            network.display()
-        )?;
+    async fn save(self, network: Network) -> Result<()> {
+        info!("starting signer state save to disk for {}", network)?;
         let path = self.state.lock().config.get_path_for_network(network);
         let backup = path.with_extension("backup");
         fs::rename(&path, &backup).await?;
         let password_hash_bytes = self.authorizer.lock().await.password_hash.as_bytes();
-        let network_copy = network;
         task::spawn_blocking(move || {
             let lock = self.state.lock();
-
-            let state_to_save = match network_copy {
-                NetworkType::Dolphin => lock.dolphin_signer.state(),
-                NetworkType::Calamari => lock.calamari_signer.state(),
-                NetworkType::Manta => lock.manta_signer.state(),
-            };
-
+            let state_to_save = lock.signer[network].state();
             File::save(path, &password_hash_bytes, state_to_save)
         })
         .await??;
         fs::remove_file(backup).await?;
-        info!("save complete for {}", network.display())?;
+        info!("save complete for {}", network)?;
         Ok(())
     }
 
@@ -522,17 +552,9 @@ where
     #[inline]
     pub async fn sync(self, request: SyncRequest) -> Result<Result<SyncResponse, SyncError>> {
         info!("[REQUEST] processing `sync`:  {:?}.", request)?;
-
-        let network = request.network;
-
-        let response = match network {
-            NetworkType::Dolphin => self.state.lock().dolphin_signer.sync(request),
-            NetworkType::Calamari => self.state.lock().calamari_signer.sync(request),
-            NetworkType::Manta => self.state.lock().manta_signer.sync(request),
-        };
-
+        let response = self.state.lock().signer[request.network].sync(request.message);
         task::spawn(async move {
-            if self.save(network).await.is_err() {
+            if self.save(request.network).await.is_err() {
                 let _ = warn!("unable to save current signer state");
             }
         });
@@ -544,17 +566,17 @@ where
     #[inline]
     pub async fn sign(self, request: SignRequest) -> Result<Result<SignResponse, SignError>> {
         info!("[REQUEST] processing `sign`: {:?}.", request)?;
-
-        if let Some(_net) = self.state.lock().currently_signing {
-            return Ok(Err(SignError::SignerBusy));
+        if self.state.lock().currently_signing {
+            return Err(Error::Delayed);
         }
-
-        self.state.lock().currently_signing = Some(request.network);
-
+        self.state.lock().currently_signing = true;
         let SignRequest {
-            transaction,
-            metadata,
             network,
+            message:
+                signer::SignRequest {
+                    transaction,
+                    metadata,
+                },
         } = request;
         match transaction.shape() {
             TransferShape::Mint => {
@@ -565,31 +587,27 @@ where
             _ => {
                 info!("[AUTH] asking for transaction authorization")?;
                 let summary = metadata
-                    .map(|m| transaction.display(&m, &network, receiving_key_to_base58))
+                    .map(|metadata| display_transaction(&transaction, &metadata, network))
                     .unwrap_or_default();
                 self.authorizer.lock().await.check(&summary).await?
             }
         }
-
-        let response = match network {
-            NetworkType::Dolphin => self.state.lock().dolphin_signer.sign(transaction),
-            NetworkType::Calamari => self.state.lock().calamari_signer.sign(transaction),
-            NetworkType::Manta => self.state.lock().manta_signer.sign(transaction),
-        };
+        let response = self.state.lock().signer[network].sign(transaction);
         info!("[RESPONSE] responding to `sign` with: {:?}.", response)?;
-        self.state.lock().currently_signing = None;
+        self.state.lock().currently_signing = false;
         Ok(response)
     }
 
-    /// Gets the mnemonic stored on disk for a specific `NetworkType` for front-end export
+    /// Gets the mnemonic stored on disk for a specific `network` for front-end export
     /// requiring password authorization.
     #[inline]
-    pub async fn get_stored_mnemonic(&mut self, prompt: &String) -> Result<Mnemonic> {
+    pub async fn get_stored_mnemonic(
+        &mut self,
+        network: Network,
+        prompt: &String,
+    ) -> Result<Mnemonic> {
         self.authorizer.lock().await.check(prompt).await?;
-        let stored_mnemonic = self
-            .state
-            .lock()
-            .dolphin_signer
+        let stored_mnemonic = self.state.lock().signer[network]
             .state()
             .accounts()
             .keys()
@@ -600,11 +618,10 @@ where
     }
 
     /// Runs the receiving key sampling protocol on the signer.
-    /// Uses default Dolphin Signer to get receiving keys.
     #[inline]
     pub async fn receiving_keys(self, request: ReceivingKeyRequest) -> Result<Vec<ReceivingKey>> {
         info!("[REQUEST] processing `receivingKeys`: {:?}", request)?;
-        let response = self.state.lock().dolphin_signer.receiving_keys(request);
+        let response = self.state.lock().signer[request.network].receiving_keys(request.message);
         info!(
             "[RESPONSE] responding to `receivingKeys` with: {:?}",
             response
@@ -612,14 +629,14 @@ where
         Ok(response)
     }
 
-    /// Runs the receiving key sampling protocol on a mutable reference
-    /// of the signer, and formats the result to base 58.
+    /// Runs the receiving key sampling protocol on a mutable reference of the signer, and formats
+    /// the result to base 58.
     #[inline]
     pub async fn get_receiving_keys(
         &mut self,
         request: ReceivingKeyRequest,
     ) -> Result<Vec<String>, ()> {
-        let response = self.state.lock().dolphin_signer.receiving_keys(request);
+        let response = self.state.lock().signer[request.network].receiving_keys(request.message);
         let keys = response
             .into_iter()
             .map(|key| receiving_key_to_base58(&key))

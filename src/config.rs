@@ -16,7 +16,7 @@
 
 //! Manta Signer Configuration
 
-use manta_accounting::wallet::signer::NetworkType;
+use crate::network::{Network, NetworkSpecific};
 use manta_pay::key::Mnemonic;
 use manta_util::serde::{Deserialize, Serialize};
 use std::{
@@ -46,14 +46,8 @@ where
 #[derive(Clone, Debug, Deserialize, Eq, Hash, PartialEq, Serialize)]
 #[serde(crate = "manta_util::serde", deny_unknown_fields)]
 pub struct Config {
-    /// Data File Path - Dolphin
-    pub data_path_dolphin: PathBuf,
-
-    /// Data File Path - Calamari
-    pub data_path_calamari: PathBuf,
-
-    /// Data File Path - Manta
-    pub data_path_manta: PathBuf,
+    /// Data File Path
+    pub data_path: NetworkSpecific<PathBuf>,
 
     /// Service URL
     ///
@@ -67,28 +61,20 @@ pub struct Config {
     pub origin_urls: Vec<String>,
 }
 
-/// Response for the does_data_exist() function of [`Config`].
-/// Contains whether or not each respective network data file exists or not.
-#[derive(Clone, Copy)]
-pub struct DataExistenceResponse {
-    /// Dolphin Network (storage-dolphin.dat)
-    pub dolphin: bool,
-
-    /// Calamari Network (storage-calamari.dat)
-    pub calamari: bool,
-
-    /// Manta Network (storage-manta.dat)
-    pub manta: bool,
-}
+/// Response for the [`Config::does_data_exist`] function of [`Config`]. The boolean fields
+/// represent whether or not each respective network data file exists or not.
+pub type DataExistenceResponse = NetworkSpecific<bool>;
 
 impl Config {
     /// Tries to build a default [`Config`].
     #[inline]
     pub fn try_default() -> Option<Self> {
         Some(Self {
-            data_path_dolphin: file(dirs_next::config_dir(), "storage-dolphin.dat")?,
-            data_path_calamari: file(dirs_next::config_dir(), "storage-calamari.dat")?,
-            data_path_manta: file(dirs_next::config_dir(), "storage-manta.dat")?,
+            data_path: NetworkSpecific {
+                dolphin: file(dirs_next::config_dir(), "storage-dolphin.dat")?,
+                calamari: file(dirs_next::config_dir(), "storage-calamari.dat")?,
+                manta: file(dirs_next::config_dir(), "storage-manta.dat")?,
+            },
             service_url: "127.0.0.1:29987".into(),
             #[cfg(feature = "unsafe-disable-cors")]
             origin_urls: vec![],
@@ -100,18 +86,19 @@ impl Config {
         })
     }
 
-    /// Returns the data directory path. All files will be in same directory
-    /// so it suffices to check on one file i.e. Dolphin.
+    /// Returns the data directory path. All files will be in same directory so it suffices to check
+    /// on one file i.e. Dolphin.
     #[inline]
     pub fn data_directory(&self) -> &Path {
-        self.data_path_dolphin
+        self.data_path
+            .dolphin
             .parent()
             .expect("The data path file must always have a parent.")
     }
 
     /// Returns whether storage file exists for a particular data path.
     #[inline]
-    async fn does_data_exist_at(&self, path: &PathBuf) -> io::Result<bool> {
+    async fn does_data_exist_at(path: &PathBuf) -> io::Result<bool> {
         match fs::metadata(path).await {
             Ok(metadata) if metadata.is_file() => Ok(true),
             Ok(metadata) => Err(io::Error::new(
@@ -127,16 +114,13 @@ impl Config {
     pub async fn does_data_exist(&self) -> DataExistenceResponse {
         let _ = fs::create_dir_all(self.data_directory()).await;
 
-        let dolphin_exists = self
-            .does_data_exist_at(&self.data_path_dolphin)
+        let dolphin_exists = Self::does_data_exist_at(&self.data_path.dolphin)
             .await
             .expect("Unable to read dolphin file.");
-        let calamari_exists = self
-            .does_data_exist_at(&self.data_path_calamari)
+        let calamari_exists = Self::does_data_exist_at(&self.data_path.calamari)
             .await
             .expect("Unable to read calamari file.");
-        let manta_exists = self
-            .does_data_exist_at(&self.data_path_manta)
+        let manta_exists = Self::does_data_exist_at(&self.data_path.manta)
             .await
             .expect("Unable to read manta file.");
 
@@ -148,12 +132,9 @@ impl Config {
     }
 
     /// Returns the path corresponding to a particular `NetworkType`.
-    pub fn get_path_for_network(&self, network: NetworkType) -> PathBuf {
-        match network {
-            NetworkType::Dolphin => self.data_path_dolphin.clone(),
-            NetworkType::Calamari => self.data_path_calamari.clone(),
-            NetworkType::Manta => self.data_path_manta.clone(),
-        }
+    #[inline]
+    pub fn get_path_for_network(&self, network: Network) -> PathBuf {
+        self.data_path[network].clone()
     }
 }
 

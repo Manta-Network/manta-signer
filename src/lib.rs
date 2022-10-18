@@ -25,6 +25,7 @@ extern crate alloc;
 pub mod config;
 pub mod http;
 pub mod log;
+pub mod network;
 pub mod parameters;
 pub mod secret;
 pub mod service;
