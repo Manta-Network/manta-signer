@@ -2,18 +2,15 @@ import { Button } from 'semantic-ui-react';
 import mainLogo from "../icons/manta.png";
 import "../App.css";
 const CreateOrRecover = ({
-  sendCreateOrRecover,
   startCreate,
   startRecover
 }) => {
 
   const onClickStartCreate = async () => {
-    await sendCreateOrRecover("Create");
     startCreate();
   }
 
   const onClickStartRecover = async () => {
-    await sendCreateOrRecover("Recover");
     startRecover();
   }
 

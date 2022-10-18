@@ -103,6 +103,9 @@ pub enum UserSelection {
 
     /// Recover an old account by providing a recovery phrase
     Recover,
+
+    /// Sign in to an existing account by providing a password
+    SignIn
 }
 
 /// Authorizer

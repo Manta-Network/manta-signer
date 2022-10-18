@@ -10,6 +10,7 @@ const DEFAULT_WINDOW_SIZE = new LogicalSize(460, 500);
 const CONFIRM_PHRASE_WINDOW_SIZE = new LogicalSize(460, 900);
 
 const CreateAccount = ({
+  sendSelection,
   recoveryPhrase,
   sendPassword,
   restartServer
@@ -140,6 +141,7 @@ const CreateAccount = ({
   // This function will be called after the user confirms their secret recovery phrase.
   const onClickCreateAccount = async () => {
     console.log("[INFO]: Creating account.");
+    await sendSelection("Create");
     await sendPassword(password);
     setPassword('');
     navigate("/create-account/finish");
@@ -149,7 +151,7 @@ const CreateAccount = ({
   const goBack = async () => {
     if (location.pathname === "/create-account/new-password") {
       console.log("[INFO]: Going back to Create or Recovery Page.")
-      await restartServer();
+      navigate("/create-or-recover");
     } else if (location.pathname === "/create-account/show-phrase") {
       console.log("[INFO]: Going back to Password Page.")
       setPassword('');

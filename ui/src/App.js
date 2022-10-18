@@ -24,6 +24,9 @@ const WITHDRAW = "Withdraw";
 const GET_RECOVERY_PHRASE = "GetRecoveryPhrase";
 
 function App() {
+  const navigate = useNavigate();
+  const location = useLocation();
+
   const [isConnected, setIsConnected] = useState(false);
   const [payloadType, setPayloadType] = useState(null);
   const [recoveryPhrase, setRecoveryPhrase] = useState(null);
@@ -39,9 +42,11 @@ function App() {
   const [exportedSecretPhrase, setExportedSecretPhrase] = useState(null);
   const [exportingPhrase, setExportingPhrase] = useState(false);
   const exportingPhraseRef = useRef(exportingPhrase);
+  const pathnameRef = useRef(location.pathname);
 
-  const navigate = useNavigate();
-  const location = useLocation();
+  useEffect(() => {
+    pathnameRef.current = location.pathname;
+  },[location.pathname]);
 
   useEffect(() => {
     if (isConnected) return;
@@ -53,7 +58,7 @@ function App() {
         let payload = event.payload;
 
         // We don't want to switch the page on reset during recovery process.
-        if (location.pathname === ("/recover/loading")) {
+        if (pathnameRef.current === ("/recover/loading")) {
           setPayloadType('CreateAccount');
           setRecoveryPhrase(payload.content);
           return;
@@ -76,7 +81,7 @@ function App() {
     };
     beginInitialConnectionPhase();
     setActiveListeners({ ...activeListeners, connect: true });
-  }, [isConnected, activeListeners, location.pathname, navigate]);
+  }, [isConnected, activeListeners, pathnameRef, navigate]);
 
   // keeps show secret phrase listener in sync with exportingPhrase state
   // whether or not we are currently exporting the phrase.
@@ -171,9 +176,9 @@ function App() {
     }
   }
 
-  const sendCreateOrRecover = async (selection) => {
+  const sendSelection = async (selection) => {
     console.log("[INFO]: Send selection to signer server.");
-    return await invoke('create_or_recover', { selection: selection });
+    return await invoke('user_selection', { selection: selection });
   }
 
   const sendPassword = async (password) => {
@@ -291,7 +296,6 @@ function App() {
           <Route path='/loading' element={<Loading />} />
           <Route path='/create-or-recover' element={
             <CreateOrRecover
-              sendCreateOrRecover={sendCreateOrRecover}
               startCreate={startCreate}
               startRecover={startRecover}
             />
@@ -307,7 +311,7 @@ function App() {
           <Route path='/recover' element={
             <Recover
               payloadType={payloadType}
-              sendCreateOrRecover={sendCreateOrRecover}
+              sendSelection={sendSelection}
               restartServer={restartServer}
               resetAccount={resetAccount}
               sendPassword={sendPassword}
@@ -321,6 +325,7 @@ function App() {
           </Route>
           <Route path='/create-account' element={
             <CreateAccount
+              sendSelection={sendSelection}
               recoveryPhrase={recoveryPhrase}
               sendPassword={sendPassword}
               restartServer={restartServer}
@@ -334,6 +339,7 @@ function App() {
           </Route>
           <Route path='/sign-in' element={
             <SignIn
+              sendSelection={sendSelection}
               getReceivingKeys={getReceivingKeys}
               receivingKey={receivingKey}
               receivingKeyDisplay={receivingKeyDisplay}

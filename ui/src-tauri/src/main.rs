@@ -232,23 +232,20 @@ impl Authorizer for User {
                 }
             );
 
-            if data_exists {
-                Setup::Login
-            } else {
-                // We need to wait here until user decides to 1. recover using seed phrase or 2. create new account.
+            let user_selection = self.request_selection().await;
 
-                let user_selection = self.request_selection().await;
-
-                // if user decides to create a new account then we can continue to build the server here.
-                if let UserSelection::Create = user_selection {
-                    return payload;
+            match user_selection {
+                UserSelection::Create => {
+                    payload
+                },
+                UserSelection::SignIn => {
+                    Setup::Login
+                },
+                UserSelection::Recover => {
+                    // if user decides to recover an existing account we need to stall and wait for their seed phrase.
+                    let user_seed_phrase = self.request_mnemonic().await;
+                    Setup::CreateAccount(user_seed_phrase)
                 }
-
-                // now we have to wait again until we get the user's seed phrase.
-
-                let user_seed_phrase = self.request_mnemonic().await;
-
-                Setup::CreateAccount(user_seed_phrase)
             }
         })
     }
@@ -383,17 +380,20 @@ async fn send_mnemonic(
     Ok(())
 }
 
-/// Sets the user's selection of whether to create a new account or recover
+/// Sets the user's selection of whether to create a new account, login, or recover
 /// using a seed phrase.
 #[tauri::command]
-async fn create_or_recover(
+async fn user_selection(
     mnemonic_store: State<'_, MnemonicStore>,
     selection: String,
 ) -> Result<(), ()> {
+
     let selected_option = if selection == "Create" {
         UserSelection::Create
-    } else {
+    } else if selection == "Recover" {
         UserSelection::Recover
+    } else {
+        UserSelection::SignIn
     };
 
     if let Some(store) = &mut *mnemonic_store.lock().await {
@@ -599,7 +599,7 @@ fn main() {
         .invoke_handler(tauri::generate_handler![
             send_password,
             stop_password_prompt,
-            create_or_recover,
+            user_selection,
             send_mnemonic,
             reset_account,
             connect_ui,

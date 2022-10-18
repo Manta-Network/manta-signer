@@ -35,7 +35,7 @@ const DEFAULT_PHRASES = {
 // By default this component will load using a 12 word phrase.
 const Recover = ({
   payloadType,
-  sendCreateOrRecover,
+  sendSelection,
   restartServer,
   resetAccount,
   sendPassword,
@@ -118,8 +118,7 @@ const Recover = ({
   const goBack = async () => {
     if (location.pathname === "/recover/seed-phrase") {
       appWindow.setSize(DEFAULT_WINDOW_SIZE);
-      const backToLogin = payloadType === "Login";
-      await restartServer(backToLogin);
+      navigate(-1);
     } else if (location.pathname === "/recover/new-password") {
       // we need to throw away the mnemonics that were already stored
       setMnemonics(DEFAULT_PHRASES[12]);
@@ -141,7 +140,7 @@ const Recover = ({
         await resetAccount(true);
       }
 
-      await sendCreateOrRecover("Recover");
+      await sendSelection("Recover");
       await sendMnemonic(validMnemonics);
       await sendPassword(password);
       navigate("/recover/finish");

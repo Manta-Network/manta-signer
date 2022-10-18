@@ -8,6 +8,7 @@ import "../App.css";
 import HyperLinkButton from '../components/HyperLinkButton';
 
 const SignIn = ({
+  sendSelection,
   getReceivingKeys,
   receivingKey,
   receivingKeyDisplay,
@@ -20,6 +21,7 @@ const SignIn = ({
   const [loginSuccess, setLoginSuccess] = useState(false);
 
   const onClickSignIn = async () => {
+    await sendSelection("SignIn");
     const shouldRetry = await sendPassword(password);
 
     if (!shouldRetry) {
