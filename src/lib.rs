@@ -22,14 +22,21 @@
 
 extern crate alloc;
 
+#[cfg(feature = "config")]
 pub mod config;
+#[cfg(feature = "http")]
 pub mod http;
+#[cfg(feature = "log")]
 pub mod log;
 #[cfg(feature = "network")]
 pub mod network;
+#[cfg(feature = "parameters")]
 pub mod parameters;
+#[cfg(feature = "secret")]
 pub mod secret;
+#[cfg(feature = "service")]
 pub mod service;
+#[cfg(feature = "storage")]
 pub mod storage;
 
 #[doc(inline)]
