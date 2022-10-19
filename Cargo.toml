@@ -32,19 +32,13 @@ maintenance = { status = "actively-developed" }
 # Disable CORS Check: This is UNSAFE in general and should only be used in debug builds.
 unsafe-disable-cors = []
 
-# all modules except network
-all = []
-
 # network module
-network = []
+network = ["manta-util"]
 
 # default dependencies and all modules
 default = ["argon2", "async-std", "chrono", "derivative", "dirs-next", "futures", "http-types",
   "manta-accounting", "manta-crypto", "manta-parameters", "manta-pay", "manta-util", "parking_lot",
-  "password-hash", "reqwest", "secrecy", "serde_json", "subtle", "tide", "tokio", "all", "network"]
-
-# only dependencies required for network module
-networkdeps = ["manta-util"]
+  "password-hash", "reqwest", "secrecy", "serde_json", "subtle", "tide", "tokio", "network"]
 
 [dependencies]
 argon2 = { version = "0.4.1", default-features = false, features = ["alloc", "password-hash"], optional = true }
