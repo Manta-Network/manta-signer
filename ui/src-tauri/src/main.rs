@@ -31,7 +31,6 @@ use core::{
     time::Duration,
 };
 use manta_accounting::wallet::signer::ReceivingKeyRequest;
-use manta_crypto::rand::OsRng;
 use manta_pay::key::Mnemonic;
 use manta_signer::{
     config::{Config, Setup},
@@ -39,7 +38,7 @@ use manta_signer::{
     secret::{
         mnemonic_channel, password_channel, Authorizer, MnemonicReceiver, MnemonicSender, Password,
         PasswordFuture, PasswordReceiver, PasswordSender, Secret, SetupFuture, UnitFuture,
-        UserSelection,
+        UserSelection, sample_mnemonic
     },
     serde::Serialize,
     service::Server,
@@ -207,7 +206,7 @@ impl Authorizer for User {
         let window = self.window.clone();
         Box::pin(async move {
             // creating a new mnemonic in case user will create a new account.
-            let new_mnemonic = Mnemonic::sample(&mut OsRng);
+            let new_mnemonic = sample_mnemonic();
 
             let payload = if data_exists {
                 Setup::Login

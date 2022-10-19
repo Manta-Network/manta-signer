@@ -429,3 +429,9 @@ pub fn mnemonic_channel() -> (MnemonicSender, MnemonicReceiver) {
         MnemonicReceiver::new(mnemonic_receiver, selection_receiver, retry_sender),
     )
 }
+
+/// Samples a random mnemonic using OsRng.
+#[inline]
+pub fn sample_mnemonic() -> Mnemonic {
+    Mnemonic::sample(&mut OsRng)
+}

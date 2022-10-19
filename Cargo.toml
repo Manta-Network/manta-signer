@@ -56,6 +56,9 @@ service = []
 # storage
 storage = []
 
+# crypto
+crypto = ["manta-crypto"]
+
 [dependencies]
 argon2 = { version = "0.4.1", default-features = false, features = ["alloc", "password-hash"] }
 async-std = { version = "1.11.0", default-features = false, features = ["attributes", "tokio1"] }
@@ -65,7 +68,7 @@ dirs-next = { version = "2.0.0", default-features = false }
 futures = { version = "0.3.17", default-features = false, features = ["alloc"] }
 http-types = { version = "2.12.0", default-features = false }
 manta-accounting = { git = "https://github.com/manta-network/manta-rs", branch = "signer_redesign", default-features = false, features = ["cocoon-fs"] }
-manta-crypto = { git = "https://github.com/manta-network/manta-rs", branch = "signer_redesign", default-features = false, features = ["getrandom"] }
+manta-crypto = { git = "https://github.com/manta-network/manta-rs", branch = "signer_redesign", default-features = false, features = ["getrandom"], optional = true }
 manta-parameters = { git = "https://github.com/manta-network/manta-rs", branch = "signer_redesign", default-features = false, features = ["download"] }
 manta-pay = { git = "https://github.com/manta-network/manta-rs", branch = "signer_redesign", default-features = false, features = ["bs58", "groth16", "serde", "wallet"] }
 manta-util = { git = "https://github.com/manta-network/manta-rs", branch = "signer_redesign", default-features = false }
