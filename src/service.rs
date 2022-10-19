@@ -151,7 +151,7 @@ impl Display for Error {
 /// Result Type
 pub type Result<T, E = Error> = core::result::Result<T, E>;
 
-///
+/// Returns a summary of the current transaction.
 #[inline]
 pub fn display_transaction(
     transaction: &Transaction,

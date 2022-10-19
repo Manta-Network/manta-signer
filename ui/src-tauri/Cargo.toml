@@ -33,6 +33,7 @@ custom-protocol = ["tauri/custom-protocol"]
 
 # Disable CORS Check
 unsafe-disable-cors = ["manta-signer/unsafe-disable-cors"]
+network = ["manta-signer/network"]
 
 [dependencies]
 manta-accounting = { git = "https://github.com/manta-network/manta-rs", branch = "signer_redesign", default-features = false, features = ["cocoon-fs"] }
@@ -42,5 +43,5 @@ manta-signer = { path = "../../", default-features = false }
 tauri = { version = "1.0.2", default-features = false, features = ["reqwest-client", "shell-all", "system-tray", "updater", "window-hide", "window-set-size", "window-show", "wry"] }
 
 [build-dependencies]
-tauri-build = { version = "1.0.2", default-features = false, features = [] }
+tauri-build = { version = "1.0.2", default-features = false, features = [network] }
 

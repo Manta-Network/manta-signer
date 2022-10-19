@@ -31,6 +31,7 @@ maintenance = { status = "actively-developed" }
 [features]
 # Disable CORS Check: This is UNSAFE in general and should only be used in debug builds.
 unsafe-disable-cors = []
+network = []
 
 [dependencies]
 argon2 = { version = "0.4.1", default-features = false, features = ["alloc", "password-hash"] }
