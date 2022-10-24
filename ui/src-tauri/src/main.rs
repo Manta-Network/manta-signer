@@ -36,9 +36,9 @@ use manta_signer::{
     config::{Config, Setup},
     network::{Message, Network},
     secret::{
-        mnemonic_channel, password_channel, Authorizer, MnemonicReceiver, MnemonicSender, Password,
-        PasswordFuture, PasswordReceiver, PasswordSender, Secret, SetupFuture, UnitFuture,
-        UserSelection, sample_mnemonic
+        mnemonic_channel, password_channel, sample_mnemonic, Authorizer, MnemonicReceiver,
+        MnemonicSender, Password, PasswordFuture, PasswordReceiver, PasswordSender, Secret,
+        SetupFuture, UnitFuture, UserSelection,
     },
     serde::Serialize,
     service::Server,
