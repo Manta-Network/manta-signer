@@ -2590,7 +2590,7 @@ dependencies = [
 [[package]]
 name = "manta-accounting"
 version = "0.5.2"
-source = "git+https://github.com/manta-network/manta-rs?tag=v0.5.2#7c8d6c45bfd2c5ce1b1ceb70af824de0fb0bc609"
+source = "git+https://github.com/manta-network/manta-rs?branch=feat/skip-initial-sync#8a49917397b8a6b0bc71825f16c71f7773e5a284"
 dependencies = [
  "bitflags",
  "cocoon",
@@ -2604,7 +2604,7 @@ dependencies = [
 [[package]]
 name = "manta-crypto"
 version = "0.5.2"
-source = "git+https://github.com/manta-network/manta-rs?tag=v0.5.2#7c8d6c45bfd2c5ce1b1ceb70af824de0fb0bc609"
+source = "git+https://github.com/manta-network/manta-rs?branch=feat/skip-initial-sync#8a49917397b8a6b0bc71825f16c71f7773e5a284"
 dependencies = [
  "derivative",
  "manta-util",
@@ -2614,7 +2614,7 @@ dependencies = [
 [[package]]
 name = "manta-parameters"
 version = "0.5.2"
-source = "git+https://github.com/manta-network/manta-rs?tag=v0.5.2#7c8d6c45bfd2c5ce1b1ceb70af824de0fb0bc609"
+source = "git+https://github.com/manta-network/manta-rs?branch=feat/skip-initial-sync#8a49917397b8a6b0bc71825f16c71f7773e5a284"
 dependencies = [
  "anyhow",
  "attohttpc 0.19.1",
@@ -2626,7 +2626,7 @@ dependencies = [
 [[package]]
 name = "manta-pay"
 version = "0.5.2"
-source = "git+https://github.com/manta-network/manta-rs?tag=v0.5.2#7c8d6c45bfd2c5ce1b1ceb70af824de0fb0bc609"
+source = "git+https://github.com/manta-network/manta-rs?branch=feat/skip-initial-sync#8a49917397b8a6b0bc71825f16c71f7773e5a284"
 dependencies = [
  "aes-gcm 0.9.4",
  "ark-bls12-381",
@@ -2687,7 +2687,7 @@ dependencies = [
 [[package]]
 name = "manta-util"
 version = "0.5.2"
-source = "git+https://github.com/manta-network/manta-rs?tag=v0.5.2#7c8d6c45bfd2c5ce1b1ceb70af824de0fb0bc609"
+source = "git+https://github.com/manta-network/manta-rs?branch=feat/skip-initial-sync#8a49917397b8a6b0bc71825f16c71f7773e5a284"
 dependencies = [
  "serde",
  "serde_with",
