@@ -218,6 +218,7 @@ where
                 {
                     let state = Self::create_state(
                         &config.data_path,
+                        &config.test_path,
                         &password,
                         &password_hash,
                         mnemonic,
@@ -284,30 +285,46 @@ where
         Some((password, password_hash))
     }
 
+    /// Create recent checkpoint
+    #[inline]
+    fn create_recent_checkpoint() -> Checkpoint {
+        let receiver_index = [418,431,415,396,392,455,401,412,426,415,402,397,396,394,410,415,401,452,441,393,406,419,393,408,439,384,411,439,424,427,417,456,411,422,440,428,417,410,410,392,391,411,410,403,385,423,424,426,408,421,396,450,430,423,398,424,421,405,428,382,401,439,400,451,394,398,436,396,416,393,428,400,441,413,420,446,378,407,393,394,415,437,396,450,414,418,418,439,444,418,421,406,434,440,399,439,408,426,444,404,440,459,406,374,424,435,389,419,426,445,418,393,413,431,467,431,393,413,426,391,396,402,432,462,400,405,394,389,403,421,406,431,418,467,417,457,432,426,455,435,428,409,451,451,428,441,406,428,420,411,410,375,402,420,363,409,403,405,401,448,383,408,395,400,465,400,423,428,397,400,428,401,429,392,426,412,413,361,440,413,396,422,381,472,439,435,425,424,410,396,418,415,437,421,393,371,413,422,440,425,433,427,405,377,409,395,388,398,416,433,383,426,430,423,442,403,445,405,394,405,380,396,412,430,434,414,411,398,433,393,376,379,441,408,426,403,387,390,404,405,448,402,405,469,416,447,403,413,376,400,454,440,473,420,415,426];
+        let sender_index = 62752;
+        let new_raw_checkpoint = RawCheckpoint::new(receiver_index, sender_index);
+        Checkpoint::from(new_raw_checkpoint)
+    }
+
     /// Creates the initial signer state for a new account.
     #[inline]
     async fn create_state(
         data_path: &Path,
+        test_path: &Path,
         password: &SecretString,
         password_hash: &PasswordHash<Argon2>,
         mnemonic: Mnemonic,
         parameters: SignerParameters,
     ) -> Result<Signer> {
         info!("creating signer state")?;
-        let receiver_index = [418,431,415,396,392,455,401,412,426,415,402,397,396,394,410,415,401,452,441,393,406,419,393,408,439,384,411,439,424,427,417,456,411,422,440,428,417,410,410,392,391,411,410,403,385,423,424,426,408,421,396,450,430,423,398,424,421,405,428,382,401,439,400,451,394,398,436,396,416,393,428,400,441,413,420,446,378,407,393,394,415,437,396,450,414,418,418,439,444,418,421,406,434,440,399,439,408,426,444,404,440,459,406,374,424,435,389,419,426,445,418,393,413,431,467,431,393,413,426,391,396,402,432,462,400,405,394,389,403,421,406,431,418,467,417,457,432,426,455,435,428,409,451,451,428,441,406,428,420,411,410,375,402,420,363,409,403,405,401,448,383,408,395,400,465,400,423,428,397,400,428,401,429,392,426,412,413,361,440,413,396,422,381,472,439,435,425,424,410,396,418,415,437,421,393,371,413,422,440,425,433,427,405,377,409,395,388,398,416,433,383,426,430,423,442,403,445,405,394,405,380,396,412,430,434,414,411,398,433,393,376,379,441,408,426,403,387,390,404,405,448,402,405,469,416,447,403,413,376,400,454,440,473,420,415,426];
-        let sender_index = 62752;
-        let new_raw_checkpoint = RawCheckpoint::new(receiver_index, sender_index);
-        let new_checkpoint = Checkpoint::from(new_raw_checkpoint);
-        let state = SignerState::new_with_checkpoint(
+                
+        // First we need to load utxo_accumulator & checkpoint from old state
+        let temp_password_hash = PasswordHash::from_default("123456789".as_bytes());
+        let mut state = Self::load_state(test_path, &temp_password_hash).await?.expect("Unable to load state.");
+
+        let new_keys = TestnetKeySecret::new(mnemonic, password.expose_secret()).map(HierarchicalKeyDerivationFunction::default());
+        state.set_keys(new_keys);
+        
+        /*
+        let state = SignerState::new(
             TestnetKeySecret::new(mnemonic, password.expose_secret())
                 .map(HierarchicalKeyDerivationFunction::default()),
             UtxoAccumulator::new(
                 task::spawn_blocking(crate::parameters::load_utxo_accumulator_model)
                     .await?
                     .ok_or(Error::ParameterLoadingError)?,
-            ),
-            new_checkpoint
+            )
         );
+        */
+
         info!("saving signer state")?;
         let data_path = data_path.to_owned();
         let password_hash_bytes = password_hash.as_bytes();

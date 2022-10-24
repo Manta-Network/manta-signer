@@ -49,6 +49,9 @@ pub struct Config {
     /// Data File Path
     pub data_path: PathBuf,
 
+    /// Test File Path
+    pub test_path: PathBuf,
+
     /// Service URL
     ///
     /// This URL defines the listening URL for the service.
@@ -67,6 +70,7 @@ impl Config {
     pub fn try_default() -> Option<Self> {
         Some(Self {
             data_path: file(dirs_next::config_dir(), "storage.dat")?,
+            test_path: file(dirs_next::config_dir(), "teststorage.dat")?,
             service_url: "127.0.0.1:29987".into(),
             #[cfg(feature = "unsafe-disable-cors")]
             origin_urls: vec![],
