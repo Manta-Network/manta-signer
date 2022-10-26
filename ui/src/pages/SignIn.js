@@ -19,13 +19,14 @@ const SignIn = ({
   const [password, setPassword] = useState('');
   const [passwordInvalid, setPasswordInvalid] = useState(null);
   const [loginSuccess, setLoginSuccess] = useState(false);
+  const [showCopyNotification, setShowCopyNotification] = useState(false);
 
   const onClickSignIn = async () => {
     await sendSelection("SignIn");
     const shouldRetry = await sendPassword(password);
 
     if (!shouldRetry) {
-      
+
       await getReceivingKeys();
       setPassword('');
       setLoginSuccess(true);
@@ -43,6 +44,12 @@ const SignIn = ({
 
   const onClickCopyZkAddress = () => {
     navigator.clipboard.writeText(receivingKey);
+
+    if (!showCopyNotification) {
+      setShowCopyNotification(true);
+      setTimeout(function () {setShowCopyNotification(false)},2000);
+    }
+
   }
 
   const onClickForgotPassword = async () => {
@@ -107,16 +114,31 @@ const SignIn = ({
             <Icon name="copy outline" className='specific' />
           </Button>
         </div>
+        {showCopyNotification ? <p className='subtext copy'>&nbsp;Copied!</p> : <br/>}
         <div className='supportedNetworksContainer'>
           <div className='supportedNetworksChild'>
             <div className='supportedNetworksHeader'>
               <h4>Supported Networks</h4>
             </div>
-            <img className='miniLogo' alt="Calamari Logo" src={calamariLogo} />
-            <a className='soonTag' href='https://calamari.network/' target="_blank" rel="noreferrer">(soon)</a>
-            <img className='miniLogo' alt="Dolphin Logo" src={dolphinLogo} />
-            <img className='miniMantaLogo' alt="Manta Logo" src={mantaLogo} />
-            <a className='soonTag' href='https://www.manta.network/' target="_blank" rel="noreferrer">(soon)</a>
+
+              <table className='networkTable'>
+                <tr>
+                  <th><img className='miniDolphinLogo' alt="Dolphin Logo" src={dolphinLogo} /></th>
+                  <th><p className='networkText'>Dolphin Network</p></th>
+                  <th></th>
+                </tr>
+                <tr>
+                  <th><img className='miniCalamariLogo' alt="Calamari Logo" src={calamariLogo} /></th>
+                  <th><p className='networkText'>&nbsp;Calamari Network&nbsp;&nbsp;</p></th>
+                  <th><a href='https://calamari.network/' target="_blank" rel="noreferrer">(soon)</a></th>
+                </tr>
+                <tr>
+                  <th><img className='miniMantaLogo' alt="Manta Logo" src={mantaLogo} /></th>
+                  <th><p className='networkText'>Manta Network</p></th>
+                  <th><a href='https://calamari.network/' target="_blank" rel="noreferrer">(soon)</a></th>
+                </tr>
+              </table>
+
           </div>
 
         </div>

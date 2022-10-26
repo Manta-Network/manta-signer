@@ -26,8 +26,15 @@ const Reset = ({
   return (<>
     <div className='tightHeaderContainer'>
       <h1 className='mainheadline'>Delete Account</h1>
+      <br/>
       <p className='subtext'>
-        Caution: Without a your recovery phrase you will lose access to this account forever!
+        You are about to <strong>delete</strong> the account associated with this wallet.
+      </p>
+      <p className='subtext'>
+        Without your recovery phrase saved you will lose access to this account and all linked funds <strong>forever</strong>!
+      </p>
+      <p className='subtext'>
+      This process is irreversible, proceed at your own risk!
       </p>
     </div>
     <Button className="button ui danger" onClick={onClickReset}>DELETE ACCOUNT</Button>

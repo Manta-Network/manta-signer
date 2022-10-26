@@ -153,8 +153,8 @@
 }
   
 .mainlogo {
-    width:19vw;
-    height:17vh;
+    width:7rem;
+    height:7rem;
 }
   
 .mainheadline {
@@ -169,6 +169,10 @@
 .mainlogocontainer {
     padding-bottom: 30px;
     padding-top: 45px;
+}
+
+.mainlogocontainer.viewPhrase {
+    padding-bottom: 10px;
 }
 
 .mainlogocontainer.login {
@@ -310,8 +314,8 @@
     display:flex;
     flex-wrap:wrap;
     justify-content:center;
-    padding-top:1rem;
-    margin-bottom: 3rem;
+    padding-top:0.5rem;
+    margin-bottom: 1rem;
 }
 
 .supportedNetworksChild {
@@ -324,27 +328,27 @@
 
 .supportedNetworksHeader {
     margin-top: 1rem;
-    margin-bottom: 1rem;
+    margin-bottom: 0.5rem;
 }
 
-.miniLogo {
-    width:3rem;
-    margin-left:1rem;
-    margin-right:1rem;
-    margin-bottom:0.5rem;
+.networkText {
+    font-weight: 400;
+}
+
+.networkTable {
+    padding-left:4.2rem;
+}
+
+.miniDolphinLogo {
+    width:2rem;
+}
+
+.miniCalamariLogo {
+    width:2rem;
 }
 
 .miniMantaLogo {
-    width:2.5rem;
-    padding-bottom:3px;
-    margin-left:1rem;
-    margin-right:1rem;
-    margin-bottom:0.5rem;
-}
-
-.soonTag {
-    margin-left:-1rem;
-    margin-bottom:0.5rem;
+    width:1.8rem;
 }
 
 .finishLogoContainer {
@@ -406,6 +410,25 @@
     justify-content: center;
 }
 
+.errorLabelContainer {
+    display: flex;
+    justify-content: center;
+}
+
+.ui.basic.label.errorlabel {
+    color:#db2828;
+    border-color: #db2828;
+    background: #fadadd;
+    display: flex;
+    justify-content: center;
+    width: 65%;
+    margin:0.2rem;
+}
+
+.exclamation.circle.icon.specific {
+    padding-top:0.2rem;
+}
+
 .button.ui.copy {
     background-color: #FFFFFF;
     display: flex;
@@ -413,6 +436,10 @@
     margin: 0rem !important;
     padding: 0rem !important;
     height:1rem;
+}
+
+.subtext.copy {
+    margin:0rem;
 }
 
 .ui.button:not(.icon)>.icon:not(.button):not(.dropdown).specific {

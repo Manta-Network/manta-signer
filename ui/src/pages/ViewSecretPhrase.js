@@ -14,6 +14,7 @@ const ViewSecretPhrase = ({
   const [password, setPassword] = useState("");
   const [passwordInvalid, setPasswordInvalid] = useState(false);
   const [recoveryPhraseConfirmed, setRecoveryPhraseConfirmed] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const onChangePassword = password => {
     setPassword(password)
@@ -31,6 +32,7 @@ const ViewSecretPhrase = ({
     if (!shouldRetry) {
       setPassword('');
       setPasswordInvalid(false);
+      setLoading(true);
     } else {
       console.log("RETRY!");
       setPasswordInvalid(true);
@@ -46,12 +48,13 @@ const ViewSecretPhrase = ({
   const onClickFinish = () => {
     setRecoveryPhraseConfirmed(false);
     endExportPhrase();
+    setLoading(false);
   }
 
   return (<>
     {!exportedSecretPhrase && (<>
 
-      <div className='mainlogocontainer'>
+      <div className='mainlogocontainer viewPhrase'>
         <img className="mainlogo" alt="Manta Logo" src={mainLogo} />
       </div>
 
@@ -77,9 +80,15 @@ const ViewSecretPhrase = ({
       </div>
 
 
-      <div>
-        <Button className="button ui first wide" onClick={onClickSubmitPassword}>Confirm</Button>
-      </div>
+      {(loading && !exportedSecretPhrase) ?
+        <div>
+          <Button disabled={true} className="button ui first wide">Loading</Button>
+        </div>
+        :
+        <div>
+          <Button className="button ui first wide" onClick={onClickSubmitPassword}>Confirm</Button>
+        </div>
+      }
       <div className="cancelShowRecoveryButtonContainer">
         <Button className="button ui cancel" onClick={onClickCancel}>Cancel</Button>
       </div>

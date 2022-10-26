@@ -330,7 +330,7 @@ async fn set_tray_reset(tray_handle: SystemTrayHandle, reset: bool) {
         SystemTrayMenu::new()
             .add_item(CustomMenuItem::new("about", "About"))
             .add_item(CustomMenuItem::new("exit", "Quit"))
-            .add_item(CustomMenuItem::new("reset", "Reset"))
+            .add_item(CustomMenuItem::new("reset", "Delete Account"))
             .add_item(CustomMenuItem::new(
                 "view secret recovery phrase",
                 "View Secret Recovery Phrase",

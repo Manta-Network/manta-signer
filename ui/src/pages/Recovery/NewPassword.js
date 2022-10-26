@@ -1,19 +1,21 @@
-import { Button, Input, Label } from 'semantic-ui-react';
+import { Button, Input } from 'semantic-ui-react';
 import HyperLinkButton from '../../components/HyperLinkButton';
 import "../../App.css";
 import { useOutletContext } from 'react-router-dom';
+import ErrorLabel from '../../components/ErrorLabel';
 
 const NewPassword = () => {
 
   const {
     goBack,
-    goForward,
+    checkPasswords,
     onChangePassword,
     onChangeConfirmPassword,
     MIN_PASSWORD_LENGTH,
     isValidPassword,
     passwordsMatch,
     password,
+    showError
   } = useOutletContext();
 
 
@@ -41,18 +43,33 @@ const NewPassword = () => {
           onChange={(e) => onChangeConfirmPassword(e)}
         />
       </div>
-      <Button disabled={((!isValidPassword) || (!passwordsMatch))} className="button ui first"
-        onClick={goForward}>
+      {!isValidPassword && password.length > 0 && showError ?
+        <>
+          <br />
+          <ErrorLabel
+            text={"Please enter a minimum of " + MIN_PASSWORD_LENGTH + " characters."}
+          />
+        </>
+        :
+        (
+          !passwordsMatch && showError ?
+            <>
+              <br />
+              <ErrorLabel
+                text={"Passwords do not match."}
+              />
+            </>
+            :
+            <><br /><br /><br /></>
+        )}
+      <Button className="button ui first"
+        onClick={checkPasswords}>
         Next
       </Button>
       <HyperLinkButton
         text={"Go Back"}
         onclick={goBack}
       />
-
-      {!isValidPassword && password.length > 0 ? <><br /><Label basic color='red' pointing>Please enter a minimum of {MIN_PASSWORD_LENGTH} characters.</Label></> : (
-        !passwordsMatch ? <><br /><Label basic color='red' pointing>Passwords do not match.</Label></> : <><br /><br /><br /></>
-      )}
 
     </>
   )

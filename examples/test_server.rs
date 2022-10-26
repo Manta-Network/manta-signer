@@ -20,6 +20,7 @@ use manta_crypto::rand::{CryptoRng, OsRng, RngCore, Sample};
 use manta_pay::key::Mnemonic;
 use manta_signer::{
     config::{Config, Setup},
+    network::Network,
     secret::{Authorizer, Password, PasswordFuture, SecretString, SetupFuture},
     service::{Error, Server},
 };
@@ -65,7 +66,7 @@ async fn main() -> Result<(), Error> {
     let test_dir = tempfile::tempdir()?;
     let mut config =
         Config::try_default().expect("Unable to generate the default server configuration.");
-    config.data_path_dolphin = test_dir.path().join("storage-dolphin.dat");
+    config.data_path[Network::Dolphin] = test_dir.path().join("storage-dolphin.dat");
     if let Some(url) = std::env::args().nth(1) {
         config.service_url = url;
     }

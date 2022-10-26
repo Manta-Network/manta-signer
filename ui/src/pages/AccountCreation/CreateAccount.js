@@ -24,9 +24,20 @@ const CreateAccount = ({
   const [shuffledRecoveryPhrase, setShuffledRecoveryPhrase] = useState(null);
   const [selectedRecoveryPhrase, setSelectedRecoveryPhrase] = useState([]);
   const [actualPhrase, setActualPhrase] = useState(null);
+  const [showError, setShowError] = useState(false);
 
   const navigate = useNavigate();
   const location = useLocation();
+
+  const checkPasswords = () => {
+
+    if (!passwordsMatch || !isValidPassword) {
+      setShowError(true);
+    } else {
+      goForward();
+    }
+
+  }
 
   useEffect(() => {
 
@@ -37,7 +48,7 @@ const CreateAccount = ({
         setIsValidPassword(false);
       }
     }
-
+  
     const checkPasswordMatch = () => {
       if (password === confirmPassword) {
         setPasswordsMatch(true);
@@ -46,8 +57,8 @@ const CreateAccount = ({
       }
     }
 
-    checkPasswordValidity();
     checkPasswordMatch();
+    checkPasswordValidity();
 
   }, [password, confirmPassword, isValidPassword, passwordsMatch]);
 
@@ -81,7 +92,6 @@ const CreateAccount = ({
     isValidPhraseSelection();
 
   }, [selectedRecoveryPhrase, actualPhrase, isValidSelectedPhrase, recoveryPhrase]);
-
 
   useEffect(() => {
 
@@ -199,10 +209,12 @@ const CreateAccount = ({
   }
 
   const onChangePassword = (e) => {
+    setShowError(false);
     setPassword(e.target.value);
   }
 
   const onChangeConfirmPassword = (e) => {
+    setShowError(false);
     setConfirmPassword(e.target.value);
   }
 
@@ -210,7 +222,7 @@ const CreateAccount = ({
     <>
       <Outlet context={{
         goBack,
-        goForward,
+        checkPasswords,
         onChangePassword,
         onChangeConfirmPassword,
         onClickConfirmRecoveryPhrase,
@@ -223,7 +235,8 @@ const CreateAccount = ({
         MIN_PASSWORD_LENGTH,
         isValidPassword,
         passwordsMatch,
-        password
+        password,
+        showError
       }} />
     </>
   );

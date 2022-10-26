@@ -25,9 +25,13 @@ const ShowPhrase = () => {
 
       <div className='recoveryPhraseContainer'>
         {recoveryPhraseConfirmed ? recoveryPhrase.split(" ").map(function (item, index) {
+          let idx = index+1;
           return (
             <div key={index} className='recoveryPhraseWord'>
-              <h4>{item}</h4>
+              <tr>
+                <th><h4>{idx+"."}</h4></th>
+                <th><h4>{item}</h4></th>
+              </tr>
             </div>
           )
         }) :
