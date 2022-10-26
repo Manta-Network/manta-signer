@@ -222,6 +222,7 @@ const CreateAccount = ({
     <>
       <Outlet context={{
         goBack,
+        goForward,
         checkPasswords,
         onChangePassword,
         onChangeConfirmPassword,

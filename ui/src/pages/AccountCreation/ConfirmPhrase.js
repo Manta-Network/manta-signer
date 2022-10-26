@@ -18,14 +18,20 @@ const ConfirmPhrase = () => {
     <div className='tallHeaderContainer'>
       <h1 className='mainheadline'>Confirm Your Secret Recovery Phrase</h1>
       <p className='subtext'>
-        Please select the appropriate phrase in the correct order.
+        Please select the appropriate phrase in the correct order, from left to right.
       </p>
     </div>
 
     <div className='wordListContainer'>
       {selectedRecoveryPhrase.map(function (item, index) {
         let word = item.split("_")[0];
-        return <div className='button ui buttonlist' key={index}>{word}</div>
+        let idx = index + 1;
+        return <div className='button ui buttonlist' key={index}>
+          <tr>
+            <th><h4 className='numberedWordSelection'>{idx + "."}&nbsp;</h4></th>
+            <th><h4>{word}</h4></th>
+          </tr>
+        </div>
       })}
     </div>
 

@@ -29,7 +29,7 @@ const ShowPhrase = () => {
           return (
             <div key={index} className='recoveryPhraseWord'>
               <tr>
-                <th><h4>{idx+"."}</h4></th>
+                <th><h4>{idx+"."}&nbsp;</h4></th>
                 <th><h4>{item}</h4></th>
               </tr>
             </div>

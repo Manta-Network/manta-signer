@@ -214,6 +214,11 @@
     margin-bottom:1rem;
     margin-left:3.2rem;
     margin-right:3.2rem;
+    height:14rem;
+}
+
+.numberedWordSelection {
+    margin-left:-1rem;
 }
 
 .recoveryPhraseWord {
