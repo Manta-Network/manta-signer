@@ -7,7 +7,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 const MIN_PASSWORD_LENGTH = 8;
 
 const DEFAULT_WINDOW_SIZE = new LogicalSize(460, 500);
-const CONFIRM_PHRASE_WINDOW_SIZE = new LogicalSize(460, 900);
+const CONFIRM_PHRASE_WINDOW_SIZE = new LogicalSize(460, 600);
 
 const CreateAccount = ({
   sendSelection,

@@ -52,6 +52,7 @@ const Recover = ({
   const [confirmPassword, setConfirmPassword] = useState('');
   const [passwordsMatch, setPasswordsMatch] = useState('');
   const [isValidPassword, setIsValidPassword] = useState(false);
+  const [showError, setShowError] = useState(false);
 
   const navigate = useNavigate();
   const location = useLocation();
@@ -189,8 +190,19 @@ const Recover = ({
     setConfirmPassword(e.target.value);
   }
 
+  const checkPasswords = () => {
+
+    if (!passwordsMatch || !isValidPassword) {
+      setShowError(true);
+    } else {
+      goForward();
+    }
+
+  }
+
   return (<>
     <Outlet context={{
+      checkPasswords,
       onChangeDropDown,
       onChangeWord,
       goBack,
@@ -203,7 +215,8 @@ const Recover = ({
       passwordsMatch,
       password,
       mnemonicsValidity,
-      mnemonics
+      mnemonics,
+      showError
     }} />
   </>);
 }
