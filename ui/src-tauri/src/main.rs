@@ -364,7 +364,7 @@ async fn send_mnemonic(
     // NOTE: Mnemonic is assumed to be valid because it is validated by front end bip39 library.
     if let Some(store) = &mut *mnemonic_store.lock().await {
         let recovered_mnemonic =
-            Mnemonic::new(mnemonic).expect("Unable to generate recovered Mnemonic.");
+            Mnemonic::new(mnemonic.as_str()).expect("Unable to generate recovered Mnemonic.");
         store.load_exact(recovered_mnemonic).await;
     }
     Ok(())

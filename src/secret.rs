@@ -268,9 +268,7 @@ impl MnemonicSender {
     /// Loads the mnemonic with `mnemonic` without requesting a retry message.
     #[inline]
     pub async fn load_exact(&mut self, mnemonic: Mnemonic) {
-        let mnemonic_instance =
-            Mnemonic::new(mnemonic).expect("Unable to generate mnemonic object using given seed.");
-        let _ = self.mnemonic.send(mnemonic_instance).await;
+        let _ = self.mnemonic.send(mnemonic).await;
     }
 
     /// Loads the user selection into the selection channel.
