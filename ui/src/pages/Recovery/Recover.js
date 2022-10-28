@@ -183,10 +183,12 @@ const Recover = ({
   }
 
   const onChangePassword = (e) => {
+    setError(false);
     setPassword(e.target.value);
   }
 
   const onChangeConfirmPassword = (e) => {
+    setError(false);
     setConfirmPassword(e.target.value);
   }
 

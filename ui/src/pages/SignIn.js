@@ -47,7 +47,7 @@ const SignIn = ({
 
     if (!showCopyNotification) {
       setShowCopyNotification(true);
-      setTimeout(function () {setShowCopyNotification(false)},2000);
+      setTimeout(function () { setShowCopyNotification(false) }, 2000);
     }
 
   }
@@ -110,34 +110,38 @@ const SignIn = ({
         </div>
         <div className='zkAddressContainer'>
           <p className='subtext'>{receivingKeyDisplay}</p>
-          <Button onClick={onClickCopyZkAddress} className='button ui copy'>
-            <Icon name="copy outline" className='specific' />
-          </Button>
+          {showCopyNotification ?
+            <Button onClick={onClickCopyZkAddress} className='button ui copy'>
+              <Icon name="checkmark" className='specific' />
+            </Button> :
+            <Button onClick={onClickCopyZkAddress} className='button ui copy'>
+              <Icon name="copy outline" className='specific' />
+            </Button>
+          }
         </div>
-        {showCopyNotification ? <p className='subtext copy'>&nbsp;Copied!</p> : <br/>}
         <div className='supportedNetworksContainer'>
           <div className='supportedNetworksChild'>
             <div className='supportedNetworksHeader'>
               <h4>Supported Networks</h4>
             </div>
 
-              <table className='networkTable'>
-                <tr>
-                  <th><img className='miniDolphinLogo' alt="Dolphin Logo" src={dolphinLogo} /></th>
-                  <th><p className='networkText'>Dolphin Network</p></th>
-                  <th></th>
-                </tr>
-                <tr>
-                  <th><img className='miniCalamariLogo' alt="Calamari Logo" src={calamariLogo} /></th>
-                  <th><p className='networkText'>&nbsp;Calamari Network&nbsp;&nbsp;</p></th>
-                  <th><a href='https://calamari.network/' target="_blank" rel="noreferrer">(soon)</a></th>
-                </tr>
-                <tr>
-                  <th><img className='miniMantaLogo' alt="Manta Logo" src={mantaLogo} /></th>
-                  <th><p className='networkText'>Manta Network</p></th>
-                  <th><a href='https://calamari.network/' target="_blank" rel="noreferrer">(soon)</a></th>
-                </tr>
-              </table>
+            <table className='networkTable'>
+              <tr>
+                <th><img className='miniDolphinLogo' alt="Dolphin Logo" src={dolphinLogo} /></th>
+                <th><p className='networkText'>Dolphin Network</p></th>
+                <th></th>
+              </tr>
+              <tr>
+                <th><img className='miniCalamariLogo' alt="Calamari Logo" src={calamariLogo} /></th>
+                <th><p className='networkText'>&nbsp;Calamari Network&nbsp;&nbsp;</p></th>
+                <th><a href='https://calamari.network/' target="_blank" rel="noreferrer">(soon)</a></th>
+              </tr>
+              <tr>
+                <th><img className='miniMantaLogo' alt="Manta Logo" src={mantaLogo} /></th>
+                <th><p className='networkText'>Manta Network</p></th>
+                <th><a href='https://calamari.network/' target="_blank" rel="noreferrer">(soon)</a></th>
+              </tr>
+            </table>
 
           </div>
 

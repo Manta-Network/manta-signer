@@ -2350,9 +2350,9 @@ dependencies = [
 
 [[package]]
 name = "iana-time-zone"
-version = "0.1.51"
+version = "0.1.52"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f5a6ef98976b22b3b7f2f3a806f858cb862044cfa66805aa3ad84cb3d3b785ed"
+checksum = "c422fb4f6e80490d0afcacf5c3de2c22ab8e631e0cd7cb2d4a3baf844720a52a"
 dependencies = [
  "android_system_properties",
  "core-foundation-sys",
@@ -2720,7 +2720,7 @@ dependencies = [
 [[package]]
 name = "manta-accounting"
 version = "0.5.5"
-source = "git+https://github.com/manta-network/manta-rs?branch=signer_redesign#4a8fd8afccd48520454915945ac57a8961b55cdc"
+source = "git+https://github.com/manta-network/manta-rs?branch=signer_redesign#0c6ca09ea66578990306ed406a262ffcc2f956da"
 dependencies = [
  "bitflags",
  "cocoon",
@@ -2734,7 +2734,7 @@ dependencies = [
 [[package]]
 name = "manta-crypto"
 version = "0.5.5"
-source = "git+https://github.com/manta-network/manta-rs?branch=signer_redesign#4a8fd8afccd48520454915945ac57a8961b55cdc"
+source = "git+https://github.com/manta-network/manta-rs?branch=signer_redesign#0c6ca09ea66578990306ed406a262ffcc2f956da"
 dependencies = [
  "ark-bls12-381",
  "ark-bn254",
@@ -2755,7 +2755,7 @@ dependencies = [
 [[package]]
 name = "manta-parameters"
 version = "0.5.5"
-source = "git+https://github.com/manta-network/manta-rs?branch=signer_redesign#4a8fd8afccd48520454915945ac57a8961b55cdc"
+source = "git+https://github.com/manta-network/manta-rs?branch=signer_redesign#0c6ca09ea66578990306ed406a262ffcc2f956da"
 dependencies = [
  "anyhow",
  "attohttpc",
@@ -2768,7 +2768,7 @@ dependencies = [
 [[package]]
 name = "manta-pay"
 version = "0.5.5"
-source = "git+https://github.com/manta-network/manta-rs?branch=signer_redesign#4a8fd8afccd48520454915945ac57a8961b55cdc"
+source = "git+https://github.com/manta-network/manta-rs?branch=signer_redesign#0c6ca09ea66578990306ed406a262ffcc2f956da"
 dependencies = [
  "aes-gcm 0.9.4",
  "ark-groth16",
@@ -2825,7 +2825,7 @@ dependencies = [
 [[package]]
 name = "manta-util"
 version = "0.5.5"
-source = "git+https://github.com/manta-network/manta-rs?branch=signer_redesign#4a8fd8afccd48520454915945ac57a8961b55cdc"
+source = "git+https://github.com/manta-network/manta-rs?branch=signer_redesign#0c6ca09ea66578990306ed406a262ffcc2f956da"
 dependencies = [
  "crossbeam-channel",
  "serde",
