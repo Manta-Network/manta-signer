@@ -218,6 +218,21 @@
     height:11rem;
 }
 
+.exportRecoveryPhraseContainer {
+    padding-top: 1rem;
+    padding-bottom: 1rem;
+    max-height: 14rem;
+    display:flex;
+    flex-wrap:wrap;
+    justify-content:center;
+    background-color:#eef0f2;
+    border-radius: 5px;
+    margin-top: 1rem;
+    margin-bottom:1rem;
+    margin-left:3.2rem;
+    margin-right:3.2rem;
+}
+
 .numberedWordSelection {
     margin-left:-1rem;
 }
@@ -333,7 +348,7 @@
 }
 
 .supportedNetworksHeader {
-    margin-top: 1rem;
+    margin-top: 0.8rem;
     margin-bottom: 0.5rem;
 }
 

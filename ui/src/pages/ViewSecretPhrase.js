@@ -99,7 +99,7 @@ const ViewSecretPhrase = ({
         <h1 className='mainheadline'>Secret Recovery Phrase</h1>
       </div>
 
-      <div className='recoveryPhraseContainer'>
+      <div className='exportRecoveryPhraseContainer'>
         {recoveryPhraseConfirmed ? exportedSecretPhrase.split(" ").map(function (item, index) {
           let idx = index+1;
           return (

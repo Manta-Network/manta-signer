@@ -145,17 +145,25 @@ function App() {
     });
   };
 
-  const listenForResetTrayRequests = () => {
+  const listenForResetTrayRequests = async () => {
     console.log("[INFO]: Setup tray reset listener.");
-    listen('tray_reset_account', (event) => {
+    listen('tray_reset_account', async (event) => {
       console.log("[INFO]: Wake: ", event);
+
+      // checking to make sure to end password stalling listener on backend if we switch away
+      // from the export secret phrase.
+      if (exportingPhraseRef.current) {
+        console.log("[INFO]: Ending export phrase process.");
+        await stopPasswordPrompt();
+        endExportPhrase(false);
+      }
       navigate("/reset");
     })
   }
 
   const listenForShowSecretPhraseRequests = async () => {
     console.log("[INFO]: Setup tray show secret phrase listener.");
-    listen('show_secret_phrase', (event) => {
+    listen('show_secret_phrase', (_event) => {
       getSecretRecoveryPhrase();
     })
   }
@@ -270,11 +278,13 @@ function App() {
     await invoke('cancel_sign');
   }
 
-  const endExportPhrase = async () => {
+  const endExportPhrase = async (hide=true) => {
     console.log("[INFO]: Ending export recovery phrase process.")
     setExportingPhrase(false);
     setExportedSecretPhrase(null);
-    hideWindow();
+    if (hide) {
+      hideWindow();
+    }
   }
 
   const getReceivingKeys = async () => {
