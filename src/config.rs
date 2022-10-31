@@ -49,6 +49,9 @@ pub struct Config {
     /// Data File Path
     pub data_path: PathBuf,
 
+    /// Backup File Path
+    pub backup_data_path: PathBuf,
+
     /// Service URL
     ///
     /// This URL defines the listening URL for the service.
@@ -67,6 +70,7 @@ impl Config {
     pub fn try_default() -> Option<Self> {
         Some(Self {
             data_path: file(dirs_next::config_dir(), "storage.dat")?,
+            backup_data_path: file(dirs_next::config_dir(), "storage.backup")?,
             service_url: "127.0.0.1:29987".into(),
             #[cfg(feature = "unsafe-disable-cors")]
             origin_urls: vec![],
@@ -97,6 +101,25 @@ impl Config {
                 format!("Invalid file format: {:?}.", metadata),
             )),
             _ => Ok(Setup::CreateAccount(Mnemonic::sample(&mut OsRng))),
+        }
+    }
+
+    /// Checks for existence of backup storage file. If found, will set the backup
+    /// to be the default storage file.
+    #[inline]
+    pub async fn check_for_backup(&self) -> io::Result<bool> {
+        fs::create_dir_all(self.data_directory()).await?;
+        match fs::metadata(&self.backup_data_path).await {
+            Ok(metadata) if metadata.is_file() => {
+                fs::remove_file(self.data_path.clone()).await?;
+                fs::rename(self.backup_data_path.clone(), self.data_path.clone()).await?;
+                Ok(true)
+            }
+            Ok(metadata) => Err(io::Error::new(
+                io::ErrorKind::Other,
+                format!("Invalid file format: {:?}.", metadata),
+            )),
+            _ => Ok(false),
         }
     }
 }
