@@ -210,6 +210,13 @@ where
             .await?
             .ok_or(Error::ParameterLoadingError)?;
         info!("setting up configuration")?;
+        let backup_exists = config
+            .check_for_backup()
+            .await
+            .expect("Unable to check for backup file existence");
+        if backup_exists {
+            info!("backup file found, restoring backup.")?;
+        }
         let setup = config.setup().await?;
         authorizer.setup(&setup).await;
         let (password_hash, signer) = match setup {
