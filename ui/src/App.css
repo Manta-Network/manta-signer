@@ -210,12 +210,13 @@
     justify-content:center;
     background-color:#eef0f2;
     border-radius: 5px;
-    padding-top: 1.4rem;
+    padding-top: 1rem;
     margin-top: 1rem;
+    padding-bottom: 2rem;
     margin-bottom:1rem;
     margin-left:3.2rem;
     margin-right:3.2rem;
-    height:11rem;
+    height:8.5rem;
 }
 
 .exportRecoveryPhraseContainer {
@@ -239,10 +240,7 @@
 
 .recoveryPhraseWord {
     flex-basis:20%;
-}
-
-.recoveryPhraseWord {
-    margin:0.2rem;
+    margin:0.4rem;
 }
 
 .wordListContainer {
@@ -315,7 +313,11 @@
 }
 
 .hideImage {
-    width: 8.5rem;
+    width: 5.5rem;
+}
+
+.hideImageRecover {
+    width: 6.5rem;
 }
 
 .bottomButtonContainer {

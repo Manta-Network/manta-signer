@@ -27,15 +27,16 @@ const ViewSecretPhrase = ({
   }
 
   const onClickSubmitPassword = async () => {
+    setLoading(true);
     const shouldRetry = await sendPassword(password);
 
     if (!shouldRetry) {
       setPassword('');
       setPasswordInvalid(false);
-      setLoading(true);
     } else {
       console.log("RETRY!");
       setPasswordInvalid(true);
+      setLoading(false);
     }
   }
 

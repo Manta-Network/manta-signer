@@ -36,7 +36,7 @@ const ShowPhrase = () => {
           )
         }) :
           <div>
-            <img className='hideImage' src={hiddenImage} alt="hidden" onClick={onClickConfirmRecoveryPhrase} />
+            <img className='hideImageRecover' src={hiddenImage} alt="hidden" onClick={onClickConfirmRecoveryPhrase} />
           </div>
         }
       </div>

@@ -461,9 +461,9 @@ dependencies = [
 
 [[package]]
 name = "async-global-executor"
-version = "2.3.0"
+version = "2.3.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0da5b41ee986eed3f524c380e6d64965aea573882a8907682ad100f7859305ca"
+checksum = "f1b6f5d7df27bd294849f8eec66ecfc63d11814df7a4f5d74168a2394467b776"
 dependencies = [
  "async-channel",
  "async-executor",
@@ -493,16 +493,16 @@ dependencies = [
 
 [[package]]
 name = "async-io"
-version = "1.9.0"
+version = "1.10.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "83e21f3a490c72b3b0cf44962180e60045de2925d8dff97918f7ee43c8f637c7"
+checksum = "e8121296a9f05be7f34aa4196b1747243b3b62e048bb7906f644f3fbfc490cf7"
 dependencies = [
+ "async-lock",
  "autocfg",
  "concurrent-queue",
  "futures-lite",
  "libc",
  "log",
- "once_cell",
  "parking",
  "polling",
  "slab",
@@ -803,9 +803,9 @@ checksum = "572f695136211188308f16ad2ca5c851a712c464060ae6974944458eb83880ba"
 
 [[package]]
 name = "bytemuck"
-version = "1.12.1"
+version = "1.12.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2f5715e491b5a1598fc2bef5a606847b5dc1d48ea625bd3c02c00de8285591da"
+checksum = "5aec14f5d4e6e3f927cd0c81f72e5710d95ee9019fbeb4b3021193867491bfd8"
 
 [[package]]
 name = "byteorder"
@@ -865,9 +865,9 @@ dependencies = [
 
 [[package]]
 name = "cc"
-version = "1.0.73"
+version = "1.0.74"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2fff2a6927b3bb87f9595d67196a70493f627687a71d87a0d692242c33f58c11"
+checksum = "581f5dba903aac52ea3feb5ec4810848460ee833876f1f9b0fdeab1f19091574"
 
 [[package]]
 name = "cesu8"
@@ -1629,7 +1629,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f82b0f4c27ad9f8bfd1f3208d882da2b09c301bc1c828fd3a00d0216d2fbbff6"
 dependencies = [
  "crc32fast",
- "miniz_oxide",
+ "miniz_oxide 0.5.4",
 ]
 
 [[package]]
@@ -2350,9 +2350,9 @@ dependencies = [
 
 [[package]]
 name = "iana-time-zone"
-version = "0.1.52"
+version = "0.1.53"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c422fb4f6e80490d0afcacf5c3de2c22ab8e631e0cd7cb2d4a3baf844720a52a"
+checksum = "64c122667b287044802d6ce17ee2ddf13207ed924c712de9a66a5814d5b64765"
 dependencies = [
  "android_system_properties",
  "core-foundation-sys",
@@ -2719,8 +2719,8 @@ dependencies = [
 
 [[package]]
 name = "manta-accounting"
-version = "0.5.5"
-source = "git+https://github.com/manta-network/manta-rs?branch=signer_redesign#0c6ca09ea66578990306ed406a262ffcc2f956da"
+version = "0.5.6"
+source = "git+https://github.com/manta-network/manta-rs?branch=signer_redesign#6ac84d869fc0ef38be28b03d902a0ba9b9a28cfb"
 dependencies = [
  "bitflags",
  "cocoon",
@@ -2733,8 +2733,8 @@ dependencies = [
 
 [[package]]
 name = "manta-crypto"
-version = "0.5.5"
-source = "git+https://github.com/manta-network/manta-rs?branch=signer_redesign#0c6ca09ea66578990306ed406a262ffcc2f956da"
+version = "0.5.6"
+source = "git+https://github.com/manta-network/manta-rs?branch=signer_redesign#6ac84d869fc0ef38be28b03d902a0ba9b9a28cfb"
 dependencies = [
  "ark-bls12-381",
  "ark-bn254",
@@ -2754,8 +2754,8 @@ dependencies = [
 
 [[package]]
 name = "manta-parameters"
-version = "0.5.5"
-source = "git+https://github.com/manta-network/manta-rs?branch=signer_redesign#0c6ca09ea66578990306ed406a262ffcc2f956da"
+version = "0.5.6"
+source = "git+https://github.com/manta-network/manta-rs?branch=signer_redesign#6ac84d869fc0ef38be28b03d902a0ba9b9a28cfb"
 dependencies = [
  "anyhow",
  "attohttpc",
@@ -2767,8 +2767,8 @@ dependencies = [
 
 [[package]]
 name = "manta-pay"
-version = "0.5.5"
-source = "git+https://github.com/manta-network/manta-rs?branch=signer_redesign#0c6ca09ea66578990306ed406a262ffcc2f956da"
+version = "0.5.6"
+source = "git+https://github.com/manta-network/manta-rs?branch=signer_redesign#6ac84d869fc0ef38be28b03d902a0ba9b9a28cfb"
 dependencies = [
  "aes-gcm 0.9.4",
  "ark-groth16",
@@ -2824,8 +2824,8 @@ dependencies = [
 
 [[package]]
 name = "manta-util"
-version = "0.5.5"
-source = "git+https://github.com/manta-network/manta-rs?branch=signer_redesign#0c6ca09ea66578990306ed406a262ffcc2f956da"
+version = "0.5.6"
+source = "git+https://github.com/manta-network/manta-rs?branch=signer_redesign#6ac84d869fc0ef38be28b03d902a0ba9b9a28cfb"
 dependencies = [
  "crossbeam-channel",
  "serde",
@@ -2893,6 +2893,15 @@ name = "miniz_oxide"
 version = "0.5.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "96590ba8f175222643a85693f33d26e9c8a015f599c216509b1a6894af675d34"
+dependencies = [
+ "adler",
+]
+
+[[package]]
+name = "miniz_oxide"
+version = "0.6.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b275950c28b37e794e8c55d88aeb5e139d0ce23fdbbeda68f8d7174abdf9e8fa"
 dependencies = [
  "adler",
 ]
@@ -3100,9 +3109,9 @@ dependencies = [
 
 [[package]]
 name = "once_cell"
-version = "1.15.0"
+version = "1.16.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e82dad04139b71a90c080c8463fe0dc7902db5192d939bd0950f074d014339e1"
+checksum = "86f0b0d4bf799edbc74508c1e8bf170ff5f41238e5f8225603ca7caaae2b7860"
 
 [[package]]
 name = "opaque-debug"
@@ -3464,14 +3473,14 @@ dependencies = [
 
 [[package]]
 name = "png"
-version = "0.17.6"
+version = "0.17.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8f0e7f4c94ec26ff209cee506314212639d6c91b80afb82984819fafce9df01c"
+checksum = "5d708eaf860a19b19ce538740d2b4bdeeb8337fa53f7738455e706623ad5c638"
 dependencies = [
  "bitflags",
  "crc32fast",
  "flate2",
- "miniz_oxide",
+ "miniz_oxide 0.6.2",
 ]
 
 [[package]]
@@ -4533,7 +4542,7 @@ dependencies = [
  "once_cell",
  "parking_lot",
  "paste",
- "png 0.17.6",
+ "png 0.17.7",
  "raw-window-handle",
  "scopeguard",
  "serde",
@@ -4638,7 +4647,7 @@ dependencies = [
  "ico",
  "json-patch",
  "plist",
- "png 0.17.6",
+ "png 0.17.7",
  "proc-macro2",
  "quote",
  "regex",
