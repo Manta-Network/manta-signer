@@ -40,7 +40,7 @@ derivative = { version = "2.2.0", default-features = false, features = ["use_cor
 dirs-next = { version = "2.0.0", default-features = false }
 futures = { version = "0.3.17", default-features = false, features = ["alloc"] }
 http-types = { version = "2.12.0", default-features = false }
-manta-accounting = { git = "https://github.com/manta-network/manta-rs", tag = "v0.5.2", default-features = false, features = ["cocoon-fs"] }
+manta-accounting = { git = "https://github.com/manta-network/manta-rs", tag = "v0.5.6", default-features = false, features = ["cocoon-fs"] }
 manta-crypto = { git = "https://github.com/manta-network/manta-rs", tag = "v0.5.2", default-features = false, features = ["getrandom"] }
 manta-parameters = { git = "https://github.com/manta-network/manta-rs", tag = "v0.5.2", default-features = false, features = ["download"] }
 manta-pay = { git = "https://github.com/manta-network/manta-rs", tag = "v0.5.2", default-features = false, features = ["bs58", "groth16", "serde", "wallet"] }
