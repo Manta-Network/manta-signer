@@ -675,6 +675,19 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b645a089122eccb6111b4f81cbc1a49f5900ac4666bb93ac027feaecf15607bf"
 
 [[package]]
+name = "bip0039"
+version = "0.10.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "bef0f0152ec5cf17f49a5866afaa3439816207fd4f0a224c0211ffaf5e278426"
+dependencies = [
+ "hmac 0.12.1",
+ "pbkdf2 0.10.1",
+ "sha2 0.10.6",
+ "unicode-normalization",
+ "zeroize",
+]
+
+[[package]]
 name = "bip32"
 version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -976,9 +989,9 @@ dependencies = [
 
 [[package]]
 name = "cocoa"
-version = "0.24.0"
+version = "0.24.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6f63902e9223530efb4e26ccd0cf55ec30d592d3b42e21a28defc42a9586e832"
+checksum = "f425db7937052c684daec3bd6375c8abe2d146dca4b8b143d6db777c39138f3a"
 dependencies = [
  "bitflags",
  "block",
@@ -2720,7 +2733,7 @@ dependencies = [
 [[package]]
 name = "manta-accounting"
 version = "0.5.6"
-source = "git+https://github.com/manta-network/manta-rs?branch=signer_redesign#2e8d6baf4af16c10c2c92bd36b9a029d4fcf23da"
+source = "git+https://github.com/manta-network/manta-rs?branch=signer_redesign#a15e4872c3f932789bbfcf85745308bd80006501"
 dependencies = [
  "bitflags",
  "cocoon",
@@ -2734,7 +2747,7 @@ dependencies = [
 [[package]]
 name = "manta-crypto"
 version = "0.5.6"
-source = "git+https://github.com/manta-network/manta-rs?branch=signer_redesign#2e8d6baf4af16c10c2c92bd36b9a029d4fcf23da"
+source = "git+https://github.com/manta-network/manta-rs?branch=signer_redesign#a15e4872c3f932789bbfcf85745308bd80006501"
 dependencies = [
  "ark-bls12-381",
  "ark-bn254",
@@ -2755,7 +2768,7 @@ dependencies = [
 [[package]]
 name = "manta-parameters"
 version = "0.5.6"
-source = "git+https://github.com/manta-network/manta-rs?branch=signer_redesign#2e8d6baf4af16c10c2c92bd36b9a029d4fcf23da"
+source = "git+https://github.com/manta-network/manta-rs?branch=signer_redesign#a15e4872c3f932789bbfcf85745308bd80006501"
 dependencies = [
  "anyhow",
  "attohttpc",
@@ -2768,12 +2781,13 @@ dependencies = [
 [[package]]
 name = "manta-pay"
 version = "0.5.6"
-source = "git+https://github.com/manta-network/manta-rs?branch=signer_redesign#2e8d6baf4af16c10c2c92bd36b9a029d4fcf23da"
+source = "git+https://github.com/manta-network/manta-rs?branch=signer_redesign#a15e4872c3f932789bbfcf85745308bd80006501"
 dependencies = [
  "aes-gcm 0.9.4",
  "ark-groth16",
  "ark-snark",
  "ark-std",
+ "bip0039",
  "bip32",
  "blake2 0.10.4",
  "bs58",
@@ -2781,7 +2795,6 @@ dependencies = [
  "manta-accounting",
  "manta-crypto",
  "manta-util",
- "tiny-bip39",
 ]
 
 [[package]]
@@ -2823,7 +2836,7 @@ dependencies = [
 [[package]]
 name = "manta-util"
 version = "0.5.6"
-source = "git+https://github.com/manta-network/manta-rs?branch=signer_redesign#2e8d6baf4af16c10c2c92bd36b9a029d4fcf23da"
+source = "git+https://github.com/manta-network/manta-rs?branch=signer_redesign#a15e4872c3f932789bbfcf85745308bd80006501"
 dependencies = [
  "crossbeam-channel",
  "serde",
@@ -3278,9 +3291,9 @@ dependencies = [
 
 [[package]]
 name = "pbkdf2"
-version = "0.11.0"
+version = "0.10.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "83a0692ec44e4cf1ef28ca317f14f8f07da2d95ec3fa01f86e4467b725e60917"
+checksum = "271779f35b581956db91a3e55737327a03aa051e90b1c47aeb189508533adfd7"
 dependencies = [
  "digest 0.10.5",
 ]
@@ -3847,12 +3860,6 @@ name = "route-recognizer"
 version = "0.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "56770675ebc04927ded3e60633437841581c285dc6236109ea25fbf3beb7b59e"
-
-[[package]]
-name = "rustc-hash"
-version = "1.1.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "08d43f7aa6b08d49f382cde6a7982047c3426db949b1424bc4b7ec9ae12c6ce2"
 
 [[package]]
 name = "rustc_version"
@@ -4896,25 +4903,6 @@ dependencies = [
  "quote",
  "standback",
  "syn",
-]
-
-[[package]]
-name = "tiny-bip39"
-version = "1.0.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "62cc94d358b5a1e84a5cb9109f559aa3c4d634d2b1b4de3d0fa4adc7c78e2861"
-dependencies = [
- "anyhow",
- "hmac 0.12.1",
- "once_cell",
- "pbkdf2 0.11.0",
- "rand 0.8.5",
- "rustc-hash",
- "sha2 0.10.6",
- "thiserror",
- "unicode-normalization",
- "wasm-bindgen",
- "zeroize",
 ]
 
 [[package]]

@@ -536,9 +536,8 @@ where
     #[inline]
     async fn save(self, network: Network) -> Result<()> {
         info!("starting signer state save to disk for {}", network)?;
-        let path = self.state.lock().config.get_path_for_network(network);
-        let backup_path_name = format!("{}-backup", network);
-        let backup = path.with_extension(backup_path_name);
+        let path = self.state.lock().config.data_path[network].clone();
+        let backup = self.state.lock().config.backup_data_path[network].clone();
         fs::rename(&path, &backup).await?;
         let password_hash_bytes = self.authorizer.lock().await.password_hash.as_bytes();
         task::spawn_blocking(move || {

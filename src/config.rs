@@ -141,11 +141,6 @@ impl Config {
         }
     }
 
-    /// Returns the path corresponding to a particular `NetworkType`.
-    #[inline]
-    pub fn get_path_for_network(&self, network: Network) -> PathBuf {
-        self.data_path[network].clone()
-    }
     /// Checks for existence of backup storage file for a particular network.
     /// If found, will set the backup to be the default storage file.
     #[inline]
