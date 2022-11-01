@@ -38,10 +38,12 @@ use manta_pay::{
     config::Transaction,
     key::{Mnemonic, TestnetKeySecret},
     signer::{
-        client::network::{Message, Network, NetworkSpecific},
         base::{
-        HierarchicalKeyDerivationFunction, Signer, SignerParameters, SignerState, UtxoAccumulator,
-    }},
+            HierarchicalKeyDerivationFunction, Signer, SignerParameters, SignerState,
+            UtxoAccumulator,
+        },
+        client::network::{Message, Network, NetworkSpecific},
+    },
 };
 use manta_util::{from_variant, serde::Serialize};
 use parking_lot::Mutex;
@@ -266,6 +268,13 @@ where
         let does_all_data_exist = data_exists.dolphin && data_exists.calamari && data_exists.manta;
         let does_one_data_exist = data_exists.dolphin || data_exists.calamari || data_exists.manta;
         let setup = authorizer.setup(does_one_data_exist).await;
+        let backup_exists = config
+            .check_all_backups()
+            .await
+            .expect("Unable to check for the existence of one more more backup files");
+        if backup_exists {
+            info!("backup file found, restoring backup.")?;
+        }
         let (password_hash, dolphin_signer, calamari_signer, manta_signer) = match setup {
             Setup::CreateAccount(mnemonic) => loop {
                 if let Some((_password, password_hash)) = Self::load_password(&mut authorizer).await
@@ -528,7 +537,7 @@ where
     async fn save(self, network: Network) -> Result<()> {
         info!("starting signer state save to disk for {}", network)?;
         let path = self.state.lock().config.get_path_for_network(network);
-        let backup_path_name = format!("{}-backup",network);
+        let backup_path_name = format!("{}-backup", network);
         let backup = path.with_extension(backup_path_name);
         fs::rename(&path, &backup).await?;
         let password_hash_bytes = self.authorizer.lock().await.password_hash.as_bytes();

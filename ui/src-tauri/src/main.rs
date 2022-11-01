@@ -32,6 +32,11 @@ use core::{
 };
 use manta_signer::{
     config::{Config, Setup},
+    manta_accounting::wallet::signer::ReceivingKeyRequest,
+    manta_pay::{
+        key::Mnemonic,
+        signer::client::network::{Message, Network},
+    },
     secret::{
         mnemonic_channel, password_channel, sample_mnemonic, Authorizer, MnemonicReceiver,
         MnemonicSender, Password, PasswordFuture, PasswordReceiver, PasswordSender, Secret,
@@ -41,11 +46,6 @@ use manta_signer::{
     service::Server,
     storage::Store,
     tokio::fs::remove_file,
-    manta_accounting::wallet::signer::ReceivingKeyRequest,
-    manta_pay::{
-    signer::client::network::{Message, Network},
-    key::Mnemonic
-    }
 };
 use std::time::Instant;
 use tauri::{

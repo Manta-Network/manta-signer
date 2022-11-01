@@ -17,8 +17,8 @@
 //! Manta Signer Configuration
 
 use manta_pay::{
+    key::Mnemonic,
     signer::client::network::{Network, NetworkSpecific},
-    key::Mnemonic
 };
 use manta_util::serde::{Deserialize, Serialize};
 use std::{
@@ -51,6 +51,9 @@ pub struct Config {
     /// Data File Path
     pub data_path: NetworkSpecific<PathBuf>,
 
+    /// Backup File Path
+    pub backup_data_path: NetworkSpecific<PathBuf>,
+
     /// Service URL
     ///
     /// This URL defines the listening URL for the service.
@@ -76,6 +79,11 @@ impl Config {
                 dolphin: file(dirs_next::config_dir(), "storage-dolphin.dat")?,
                 calamari: file(dirs_next::config_dir(), "storage-calamari.dat")?,
                 manta: file(dirs_next::config_dir(), "storage-manta.dat")?,
+            },
+            backup_data_path: NetworkSpecific {
+                dolphin: file(dirs_next::config_dir(), "storage-dolphin.backup")?,
+                calamari: file(dirs_next::config_dir(), "storage-calamari.backup")?,
+                manta: file(dirs_next::config_dir(), "storage-manta.backup")?,
             },
             service_url: "127.0.0.1:29987".into(),
             #[cfg(feature = "unsafe-disable-cors")]
@@ -137,6 +145,48 @@ impl Config {
     #[inline]
     pub fn get_path_for_network(&self, network: Network) -> PathBuf {
         self.data_path[network].clone()
+    }
+    /// Checks for existence of backup storage file for a particular network.
+    /// If found, will set the backup to be the default storage file.
+    #[inline]
+    pub async fn check_for_backup(&self, network: Network) -> io::Result<bool> {
+        fs::create_dir_all(self.data_directory()).await?;
+        match fs::metadata(&self.backup_data_path[network]).await {
+            Ok(metadata) if metadata.is_file() => {
+                fs::remove_file(self.data_path[network].clone()).await?;
+                fs::rename(
+                    self.backup_data_path[network].clone(),
+                    self.data_path[network].clone(),
+                )
+                .await?;
+                Ok(true)
+            }
+            Ok(metadata) => Err(io::Error::new(
+                io::ErrorKind::Other,
+                format!("Invalid file format: {:?}.", metadata),
+            )),
+            _ => Ok(false),
+        }
+    }
+
+    /// Checks if backup exists for all networks, if it does then restores
+    /// using the backup.
+    #[inline]
+    pub async fn check_all_backups(&self) -> io::Result<bool> {
+        let dolphin_backup_exists = self
+            .check_for_backup(Network::Dolphin)
+            .await
+            .expect("unable to check for Dolphin backup");
+        let calamari_backup_exists = self
+            .check_for_backup(Network::Calamari)
+            .await
+            .expect("unable to check for Calamari backup");
+        let manta_backup_exists = self
+            .check_for_backup(Network::Manta)
+            .await
+            .expect("unable to check for Manta backup");
+
+        Ok(dolphin_backup_exists && calamari_backup_exists && manta_backup_exists)
     }
 }
 
