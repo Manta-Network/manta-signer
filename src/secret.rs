@@ -95,8 +95,8 @@ pub type SetupFuture<'t> = BoxFuture<'t, Setup>;
 /// See its documentation for more.
 pub type PasswordFuture<'t> = BoxFuture<'t, Password>;
 
-/// User Selection Enum for different choices user can make while in the setup phae
-/// of the manta singer
+/// User Selection for different choices the user can make while in the setup phase
+/// of the singer
 pub enum UserSelection {
     /// Create a new account, generates new recovery phrase
     Create,
