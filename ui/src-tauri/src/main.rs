@@ -30,11 +30,8 @@ use core::{
     sync::atomic::{AtomicBool, Ordering},
     time::Duration,
 };
-use manta_accounting::wallet::signer::ReceivingKeyRequest;
-use manta_pay::key::Mnemonic;
 use manta_signer::{
     config::{Config, Setup},
-    network::{Message, Network},
     secret::{
         mnemonic_channel, password_channel, sample_mnemonic, Authorizer, MnemonicReceiver,
         MnemonicSender, Password, PasswordFuture, PasswordReceiver, PasswordSender, Secret,
@@ -44,6 +41,11 @@ use manta_signer::{
     service::Server,
     storage::Store,
     tokio::fs::remove_file,
+    manta_accounting::wallet::signer::ReceivingKeyRequest,
+    manta_pay::{
+    signer::client::network::{Message, Network},
+    key::Mnemonic
+    }
 };
 use std::time::Instant;
 use tauri::{

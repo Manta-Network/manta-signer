@@ -20,7 +20,6 @@ use crate::{
     config::{Config, DataExistenceResponse, Setup},
     http,
     log::{info, trace, warn},
-    network::{Message, Network, NetworkSpecific},
     secret::{Argon2, Authorizer, ExposeSecret, PasswordHash, SecretString},
 };
 use alloc::sync::Arc;
@@ -38,9 +37,11 @@ use manta_accounting::{
 use manta_pay::{
     config::Transaction,
     key::{Mnemonic, TestnetKeySecret},
-    signer::base::{
+    signer::{
+        client::network::{Message, Network, NetworkSpecific},
+        base::{
         HierarchicalKeyDerivationFunction, Signer, SignerParameters, SignerState, UtxoAccumulator,
-    },
+    }},
 };
 use manta_util::{from_variant, serde::Serialize};
 use parking_lot::Mutex;

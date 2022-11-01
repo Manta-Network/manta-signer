@@ -17,10 +17,12 @@
 //! Test Signer Server
 
 use manta_crypto::rand::{CryptoRng, OsRng, RngCore, Sample};
-use manta_pay::key::Mnemonic;
+use manta_pay::{
+    signer::client::network::Network,
+    key::Mnemonic
+};
 use manta_signer::{
     config::{Config, Setup},
-    network::Network,
     secret::{Authorizer, Password, PasswordFuture, SecretString, SetupFuture},
     service::{Error, Server},
 };

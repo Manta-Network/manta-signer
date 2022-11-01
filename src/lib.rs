@@ -22,27 +22,21 @@
 
 extern crate alloc;
 
-#[cfg(feature = "default")]
 pub mod config;
-#[cfg(feature = "default")]
 pub mod http;
-#[cfg(feature = "default")]
 pub mod log;
-#[cfg(feature = "network")]
-pub mod network;
-#[cfg(feature = "default")]
 pub mod parameters;
-#[cfg(feature = "default")]
 pub mod secret;
-#[cfg(feature = "default")]
 pub mod service;
-#[cfg(feature = "default")]
 pub mod storage;
 
 #[doc(inline)]
 pub use manta_util::serde;
+#[doc(inline)]
+pub use manta_accounting;
+#[doc(inline)]
+pub use manta_pay;
 
-#[cfg(feature = "default")]
 #[doc(inline)]
 pub use tokio;
 

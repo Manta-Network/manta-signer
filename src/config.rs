@@ -16,8 +16,10 @@
 
 //! Manta Signer Configuration
 
-use crate::network::{Network, NetworkSpecific};
-use manta_pay::key::Mnemonic;
+use manta_pay::{
+    signer::client::network::{Network, NetworkSpecific},
+    key::Mnemonic
+};
 use manta_util::serde::{Deserialize, Serialize};
 use std::{
     io,

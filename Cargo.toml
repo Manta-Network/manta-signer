@@ -32,35 +32,27 @@ maintenance = { status = "actively-developed" }
 # Disable CORS Check: This is UNSAFE in general and should only be used in debug builds.
 unsafe-disable-cors = []
 
-# network module
-network = ["manta-util"]
-
-# default dependencies and all modules
-default = ["argon2", "async-std", "chrono", "derivative", "dirs-next", "futures", "http-types",
-  "manta-accounting", "manta-crypto", "manta-parameters", "manta-pay", "manta-util", "parking_lot",
-  "password-hash", "reqwest", "secrecy", "serde_json", "subtle", "tide", "tokio", "network"]
-
 [dependencies]
-argon2 = { version = "0.4.1", default-features = false, features = ["alloc", "password-hash"], optional = true }
-async-std = { version = "1.11.0", default-features = false, features = ["attributes", "tokio1"], optional = true }
-chrono = { version = "0.4.19", default-features = false, features = ["clock"], optional = true }
-derivative = { version = "2.2.0", default-features = false, features = ["use_core"], optional = true }
-dirs-next = { version = "2.0.0", default-features = false, optional = true }
-futures = { version = "0.3.17", default-features = false, features = ["alloc"], optional = true }
-http-types = { version = "2.12.0", default-features = false, optional = true }
-manta-accounting = { git = "https://github.com/manta-network/manta-rs", branch = "signer_redesign", default-features = false, features = ["cocoon-fs"], optional = true }
-manta-crypto = { git = "https://github.com/manta-network/manta-rs", branch = "signer_redesign", default-features = false, features = ["getrandom"], optional = true }
-manta-parameters = { git = "https://github.com/manta-network/manta-rs", branch = "signer_redesign", default-features = false, features = ["download"], optional = true }
-manta-pay = { git = "https://github.com/manta-network/manta-rs", branch = "signer_redesign", default-features = false, features = ["bs58", "groth16", "serde", "wallet"], optional = true }
-manta-util = { git = "https://github.com/manta-network/manta-rs", branch = "signer_redesign", default-features = false, optional = true }
-parking_lot = { version = "0.12.1", default-features = false, optional = true }
-password-hash = { version = "0.4.2", default-features = false, features = ["alloc"], optional = true }
-reqwest = { version = "0.11.11", default-features = false, features = ["json"], optional = true }
-secrecy = { version = "0.8.0", default-features = false, features = ["alloc"], optional = true }
-serde_json = { version = "1.0.68", default-features = false, optional = true }
-subtle = { version = "2.4.1", default-features = false, optional = true }
-tide = { version = "0.16.0", default-features = false, features = ["h1-server"], optional = true }
-tokio = { version = "1.20.1", default-features = false, features = ["fs", "io-std", "io-util", "rt", "sync", "time"], optional = true }
+argon2 = { version = "0.4.1", default-features = false, features = ["alloc", "password-hash"] }
+async-std = { version = "1.11.0", default-features = false, features = ["attributes", "tokio1"] }
+chrono = { version = "0.4.19", default-features = false, features = ["clock"] }
+derivative = { version = "2.2.0", default-features = false, features = ["use_core"] }
+dirs-next = { version = "2.0.0", default-features = false }
+futures = { version = "0.3.17", default-features = false, features = ["alloc"] }
+http-types = { version = "2.12.0", default-features = false }
+manta-accounting = { git = "https://github.com/manta-network/manta-rs", branch = "signer_redesign", default-features = false, features = ["cocoon-fs"] }
+manta-crypto = { git = "https://github.com/manta-network/manta-rs", branch = "signer_redesign", default-features = false, features = ["getrandom"] }
+manta-parameters = { git = "https://github.com/manta-network/manta-rs", branch = "signer_redesign", default-features = false, features = ["download"] }
+manta-pay = { git = "https://github.com/manta-network/manta-rs", branch = "signer_redesign", default-features = false, features = ["bs58", "groth16", "serde", "wallet", "network"] }
+manta-util = { git = "https://github.com/manta-network/manta-rs", branch = "signer_redesign", default-features = false }
+parking_lot = { version = "0.12.1", default-features = false }
+password-hash = { version = "0.4.2", default-features = false, features = ["alloc"] }
+reqwest = { version = "0.11.11", default-features = false, features = ["json"] }
+secrecy = { version = "0.8.0", default-features = false, features = ["alloc"] }
+serde_json = { version = "1.0.68", default-features = false }
+subtle = { version = "2.4.1", default-features = false }
+tide = { version = "0.16.0", default-features = false, features = ["h1-server"] }
+tokio = { version = "1.20.1", default-features = false, features = ["fs", "io-std", "io-util", "rt", "sync", "time"] }
 
 [dev-dependencies]
 tempfile = { version = "3.3.0", default-features = false }

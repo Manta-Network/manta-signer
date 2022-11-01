@@ -2313,9 +2313,9 @@ checksum = "c4a1e36c821dbe04574f602848a19f742f4fb3c98d40449f11bcad18d6b17421"
 
 [[package]]
 name = "hyper"
-version = "0.14.20"
+version = "0.14.22"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "02c929dc5c39e335a03c405292728118860721b10190d98c2a0f0efd5baafbac"
+checksum = "abfba89e19b959ca163c7752ba59d737c1ceea53a5d31a149c805446fc958064"
 dependencies = [
  "bytes",
  "futures-channel",
@@ -2720,7 +2720,7 @@ dependencies = [
 [[package]]
 name = "manta-accounting"
 version = "0.5.6"
-source = "git+https://github.com/manta-network/manta-rs?branch=signer_redesign#6ac84d869fc0ef38be28b03d902a0ba9b9a28cfb"
+source = "git+https://github.com/manta-network/manta-rs?branch=signer_redesign#2e8d6baf4af16c10c2c92bd36b9a029d4fcf23da"
 dependencies = [
  "bitflags",
  "cocoon",
@@ -2734,7 +2734,7 @@ dependencies = [
 [[package]]
 name = "manta-crypto"
 version = "0.5.6"
-source = "git+https://github.com/manta-network/manta-rs?branch=signer_redesign#6ac84d869fc0ef38be28b03d902a0ba9b9a28cfb"
+source = "git+https://github.com/manta-network/manta-rs?branch=signer_redesign#2e8d6baf4af16c10c2c92bd36b9a029d4fcf23da"
 dependencies = [
  "ark-bls12-381",
  "ark-bn254",
@@ -2755,7 +2755,7 @@ dependencies = [
 [[package]]
 name = "manta-parameters"
 version = "0.5.6"
-source = "git+https://github.com/manta-network/manta-rs?branch=signer_redesign#6ac84d869fc0ef38be28b03d902a0ba9b9a28cfb"
+source = "git+https://github.com/manta-network/manta-rs?branch=signer_redesign#2e8d6baf4af16c10c2c92bd36b9a029d4fcf23da"
 dependencies = [
  "anyhow",
  "attohttpc",
@@ -2768,7 +2768,7 @@ dependencies = [
 [[package]]
 name = "manta-pay"
 version = "0.5.6"
-source = "git+https://github.com/manta-network/manta-rs?branch=signer_redesign#6ac84d869fc0ef38be28b03d902a0ba9b9a28cfb"
+source = "git+https://github.com/manta-network/manta-rs?branch=signer_redesign#2e8d6baf4af16c10c2c92bd36b9a029d4fcf23da"
 dependencies = [
  "aes-gcm 0.9.4",
  "ark-groth16",
@@ -2815,8 +2815,6 @@ dependencies = [
 name = "manta-signer-ui"
 version = "0.8.0"
 dependencies = [
- "manta-accounting",
- "manta-pay",
  "manta-signer",
  "tauri",
  "tauri-build",
@@ -2825,7 +2823,7 @@ dependencies = [
 [[package]]
 name = "manta-util"
 version = "0.5.6"
-source = "git+https://github.com/manta-network/manta-rs?branch=signer_redesign#6ac84d869fc0ef38be28b03d902a0ba9b9a28cfb"
+source = "git+https://github.com/manta-network/manta-rs?branch=signer_redesign#2e8d6baf4af16c10c2c92bd36b9a029d4fcf23da"
 dependencies = [
  "crossbeam-channel",
  "serde",
@@ -3922,9 +3920,9 @@ dependencies = [
 
 [[package]]
 name = "scoped-tls"
-version = "1.0.0"
+version = "1.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ea6a9290e3c9cf0f18145ef7ffa62d68ee0bf5fcd651017e586dc7fd5da448c2"
+checksum = "e1cf6437eb19a8f4a6cc0f7dca544973b0b78843adbfeb3683d1a94a0024a294"
 
 [[package]]
 name = "scopeguard"
