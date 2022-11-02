@@ -17,6 +17,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - [\#199](https://github.com/Manta-Network/manta-signer/pull/199) Fix unable to login to signer if close during state save
 - [\#203](https://github.com/Manta-Network/manta-signer/pull/203) Fix storage file deletion edge case
 
+
 ### Security
 
 ## [0.8.0] 2022-10-05
