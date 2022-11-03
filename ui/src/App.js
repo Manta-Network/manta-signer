@@ -231,6 +231,7 @@ function App() {
       navigate("/create-or-recover");
     }
 
+    await endConnection();
     await invoke('disconnect_ui');
     await invoke('reset_account', { delete: false });
   }
