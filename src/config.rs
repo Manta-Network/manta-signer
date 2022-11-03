@@ -111,7 +111,13 @@ impl Config {
         fs::create_dir_all(self.data_directory()).await?;
         match fs::metadata(&self.backup_data_path).await {
             Ok(metadata) if metadata.is_file() => {
-                fs::remove_file(self.data_path.clone()).await?;
+                // need to check if old storage file still exists before deleting.
+                if let Ok(metadata) = fs::metadata(&self.data_path).await {
+                    if metadata.is_file() {
+                        fs::remove_file(self.data_path.clone()).await?;
+                    }
+                }
+                
                 fs::rename(self.backup_data_path.clone(), self.data_path.clone()).await?;
                 Ok(true)
             }
