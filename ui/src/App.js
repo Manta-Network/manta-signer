@@ -106,7 +106,7 @@ function App() {
       })
     }
     setActiveListeners({ ...activeListeners, connect: true, tray_reset_account: true });
-  }, [isConnected, activeListeners, pathnameRef, endExportPhrase, navigate]);
+  }, [isConnected, activeListeners, pathnameRef, navigate]);
 
   // keeps show secret phrase listener in sync with exportingPhrase state
   // whether or not we are currently exporting the phrase.
