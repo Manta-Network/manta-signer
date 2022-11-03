@@ -15,6 +15,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### Fixed
 - [\#199](https://github.com/Manta-Network/manta-signer/pull/199) Fix unable to login to signer if close during state save
+- [\#204](https://github.com/Manta-Network/manta-signer/pull/204) Check for storage file before deleting it
 
 ### Security
 
