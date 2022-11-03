@@ -312,10 +312,9 @@ async fn send_password(
             let tray_handle = app_handle.tray_handle();
 
             // if result == true, it means user has successfully signed in, so we can now add the tray
-            // menu item to reset account. Which will emit "reset_account" to the front-end, and will trigger
-            // the load of the delete page.
+            // menu item of viewing the secret phrase.
 
-            set_tray_reset(tray_handle, true).await;
+            set_tray_reset(tray_handle, true, true).await;
         }
 
         Ok(result)
@@ -324,29 +323,46 @@ async fn send_password(
     }
 }
 
-/// Adds or removes the reset option and view secret phrase option on the menu tray depending on the
-/// value of `reset`.
-async fn set_tray_reset(tray_handle: SystemTrayHandle, reset: bool) {
-    let new_menu = if reset {
-        // add the reset option
+/// Adds or removes the reset option and view secret phrase option on
+/// the menu tray depending on the value of `reset` and `show_phrase`.
+async fn set_tray_reset(tray_handle: SystemTrayHandle, reset: bool, show_phrase:bool) {
+
+    let menu_tray = if show_phrase && reset {
         SystemTrayMenu::new()
-            .add_item(CustomMenuItem::new("about", "About"))
-            .add_item(CustomMenuItem::new(
-                "view secret recovery phrase",
-                "View Secret Recovery Phrase",
-            ))
-            .add_item(CustomMenuItem::new("reset", "Delete Account"))
-            .add_item(CustomMenuItem::new("exit", "Quit"))
+        .add_item(CustomMenuItem::new("about", "About"))
+        .add_item(CustomMenuItem::new("view secret recovery phrase",
+        "View Secret Recovery Phrase",))
+        .add_item(CustomMenuItem::new("reset",
+        "Delete Account",))
+        .add_item(CustomMenuItem::new("exit", "Quit"))
+    } else if reset {
+        SystemTrayMenu::new()
+        .add_item(CustomMenuItem::new("about", "About"))
+        .add_item(CustomMenuItem::new("reset",
+        "Delete Account",)).
+        add_item(CustomMenuItem::new("exit", "Quit"))
     } else {
-        // remove it
         SystemTrayMenu::new()
-            .add_item(CustomMenuItem::new("about", "About"))
-            .add_item(CustomMenuItem::new("exit", "Quit"))
+        .add_item(CustomMenuItem::new("about", "About"))
+        .add_item(CustomMenuItem::new("exit", "Quit"))
     };
+
     tray_handle
-        .set_menu(new_menu)
+        .set_menu(menu_tray)
         .expect("Unable to update tray menu");
 }
+
+/// Enables the Delete Account menu bar item, this command is invoked when signer
+/// logs in upon discovery of storage files.
+#[tauri::command]
+async fn enable_reset_menu_item(app_handle_store: State<'_, AppHandleStore>) -> Result<(), ()> {
+    let app_handle_guard = app_handle_store.lock().await;
+    let app_handle = app_handle_guard.as_ref().unwrap();
+    let tray_handle = app_handle.tray_handle();
+    set_tray_reset(tray_handle, true, false).await;
+    Ok(())
+}
+
 
 /// Stops the server from prompting for the password.
 #[tauri::command]
@@ -394,8 +410,8 @@ async fn user_selection(
     Ok(())
 }
 
-/// Restarts the server in case of account reset. This feature can be used to implement the cancel button
-/// once recovery has started.
+/// Restarts the server in case of account reset. Or to redirect user to
+/// sign in after account has been created/recovered.
 #[tauri::command]
 async fn reset_account(
     delete: bool,
@@ -456,7 +472,11 @@ async fn reset_account(
 
     // Removing the reset account menu tray item.
 
-    set_tray_reset(tray_handle, false).await;
+    if delete {
+        set_tray_reset(tray_handle, false, false).await;
+    } else {
+        set_tray_reset(tray_handle, true, false).await;
+    }
 
     abort_handle_store.set(new_handle).await;
 
@@ -602,7 +622,8 @@ fn main() {
             disconnect_ui,
             receiving_keys,
             get_recovery_phrase,
-            cancel_sign
+            cancel_sign,
+            enable_reset_menu_item
         ])
         .build(tauri::generate_context!())
         .expect("Error while building UI.");

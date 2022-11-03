@@ -46,7 +46,7 @@ function App() {
 
   useEffect(() => {
     pathnameRef.current = location.pathname;
-  },[location.pathname]);
+  }, [location.pathname]);
 
   useEffect(() => {
     if (isConnected) return;
@@ -72,6 +72,7 @@ function App() {
             break;
           case 'Login':
             setPayloadType('Login');
+            invoke('enable_reset_menu_item');
             navigate("/sign-in");
             break;
           default:
@@ -79,9 +80,33 @@ function App() {
         }
       });
     };
+
+    const listenForResetTrayRequests = async () => {
+      console.log("[INFO]: Setup tray reset listener.");
+      listen('tray_reset_account', async (event) => {
+        console.log("[INFO]: Wake: ", event);
+
+        // checking to make sure to end password stalling listener on backend if we switch away
+        // from the export secret phrase.
+        if (exportingPhraseRef.current) {
+          console.log("[INFO]: Ending export phrase process.");
+          await stopPasswordPrompt();
+          endExportPhrase(false);
+        }
+        navigate("/reset");
+      })
+    }
+
     beginInitialConnectionPhase();
-    setActiveListeners({ ...activeListeners, connect: true });
-  }, [isConnected, activeListeners, pathnameRef, navigate]);
+    if (!activeListeners.tray_reset_account) {
+      listenForResetTrayRequests();
+      setActiveListeners({
+        ...activeListeners,
+        tray_reset_account: true,
+      })
+    }
+    setActiveListeners({ ...activeListeners, connect: true, tray_reset_account: true });
+  }, [isConnected, activeListeners, pathnameRef, endExportPhrase, navigate]);
 
   // keeps show secret phrase listener in sync with exportingPhrase state
   // whether or not we are currently exporting the phrase.
@@ -144,22 +169,6 @@ function App() {
       appWindow.show();
     });
   };
-
-  const listenForResetTrayRequests = async () => {
-    console.log("[INFO]: Setup tray reset listener.");
-    listen('tray_reset_account', async (event) => {
-      console.log("[INFO]: Wake: ", event);
-
-      // checking to make sure to end password stalling listener on backend if we switch away
-      // from the export secret phrase.
-      if (exportingPhraseRef.current) {
-        console.log("[INFO]: Ending export phrase process.");
-        await stopPasswordPrompt();
-        endExportPhrase(false);
-      }
-      navigate("/reset");
-    })
-  }
 
   const listenForShowSecretPhraseRequests = async () => {
     console.log("[INFO]: Setup tray show secret phrase listener.");
@@ -240,14 +249,6 @@ function App() {
       })
     }
 
-    if (!activeListeners.tray_reset_account) {
-      listenForResetTrayRequests();
-      setActiveListeners({
-        ...activeListeners,
-        tray_reset_account: true,
-      })
-    }
-
     if (!activeListeners.show_secret_phrase) {
       listenForShowSecretPhraseRequests();
       setActiveListeners({
@@ -278,7 +279,7 @@ function App() {
     await invoke('cancel_sign');
   }
 
-  const endExportPhrase = async (hide=true) => {
+  const endExportPhrase = async (hide = true) => {
     console.log("[INFO]: Ending export recovery phrase process.")
     setExportingPhrase(false);
     setExportedSecretPhrase(null);
@@ -296,6 +297,10 @@ function App() {
       `${newReceivingKey.slice(0, 10)}...${newReceivingKey.slice(-10)}` :
       '';
     setReceivingKeyDisplay(newReceivingKeyDisplay);
+  }
+
+  const cancelReset = async () => {
+    navigate(-1);
   }
 
   return (
@@ -316,6 +321,7 @@ function App() {
               hideWindow={hideWindow}
               endConnection={endConnection}
               resetAccount={resetAccount}
+              cancelReset={cancelReset}
             />
           } />
           <Route path='/recover' element={
