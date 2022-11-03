@@ -264,17 +264,17 @@ where
             .await?
             .ok_or(Error::ParameterLoadingError)?;
         info!("setting up configuration")?;
+        let backup_exists = config
+        .check_all_backups()
+        .await
+        .expect("Unable to check for the existence of one more more backup files");
+        if backup_exists {
+            info!("backup file found, restoring backup.")?;
+        }
         let data_exists = config.does_data_exist().await;
         let does_all_data_exist = data_exists.dolphin && data_exists.calamari && data_exists.manta;
         let does_one_data_exist = data_exists.dolphin || data_exists.calamari || data_exists.manta;
         let setup = authorizer.setup(does_one_data_exist).await;
-        let backup_exists = config
-            .check_all_backups()
-            .await
-            .expect("Unable to check for the existence of one more more backup files");
-        if backup_exists {
-            info!("backup file found, restoring backup.")?;
-        }
         let (password_hash, dolphin_signer, calamari_signer, manta_signer) = match setup {
             Setup::CreateAccount(mnemonic) => loop {
                 if let Some((_password, password_hash)) = Self::load_password(&mut authorizer).await
