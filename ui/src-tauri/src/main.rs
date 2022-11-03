@@ -325,26 +325,25 @@ async fn send_password(
 
 /// Adds or removes the reset option and view secret phrase option on
 /// the menu tray depending on the value of `reset` and `show_phrase`.
-async fn set_tray_reset(tray_handle: SystemTrayHandle, reset: bool, show_phrase:bool) {
-
+async fn set_tray_reset(tray_handle: SystemTrayHandle, reset: bool, show_phrase: bool) {
     let menu_tray = if show_phrase && reset {
         SystemTrayMenu::new()
-        .add_item(CustomMenuItem::new("about", "About"))
-        .add_item(CustomMenuItem::new("view secret recovery phrase",
-        "View Secret Recovery Phrase",))
-        .add_item(CustomMenuItem::new("reset",
-        "Delete Account",))
-        .add_item(CustomMenuItem::new("exit", "Quit"))
+            .add_item(CustomMenuItem::new("about", "About"))
+            .add_item(CustomMenuItem::new(
+                "view secret recovery phrase",
+                "View Secret Recovery Phrase",
+            ))
+            .add_item(CustomMenuItem::new("reset", "Delete Account"))
+            .add_item(CustomMenuItem::new("exit", "Quit"))
     } else if reset {
         SystemTrayMenu::new()
-        .add_item(CustomMenuItem::new("about", "About"))
-        .add_item(CustomMenuItem::new("reset",
-        "Delete Account",)).
-        add_item(CustomMenuItem::new("exit", "Quit"))
+            .add_item(CustomMenuItem::new("about", "About"))
+            .add_item(CustomMenuItem::new("reset", "Delete Account"))
+            .add_item(CustomMenuItem::new("exit", "Quit"))
     } else {
         SystemTrayMenu::new()
-        .add_item(CustomMenuItem::new("about", "About"))
-        .add_item(CustomMenuItem::new("exit", "Quit"))
+            .add_item(CustomMenuItem::new("about", "About"))
+            .add_item(CustomMenuItem::new("exit", "Quit"))
     };
 
     tray_handle
@@ -362,7 +361,6 @@ async fn enable_reset_menu_item(app_handle_store: State<'_, AppHandleStore>) -> 
     set_tray_reset(tray_handle, true, false).await;
     Ok(())
 }
-
 
 /// Stops the server from prompting for the password.
 #[tauri::command]
@@ -563,7 +561,7 @@ fn main() {
                         window(app, "main")
                             .emit("show_secret_phrase", ())
                             .expect("Unable to emit reset tray event to window.");
-                    },
+                    }
                     "reset" => {
                         window(app, "main").show().expect("Unable to show window");
                         window(app, "main")

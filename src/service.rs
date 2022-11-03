@@ -265,9 +265,9 @@ where
             .ok_or(Error::ParameterLoadingError)?;
         info!("setting up configuration")?;
         let backup_exists = config
-        .check_all_backups()
-        .await
-        .expect("Unable to check for the existence of one more more backup files");
+            .check_all_backups()
+            .await
+            .expect("Unable to check for the existence of one more more backup files");
         if backup_exists {
             info!("backup file found, restoring backup.")?;
         }
