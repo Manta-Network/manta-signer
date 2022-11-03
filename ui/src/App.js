@@ -238,8 +238,6 @@ function App() {
   const endInitialConnectionPhase = async () => {
     console.log("[INFO]: End Initial Connection Phase");
     setIsConnected(true);
-    navigate("/loading");
-    hideWindow();
 
     if (!activeListeners.authorize) {
       listenForAuthorizationRequests();
@@ -362,6 +360,7 @@ function App() {
               sendPassword={sendPassword}
               endInitialConnectionPhase={endInitialConnectionPhase}
               startRecover={startRecover}
+              hideWindow={hideWindow}
             />
           } />
           <Route path='/authorize' element={

@@ -14,7 +14,8 @@ const SignIn = ({
   receivingKeyDisplay,
   sendPassword,
   endInitialConnectionPhase,
-  startRecover
+  startRecover,
+  hideWindow
 }) => {
   const [password, setPassword] = useState('');
   const [passwordInvalid, setPasswordInvalid] = useState(null);
@@ -28,9 +29,9 @@ const SignIn = ({
     if (!shouldRetry) {
 
       await getReceivingKeys();
+      await endInitialConnectionPhase();
       setPassword('');
       setLoginSuccess(true);
-      console.log(receivingKey);
     } else {
       console.log("RETRY!");
       setPasswordInvalid(true);
@@ -57,8 +58,7 @@ const SignIn = ({
   }
 
   const onClickFinishSignIn = async () => {
-    console.log("[INFO]: End Initial Connection Phase");
-    await endInitialConnectionPhase();
+    await hideWindow();
   }
 
   return (<>
