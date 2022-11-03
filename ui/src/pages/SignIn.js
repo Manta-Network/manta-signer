@@ -70,7 +70,7 @@ const SignIn = ({
 
         <div>
           <h1 className='mainheadline'>Welcome Back!</h1>
-          <p className='subtext'>Let`s connect you to the Web3 privacy hub.</p>
+          <p className='subtext'>Let's connect you to the Web3 privacy hub.</p>
         </div>
         <Form.Field>
           <Input

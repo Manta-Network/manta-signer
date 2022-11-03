@@ -5,7 +5,7 @@
     -moz-transform: translateX(-50%) translateY(-50%);
     -webkit-transform: translateX(-50%) translateY(-50%);
     transform: translateX(-50%) translateY(-50%);
-    width: 500px;
+    width: 460px;
 }
 
 .password-input {
@@ -14,7 +14,7 @@
 
 .page {
     justify-content: space-between;
-    max-width: 500px;
+    max-width: 460px;
     min-height: 60%;
     text-align: center;
 }
@@ -33,7 +33,7 @@
 
 .recovery-phrase-info {
     min-width: 23rem;
-    text-align: left;
+    text-align: center;
     margin-left: 2rem;
     margin-right: 2rem;
     margin-top: 1rem;
@@ -73,14 +73,14 @@
 .input.ui.password {
     border-radius: 5px;
     height: 40px;
-    width: 65%;
+    width: 75%;
     margin: 0.5rem;
 }
 
 .input.ui.password.tall {
     border-radius: 5px;
     height: 40px;
-    width: 65%;
+    width: 75%;
     margin: 0.5rem;
     margin-top:2rem;
 }
@@ -88,7 +88,7 @@
 .input.ui.password.tall.wide {
     border-radius: 5px;
     height: 40px;
-    width: 80%;
+    width: 86%;
     margin: 0.5rem;
     margin-top:2rem;
 }
@@ -98,7 +98,7 @@
     color:#FFFFFF;
     border-radius: 5px;
     height: 40px;
-    width: 65%;
+    width: 75%;
 }
  
 .button.ui.first.thin {
@@ -106,7 +106,7 @@
     color:#FFFFFF;
     border-radius: 5px;
     height: 40px;
-    width: 29%;
+    width: 34%;
 }
 
 .button.ui.cancel {
@@ -115,7 +115,7 @@
     color: #0894ec;
     border-radius: 5px;
     height: 40px;
-    width: 29%;
+    width: 34%;
     border-style: solid;
     border-width: thin;
 }
@@ -129,7 +129,7 @@
     color:#FFFFFF;
     border-radius: 5px;
     height: 40px;
-    width: 80%;
+    width: 86%;
 }
 
 .button.ui.two {
@@ -178,7 +178,7 @@
 }
 
 .mainlogocontainer.login {
-    padding-top: 80px;
+    padding-top: 65px;
 }
 
 .firstbuttoncontainer {
@@ -195,7 +195,7 @@
 }
 
 .recoverHeaderContainer {
-    margin:1rem;
+    margin:0.6rem;
     padding-top: 8rem;
 }
 
@@ -214,8 +214,8 @@
     margin-top: 1rem;
     padding-bottom: 2rem;
     margin-bottom:1rem;
-    margin-left:3.2rem;
-    margin-right:3.2rem;
+    margin-left:2.2rem;
+    margin-right:2.2rem;
     height:8.5rem;
 }
 
@@ -250,8 +250,6 @@
     justify-content:center;
     border-color: #eef0f2;
     height:12rem;
-    margin-left:1rem;
-    margin-right:1rem;
     border-style: solid;
     align-content: flex-start;
     padding-top:0.7rem;
@@ -263,7 +261,8 @@
     flex-wrap:wrap;
     justify-content:space-evenly;
     height:10rem;
-    margin:1rem;
+    padding-top: 1rem;
+    margin-bottom:1rem;
 }
 
 .button.ui.buttonlist {
@@ -308,8 +307,8 @@
     justify-content:space-evenly;
     max-height:32rem;
     margin-top:1rem;
-    padding-left:3.5rem;
-    padding-right:3rem;
+    padding-left:1rem;
+    padding-right:1rem;
 }
 
 .hideImage {
@@ -346,7 +345,7 @@
     border-style: solid;
     border-radius: 5px;
     border-width: thin;
-    width: 65%;
+    width: 75%;
 }
 
 .supportedNetworksHeader {
@@ -392,7 +391,7 @@
     background-color: #f8fcfc;
     display: flex;
     justify-content: space-between;
-    width: 65%;
+    width: 75%;
     height:2.7rem;
 }
 
@@ -405,7 +404,7 @@
     background-color: #f8fcfc;
     display: flex;
     justify-content: space-between;
-    width: 65%;
+    width: 75%;
     height:2.7rem;
     margin-bottom: 1.5rem;
 }
@@ -444,7 +443,7 @@
     background: #fadadd;
     display: flex;
     justify-content: center;
-    width: 65%;
+    width: 75%;
     margin:0.2rem;
 }
 
@@ -472,15 +471,16 @@
 .secretPhraseWarning {
     border-color: #ffece4;
     background-color:#FFFFFF;
-    width: 80%;
-    text-align: left;
+    width: 86%;
+    text-align: center;
+    border-radius: 5px;
     border-width: medium;
     border-style: solid;
 }
 
 .secretPhraseWarningText {
     padding: 1rem;
-    color: #FFBC2C;
+    color: #FF6700;
 }
 
 .secretPhraseWarningContainer {

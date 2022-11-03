@@ -331,12 +331,12 @@ async fn set_tray_reset(tray_handle: SystemTrayHandle, reset: bool) {
         // add the reset option
         SystemTrayMenu::new()
             .add_item(CustomMenuItem::new("about", "About"))
-            .add_item(CustomMenuItem::new("exit", "Quit"))
-            .add_item(CustomMenuItem::new("reset", "Delete Account"))
             .add_item(CustomMenuItem::new(
                 "view secret recovery phrase",
                 "View Secret Recovery Phrase",
             ))
+            .add_item(CustomMenuItem::new("reset", "Delete Account"))
+            .add_item(CustomMenuItem::new("exit", "Quit"))
     } else {
         // remove it
         SystemTrayMenu::new()
@@ -539,15 +539,15 @@ fn main() {
             if let SystemTrayEvent::MenuItemClick { id, .. } = event {
                 match id.as_str() {
                     "about" => window(app, "about").show().expect("Unable to show window."),
+                    "view secret recovery phrase" => {
+                        window(app, "main")
+                            .emit("show_secret_phrase", ())
+                            .expect("Unable to emit reset tray event to window.");
+                    },
                     "reset" => {
                         window(app, "main").show().expect("Unable to show window");
                         window(app, "main")
                             .emit("tray_reset_account", ())
-                            .expect("Unable to emit reset tray event to window.");
-                    }
-                    "view secret recovery phrase" => {
-                        window(app, "main")
-                            .emit("show_secret_phrase", ())
                             .expect("Unable to emit reset tray event to window.");
                     }
                     "exit" => app.exit(0),
