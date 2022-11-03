@@ -25,18 +25,22 @@ const ShowPhrase = () => {
 
       <div className='recoveryPhraseContainer'>
         {recoveryPhraseConfirmed ? recoveryPhrase.split(" ").map(function (item, index) {
-          let idx = index+1;
+          let idx = index + 1;
           return (
             <div key={index} className='recoveryPhraseWord'>
-              <tr>
-                <th><h4>{idx+"."}&nbsp;</h4></th>
-                <th><h4>{item}</h4></th>
-              </tr>
+              <table>
+                <tbody>
+                  <tr>
+                    <th><h4>{idx + "."}&nbsp;</h4></th>
+                    <th><h4>{item}</h4></th>
+                  </tr>
+                </tbody>
+              </table>
             </div>
           )
         }) :
           <div>
-            <img className='hideImageRecover' src={hiddenImage} alt="hidden" onClick={onClickConfirmRecoveryPhrase} />
+            <img className='hideImage' src={hiddenImage} alt="hidden" onClick={onClickConfirmRecoveryPhrase} />
           </div>
         }
       </div>

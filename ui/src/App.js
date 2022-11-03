@@ -50,7 +50,6 @@ function App() {
 
   useEffect(() => {
     if (isConnected) return;
-    if (activeListeners.connect) return;
     const beginInitialConnectionPhase = async () => {
       await listen('connect', (event) => {
         invoke('connect_ui');
@@ -68,7 +67,7 @@ function App() {
           case 'CreateAccount':
             setRecoveryPhrase(payload.content);
             setPayloadType('CreateAccount');
-            navigate("/create-or-recover")
+            navigate("/create-or-recover");
             break;
           case 'Login':
             setPayloadType('Login');
@@ -97,15 +96,21 @@ function App() {
       })
     }
 
-    beginInitialConnectionPhase();
+    if (!activeListeners.connect) {
+      beginInitialConnectionPhase();
+      setActiveListeners({
+        ...activeListeners,
+        connect: true,
+      });
+    }
     if (!activeListeners.tray_reset_account) {
       listenForResetTrayRequests();
       setActiveListeners({
         ...activeListeners,
         tray_reset_account: true,
-      })
+      });
     }
-    setActiveListeners({ ...activeListeners, connect: true, tray_reset_account: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isConnected, activeListeners, pathnameRef, navigate]);
 
   // keeps show secret phrase listener in sync with exportingPhrase state

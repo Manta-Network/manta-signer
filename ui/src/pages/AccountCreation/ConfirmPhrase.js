@@ -27,10 +27,14 @@ const ConfirmPhrase = () => {
         let word = item.split("_")[0];
         let idx = index + 1;
         return <div className='button ui buttonlist' key={index}>
-          <tr>
-            <th><h4 className='numberedWordSelection'>{idx + "."}&nbsp;</h4></th>
-            <th><h4>{word}</h4></th>
-          </tr>
+          <table className='numberedTableWord'>
+            <tbody>
+              <tr>
+                <th><h4 className='numberedWordSelection'>{idx + "."}&nbsp;</h4></th>
+                <th><h4>{word}</h4></th>
+              </tr>
+            </tbody>
+          </table>
         </div>
       })}
     </div>
