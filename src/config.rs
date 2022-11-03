@@ -117,7 +117,7 @@ impl Config {
                         fs::remove_file(self.data_path.clone()).await?;
                     }
                 }
-                
+
                 fs::rename(self.backup_data_path.clone(), self.data_path.clone()).await?;
                 Ok(true)
             }
