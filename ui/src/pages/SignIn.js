@@ -21,8 +21,10 @@ const SignIn = ({
   const [passwordInvalid, setPasswordInvalid] = useState(null);
   const [loginSuccess, setLoginSuccess] = useState(false);
   const [showCopyNotification, setShowCopyNotification] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const onClickSignIn = async () => {
+    setLoading(true);
     await sendSelection("SignIn");
     const shouldRetry = await sendPassword(password);
 
@@ -36,6 +38,7 @@ const SignIn = ({
       console.log("RETRY!");
       setPasswordInvalid(true);
     }
+    setLoading(false);
   };
 
   const onChangePassword = password => {
@@ -82,9 +85,14 @@ const SignIn = ({
             error={passwordInvalid}
           />
         </Form.Field>
-        <Button className="button ui first" onClick={onClickSignIn}>
-          Unlock
-        </Button>
+        {
+          loading ?
+            <Button disabled={true} className="button ui first">Loading</Button>
+            :
+            <Button className="button ui first" onClick={onClickSignIn}>
+              Unlock
+            </Button>
+        }
         <HyperLinkButton
           text={"Forgot Password?"}
           onclick={onClickForgotPassword}
