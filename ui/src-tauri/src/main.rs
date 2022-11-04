@@ -45,7 +45,7 @@ use manta_signer::{
     serde::Serialize,
     service::Server,
     storage::Store,
-    tokio::fs::remove_file,
+    tokio::fs,
 };
 use std::time::Instant;
 use tauri::{
@@ -408,8 +408,28 @@ async fn user_selection(
     Ok(())
 }
 
+/// Checks for storage file and backup file and deletes it if it exists respectively
+/// for the seleceted network.
+async fn check_and_delete_files(network: Network, config: &Config) -> Result<(),()> {
+
+    if let Ok(metadata) = fs::metadata(config.data_path[network].clone()).await {
+        if metadata.is_file() {
+            fs::remove_file(config.data_path[network].clone()).await.expect("Unable to delete storage file.");
+        }
+    }
+
+    if let Ok(metadata) = fs::metadata(config.backup_data_path[network].clone()).await {
+        if metadata.is_file() {
+            fs::remove_file(config.backup_data_path[network].clone()).await.expect("Unable to delete backup file.");
+        }
+    }
+    Ok(())
+}
+
 /// Restarts the server in case of account reset. Or to redirect user to
 /// sign in after account has been created/recovered.
+/// `delete` flag is present in case user wants to delete their existing account
+/// from storage.
 #[tauri::command]
 async fn reset_account(
     delete: bool,
@@ -421,21 +441,22 @@ async fn reset_account(
     let config =
         Config::try_default().expect("Unable to generate the default server configuration.");
 
-    // delete flag is present in case user wants to restart the setup process, but there is no storage files to delete.
-    if delete {
-        remove_file(config.data_path.dolphin.clone())
-            .await
-            .expect("Dolphin file removal failed.");
-        remove_file(config.data_path.calamari.clone())
-            .await
-            .expect("Calamari file removal failed.");
-        remove_file(config.data_path.manta.clone())
-            .await
-            .expect("Manta file removal failed.");
-    }
-
+    // first we kill the currently running server instance, so that the files stop being modified
+    // in the case we want to delete them aswell.
     if let Some(handle) = &mut *abort_handle_store.lock().await {
         handle.abort();
+    }
+
+    if delete {
+
+        // note: before every calling remove_file, we need to check that it actually exists.
+        // the user might delete an account during sync. In this case we also need to check
+        // to delete backup files, if they exist aswell.
+
+        check_and_delete_files(Network::Dolphin, &config).await.expect("Unable to delete Dolphin files");
+        check_and_delete_files(Network::Calamari, &config).await.expect("Unable to delete Calamari files");
+        check_and_delete_files(Network::Manta, &config).await.expect("Unable to delete Manta files");
+
     }
 
     let (password_sender, password_receiver) = password_channel();
