@@ -32,6 +32,9 @@ maintenance = { status = "actively-developed" }
 # Disable CORS Check: This is UNSAFE in general and should only be used in debug builds.
 unsafe-disable-cors = []
 
+# Disable app restart functionality which does not work in dev mode, only in actual builds.
+disable-restart = []
+
 [dependencies]
 argon2 = { version = "0.4.1", default-features = false, features = ["alloc", "password-hash"] }
 async-std = { version = "1.11.0", default-features = false, features = ["attributes", "tokio1"] }

@@ -5,13 +5,13 @@ const Reset = ({
   isConnected,
   hideWindow,
   endConnection,
-  resetAccount,
+  restartServer,
   cancelReset
 }) => {
 
   const onClickReset = async () => {
     await endConnection();
-    resetAccount();
+    restartServer(true,true);
   }
 
   const onClickCancel = async () => {

@@ -199,7 +199,7 @@ const CreateAccount = ({
   // This function will redirect the user to log in with the password they just made.
   const onClickFinishSetup = async () => {
     console.log("[INFO]: Finishing Setup.")
-    await restartServer(true);
+    await restartServer(false,true);
   };
 
   // This function enables the Next button to continue in the account creation

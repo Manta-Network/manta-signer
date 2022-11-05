@@ -426,13 +426,19 @@ async fn check_and_delete_files(network: Network, config: &Config) -> Result<(),
     Ok(())
 }
 
-/// Restarts the server in case of account reset. Or to redirect user to
+/// Restarts the server in case of account deletion, or to redirect user to
 /// sign in after account has been created/recovered.
 /// `delete` flag is present in case user wants to delete their existing account
 /// from storage.
+/// `restart` flag is present in case we need to do a hard restart of the application
+/// as opposed to only restarting the server. We may want to do this to terminate
+/// the currently running server so that it disconnects from the UI properly.
+/// WARNING: Restarting the app only works in builds and not in dev mode.
+/// NOTE: app will only work properlly in dev mode if feature `disable-restart` is enabled.
 #[tauri::command]
 async fn reset_account(
     delete: bool,
+    restart: bool,
     app_handle_store: State<'_, AppHandleStore>,
     abort_handle_store: State<'_, AbortHandleStore>,
     password_store: State<'_, PasswordStore>,
@@ -459,13 +465,18 @@ async fn reset_account(
 
     }
 
+    let app_handle_guard = app_handle_store.lock().await;
+    let app_handle = app_handle_guard.as_ref().unwrap();
+
+    if config.can_app_restart && restart {
+        app_handle.restart();
+    }
+    
     let (password_sender, password_receiver) = password_channel();
     let (mnemonic_sender, mnemonic_receiver) = mnemonic_channel();
     password_store.set(password_sender).await;
     mnemonic_store.set(mnemonic_sender).await;
 
-    let app_handle_guard = app_handle_store.lock().await;
-    let app_handle = app_handle_guard.as_ref().unwrap();
     let tray_handle = app_handle.tray_handle();
     let new_window = app_handle
         .get_window("main")
@@ -488,7 +499,7 @@ async fn reset_account(
             .await
             .expect("Unable to start manta-signer");
     });
-
+    
     // Removing the reset account menu tray item.
 
     if delete {

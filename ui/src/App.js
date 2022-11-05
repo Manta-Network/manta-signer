@@ -218,27 +218,19 @@ function App() {
     await invoke('stop_password_prompt');
   };
 
-  const resetAccount = async () => {
-    console.log("[INFO]: Resetting Account.");
-
-    await invoke('disconnect_ui');
-    await invoke('reset_account', { delete: true });
-
-  }
-
-  const restartServer = async (loginPage = false) => {
-    console.log("[INFO]: Restarting Server.");
-
-    // for faster redirection
-    if (loginPage) {
-      navigate("/sign-in");
-    } else {
-      navigate("/create-or-recover");
-    }
-
+  const restartServer = async (deleteAccount, restartApp) => {
+    console.log("[INFO]: Restarting Server with current parameters: "
+      + "Delete Account: " + deleteAccount + " Restart App: " + restartApp
+    );
     await endConnection();
     await invoke('disconnect_ui');
-    await invoke('reset_account', { delete: false });
+
+    const payload = {
+      delete: deleteAccount,
+      restart: restartApp
+    };
+
+    await invoke('reset_account', payload);
   }
 
   const endInitialConnectionPhase = async () => {
@@ -324,7 +316,7 @@ function App() {
               isConnected={isConnected}
               hideWindow={hideWindow}
               endConnection={endConnection}
-              resetAccount={resetAccount}
+              restartServer={restartServer}
               cancelReset={cancelReset}
             />
           } />
@@ -333,7 +325,6 @@ function App() {
               payloadType={payloadType}
               sendSelection={sendSelection}
               restartServer={restartServer}
-              resetAccount={resetAccount}
               sendPassword={sendPassword}
               sendMnemonic={sendMnemonic}
             />

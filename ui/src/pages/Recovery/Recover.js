@@ -37,7 +37,6 @@ const Recover = ({
   payloadType,
   sendSelection,
   restartServer,
-  resetAccount,
   sendPassword,
   sendMnemonic
 }) => {
@@ -136,9 +135,9 @@ const Recover = ({
 
       navigate("/recover/loading");
       // If user came from the login page, it means we need to reset their 
-      // old account first by wiping their storage.
+      // old account first by wiping their storage, but not restarting the actual app.
       if (payloadType === "Login") {
-        await resetAccount(true);
+        await restartServer(true,false);
       }
 
       await sendSelection("Recover");
@@ -147,7 +146,9 @@ const Recover = ({
       navigate("/recover/finish");
 
     } else if (location.pathname === "/recover/finish") {
-      await restartServer(true); // redirect to login page
+      // we restart the actual app here.
+      // redirects to login page.
+      await restartServer(false,true);
     }
   }
 

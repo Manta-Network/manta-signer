@@ -64,6 +64,12 @@ pub struct Config {
     /// These URLs are the allowed origins that can send requests to the service. An empty list
     /// means any origin is allowed to send requests to the service.
     pub origin_urls: Vec<String>,
+
+    /// If the Signer App can perform a full restart. This is required in order to properly
+    /// terminate the running http sever and disconnect from the UI, but only works in
+    /// normal builds, not dev mode.
+    /// Thus when running `cargo dev` the feature `disable-restart` must be enabled.
+    pub can_app_restart: bool
 }
 
 /// Response for the [`Config::does_data_exist`] function of [`Config`]. The boolean fields
@@ -93,6 +99,10 @@ impl Config {
                 "https://app.manta.network".into(),
                 "https://app.dolphin.manta.network".into(),
             ],
+            #[cfg(feature = "disable-restart")]
+            can_app_restart: false,
+            #[cfg(not(feature = "disable-restart"))]
+            can_app_restart: true
         })
     }
 

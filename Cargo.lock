@@ -2733,7 +2733,7 @@ dependencies = [
 [[package]]
 name = "manta-accounting"
 version = "0.5.6"
-source = "git+https://github.com/manta-network/manta-rs?branch=signer_redesign#57e08afeeb4188cb3e119a7d12c3eeb61b9e0c8c"
+source = "git+https://github.com/manta-network/manta-rs?branch=signer_redesign#373131ed86809441fea52c9afd61890f49cc2b7f"
 dependencies = [
  "bitflags",
  "cocoon",
@@ -2747,7 +2747,7 @@ dependencies = [
 [[package]]
 name = "manta-crypto"
 version = "0.5.6"
-source = "git+https://github.com/manta-network/manta-rs?branch=signer_redesign#57e08afeeb4188cb3e119a7d12c3eeb61b9e0c8c"
+source = "git+https://github.com/manta-network/manta-rs?branch=signer_redesign#373131ed86809441fea52c9afd61890f49cc2b7f"
 dependencies = [
  "ark-bls12-381",
  "ark-bn254",
@@ -2761,6 +2761,7 @@ dependencies = [
  "derivative",
  "ed25519-dalek",
  "manta-util",
+ "rand 0.8.5",
  "rand_chacha 0.3.1",
  "rand_core 0.6.4",
 ]
@@ -2768,7 +2769,7 @@ dependencies = [
 [[package]]
 name = "manta-parameters"
 version = "0.5.6"
-source = "git+https://github.com/manta-network/manta-rs?branch=signer_redesign#57e08afeeb4188cb3e119a7d12c3eeb61b9e0c8c"
+source = "git+https://github.com/manta-network/manta-rs?branch=signer_redesign#373131ed86809441fea52c9afd61890f49cc2b7f"
 dependencies = [
  "anyhow",
  "attohttpc",
@@ -2781,7 +2782,7 @@ dependencies = [
 [[package]]
 name = "manta-pay"
 version = "0.5.6"
-source = "git+https://github.com/manta-network/manta-rs?branch=signer_redesign#57e08afeeb4188cb3e119a7d12c3eeb61b9e0c8c"
+source = "git+https://github.com/manta-network/manta-rs?branch=signer_redesign#373131ed86809441fea52c9afd61890f49cc2b7f"
 dependencies = [
  "aes-gcm 0.9.4",
  "ark-groth16",
@@ -2836,7 +2837,7 @@ dependencies = [
 [[package]]
 name = "manta-util"
 version = "0.5.6"
-source = "git+https://github.com/manta-network/manta-rs?branch=signer_redesign#57e08afeeb4188cb3e119a7d12c3eeb61b9e0c8c"
+source = "git+https://github.com/manta-network/manta-rs?branch=signer_redesign#373131ed86809441fea52c9afd61890f49cc2b7f"
 dependencies = [
  "crossbeam-channel",
  "serde",
@@ -3051,9 +3052,9 @@ dependencies = [
 
 [[package]]
 name = "num_cpus"
-version = "1.13.1"
+version = "1.14.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "19e64526ebdee182341572e50e9ad03965aa510cd94427a4549448f285e957a1"
+checksum = "f6058e64324c71e02bc2b150e4f3bc8286db6c83092132ffa3f6b1eab0f9def5"
 dependencies = [
  "hermit-abi",
  "libc",

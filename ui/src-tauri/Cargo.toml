@@ -34,6 +34,9 @@ custom-protocol = ["tauri/custom-protocol"]
 # Disable CORS Check
 unsafe-disable-cors = ["manta-signer/unsafe-disable-cors"]
 
+# Disable CORS Check
+disable-restart = ["manta-signer/disable-restart"]
+
 [dependencies]
 manta-signer = { path = "../../", default-features = false }
 tauri = { version = "1.0.2", default-features = false, features = ["reqwest-client", "shell-all", "system-tray", "updater", "window-hide", "window-set-size", "window-show", "wry"] }
