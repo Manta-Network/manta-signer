@@ -69,7 +69,7 @@ pub struct Config {
     /// terminate the running http sever and disconnect from the UI, but only works in
     /// normal builds, not dev mode.
     /// Thus when running `cargo dev` the feature `disable-restart` must be enabled.
-    pub can_app_restart: bool
+    pub can_app_restart: bool,
 }
 
 /// Response for the [`Config::does_data_exist`] function of [`Config`]. The boolean fields
@@ -102,7 +102,7 @@ impl Config {
             #[cfg(feature = "disable-restart")]
             can_app_restart: false,
             #[cfg(not(feature = "disable-restart"))]
-            can_app_restart: true
+            can_app_restart: true,
         })
     }
 

@@ -410,17 +410,20 @@ async fn user_selection(
 
 /// Checks for storage file and backup file and deletes it if it exists respectively
 /// for the seleceted network.
-async fn check_and_delete_files(network: Network, config: &Config) -> Result<(),()> {
-
+async fn check_and_delete_files(network: Network, config: &Config) -> Result<(), ()> {
     if let Ok(metadata) = fs::metadata(config.data_path[network].clone()).await {
         if metadata.is_file() {
-            fs::remove_file(config.data_path[network].clone()).await.expect("Unable to delete storage file.");
+            fs::remove_file(config.data_path[network].clone())
+                .await
+                .expect("Unable to delete storage file.");
         }
     }
 
     if let Ok(metadata) = fs::metadata(config.backup_data_path[network].clone()).await {
         if metadata.is_file() {
-            fs::remove_file(config.backup_data_path[network].clone()).await.expect("Unable to delete backup file.");
+            fs::remove_file(config.backup_data_path[network].clone())
+                .await
+                .expect("Unable to delete backup file.");
         }
     }
     Ok(())
@@ -454,15 +457,19 @@ async fn reset_account(
     }
 
     if delete {
-
         // note: before every calling remove_file, we need to check that it actually exists.
         // the user might delete an account during sync. In this case we also need to check
         // to delete backup files, if they exist aswell.
 
-        check_and_delete_files(Network::Dolphin, &config).await.expect("Unable to delete Dolphin files");
-        check_and_delete_files(Network::Calamari, &config).await.expect("Unable to delete Calamari files");
-        check_and_delete_files(Network::Manta, &config).await.expect("Unable to delete Manta files");
-
+        check_and_delete_files(Network::Dolphin, &config)
+            .await
+            .expect("Unable to delete Dolphin files");
+        check_and_delete_files(Network::Calamari, &config)
+            .await
+            .expect("Unable to delete Calamari files");
+        check_and_delete_files(Network::Manta, &config)
+            .await
+            .expect("Unable to delete Manta files");
     }
 
     let app_handle_guard = app_handle_store.lock().await;
@@ -471,7 +478,7 @@ async fn reset_account(
     if config.can_app_restart && restart {
         app_handle.restart();
     }
-    
+
     let (password_sender, password_receiver) = password_channel();
     let (mnemonic_sender, mnemonic_receiver) = mnemonic_channel();
     password_store.set(password_sender).await;
@@ -499,7 +506,7 @@ async fn reset_account(
             .await
             .expect("Unable to start manta-signer");
     });
-    
+
     // Removing the reset account menu tray item.
 
     if delete {
