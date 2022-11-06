@@ -2732,8 +2732,8 @@ dependencies = [
 
 [[package]]
 name = "manta-accounting"
-version = "0.5.6"
-source = "git+https://github.com/manta-network/manta-rs?branch=signer_redesign#373131ed86809441fea52c9afd61890f49cc2b7f"
+version = "0.5.7"
+source = "git+https://github.com/manta-network/manta-rs?tag=v0.5.7#0afc8d43b55ab2504a85ffe1e3ca59f242282385"
 dependencies = [
  "bitflags",
  "cocoon",
@@ -2746,8 +2746,8 @@ dependencies = [
 
 [[package]]
 name = "manta-crypto"
-version = "0.5.6"
-source = "git+https://github.com/manta-network/manta-rs?branch=signer_redesign#373131ed86809441fea52c9afd61890f49cc2b7f"
+version = "0.5.7"
+source = "git+https://github.com/manta-network/manta-rs?tag=v0.5.7#0afc8d43b55ab2504a85ffe1e3ca59f242282385"
 dependencies = [
  "ark-bls12-381",
  "ark-bn254",
@@ -2768,8 +2768,8 @@ dependencies = [
 
 [[package]]
 name = "manta-parameters"
-version = "0.5.6"
-source = "git+https://github.com/manta-network/manta-rs?branch=signer_redesign#373131ed86809441fea52c9afd61890f49cc2b7f"
+version = "0.5.7"
+source = "git+https://github.com/manta-network/manta-rs?tag=v0.5.7#0afc8d43b55ab2504a85ffe1e3ca59f242282385"
 dependencies = [
  "anyhow",
  "attohttpc",
@@ -2781,8 +2781,8 @@ dependencies = [
 
 [[package]]
 name = "manta-pay"
-version = "0.5.6"
-source = "git+https://github.com/manta-network/manta-rs?branch=signer_redesign#373131ed86809441fea52c9afd61890f49cc2b7f"
+version = "0.5.7"
+source = "git+https://github.com/manta-network/manta-rs?tag=v0.5.7#0afc8d43b55ab2504a85ffe1e3ca59f242282385"
 dependencies = [
  "aes-gcm 0.9.4",
  "ark-groth16",
@@ -2836,8 +2836,8 @@ dependencies = [
 
 [[package]]
 name = "manta-util"
-version = "0.5.6"
-source = "git+https://github.com/manta-network/manta-rs?branch=signer_redesign#373131ed86809441fea52c9afd61890f49cc2b7f"
+version = "0.5.7"
+source = "git+https://github.com/manta-network/manta-rs?tag=v0.5.7#0afc8d43b55ab2504a85ffe1e3ca59f242282385"
 dependencies = [
  "crossbeam-channel",
  "serde",
