@@ -196,6 +196,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "ark-bn254"
+version = "0.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ea691771ebbb28aea556c044e2e5c5227398d840cee0c34d4d20fa8eb2689e8c"
+dependencies = [
+ "ark-ec",
+ "ark-ff",
+ "ark-std",
+]
+
+[[package]]
 name = "ark-crypto-primitives"
 version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -233,6 +244,19 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "43b7ada17db3854f5994e74e60b18e10e818594935ee7e1d329800c117b32970"
 dependencies = [
  "ark-bls12-381",
+ "ark-ec",
+ "ark-ff",
+ "ark-r1cs-std",
+ "ark-std",
+]
+
+[[package]]
+name = "ark-ed-on-bn254"
+version = "0.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7fdc786b806fdbff4abebb08ec2fcb50cfe3941918e57120ab121228452903fd"
+dependencies = [
+ "ark-bn254",
  "ark-ec",
  "ark-ff",
  "ark-r1cs-std",
@@ -332,6 +356,7 @@ dependencies = [
  "ark-ff",
  "ark-std",
  "tracing",
+ "tracing-subscriber 0.2.25",
 ]
 
 [[package]]
@@ -2634,7 +2659,7 @@ dependencies = [
  "serde",
  "serde_json",
  "tracing",
- "tracing-subscriber",
+ "tracing-subscriber 0.3.16",
 ]
 
 [[package]]
@@ -2657,12 +2682,23 @@ name = "manta-accounting"
 version = "0.5.2"
 source = "git+https://github.com/manta-network/manta-rs?tag=v0.5.2#7c8d6c45bfd2c5ce1b1ceb70af824de0fb0bc609"
 dependencies = [
+ "derivative",
+ "derive_more",
+ "manta-crypto 0.5.2",
+ "manta-util 0.5.2",
+]
+
+[[package]]
+name = "manta-accounting"
+version = "0.5.7"
+source = "git+https://github.com/manta-network/manta-rs?tag=v0.5.7#0afc8d43b55ab2504a85ffe1e3ca59f242282385"
+dependencies = [
  "bitflags",
  "cocoon",
  "derivative",
  "derive_more",
- "manta-crypto",
- "manta-util",
+ "manta-crypto 0.5.7",
+ "manta-util 0.5.7",
  "rand_chacha 0.3.1",
 ]
 
@@ -2672,7 +2708,28 @@ version = "0.5.2"
 source = "git+https://github.com/manta-network/manta-rs?tag=v0.5.2#7c8d6c45bfd2c5ce1b1ceb70af824de0fb0bc609"
 dependencies = [
  "derivative",
- "manta-util",
+ "manta-util 0.5.2",
+ "rand_core 0.6.4",
+]
+
+[[package]]
+name = "manta-crypto"
+version = "0.5.7"
+source = "git+https://github.com/manta-network/manta-rs?tag=v0.5.7#0afc8d43b55ab2504a85ffe1e3ca59f242282385"
+dependencies = [
+ "ark-bls12-381",
+ "ark-bn254",
+ "ark-ec",
+ "ark-ed-on-bls12-381",
+ "ark-ed-on-bn254",
+ "ark-ff",
+ "ark-r1cs-std",
+ "ark-relations",
+ "ark-serialize",
+ "derivative",
+ "manta-util 0.5.7",
+ "rand 0.8.5",
+ "rand_chacha 0.3.1",
  "rand_core 0.6.4",
 ]
 
@@ -2708,9 +2765,9 @@ dependencies = [
  "blake2 0.10.4",
  "bs58",
  "derivative",
- "manta-accounting",
- "manta-crypto",
- "manta-util",
+ "manta-accounting 0.5.2",
+ "manta-crypto 0.5.2",
+ "manta-util 0.5.2",
  "rand_chacha 0.3.1",
 ]
 
@@ -2725,11 +2782,11 @@ dependencies = [
  "dirs-next",
  "futures",
  "http-types",
- "manta-accounting",
- "manta-crypto",
+ "manta-accounting 0.5.7",
+ "manta-crypto 0.5.2",
  "manta-parameters",
  "manta-pay",
- "manta-util",
+ "manta-util 0.5.2",
  "parking_lot",
  "password-hash",
  "secrecy",
@@ -2756,6 +2813,15 @@ source = "git+https://github.com/manta-network/manta-rs?tag=v0.5.2#7c8d6c45bfd2c
 dependencies = [
  "serde",
  "serde_with",
+]
+
+[[package]]
+name = "manta-util"
+version = "0.5.7"
+source = "git+https://github.com/manta-network/manta-rs?tag=v0.5.7#0afc8d43b55ab2504a85ffe1e3ca59f242282385"
+dependencies = [
+ "crossbeam-channel",
+ "serde",
 ]
 
 [[package]]
@@ -4872,6 +4938,15 @@ checksum = "78ddad33d2d10b1ed7eb9d1f518a5674713876e97e5bb9b7345a7984fbb4f922"
 dependencies = [
  "lazy_static",
  "log",
+ "tracing-core",
+]
+
+[[package]]
+name = "tracing-subscriber"
+version = "0.2.25"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0e0d2eaa99c3c2e41547cfa109e910a68ea03823cccad4a0525dcbc9b01e8c71"
+dependencies = [
  "tracing-core",
 ]
 
