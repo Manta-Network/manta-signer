@@ -32,7 +32,7 @@ const Authorize = ({
   };
 
   const onClickDecline = async () => {
-    console.log("[INFO]: Declining Transaction.");
+    ("[INFO]: Declining Transaction.");
     setPassword('');
     setPasswordInvalid(false)
     await stopPasswordPrompt();
@@ -47,23 +47,23 @@ const Authorize = ({
 
   return (
     <>
-      <div className='authTransactionHeader'>
-        <h1 className='mainheadline'>Authorize Transaction</h1>
+      <div className='auth-transaction-header'>
+        <h1 className='main-headline'>Authorize Transaction</h1>
       </div>
-      <div className='transactionContainer'>
-        <div className='transactionDetail'>
-          <h5 className='transactionDescription'>Send</h5>
+      <div className='transaction-container'>
+        <div className='transaction-detail'>
+          <h5 className='transaction-description'>Send</h5>
           <div>
-            <h5 className='transactionValue'>{summary.sendAmount + " " + summary.currency}</h5>
+            <h5 className='transaction-value'>{summary.sendAmount + " " + summary.currency}</h5>
           </div>
         </div>
-        <div className='transactionDetail'>
-          <h5 className='transactionDescription'>To</h5>
-          <h5 className='transactionValue'>{summary.toAddress}</h5>
+        <div className='transaction-detail'>
+          <h5 className='transaction-description'>To</h5>
+          <h5 className='transaction-value'>{summary.toAddress}</h5>
         </div>
-        <div className='transactionDetailPadded'>
-          <h5 className='transactionDescription'>Network</h5>
-          <h5 className='transactionValue'>{summary.network}</h5>
+        <div className='transaction-detail-padded'>
+          <h5 className='transaction-description'>Network</h5>
+          <h5 className='transaction-value'>{summary.network}</h5>
         </div>
       </div>
       <Input

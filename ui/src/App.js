@@ -40,8 +40,11 @@ function App() {
     show_secret_phrase: false
   });
   const [exportedSecretPhrase, setExportedSecretPhrase] = useState(null);
-  const [exportingPhrase, setExportingPhrase] = useState(false);
-  const exportingPhraseRef = useRef(exportingPhrase);
+
+  // keeps show secret phrase listener in sync with exportingPhrase state
+  // whether or not we are currently exporting the phrase.
+  const exportingPhraseRef = useRef(false);
+
   const pathnameRef = useRef(location.pathname);
 
   useEffect(() => {
@@ -113,12 +116,6 @@ function App() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isConnected, activeListeners, pathnameRef, navigate]);
 
-  // keeps show secret phrase listener in sync with exportingPhrase state
-  // whether or not we are currently exporting the phrase.
-  useEffect(() => {
-    exportingPhraseRef.current = exportingPhrase;
-  }, [exportingPhrase])
-
   const hideWindow = () => {
     console.log("[INFO]: HIDE.");
     appWindow.hide();
@@ -149,6 +146,10 @@ function App() {
       // Withdraw {} on {} network
       parsedAuthorizationSummary.toAddress = "Your Public Address";
       parsedAuthorizationSummary.network = summary[4];
+    } else {
+      // Privatize {} on {} network
+      parsedAuthorizationSummary.toAddress = "Your Private zkAddress";
+      parsedAuthorizationSummary.network = summary[4];
     }
 
     return parsedAuthorizationSummary;
@@ -156,7 +157,7 @@ function App() {
 
   const listenForAuthorizationRequests = () => {
     console.log("[INFO]: Setup listener.");
-    listen('authorize', (event) => {
+    listen('authorize', async (event) => {
       console.log("[INFO]: Wake: ", event);
 
       // Case 1: we need authorization for exporting the recovery phrase.
@@ -187,7 +188,7 @@ function App() {
     if (exportingPhraseRef.current) {
       return;
     } else {
-      setExportingPhrase(true);
+      exportingPhraseRef.current = true;
     }
 
     console.log("[INFO]: Send request to export recovery phrase.");
@@ -277,7 +278,7 @@ function App() {
 
   const endExportPhrase = async (hide = true) => {
     console.log("[INFO]: Ending export recovery phrase process.")
-    setExportingPhrase(false);
+    exportingPhraseRef.current = false;
     setExportedSecretPhrase(null);
     if (hide) {
       hideWindow();

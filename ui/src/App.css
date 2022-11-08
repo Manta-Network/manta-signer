@@ -154,57 +154,57 @@
     text-align: center;
 }
   
-.mainlogo {
+.main-logo {
     width:7rem;
     height:7rem;
 }
   
-.mainheadline {
+.main-headline {
     font-weight: 900;
 }
   
-.subtext {
+.sub-text {
     color:gray;
     margin-top:-10px;
 }
 
-.mainlogocontainer {
+.main-logo-container {
     padding-bottom: 30px;
     padding-top: 45px;
 }
 
-.mainlogocontainer.viewPhrase {
+.main-logo-container.view-phrase {
     padding-bottom: 10px;
 }
 
-.mainlogocontainer.login {
+.main-logo-container.login {
     padding-top: 65px;
 }
 
-.firstbuttoncontainer {
+.first-button-container {
     padding-top: 2rem;
 }
 
-.headercontainer {
+.header-container {
     padding-top: 6rem;
 }
 
-.tightHeaderContainer {
+.tight-header-container {
     margin:1rem;
     padding-top: 5rem;
 }
 
-.recoverHeaderContainer {
+.recover-header-container {
     margin:0.6rem;
     padding-top: 8rem;
 }
 
-.tallHeaderContainer {
+.tall-header-container {
     margin:1rem;
     padding-top: 7.5rem;
 }
 
-.recoveryPhraseContainer {
+.recovery-phrase-container {
     display:flex;
     flex-wrap:wrap;
     justify-content:center;
@@ -219,7 +219,7 @@
     height:8.5rem;
 }
 
-.exportRecoveryPhraseContainer {
+.export-recovery-phrase-container {
     padding-top: 1rem;
     padding-bottom: 1rem;
     max-height: 14rem;
@@ -235,16 +235,16 @@
     margin-right:2.2rem;
 }
 
-.numberedWordSelection {
+.numbered-word-selection {
     margin-left:-1rem;
 }
 
-.recoveryPhraseWord {
+.recovery-phrase-word {
     flex-basis:20%;
     margin:0.4rem;
 }
 
-.wordListContainer {
+.word-list-container {
     border-radius: 5px;
     display:flex;
     flex-wrap:wrap;
@@ -256,7 +256,7 @@
     padding-top:0.7rem;
 }
 
-.buttonListContainer {
+.button-list-container {
     border-radius: 5px;
     display:flex;
     flex-wrap:wrap;
@@ -266,7 +266,7 @@
     margin-bottom:1rem;
 }
 
-.button.ui.buttonlist {
+.button.ui.button-list {
     flex-basis:10%;
     margin:0.2rem !important;
     background-color: #FFFFFF;
@@ -277,11 +277,11 @@
     min-width: 7rem;
 }
 
-.mediumSubText {
+.medium-sub-text {
     color: gray;
 }
 
-.headercontainerFat {
+.header-container-fat {
     margin: 4rem;
 }
 
@@ -312,29 +312,29 @@
     padding-right:1rem;
 }
 
-.hideImage {
+.hide-image {
     padding-top: 1rem;
     width: 5.5rem;
 }
 
-.numberedTableWord {
+.numbered-table-word {
     margin-top: -0.3rem;
 }
 
-.bottomButtonContainer {
+.bottom-button-container {
     margin-bottom: 3rem;
 }
 
-.learnAboutManta {
+.learn-about-manta {
     margin-bottom:-6rem;
 }
 
-.learnAboutMantaSmall {
+.learn-about-manta-small {
     margin-bottom:-5rem;
     padding-top:1rem;
 }
 
-.supportedNetworksContainer {
+.supported-networks-container {
     display:flex;
     flex-wrap:wrap;
     justify-content:center;
@@ -342,7 +342,7 @@
     margin-bottom: 1rem;
 }
 
-.supportedNetworksChild {
+.supported-networks-child {
     border-color: #0894ec;
     border-style: solid;
     border-radius: 5px;
@@ -350,42 +350,42 @@
     width: 75%;
 }
 
-.supportedNetworksHeader {
+.supported-networks-header {
     margin-top: 0.8rem;
     margin-bottom: 0.5rem;
 }
 
-.networkText {
+.network-text {
     font-weight: 400;
 }
 
-.networkTable {
+.network-table {
     padding-left:4.2rem;
 }
 
-.miniDolphinLogo {
+.mini-dolphin-logo {
     width:2rem;
 }
 
-.miniCalamariLogo {
+.mini-calamari-logo {
     width:2rem;
 }
 
-.miniMantaLogo {
+.mini-manta-logo {
     width:1.8rem;
 }
 
-.finishLogoContainer {
+.finish-logo-container {
     padding-top:6rem;
 }
 
-.transactionContainer {
+.transaction-container {
     display:flex;
     flex-wrap:wrap;
     justify-content:center;
 }
 
-.transactionDetail {
+.transaction-detail {
     border-color: #e6ecf5;
     border-style: solid;
     border-radius: 5px;
@@ -397,7 +397,7 @@
     height:2.7rem;
 }
 
-.transactionDetailPadded {
+.transaction-detail-padded {
     border-color: #e6ecf5;
     border-style: solid;
     border-radius: 5px;
@@ -411,35 +411,35 @@
     margin-bottom: 1.5rem;
 }
 
-.transactionDescription {
+.transaction-description {
     color:gray;
     padding-left: 2rem;
     margin-top: 0.5rem !important;
     margin-bottom: 0.5rem !important;
 }
 
-.transactionValue {
+.transaction-value {
     padding-right:2rem;
     margin-top: 0.5rem !important;
     margin-bottom: 0.5rem !important;
 }
 
-.authTransactionHeader {
+.auth-transaction-header {
     padding-top: 3rem;
     padding-bottom: 3rem;
 }
 
-.zkAddressContainer {
+.zk-address-container {
     display: flex;
     justify-content: center;
 }
 
-.errorLabelContainer {
+.error-label-container {
     display: flex;
     justify-content: center;
 }
 
-.ui.basic.label.errorlabel {
+.ui.basic.label.error-label {
     color:#db2828;
     border-color: #db2828;
     background: #fadadd;
@@ -462,7 +462,7 @@
     height:1rem;
 }
 
-.subtext.copy {
+.sub-text.copy {
     margin:0rem;
 }
 
@@ -470,7 +470,7 @@
     margin:0rem;
 }
 
-.secretPhraseWarning {
+.secret-phrase-warning {
     border-color: #ffece4;
     background-color:#FFFFFF;
     width: 86%;
@@ -480,34 +480,34 @@
     border-style: solid;
 }
 
-.secretPhraseWarningText {
+.secret-phrase-warning-text {
     padding: 1rem;
     color: #FF6700;
 }
 
-.secretPhraseWarningContainer {
+.secret-phrase-warning-container {
     display: flex;
     flex-wrap:wrap;
     justify-content: center;
     padding-top: 1rem;
 }
 
-.cancelShowRecoveryButtonContainer {
+.cancel-show-recovery-button-container {
     margin-bottom: -5rem;
     margin-top: -1rem;
 }
 
-.ui.button.hrefButton {
+.ui.button.href-button {
     background-color: #FFFFFF;
     color:#0894ec;
     font-weight:300;
 } 
 
-.ui.button.hrefButton:hover {
+.ui.button.href-button:hover {
     color:gray;
     background-color: #FFFFFF;
 }
 
-.hrefButtonContainer {
+.href-button-container {
     margin-top:-2rem;
 }

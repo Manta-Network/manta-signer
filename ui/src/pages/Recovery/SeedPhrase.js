@@ -17,9 +17,9 @@ const SeedPhrase = () => {
 
   return (<>
 
-    <div className='recoverHeaderContainer'>
-      <h1 className='mainheadline'>Reset Wallet</h1>
-      <p className='subtext'>
+    <div className='recover-header-container'>
+      <h1 className='main-headline'>Reset Wallet</h1>
+      <p className='sub-text'>
         You can reset your password by entering your secret recovery phrase.
       </p>
     </div>

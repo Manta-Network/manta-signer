@@ -163,7 +163,7 @@ pub fn display_transaction(
 ) -> String {
     match transaction {
         Transaction::Mint(Asset { value, .. }) => format!(
-            "Deposit {} on {} network",
+            "Privatize {} on {} network",
             metadata.display(*value),
             network
         ),

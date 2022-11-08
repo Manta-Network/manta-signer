@@ -25,11 +25,9 @@ const DROPDOWN_OPTIONS = [
 ];
 
 const DEFAULT_PHRASES = {
-  12: ["", "", "", "", "", "", "", "", "", "", "", ""],
-  18: ["", "", "", "", "", "", "", "", "", "", "", "",
-    "", "", "", "", "", ""],
-  24: ["", "", "", "", "", "", "", "", "", "", "", "",
-    "", "", "", "", "", "", "", "", "", "", "", ""]
+  12: new Array(12).fill(""),
+  18: new Array(18).fill(""),
+  24: new Array(24).fill("")
 }
 
 // By default this component will load using a 12 word phrase.
@@ -77,7 +75,8 @@ const Recover = ({
     checkPasswordMatch();
     checkPasswordValidity();
 
-  }, [password, confirmPassword, isValidPassword, passwordsMatch]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [password, confirmPassword]);
 
   useEffect(() => {
 
@@ -112,8 +111,8 @@ const Recover = ({
     }
 
     validateSelectedMnemonic();
-
-  }, [mnemonics, mnemonicsValidity]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mnemonics]);
 
   const goBack = async () => {
     if (location.pathname === "/recover/seed-phrase") {

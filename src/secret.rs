@@ -326,7 +326,7 @@ pub struct PasswordReceiver {
 
 /// Mnemonic Receiver
 pub struct MnemonicReceiver {
-    /// Password Receiver
+    /// Mnemonic Receiver
     pub mnemonic: Receiver<Mnemonic>,
 
     /// Selection Receiver

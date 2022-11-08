@@ -7,9 +7,9 @@ const Finish = () => {
   const { goForward } = useOutletContext();
 
   return (<>
-    <div className='headercontainerFat'>
-      <h1 className='mainheadline'>You're all done!</h1>
-      <h3 className='mediumSubText'>It's time to start using the Manta Signer.</h3>
+    <div className='header-container-fat'>
+      <h1 className='main-headline'>You're all done!</h1>
+      <h3 className='medium-sub-text'>It's time to start using the Manta Signer.</h3>
     </div>
     <Button className="button ui first wide" onClick={goForward}>
       Finish

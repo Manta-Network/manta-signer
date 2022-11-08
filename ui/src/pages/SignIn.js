@@ -35,7 +35,7 @@ const SignIn = ({
       setPassword('');
       setLoginSuccess(true);
     } else {
-      console.log("RETRY!");
+      console.log("[INFO]: Invalid password, RETRY!");
       setPasswordInvalid(true);
     }
     setLoading(false);
@@ -67,13 +67,13 @@ const SignIn = ({
   return (<>
     {!loginSuccess &&
       <div>
-        <div className='mainlogocontainer login'>
-          <img className="mainlogo" alt="Manta Logo" src={mantaLogo} />
+        <div className='main-logo-container login'>
+          <img className="main-logo" alt="Manta Logo" src={mantaLogo} />
         </div>
 
         <div>
-          <h1 className='mainheadline'>Welcome Back!</h1>
-          <p className='subtext'>Let's connect you to the Web3 privacy hub.</p>
+          <h1 className='main-headline'>Welcome Back!</h1>
+          <p className='sub-text'>Let's connect you to the Web3 privacy hub.</p>
         </div>
         <Form.Field>
           <Input
@@ -98,7 +98,7 @@ const SignIn = ({
           onclick={onClickForgotPassword}
         />
 
-        <div className='learnAboutMantaSmall'>
+        <div className='learn-about-manta-small'>
           <p>Learn more about &nbsp;
             <a href='https://www.manta.network/' target="_blank" rel="noreferrer">
               Manta
@@ -109,15 +109,15 @@ const SignIn = ({
     }
     {loginSuccess &&
       <div>
-        <div className='finishLogoContainer'>
-          <img className="mainlogo" alt="Manta Logo" src={newAccount} />
+        <div className='finish-logo-container'>
+          <img className="main-logo" alt="Manta Logo" src={newAccount} />
         </div>
 
         <div>
-          <h1 className='mainheadline'>Your zkAddress</h1>
+          <h1 className='main-headline'>Your zkAddress</h1>
         </div>
-        <div className='zkAddressContainer'>
-          <p className='subtext'>{receivingKeyDisplay}</p>
+        <div className='zk-address-container'>
+          <p className='sub-text'>{receivingKeyDisplay}</p>
           {showCopyNotification ?
             <Button onClick={onClickCopyZkAddress} className='button ui copy'>
               <Icon name="checkmark" className='specific' />
@@ -127,27 +127,27 @@ const SignIn = ({
             </Button>
           }
         </div>
-        <div className='supportedNetworksContainer'>
-          <div className='supportedNetworksChild'>
-            <div className='supportedNetworksHeader'>
+        <div className='supported-networks-container'>
+          <div className='supported-networks-child'>
+            <div className='supported-networks-header'>
               <h4>Supported Networks</h4>
             </div>
 
-            <table className='networkTable'>
+            <table className='network-table'>
               <tbody>
                 <tr>
-                  <th><img className='miniDolphinLogo' alt="Dolphin Logo" src={dolphinLogo} /></th>
-                  <th><p className='networkText'>Dolphin Network</p></th>
+                  <th><img className='mini-dolphin-logo' alt="Dolphin Logo" src={dolphinLogo} /></th>
+                  <th><p className='network-text'>Dolphin Network</p></th>
                   <th></th>
                 </tr>
                 <tr>
-                  <th><img className='miniCalamariLogo' alt="Calamari Logo" src={calamariLogo} /></th>
-                  <th><p className='networkText'>&nbsp;Calamari Network&nbsp;&nbsp;</p></th>
+                  <th><img className='mini-calamari-logo' alt="Calamari Logo" src={calamariLogo} /></th>
+                  <th><p className='network-text'>&nbsp;Calamari Network&nbsp;&nbsp;</p></th>
                   <th><a href='https://calamari.network/' target="_blank" rel="noreferrer">(soon)</a></th>
                 </tr>
                 <tr>
-                  <th><img className='miniMantaLogo' alt="Manta Logo" src={mantaLogo} /></th>
-                  <th><p className='networkText'>Manta Network</p></th>
+                  <th><img className='mini-manta-logo' alt="Manta Logo" src={mantaLogo} /></th>
+                  <th><p className='network-text'>Manta Network</p></th>
                   <th><a href='https://calamari.network/' target="_blank" rel="noreferrer">(soon)</a></th>
                 </tr>
               </tbody>

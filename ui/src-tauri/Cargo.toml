@@ -34,7 +34,7 @@ custom-protocol = ["tauri/custom-protocol"]
 # Disable CORS Check
 unsafe-disable-cors = ["manta-signer/unsafe-disable-cors"]
 
-# Disable CORS Check
+# Disable app restart functionality which does not work in dev mode, only in actual builds.
 disable-restart = ["manta-signer/disable-restart"]
 
 [dependencies]

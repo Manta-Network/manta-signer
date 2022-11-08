@@ -21,9 +21,9 @@ const NewPassword = () => {
 
   return (
     <>
-      <div className='headercontainer'>
-        <h1 className='mainheadline'>Create a password</h1>
-        <p className='subtext'>Your password will unlock the Manta Signer.</p>
+      <div className='header-container'>
+        <h1 className='main-headline'>Create a password</h1>
+        <p className='sub-text'>Your password will unlock the Manta Signer.</p>
       </div>
       <br />
       <br />

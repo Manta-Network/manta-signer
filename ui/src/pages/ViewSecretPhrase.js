@@ -34,7 +34,7 @@ const ViewSecretPhrase = ({
       setPassword('');
       setPasswordInvalid(false);
     } else {
-      console.log("RETRY!");
+      console.log("[INFO]: Invalid password, RETRY!");
       setPasswordInvalid(true);
       setLoading(false);
     }
@@ -55,12 +55,12 @@ const ViewSecretPhrase = ({
   return (<>
     {!exportedSecretPhrase && (<>
 
-      <div className='mainlogocontainer viewPhrase'>
-        <img className="mainlogo" alt="Manta Logo" src={mainLogo} />
+      <div className='main-logo-container view-phrase'>
+        <img className="main-logo" alt="Manta Logo" src={mainLogo} />
       </div>
 
       <div>
-        <h1 className='mainheadline'>Show Secret Recovery Phrase</h1>
+        <h1 className='main-headline'>Show Secret Recovery Phrase</h1>
       </div>
 
       <Form.Field>
@@ -74,9 +74,9 @@ const ViewSecretPhrase = ({
         />
       </Form.Field>
 
-      <div className="secretPhraseWarningContainer">
-        <div className="secretPhraseWarning">
-          <p className="secretPhraseWarningText">Warning: Never share your secret recovery phrase. {<br />} Anyone with your secret recovery phrase can steal your assets in your wallet.</p>
+      <div className="secret-phrase-warning-container">
+        <div className="secret-phrase-warning">
+          <p className="secret-phrase-warning-text">Warning: Never share your secret recovery phrase. {<br />} Anyone with your secret recovery phrase can steal your assets in your wallet.</p>
         </div>
       </div>
 
@@ -90,21 +90,21 @@ const ViewSecretPhrase = ({
           <Button className="button ui first wide" onClick={onClickSubmitPassword}>Confirm</Button>
         </div>
       }
-      <div className="cancelShowRecoveryButtonContainer">
+      <div className="cancel-show-recovery-button-container">
         <Button className="button ui cancel" onClick={onClickCancel}>Cancel</Button>
       </div>
 
     </>)}
     {exportedSecretPhrase && (<>
-      <div className='headercontainer'>
-        <h1 className='mainheadline'>Secret Recovery Phrase</h1>
+      <div className='header-container'>
+        <h1 className='main-headline'>Secret Recovery Phrase</h1>
       </div>
 
-      <div className='exportRecoveryPhraseContainer'>
+      <div className='export-recovery-phrase-container'>
         {recoveryPhraseConfirmed ? exportedSecretPhrase.split(" ").map(function (item, index) {
           let idx = index + 1;
           return (
-            <div key={index} className='recoveryPhraseWord'>
+            <div key={index} className='recovery-phrase-word'>
               <table>
                 <tbody>
                   <tr>
@@ -117,14 +117,14 @@ const ViewSecretPhrase = ({
           )
         }) :
           <div>
-            <img className='hideImage' src={hiddenImage} alt="Hide Logo" onClick={onClickConfirmRecoveryPhrase} />
+            <img className='hide-image' src={hiddenImage} alt="Hide Logo" onClick={onClickConfirmRecoveryPhrase} />
           </div>
         }
       </div>
 
-      <div className="secretPhraseWarningContainer">
-        <div className="secretPhraseWarning">
-          <p className="secretPhraseWarningText">Warning: Never share your secret recovery phrase. {<br />} Anyone with your secret recovery phrase can steal assets in your wallet.</p>
+      <div className="secret-phrase-warning-container">
+        <div className="secret-phrase-warning">
+          <p className="secret-phrase-warning-text">Warning: Never share your secret recovery phrase. {<br />} Anyone with your secret recovery phrase can steal assets in your wallet.</p>
         </div>
       </div>
 

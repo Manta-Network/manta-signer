@@ -60,7 +60,8 @@ const CreateAccount = ({
     checkPasswordMatch();
     checkPasswordValidity();
 
-  }, [password, confirmPassword, isValidPassword, passwordsMatch]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [password, confirmPassword]);
 
   // determines whether or not the inputted recovery phrase matches the one
   // originally provided.
@@ -91,7 +92,8 @@ const CreateAccount = ({
 
     isValidPhraseSelection();
 
-  }, [selectedRecoveryPhrase, actualPhrase, isValidSelectedPhrase, recoveryPhrase]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedRecoveryPhrase, actualPhrase, recoveryPhrase]);
 
   useEffect(() => {
 
@@ -120,6 +122,7 @@ const CreateAccount = ({
 
   // onClickSelectWordButton is called whenever a word selection button
   // gets clicked when the user is reciting their seed phrase.
+  // in this case `word` consists of the word followed by an index to make it a unqiue element.
   const onClickSelectWordButton = (e, word) => {
 
     if (selectedRecoveryPhrase.includes(word)) {

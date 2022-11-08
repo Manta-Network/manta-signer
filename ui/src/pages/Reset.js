@@ -11,7 +11,7 @@ const Reset = ({
 
   const onClickReset = async () => {
     await endConnection();
-    restartServer(true,true);
+    restartServer(true, true);
   }
 
   const onClickCancel = async () => {
@@ -24,17 +24,17 @@ const Reset = ({
   }
 
   return (<>
-    <div className='tightHeaderContainer'>
-      <h1 className='mainheadline'>Delete Account</h1>
-      <br/>
-      <p className='subtext'>
+    <div className='tight-header-container'>
+      <h1 className='main-headline'>Delete Account</h1>
+      <br />
+      <p className='sub-text'>
         You are about to <strong>delete</strong> the account associated with this wallet.
       </p>
-      <p className='subtext'>
+      <p className='sub-text'>
         Without your recovery phrase saved you will lose access to this account and all linked funds <strong>forever</strong>!
       </p>
-      <p className='subtext'>
-      This process is irreversible, proceed at your own risk!
+      <p className='sub-text'>
+        This process is irreversible, proceed at your own risk!
       </p>
     </div>
     <Button className="button ui danger" onClick={onClickReset}>DELETE ACCOUNT</Button>

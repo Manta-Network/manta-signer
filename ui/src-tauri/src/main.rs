@@ -207,14 +207,12 @@ impl Authorizer for User {
     fn setup(&mut self, data_exists: bool) -> SetupFuture {
         let window = self.window.clone();
         Box::pin(async move {
-            // creating a new mnemonic in case user will create a new account.
-            let new_mnemonic = sample_mnemonic();
-
             let payload = if data_exists {
                 Setup::Login
             } else {
                 // Mnemonic created here
-                Setup::CreateAccount(new_mnemonic)
+                // creating a new mnemonic in case user will create a new account.
+                Setup::CreateAccount(sample_mnemonic())
             };
 
             while_w_timeout!(
@@ -306,14 +304,12 @@ async fn send_password(
     if let Some(store) = &mut *password_store.lock().await {
         let result = store.load(Secret::new(password)).await;
 
+        // if result == false, then no retry is needed, and it means user has successfully signed in,
+        // so we can now add the tray menu item of viewing the secret phrase.
         if !result {
             let app_handle_guard = app_handle_store.lock().await;
             let app_handle = app_handle_guard.as_ref().unwrap();
             let tray_handle = app_handle.tray_handle();
-
-            // if result == true, it means user has successfully signed in, so we can now add the tray
-            // menu item of viewing the secret phrase.
-
             set_tray_reset(tray_handle, true, true).await;
         }
 

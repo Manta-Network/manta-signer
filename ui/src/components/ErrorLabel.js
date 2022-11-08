@@ -5,8 +5,8 @@ const ErrorLabel = ({
   text
 }) => {
   return (
-    <div className="errorLabelContainer">
-      <Label className="ui basic label errorlabel">
+    <div className="error-label-container">
+      <Label className="ui basic label error-label">
         <Icon name="exclamation circle" className='specific' />
         <p>{text}</p>
       </Label>

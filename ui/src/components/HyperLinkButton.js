@@ -7,8 +7,8 @@ const HyperLinkButton = ({
 }) => {
 
   return (
-    <div className='hrefButtonContainer'>
-      <Button className='button ui hrefButton' onClick={onclick}>{text}</Button>
+    <div className='href-button-container'>
+      <Button className='button ui href-button' onClick={onclick}>{text}</Button>
     </div>
   )
 }

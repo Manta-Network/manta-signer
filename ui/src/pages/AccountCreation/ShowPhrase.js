@@ -15,19 +15,19 @@ const ShowPhrase = () => {
 
   return (
     <>
-      <div className='headercontainer'>
-        <h1 className='mainheadline'>Secret Recovery Phrase</h1>
+      <div className='header-container'>
+        <h1 className='main-headline'>Secret Recovery Phrase</h1>
       </div>
       <div className="recovery-phrase-info">
         <p>Please write down your secret recovery phrase and keep it in a safe place.</p>
         <p>This phrase is the only way to recover your wallet. Do not share it with anyone!</p>
       </div>
 
-      <div className='recoveryPhraseContainer'>
+      <div className='recovery-phrase-container'>
         {recoveryPhraseConfirmed ? recoveryPhrase.split(" ").map(function (item, index) {
           let idx = index + 1;
           return (
-            <div key={index} className='recoveryPhraseWord'>
+            <div key={index} className='recovery-phrase-word'>
               <table>
                 <tbody>
                   <tr>
@@ -40,7 +40,7 @@ const ShowPhrase = () => {
           )
         }) :
           <div>
-            <img className='hideImage' src={hiddenImage} alt="hidden" onClick={onClickConfirmRecoveryPhrase} />
+            <img className='hide-image' src={hiddenImage} alt="hidden" onClick={onClickConfirmRecoveryPhrase} />
           </div>
         }
       </div>
