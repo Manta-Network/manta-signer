@@ -243,8 +243,8 @@
     border-radius: 5px;
     margin-top: 1rem;
     margin-bottom:1rem;
-    margin-left:2.2rem;
-    margin-right:2.2rem;
+    margin-left:1.2rem;
+    margin-right:1.2rem;
 }
 
 .numbered-word-selection {
@@ -326,6 +326,11 @@
 
 .hide-image {
     padding-top: 1rem;
+    width: 5.5rem;
+}
+
+.hide-image-recovery {
+    padding-top: 0.7rem;
     width: 5.5rem;
 }
 
