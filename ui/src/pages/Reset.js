@@ -25,8 +25,7 @@ const Reset = ({
 
   return (<>
     <div className='tight-header-container'>
-      <h1 className='main-headline'>Delete Account</h1>
-      <br />
+      <h1 className='main-headline padded-bottom-1rem'>Delete Account</h1>
       <p className='sub-text'>
         You are about to <strong>delete</strong> the account associated with this wallet.
       </p>

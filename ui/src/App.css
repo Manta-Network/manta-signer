@@ -1,3 +1,7 @@
+/*
+@TODO: Integrate tailwind.css
+*/
+
 .App {
     left: 50%;
     position: absolute;
@@ -189,6 +193,14 @@
     padding-top: 6rem;
 }
 
+.padded-bottom-3rem {
+    padding-bottom: 3rem;
+}
+
+.padded-bottom-1rem {
+    padding-bottom: 1.3rem;
+}
+
 .tight-header-container {
     margin:1rem;
     padding-top: 5rem;
@@ -214,8 +226,8 @@
     margin-top: 1rem;
     padding-bottom: 2rem;
     margin-bottom:1rem;
-    margin-left:2.2rem;
-    margin-right:2.2rem;
+    margin-left:1.2rem;
+    margin-right:1.2rem;
     height:8.5rem;
 }
 
@@ -437,6 +449,7 @@
 .error-label-container {
     display: flex;
     justify-content: center;
+    padding-top:1.3rem;
 }
 
 .ui.basic.label.error-label {
@@ -510,4 +523,8 @@
 
 .href-button-container {
     margin-top:-2rem;
+}
+
+.empty-place-holder-4rem {
+    height:4rem;
 }

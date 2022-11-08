@@ -21,12 +21,10 @@ const NewPassword = () => {
 
   return (
     <>
-      <div className='header-container'>
+      <div className='header-container padded-bottom-3rem'>
         <h1 className='main-headline'>Create a password</h1>
         <p className='sub-text'>Your password will unlock the Manta Signer.</p>
       </div>
-      <br />
-      <br />
       <div>
         <Input
           className='input ui password'
@@ -45,7 +43,6 @@ const NewPassword = () => {
       </div>
       {!isValidPassword && password.length > 0 && showError ?
         <>
-          <br />
           <ErrorLabel
             text={"Please enter a minimum of " + MIN_PASSWORD_LENGTH + " characters."}
           />
@@ -54,13 +51,12 @@ const NewPassword = () => {
         (
           !passwordsMatch && showError ?
             <>
-              <br />
               <ErrorLabel
                 text={"Passwords do not match."}
               />
             </>
             :
-            <><br /><br /><br /></>
+            <div className='empty-place-holder-4rem'></div>
         )}
       <Button className="button ui first"
         onClick={checkPasswords}>
