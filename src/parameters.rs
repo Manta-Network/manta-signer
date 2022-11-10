@@ -19,11 +19,21 @@
 // TODO: Report a more informative error.
 
 use manta_pay::{
-    config::{
-        MultiProvingContext, NoteEncryptionScheme, Parameters, ProvingContext,
-        UtxoAccumulatorModel, UtxoCommitmentScheme, VoidNumberCommitmentScheme,
+    config::utxo::v2::{
+        LightIncomingBaseEncryptionScheme,
     },
     signer::base::SignerParameters,
+};
+use manta_accounting::transfer::{
+    ProvingContext,
+    canonical::MultiProvingContext,
+    utxo::{
+        UtxoAccumulatorModel,
+        UtxoCommitmentScheme,
+        VoidNumberCommitmentScheme,
+        self as protocol,
+        ::v2::Parameters,
+    }
 };
 use manta_util::codec::{Decode, IoReader};
 use std::{
@@ -55,10 +65,10 @@ where
     manta_parameters::pay::testnet::proving::Reclaim::download_if_invalid(&reclaim).ok()?;
     Some(SignerParameters {
         proving_context: MultiProvingContext {
-            mint: ProvingContext::decode(IoReader(File::open(mint).ok()?)).ok()?,
+            to_private: ProvingContext::decode(IoReader(File::open(mint).ok()?)).ok()?,
             private_transfer: ProvingContext::decode(IoReader(File::open(private_transfer).ok()?))
                 .ok()?,
-            reclaim: ProvingContext::decode(IoReader(File::open(reclaim).ok()?)).ok()?,
+            to_public: ProvingContext::decode(IoReader(File::open(reclaim).ok()?)).ok()?,
         },
         parameters: Parameters {
             note_encryption_scheme: NoteEncryptionScheme::decode(
