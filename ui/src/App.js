@@ -41,8 +41,6 @@ function App() {
   });
   const [exportedSecretPhrase, setExportedSecretPhrase] = useState(null);
 
-  // keeps show secret phrase listener in sync with exportingPhrase state
-  // whether or not we are currently exporting the phrase.
   const exportingPhraseRef = useRef(false);
 
   const pathnameRef = useRef(location.pathname);
