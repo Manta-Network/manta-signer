@@ -65,6 +65,8 @@ async fn main() -> Result<(), Error> {
     let mut config =
         Config::try_default().expect("Unable to generate the default server configuration.");
     config.data_path[Network::Dolphin] = test_dir.path().join("storage-dolphin.dat");
+    config.data_path[Network::Calamari] = test_dir.path().join("storage-calamari.dat");
+    config.data_path[Network::Manta] = test_dir.path().join("storage-manta.dat");
     if let Some(url) = std::env::args().nth(1) {
         config.service_url = url;
     }
