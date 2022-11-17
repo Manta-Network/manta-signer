@@ -533,3 +533,13 @@
 .empty-place-holder-4rem {
     height:4rem;
 }
+
+.empty-place-holder-1rem {
+    height:1rem;
+}
+
+.copy-icon-container {
+    display: flex;
+    flex-wrap:wrap;
+    justify-content: center;
+}

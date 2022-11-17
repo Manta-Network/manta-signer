@@ -25,9 +25,21 @@ const CreateAccount = ({
   const [selectedRecoveryPhrase, setSelectedRecoveryPhrase] = useState([]);
   const [actualPhrase, setActualPhrase] = useState(null);
   const [showError, setShowError] = useState(false);
+  const [showCopyNotification, setShowCopyNotification] = useState(false);
 
   const navigate = useNavigate();
   const location = useLocation();
+
+
+  const onClickCopyPhrase = () => {
+    navigator.clipboard.writeText(actualPhrase);
+
+    if (!showCopyNotification) {
+      setShowCopyNotification(true);
+      setTimeout(function () { setShowCopyNotification(false) }, 2000);
+    }
+
+  }
 
   const checkPasswords = () => {
 
@@ -231,6 +243,8 @@ const CreateAccount = ({
         onChangeConfirmPassword,
         onClickConfirmRecoveryPhrase,
         onClickSelectWordButton,
+        onClickCopyPhrase,
+        showCopyNotification,
         isValidSelectedPhrase,
         shuffledRecoveryPhrase,
         selectedRecoveryPhrase,

@@ -1,8 +1,9 @@
-import { Button, Icon } from 'semantic-ui-react';
+import { Button } from 'semantic-ui-react';
 import mantaLogo from "../../icons/manta.png";
 import dolphinLogo from "../../icons/Square150x150Logo.png";
 import calamariLogo from "../../icons/calamari.png";
 import newAccount from "../../icons/new_account.png";
+import CopyButton from '../../components/copyButton';
 import "../../App.css";
 
 const SignInSuccess = ({
@@ -22,14 +23,10 @@ const SignInSuccess = ({
     </div>
     <div className='zk-address-container'>
       <p className='sub-text'>{receivingKeyDisplay}</p>
-      {showCopyNotification ?
-        <Button onClick={onClickCopyZkAddress} className='button ui copy'>
-          <Icon name="checkmark" className='specific' />
-        </Button> :
-        <Button onClick={onClickCopyZkAddress} className='button ui copy'>
-          <Icon name="copy outline" className='specific' />
-        </Button>
-      }
+      <CopyButton
+        showCopyNotification={showCopyNotification}
+        onClickCopyPhrase={onClickCopyZkAddress}
+      />
     </div>
     <div className='supported-networks-container'>
       <div className='supported-networks-child'>

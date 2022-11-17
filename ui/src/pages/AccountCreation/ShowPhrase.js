@@ -3,12 +3,15 @@ import HyperLinkButton from '../../components/HyperLinkButton';
 import "../../App.css";
 import { useOutletContext } from 'react-router-dom';
 import hiddenImage from "../../icons/eye-close.png";
+import CopyButton from '../../components/copyButton';
 const ShowPhrase = () => {
 
   const {
     goBack,
     goForward,
     onClickConfirmRecoveryPhrase,
+    onClickCopyPhrase,
+    showCopyNotification,
     recoveryPhraseConfirmed,
     recoveryPhrase,
   } = useOutletContext();
@@ -22,7 +25,17 @@ const ShowPhrase = () => {
         <p>Please write down your secret recovery phrase and keep it in a safe place.</p>
         <p>This phrase is the only way to recover your wallet. Do not share it with anyone!</p>
       </div>
-
+      <div className="copy-icon-container">
+        {
+          recoveryPhraseConfirmed ?
+            <CopyButton
+              showCopyNotification={showCopyNotification}
+              onClickCopyPhrase={onClickCopyPhrase}
+            />
+            :
+            <div className='empty-place-holder-1rem'></div>
+        }
+      </div>
       <div className='recovery-phrase-container'>
         {recoveryPhraseConfirmed ? recoveryPhrase.split(" ").map(function (item, index) {
           let idx = index + 1;
