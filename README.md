@@ -47,6 +47,9 @@ Executables can be found in ./target/release or ./ui/src-tauri/target/release.
 ### Testing
 Can use non-UI testing server in ./examples
 ```cargo run --example test_server --features=unsafe-disable-cors,disable-restart --release```
+
 ```--features=unsafe-disable-cors``` use only if you are using the local manta-front-end
+
 ```--features=disable-restart``` this feature is required if signer is being run in dev mode. 
+
 To run the signer in dev mode: ```cargo tauri dev --features=disable-restart``` or ```cargo tauri dev --features=disable-restart,unsafe-disable-cors```
