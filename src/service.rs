@@ -31,7 +31,6 @@ use http_types::headers::HeaderValue;
 use manta_accounting::{
     asset::{Asset, AssetMetadata},
     fs::{cocoon::File, File as _, SaveError},
-    key::HierarchicalKeyDerivationScheme,
     transfer::canonical::TransferShape,
 };
 use manta_pay::{
@@ -39,7 +38,7 @@ use manta_pay::{
     key::{Mnemonic, TestnetKeySecret},
     signer::{
         base::{
-            HierarchicalKeyDerivationFunction, Signer, SignerParameters, SignerState,
+            Signer, SignerParameters, SignerState,
             UtxoAccumulator,
         },
         client::network::{Message, Network, NetworkSpecific},
@@ -63,7 +62,7 @@ use tokio::{
 };
 
 pub use manta_pay::{
-    config::{receiving_key_to_base58, ReceivingKey},
+    config::{address_to_base58, Address},
     signer::{self, SignError, SignResponse, SyncError, SyncResponse},
 };
 
@@ -74,7 +73,7 @@ pub type SyncRequest = Message<signer::SyncRequest>;
 pub type SignRequest = Message<signer::SignRequest>;
 
 /// Receiving Key Request
-pub type ReceivingKeyRequest = Message<signer::ReceivingKeyRequest>;
+pub type ReceivingKeyRequest = Message<signer::GetRequest>;
 
 /// Password Retry Interval
 pub const PASSWORD_RETRY_INTERVAL: Duration = Duration::from_millis(1000);
@@ -162,20 +161,20 @@ pub fn display_transaction(
     network: Network,
 ) -> String {
     match transaction {
-        Transaction::Mint(Asset { value, .. }) => format!(
+        Transaction::ToPrivate(Asset { value, .. }) => format!(
             "Privatize {} on {} network",
             metadata.display(*value),
             network
         ),
-        Transaction::PrivateTransfer(Asset { value, .. }, receiving_key) => {
+        Transaction::PrivateTransfer(Asset { value, .. }, address) => {
             format!(
                 "Send {} to {} on {} network",
                 metadata.display(*value),
-                receiving_key_to_base58(receiving_key),
+                address_to_base58(address),
                 network
             )
         }
-        Transaction::Reclaim(Asset { value, .. }) => format!(
+        Transaction::ToPublic(Asset { value, .. }) => format!(
             "Withdraw {} on {} network",
             metadata.display(*value),
             network
@@ -413,7 +412,8 @@ where
             exisitng_signer
                 .state()
                 .accounts()
-                .keys()
+                .get_default()
+                .key()
                 .base()
                 .expose_mnemonic()
                 .clone(),
@@ -471,7 +471,7 @@ where
             .get(|_| http::into_body(Server::<A>::version));
         http::register_post(&mut api, "/sync", Server::sync);
         http::register_post(&mut api, "/sign", Server::sign);
-        http::register_post(&mut api, "/receivingKeys", Server::receiving_keys);
+        http::register_post(&mut api, "/address", Server::address);
         info!("serving signer API at {}", socket_address)?;
         api.listen(socket_address).await?;
         Ok(())
@@ -495,7 +495,7 @@ where
     ) -> Result<SignerState> {
         info!("creating signer state")?;
         let state = SignerState::new(
-            TestnetKeySecret::new(mnemonic, "").map(HierarchicalKeyDerivationFunction::default()),
+            TestnetKeySecret::new(mnemonic, ""),
             UtxoAccumulator::new(
                 task::spawn_blocking(crate::parameters::load_utxo_accumulator_model)
                     .await?
@@ -568,7 +568,7 @@ where
                 let _ = warn!("unable to save current signer state");
             }
         });
-        info!("[RESPONSE] responding to `sync` with: {:?}.", response)?;
+        // info!("[RESPONSE] responding to `sync` with: {:?}.", response)?;
         Ok(response)
     }
 
@@ -589,7 +589,7 @@ where
                 },
         } = request;
         match transaction.shape() {
-            TransferShape::Mint => {
+            TransferShape::ToPrivate => {
                 // NOTE: We skip authorization on mint transactions because they are deposits not
                 //       withdrawals from the point of view of the signer. Everything else, by
                 //       default, requests authorization.
@@ -603,7 +603,7 @@ where
             }
         }
         let response = self.state.lock().signer[network].sign(transaction);
-        info!("[RESPONSE] responding to `sign` with: {:?}.", response)?;
+        // info!("[RESPONSE] responding to `sign` with: {:?}.", response)?;
         self.state.lock().currently_signing = false;
         Ok(response)
     }
@@ -620,8 +620,8 @@ where
         let stored_mnemonic = self.state.lock().signer[network]
             .state()
             .accounts()
-            .keys()
-            .base()
+            .get_default()
+            .spending_key()
             .expose_mnemonic()
             .clone();
         Ok(stored_mnemonic)
@@ -629,13 +629,13 @@ where
 
     /// Runs the receiving key sampling protocol on the signer.
     #[inline]
-    pub async fn receiving_keys(self, request: ReceivingKeyRequest) -> Result<Vec<ReceivingKey>> {
-        info!("[REQUEST] processing `receivingKeys`: {:?}", request)?;
-        let response = self.state.lock().signer[request.network].receiving_keys(request.message);
-        info!(
-            "[RESPONSE] responding to `receivingKeys` with: {:?}",
-            response
-        )?;
+    pub async fn address(self, request: ReceivingKeyRequest) -> Result<Address> {
+        // info!("[REQUEST] processing `receivingKeys`: {:?}", request)?;
+        let response = self.state.lock().signer[request.network].address();
+        // info!(
+        //     "[RESPONSE] responding to `receivingKeys` with: {:?}",
+        //     response
+        // )?;
         Ok(response)
     }
 
@@ -645,12 +645,14 @@ where
     pub async fn get_receiving_keys(
         &mut self,
         request: ReceivingKeyRequest,
-    ) -> Result<Vec<String>, ()> {
-        let response = self.state.lock().signer[request.network].receiving_keys(request.message);
-        let keys = response
-            .into_iter()
-            .map(|key| receiving_key_to_base58(&key))
-            .collect();
-        Ok(keys)
+    ) -> Result<String, ()> {
+        let response = self.state.lock().signer[request.network].address();
+        // let keys = response
+        //     .into_iter()
+        //     .map(|key| address_to_base58(&key))
+        //     .collect();
+        // Ok(keys)
+        let res = address_to_base58(&response);
+        Ok(res)
     }
 }

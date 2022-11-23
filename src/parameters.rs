@@ -19,27 +19,16 @@
 // TODO: Report a more informative error.
 
 use manta_pay::{
-    config::utxo::v2::{
-        LightIncomingBaseEncryptionScheme,
-    },
     signer::base::SignerParameters,
-};
-use manta_accounting::transfer::{
-    ProvingContext,
-    canonical::MultiProvingContext,
-    utxo::{
-        UtxoAccumulatorModel,
-        UtxoCommitmentScheme,
-        VoidNumberCommitmentScheme,
-        self as protocol,
-        ::v2::Parameters,
-    }
+    config::self,
+    parameters::load_transfer_parameters,
 };
 use manta_util::codec::{Decode, IoReader};
 use std::{
     fs::{self, File},
     path::Path,
 };
+use manta_parameters::{Download, Get as _};
 
 /// Loads the [`SignerParameters`] from the Manta SDK.
 #[inline]
@@ -55,42 +44,30 @@ where
     directory.push("proving");
     fs::create_dir_all(&directory).ok()?;
     let mint = directory.join("mint.dat");
-    manta_parameters::pay::testnet::proving::Mint::download_if_invalid(&mint).ok()?;
+    manta_parameters::pay::testnet::proving::ToPrivate::download_if_invalid(&mint).ok()?;
     let private_transfer = directory.join("private-transfer.dat");
     manta_parameters::pay::testnet::proving::PrivateTransfer::download_if_invalid(
         &private_transfer,
     )
     .ok()?;
     let reclaim = directory.join("reclaim.dat");
-    manta_parameters::pay::testnet::proving::Reclaim::download_if_invalid(&reclaim).ok()?;
+    manta_parameters::pay::testnet::proving::ToPublic::download_if_invalid(&reclaim).ok()?;
+    let parameters = load_transfer_parameters();
     Some(SignerParameters {
-        proving_context: MultiProvingContext {
-            to_private: ProvingContext::decode(IoReader(File::open(mint).ok()?)).ok()?,
-            private_transfer: ProvingContext::decode(IoReader(File::open(private_transfer).ok()?))
+        proving_context: config::MultiProvingContext {
+            to_private: config::ProvingContext::decode(IoReader(File::open(mint).ok()?)).ok()?,
+            private_transfer: config::ProvingContext::decode(IoReader(File::open(private_transfer).ok()?))
                 .ok()?,
-            to_public: ProvingContext::decode(IoReader(File::open(reclaim).ok()?)).ok()?,
+            to_public: config::ProvingContext::decode(IoReader(File::open(reclaim).ok()?)).ok()?,
         },
-        parameters: Parameters {
-            note_encryption_scheme: NoteEncryptionScheme::decode(
-                manta_parameters::pay::testnet::parameters::NoteEncryptionScheme::get()?,
-            )
-            .ok()?,
-            utxo_commitment: UtxoCommitmentScheme::decode(
-                manta_parameters::pay::testnet::parameters::UtxoCommitmentScheme::get()?,
-            )
-            .ok()?,
-            void_number_commitment: VoidNumberCommitmentScheme::decode(
-                manta_parameters::pay::testnet::parameters::VoidNumberCommitmentScheme::get()?,
-            )
-            .ok()?,
-        },
+        parameters
     })
 }
 
 /// Loads the [`UtxoAccumulatorModel`] from the Manta SDK.
 #[inline]
-pub fn load_utxo_accumulator_model() -> Option<UtxoAccumulatorModel> {
-    UtxoAccumulatorModel::decode(
+pub fn load_utxo_accumulator_model() -> Option<config::UtxoAccumulatorModel> {
+    config::UtxoAccumulatorModel::decode(
         manta_parameters::pay::testnet::parameters::UtxoAccumulatorModel::get()?,
     )
     .ok()
