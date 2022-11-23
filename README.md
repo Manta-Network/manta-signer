@@ -19,11 +19,11 @@
 To delete your private account data completely and set up a new account, open manta-signer on the task bar, select 'Delete Account' and confirm that you would like to delete your account in the pop-up window. 
 
 <p align="center">
-    <img width="655" src="./delete-account-dropdown.png">
+    <img width="355" src="./delete-account-dropdown.png">
 </p>
 
 <p align="center">
-    <img width="655" src="./delete-account-tab.png">
+    <img width="455" src="./delete-account-tab.png">
 </p>
 
 Alternatively, you can achieve the same result by removing these files:
