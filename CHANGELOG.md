@@ -14,10 +14,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 ### Removed
 
 ### Fixed
-- [\#199](https://github.com/Manta-Network/manta-signer/pull/199) Fix unable to login to signer if close during state save
-- [\#204](https://github.com/Manta-Network/manta-signer/pull/204) Check for storage file before deleting it
 
 ### Security
+
+## [1.0.0] 2022-11-23
+
+### Added
+- [\#179](https://github.com/Manta-Network/manta-signer/pull/179) Added signer redesign UI, account deletion and recovery.
+
+### Fixed
+- [\#199](https://github.com/Manta-Network/manta-signer/pull/199) Fix unable to login to signer if close during state save
+- [\#204](https://github.com/Manta-Network/manta-signer/pull/204) Check for storage file before deleting it
 
 ## [0.8.0] 2022-10-05
 
