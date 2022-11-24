@@ -32,10 +32,12 @@ use core::{
 };
 use manta_signer::{
     config::{Config, Setup},
-    manta_accounting::wallet::signer::ReceivingKeyRequest,
     manta_pay::{
         key::Mnemonic,
-        signer::client::network::{Message, Network},
+        signer::{
+            client::network::{Message, Network},
+            GetRequest,
+        },
     },
     secret::{
         mnemonic_channel, password_channel, sample_mnemonic, Authorizer, MnemonicReceiver,
@@ -43,7 +45,7 @@ use manta_signer::{
         SetupFuture, UnitFuture, UserSelection,
     },
     serde::Serialize,
-    service::Server,
+    service::{ReceivingKeyRequest, Server},
     storage::Store,
     tokio::fs,
 };
@@ -522,8 +524,9 @@ async fn receiving_keys(server_store: State<'_, ServerStore>) -> Result<Vec<Stri
     if let Some(store) = &mut *server_store.lock().await {
         let keys = store
             .get_receiving_keys(Message {
+                // TODO: do we need to passing network?
                 network: Network::Dolphin,
-                message: ReceivingKeyRequest::GetAll,
+                message: GetRequest::Get,
             })
             .await;
         return keys;

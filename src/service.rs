@@ -59,7 +59,7 @@ use tokio::{
 };
 
 pub use manta_pay::{
-    config::{address_to_base58, Address as ReceivingKey},
+    config::{address_to_base58, Address},
     signer::{self, SignError, SignResponse, SyncError, SyncResponse},
 };
 
@@ -466,7 +466,7 @@ where
             .get(|_| http::into_body(Server::<A>::version));
         http::register_post(&mut api, "/sync", Server::sync);
         http::register_post(&mut api, "/sign", Server::sign);
-        http::register_post(&mut api, "/receivingKeys", Server::receiving_keys);
+        http::register_post(&mut api, "/address", Server::receiving_keys);
         info!("serving signer API at {}", socket_address)?;
         api.listen(socket_address).await?;
         Ok(())
@@ -623,14 +623,13 @@ where
 
     /// Runs the receiving key sampling protocol on the signer.
     #[inline]
-    pub async fn receiving_keys(self, request: ReceivingKeyRequest) -> Result<Vec<ReceivingKey>> {
-        // info!("[REQUEST] processing `receivingKeys`: {:?}", request)?;
+    pub async fn receiving_keys(self, request: ReceivingKeyRequest) -> Result<Address> {
         let response = self.state.lock().signer[request.network].address();
         info!(
             "[RESPONSE] responding to `receivingKeys` with: {:?}",
             response
         )?;
-        Ok(vec![response])
+        Ok(response)
     }
 
     /// Runs the receiving key sampling protocol on a mutable reference of the signer, and formats
