@@ -39,14 +39,14 @@ where
     directory.push("testnet");
     directory.push("proving");
     fs::create_dir_all(&directory).ok()?;
-    let mint = directory.join("mint.dat");
+    let mint = directory.join("to-private.dat");
     manta_parameters::pay::testnet::proving::ToPrivate::download_if_invalid(&mint).ok()?;
     let private_transfer = directory.join("private-transfer.dat");
     manta_parameters::pay::testnet::proving::PrivateTransfer::download_if_invalid(
         &private_transfer,
     )
     .ok()?;
-    let reclaim = directory.join("reclaim.dat");
+    let reclaim = directory.join("to-public.dat");
     manta_parameters::pay::testnet::proving::ToPublic::download_if_invalid(&reclaim).ok()?;
     let parameters = load_transfer_parameters();
     Some(SignerParameters {

@@ -171,11 +171,9 @@ pub fn display_transaction(
                 network
             )
         }
-        Transaction::ToPublic(Asset { value, .. }) => format!(
-            "Withdraw {} on {} network",
-            metadata.display(*value),
-            network
-        ),
+        Transaction::ToPublic(Asset { value, .. }) => {
+            format!("Public {} on {} network", metadata.display(*value), network)
+        }
     }
 }
 
@@ -399,14 +397,14 @@ where
         } else {
             &config.data_path.manta
         };
-        let exisitng_signer = Signer::from_parts(
+        let existing_signer = Signer::from_parts(
             parameters.clone(),
             Self::load_state(existing_state_path, password_hash)
                 .await
                 .expect("Unable to get dolphin state")?,
         );
         Some(
-            exisitng_signer
+            existing_signer
                 .state()
                 .accounts
                 .keys
@@ -432,7 +430,7 @@ where
                 recovery_mnemonic.expect("unable to retrieve mnemonic for account recreation."),
             )
             .await
-            .expect("Unable to recreate signer instance from exisitng mnemonic.");
+            .expect("Unable to recreate signer instance from existing mnemonic.");
             Ok(Some(state))
         } else {
             Self::load_state(data_path, password_hash).await

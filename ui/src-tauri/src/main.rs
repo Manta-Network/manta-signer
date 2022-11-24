@@ -45,7 +45,7 @@ use manta_signer::{
         SetupFuture, UnitFuture, UserSelection,
     },
     serde::Serialize,
-    service::{ReceivingKeyRequest, Server},
+    service::Server,
     storage::Store,
     tokio::fs,
 };
