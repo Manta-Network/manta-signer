@@ -31,17 +31,13 @@ use http_types::headers::HeaderValue;
 use manta_accounting::{
     asset::{Asset, AssetMetadata},
     fs::{cocoon::File, File as _, SaveError},
-    key::HierarchicalKeyDerivationScheme,
     transfer::canonical::TransferShape,
 };
 use manta_pay::{
     config::Transaction,
     key::{Mnemonic, TestnetKeySecret},
     signer::{
-        base::{
-            HierarchicalKeyDerivationFunction, Signer, SignerParameters, SignerState,
-            UtxoAccumulator,
-        },
+        base::{Signer, SignerParameters, SignerState, UtxoAccumulator},
         client::network::{Message, Network, NetworkSpecific},
     },
 };
@@ -63,7 +59,7 @@ use tokio::{
 };
 
 pub use manta_pay::{
-    config::{receiving_key_to_base58, ReceivingKey},
+    config::{address_to_base58, Address as ReceivingKey},
     signer::{self, SignError, SignResponse, SyncError, SyncResponse},
 };
 
@@ -74,7 +70,7 @@ pub type SyncRequest = Message<signer::SyncRequest>;
 pub type SignRequest = Message<signer::SignRequest>;
 
 /// Receiving Key Request
-pub type ReceivingKeyRequest = Message<signer::ReceivingKeyRequest>;
+pub type ReceivingKeyRequest = Message<signer::GetRequest>;
 
 /// Password Retry Interval
 pub const PASSWORD_RETRY_INTERVAL: Duration = Duration::from_millis(1000);
@@ -162,7 +158,7 @@ pub fn display_transaction(
     network: Network,
 ) -> String {
     match transaction {
-        Transaction::Mint(Asset { value, .. }) => format!(
+        Transaction::ToPrivate(Asset { value, .. }) => format!(
             "Privatize {} on {} network",
             metadata.display(*value),
             network
@@ -171,11 +167,11 @@ pub fn display_transaction(
             format!(
                 "Send {} to {} on {} network",
                 metadata.display(*value),
-                receiving_key_to_base58(receiving_key),
+                address_to_base58(receiving_key),
                 network
             )
         }
-        Transaction::Reclaim(Asset { value, .. }) => format!(
+        Transaction::ToPublic(Asset { value, .. }) => format!(
             "Withdraw {} on {} network",
             metadata.display(*value),
             network
@@ -412,9 +408,8 @@ where
         Some(
             exisitng_signer
                 .state()
-                .accounts()
-                .keys()
-                .base()
+                .accounts
+                .keys
                 .expose_mnemonic()
                 .clone(),
         )
@@ -495,7 +490,7 @@ where
     ) -> Result<SignerState> {
         info!("creating signer state")?;
         let state = SignerState::new(
-            TestnetKeySecret::new(mnemonic, "").map(HierarchicalKeyDerivationFunction::default()),
+            TestnetKeySecret::new(mnemonic, ""),
             UtxoAccumulator::new(
                 task::spawn_blocking(crate::parameters::load_utxo_accumulator_model)
                     .await?
@@ -589,7 +584,7 @@ where
                 },
         } = request;
         match transaction.shape() {
-            TransferShape::Mint => {
+            TransferShape::ToPrivate => {
                 // NOTE: We skip authorization on mint transactions because they are deposits not
                 //       withdrawals from the point of view of the signer. Everything else, by
                 //       default, requests authorization.
@@ -619,9 +614,8 @@ where
         self.authorizer.lock().await.check(prompt).await?;
         let stored_mnemonic = self.state.lock().signer[network]
             .state()
-            .accounts()
-            .keys()
-            .base()
+            .accounts
+            .keys
             .expose_mnemonic()
             .clone();
         Ok(stored_mnemonic)
@@ -630,13 +624,13 @@ where
     /// Runs the receiving key sampling protocol on the signer.
     #[inline]
     pub async fn receiving_keys(self, request: ReceivingKeyRequest) -> Result<Vec<ReceivingKey>> {
-        info!("[REQUEST] processing `receivingKeys`: {:?}", request)?;
-        let response = self.state.lock().signer[request.network].receiving_keys(request.message);
+        // info!("[REQUEST] processing `receivingKeys`: {:?}", request)?;
+        let response = self.state.lock().signer[request.network].address();
         info!(
             "[RESPONSE] responding to `receivingKeys` with: {:?}",
             response
         )?;
-        Ok(response)
+        Ok(vec![response])
     }
 
     /// Runs the receiving key sampling protocol on a mutable reference of the signer, and formats
@@ -646,10 +640,11 @@ where
         &mut self,
         request: ReceivingKeyRequest,
     ) -> Result<Vec<String>, ()> {
-        let response = self.state.lock().signer[request.network].receiving_keys(request.message);
-        let keys = response
+        let response = self.state.lock().signer[request.network].address();
+        let responses = vec![response];
+        let keys = responses
             .into_iter()
-            .map(|key| receiving_key_to_base58(&key))
+            .map(|key| address_to_base58(&key))
             .collect();
         Ok(keys)
     }
