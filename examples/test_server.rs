@@ -17,9 +17,10 @@
 //! Test Signer Server
 
 use manta_crypto::rand::{CryptoRng, OsRng, RngCore, Sample};
+use manta_pay::{key::Mnemonic, signer::client::network::Network};
 use manta_signer::{
-    config::Config,
-    secret::{Authorizer, Password, PasswordFuture, SecretString},
+    config::{Config, Setup},
+    secret::{Authorizer, Password, PasswordFuture, SecretString, SetupFuture},
     service::{Error, Server},
 };
 
@@ -47,6 +48,15 @@ impl Authorizer for MockUser {
     fn password(&mut self) -> PasswordFuture {
         Box::pin(async move { Password::from_known(self.password.clone()) })
     }
+
+    #[inline]
+    fn setup(&mut self, data_exists: bool) -> SetupFuture {
+        if data_exists {
+            Box::pin(async move { Setup::Login })
+        } else {
+            Box::pin(async move { Setup::CreateAccount(Mnemonic::sample(&mut OsRng)) })
+        }
+    }
 }
 
 #[async_std::main]
@@ -54,7 +64,9 @@ async fn main() -> Result<(), Error> {
     let test_dir = tempfile::tempdir()?;
     let mut config =
         Config::try_default().expect("Unable to generate the default server configuration.");
-    config.data_path = test_dir.path().join("storage.dat");
+    config.data_path[Network::Dolphin] = test_dir.path().join("storage-dolphin.dat");
+    config.data_path[Network::Calamari] = test_dir.path().join("storage-calamari.dat");
+    config.data_path[Network::Manta] = test_dir.path().join("storage-manta.dat");
     if let Some(url) = std::env::args().nth(1) {
         config.service_url = url;
     }

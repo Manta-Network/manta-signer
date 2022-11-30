@@ -1,8 +1,9 @@
 import { once } from '@tauri-apps/api/event';
 import React, { useState, useEffect } from 'react';
-import { Button, Header, Input } from 'semantic-ui-react';
+import { Button, Input } from 'semantic-ui-react';
 
 const Authorize = ({
+  cancelSign,
   summary,
   sendPassword,
   stopPasswordPrompt,
@@ -10,6 +11,7 @@ const Authorize = ({
 }) => {
   const [password, setPassword] = useState('');
   const [passwordInvalid, setPasswordInvalid] = useState(false);
+
 
   useEffect(() => {
     once("abort_auth", async () => {
@@ -30,10 +32,11 @@ const Authorize = ({
   };
 
   const onClickDecline = async () => {
-    console.log("[INFO]: Declining Transaction.");
+    ("[INFO]: Declining Transaction.");
     setPassword('');
     setPasswordInvalid(false)
     await stopPasswordPrompt();
+    await cancelSign();
     hideWindow();
   };
 
@@ -44,21 +47,41 @@ const Authorize = ({
 
   return (
     <>
-      <Header>Authorize</Header>
-      <div className="authorize-summary">{summary}</div>
+      <div className='auth-transaction-header'>
+        <h1 className='main-headline'>Authorize Transaction</h1>
+      </div>
+      <div className='transaction-container'>
+        <div className='transaction-detail'>
+          <h5 className='transaction-description'>Send</h5>
+          <div>
+            <h5 className='transaction-value'>{summary.sendAmount + " " + summary.currency}</h5>
+          </div>
+        </div>
+        <div className='transaction-detail'>
+          <h5 className='transaction-description'>To</h5>
+          <h5 className='transaction-value'>{summary.toAddress}</h5>
+        </div>
+        <div className='transaction-detail-padded'>
+          <h5 className='transaction-description'>Network</h5>
+          <h5 className='transaction-value'>{summary.network}</h5>
+        </div>
+      </div>
       <Input
+        className='input ui password'
         type="password"
-        label="Password"
+        placeholder="Enter Password"
         value={password}
         onChange={(e) => onChangePassword(e.target.value)}
         error={passwordInvalid}
       />
-      <Button className="button" onClick={onClickAuthorize}>
-        Authorize
-      </Button>
-      <Button className="button" onClick={onClickDecline}>
-        Decline
-      </Button>
+      <div className='authButtonsContainer'>
+        <Button className="button ui cancel" onClick={onClickDecline}>
+          Cancel
+        </Button>
+        <Button className="button ui first thin" onClick={onClickAuthorize}>
+          Authorize
+        </Button>
+      </div>
     </>
   );
 };

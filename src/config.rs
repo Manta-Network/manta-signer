@@ -16,8 +16,10 @@
 
 //! Manta Signer Configuration
 
-use manta_crypto::rand::OsRng;
-use manta_pay::key::Mnemonic;
+use manta_pay::{
+    key::Mnemonic,
+    signer::client::network::{Network, NetworkSpecific},
+};
 use manta_util::serde::{Deserialize, Serialize};
 use std::{
     io,
@@ -47,10 +49,10 @@ where
 #[serde(crate = "manta_util::serde", deny_unknown_fields)]
 pub struct Config {
     /// Data File Path
-    pub data_path: PathBuf,
+    pub data_path: NetworkSpecific<PathBuf>,
 
     /// Backup File Path
-    pub backup_data_path: PathBuf,
+    pub backup_data_path: NetworkSpecific<PathBuf>,
 
     /// Service URL
     ///
@@ -62,15 +64,33 @@ pub struct Config {
     /// These URLs are the allowed origins that can send requests to the service. An empty list
     /// means any origin is allowed to send requests to the service.
     pub origin_urls: Vec<String>,
+
+    /// If the Signer App can perform a full restart. This is required in order to properly
+    /// terminate the running http sever and disconnect from the UI, but only works in
+    /// normal builds, not dev mode.
+    /// Thus when running `cargo dev` the feature `disable-restart` must be enabled.
+    pub can_app_restart: bool,
 }
+
+/// Response for the [`Config::does_data_exist`] function of [`Config`]. The boolean fields
+/// represent whether or not each respective network data file exists or not.
+pub type DataExistenceResponse = NetworkSpecific<bool>;
 
 impl Config {
     /// Tries to build a default [`Config`].
     #[inline]
     pub fn try_default() -> Option<Self> {
         Some(Self {
-            data_path: file(dirs_next::config_dir(), "storage.dat")?,
-            backup_data_path: file(dirs_next::config_dir(), "storage.backup")?,
+            data_path: NetworkSpecific {
+                dolphin: file(dirs_next::config_dir(), "storage-dolphin.dat")?,
+                calamari: file(dirs_next::config_dir(), "storage-calamari.dat")?,
+                manta: file(dirs_next::config_dir(), "storage-manta.dat")?,
+            },
+            backup_data_path: NetworkSpecific {
+                dolphin: file(dirs_next::config_dir(), "storage-dolphin.backup")?,
+                calamari: file(dirs_next::config_dir(), "storage-calamari.backup")?,
+                manta: file(dirs_next::config_dir(), "storage-manta.backup")?,
+            },
             service_url: "127.0.0.1:29987".into(),
             #[cfg(feature = "unsafe-disable-cors")]
             origin_urls: vec![],
@@ -79,46 +99,76 @@ impl Config {
                 "https://app.manta.network".into(),
                 "https://app.dolphin.manta.network".into(),
             ],
+            #[cfg(feature = "disable-restart")]
+            can_app_restart: false,
+            #[cfg(not(feature = "disable-restart"))]
+            can_app_restart: true,
         })
     }
 
-    /// Returns the data directory path.
+    /// Returns the data directory path. All files will be in same directory so it suffices to check
+    /// on one file i.e. Dolphin.
     #[inline]
     pub fn data_directory(&self) -> &Path {
         self.data_path
+            .dolphin
             .parent()
             .expect("The data path file must always have a parent.")
     }
 
-    /// Builds the [`Setup`] for the given configuration depending on the filesystem resources.
+    /// Returns whether storage file exists for a particular data path.
     #[inline]
-    pub async fn setup(&self) -> io::Result<Setup> {
-        fs::create_dir_all(self.data_directory()).await?;
-        match fs::metadata(&self.data_path).await {
-            Ok(metadata) if metadata.is_file() => Ok(Setup::Login),
+    async fn does_data_exist_at(path: &PathBuf) -> io::Result<bool> {
+        match fs::metadata(path).await {
+            Ok(metadata) if metadata.is_file() => Ok(true),
             Ok(metadata) => Err(io::Error::new(
                 io::ErrorKind::Other,
                 format!("Invalid file format: {:?}.", metadata),
             )),
-            _ => Ok(Setup::CreateAccount(Mnemonic::sample(&mut OsRng))),
+            _ => Ok(false),
         }
     }
 
-    /// Checks for existence of backup storage file. If found, will set the backup
-    /// to be the default storage file.
+    /// Returns whether or not storage files exist already on the filesystem resources.
     #[inline]
-    pub async fn check_for_backup(&self) -> io::Result<bool> {
+    pub async fn does_data_exist(&self) -> DataExistenceResponse {
+        let _ = fs::create_dir_all(self.data_directory()).await;
+
+        let dolphin_exists = Self::does_data_exist_at(&self.data_path.dolphin)
+            .await
+            .expect("Unable to read dolphin file.");
+        let calamari_exists = Self::does_data_exist_at(&self.data_path.calamari)
+            .await
+            .expect("Unable to read calamari file.");
+        let manta_exists = Self::does_data_exist_at(&self.data_path.manta)
+            .await
+            .expect("Unable to read manta file.");
+
+        DataExistenceResponse {
+            dolphin: dolphin_exists,
+            calamari: calamari_exists,
+            manta: manta_exists,
+        }
+    }
+
+    /// Checks for existence of backup storage file for a particular network.
+    /// If found, will set the backup to be the default storage file.
+    #[inline]
+    pub async fn check_for_backup(&self, network: Network) -> io::Result<bool> {
         fs::create_dir_all(self.data_directory()).await?;
-        match fs::metadata(&self.backup_data_path).await {
+        match fs::metadata(&self.backup_data_path[network]).await {
             Ok(metadata) if metadata.is_file() => {
                 // need to check if old storage file still exists before deleting.
-                if let Ok(metadata) = fs::metadata(&self.data_path).await {
+                if let Ok(metadata) = fs::metadata(&self.data_path[network]).await {
                     if metadata.is_file() {
-                        fs::remove_file(self.data_path.clone()).await?;
+                        fs::remove_file(self.data_path[network].clone()).await?;
                     }
                 }
-
-                fs::rename(self.backup_data_path.clone(), self.data_path.clone()).await?;
+                fs::rename(
+                    self.backup_data_path[network].clone(),
+                    self.data_path[network].clone(),
+                )
+                .await?;
                 Ok(true)
             }
             Ok(metadata) => Err(io::Error::new(
@@ -127,6 +177,26 @@ impl Config {
             )),
             _ => Ok(false),
         }
+    }
+
+    /// Checks if backup exists for all networks, if it does then restores
+    /// using the backup.
+    #[inline]
+    pub async fn check_all_backups(&self) -> io::Result<bool> {
+        let dolphin_backup_exists = self
+            .check_for_backup(Network::Dolphin)
+            .await
+            .expect("unable to check for Dolphin backup");
+        let calamari_backup_exists = self
+            .check_for_backup(Network::Calamari)
+            .await
+            .expect("unable to check for Calamari backup");
+        let manta_backup_exists = self
+            .check_for_backup(Network::Manta)
+            .await
+            .expect("unable to check for Manta backup");
+
+        Ok(dolphin_backup_exists && calamari_backup_exists && manta_backup_exists)
     }
 }
 
