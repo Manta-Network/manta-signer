@@ -20,7 +20,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 ## [1.0.0] 2022-11-23
 
 ### Added
-- [\#179](https://github.com/Manta-Network/manta-signer/pull/179) Added signer redesign UI, account deletion and recovery.
+- [\#215](https://github.com/Manta-Network/manta-signer/pull/215) Added signer redesign UI, account deletion and recovery.
 
 ### Fixed
 - [\#199](https://github.com/Manta-Network/manta-signer/pull/199) Fix unable to login to signer if close during state save
