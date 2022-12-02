@@ -406,8 +406,8 @@ where
         Some(
             existing_signer
                 .state()
-                .accounts
-                .keys
+                .accounts()
+                .keys()
                 .expose_mnemonic()
                 .clone(),
         )
@@ -612,8 +612,8 @@ where
         self.authorizer.lock().await.check(prompt).await?;
         let stored_mnemonic = self.state.lock().signer[network]
             .state()
-            .accounts
-            .keys
+            .accounts()
+            .keys()
             .expose_mnemonic()
             .clone();
         Ok(stored_mnemonic)
