@@ -136,11 +136,11 @@ impl Display for Error {
     #[inline]
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
-            Self::AddrParseError(err) => write!(f, "Address Parse Error: {}", err),
-            Self::JoinError(err) => write!(f, "Join Error: {}", err),
+            Self::AddrParseError(err) => write!(f, "Address Parse Error: {err}"),
+            Self::JoinError(err) => write!(f, "Join Error: {err}"),
             Self::ParameterLoadingError => write!(f, "Parameter Loading Error"),
-            Self::SaveError(err) => write!(f, "Save Error: {}", err),
-            Self::Io(err) => write!(f, "I/O Error: {}", err),
+            Self::SaveError(err) => write!(f, "Save Error: {err}"),
+            Self::Io(err) => write!(f, "I/O Error: {err}"),
             Self::AuthorizationError => write!(f, "Authorization Error"),
             Self::Delayed => write!(f, "Delay Error"),
         }
