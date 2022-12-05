@@ -464,7 +464,7 @@ where
             .get(|_| http::into_body(Server::<A>::version));
         http::register_post(&mut api, "/sync", Server::sync);
         http::register_post(&mut api, "/sign", Server::sign);
-        http::register_post(&mut api, "/address", Server::receiving_keys);
+        http::register_post(&mut api, "/address", Server::address);
         info!("serving signer API at {}", socket_address)?;
         api.listen(socket_address).await?;
         Ok(())
@@ -621,28 +621,18 @@ where
 
     /// Runs the receiving key sampling protocol on the signer.
     #[inline]
-    pub async fn receiving_keys(self, request: ReceivingKeyRequest) -> Result<Address> {
+    pub async fn address(self, request: ReceivingKeyRequest) -> Result<Address> {
         let response = self.state.lock().signer[request.network].address();
-        info!(
-            "[RESPONSE] responding to `receivingKeys` with: {:?}",
-            response
-        )?;
+        info!("[RESPONSE] responding to `receivingKeys` with: {response:?}")?;
         Ok(response)
     }
 
     /// Runs the receiving key sampling protocol on a mutable reference of the signer, and formats
     /// the result to base 58.
     #[inline]
-    pub async fn get_receiving_keys(
-        &mut self,
-        request: ReceivingKeyRequest,
-    ) -> Result<Vec<String>, ()> {
+    pub async fn get_address(&mut self, request: ReceivingKeyRequest) -> Result<String, ()> {
         let response = self.state.lock().signer[request.network].address();
-        let responses = vec![response];
-        let keys = responses
-            .into_iter()
-            .map(|key| address_to_base58(&key))
-            .collect();
-        Ok(keys)
+        let key = address_to_base58(&response);
+        Ok(key)
     }
 }
