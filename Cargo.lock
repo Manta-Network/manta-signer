@@ -2749,8 +2749,8 @@ dependencies = [
 
 [[package]]
 name = "manta-accounting"
-version = "0.5.6"
-source = "git+https://github.com/manta-network/manta-rs?branch=zqh/new-circuits-signer#ed38da01a74781724416a001559c7e235ae532ec"
+version = "0.5.7"
+source = "git+https://github.com/manta-network/manta-rs#6572219b4793a5fed9ae4c8ecc1281eadbc038a4"
 dependencies = [
  "bitflags",
  "cocoon",
@@ -2763,8 +2763,8 @@ dependencies = [
 
 [[package]]
 name = "manta-crypto"
-version = "0.5.6"
-source = "git+https://github.com/manta-network/manta-rs?branch=zqh/new-circuits-signer#ed38da01a74781724416a001559c7e235ae532ec"
+version = "0.5.7"
+source = "git+https://github.com/manta-network/manta-rs#6572219b4793a5fed9ae4c8ecc1281eadbc038a4"
 dependencies = [
  "ark-bls12-381",
  "ark-bn254",
@@ -2772,12 +2772,16 @@ dependencies = [
  "ark-ed-on-bls12-381",
  "ark-ed-on-bn254",
  "ark-ff",
+ "ark-groth16",
  "ark-r1cs-std",
  "ark-relations",
  "ark-serialize",
+ "ark-snark",
+ "ark-std",
  "derivative",
  "ed25519-dalek",
  "manta-util",
+ "num-integer",
  "rand 0.8.5",
  "rand_chacha 0.3.1",
  "rand_core 0.6.4",
@@ -2785,8 +2789,8 @@ dependencies = [
 
 [[package]]
 name = "manta-parameters"
-version = "0.5.6"
-source = "git+https://github.com/manta-network/manta-rs?branch=zqh/new-circuits-signer#ed38da01a74781724416a001559c7e235ae532ec"
+version = "0.5.7"
+source = "git+https://github.com/manta-network/manta-rs#6572219b4793a5fed9ae4c8ecc1281eadbc038a4"
 dependencies = [
  "anyhow",
  "attohttpc",
@@ -2798,13 +2802,10 @@ dependencies = [
 
 [[package]]
 name = "manta-pay"
-version = "0.5.6"
-source = "git+https://github.com/manta-network/manta-rs?branch=zqh/new-circuits-signer#ed38da01a74781724416a001559c7e235ae532ec"
+version = "0.5.7"
+source = "git+https://github.com/manta-network/manta-rs#6572219b4793a5fed9ae4c8ecc1281eadbc038a4"
 dependencies = [
  "aes-gcm 0.9.4",
- "ark-groth16",
- "ark-snark",
- "ark-std",
  "bip0039",
  "bip32",
  "blake2 0.10.5",
@@ -2815,7 +2816,6 @@ dependencies = [
  "manta-parameters",
  "manta-util",
  "num-bigint",
- "num-integer",
 ]
 
 [[package]]
@@ -2856,8 +2856,8 @@ dependencies = [
 
 [[package]]
 name = "manta-util"
-version = "0.5.6"
-source = "git+https://github.com/manta-network/manta-rs?branch=zqh/new-circuits-signer#ed38da01a74781724416a001559c7e235ae532ec"
+version = "0.5.7"
+source = "git+https://github.com/manta-network/manta-rs#6572219b4793a5fed9ae4c8ecc1281eadbc038a4"
 dependencies = [
  "crossbeam-channel",
  "serde",

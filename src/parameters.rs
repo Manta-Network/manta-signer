@@ -62,7 +62,7 @@ where
     })
 }
 
-/// Loads the [`UtxoAccumulatorModel`] from the Manta SDK.
+/// Loads the [`UtxoAccumulatorModel`](config::UtxoAccumulatorModel) from the Manta SDK.
 #[inline]
 pub fn load_utxo_accumulator_model() -> Option<config::UtxoAccumulatorModel> {
     config::UtxoAccumulatorModel::decode(
