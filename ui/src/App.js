@@ -287,8 +287,7 @@ function App() {
 
   const getReceivingKeys = async () => {
     console.log("[INFO]: Getting receiving keys.")
-    const newReceivingKeys = await invoke('receiving_keys');
-    const newReceivingKey = newReceivingKeys[0];
+    const newReceivingKey = await invoke('address');
     setReceivingKey(newReceivingKey);
     const newReceivingKeyDisplay = newReceivingKey ?
       `${newReceivingKey.slice(0, 10)}...${newReceivingKey.slice(-10)}` :

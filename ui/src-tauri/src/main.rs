@@ -520,16 +520,16 @@ async fn reset_account(
 
 /// Returns receiving keys to front end to display once user is logged in.
 #[tauri::command]
-async fn receiving_keys(server_store: State<'_, ServerStore>) -> Result<Vec<String>, ()> {
+async fn address(server_store: State<'_, ServerStore>) -> Result<String, ()> {
     if let Some(store) = &mut *server_store.lock().await {
-        let keys = store
-            .get_receiving_keys(Message {
+        let key = store
+            .get_address(Message {
                 // TODO: do we need to passing network?
                 network: Network::Dolphin,
                 message: GetRequest::Get,
             })
             .await;
-        return keys;
+        return key;
     }
     Err(())
 }
@@ -656,7 +656,7 @@ fn main() {
             reset_account,
             connect_ui,
             disconnect_ui,
-            receiving_keys,
+            address,
             get_recovery_phrase,
             cancel_sign,
             enable_reset_menu_item
