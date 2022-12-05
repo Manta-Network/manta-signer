@@ -296,7 +296,6 @@ where
                         mnemonic.clone(),
                     )
                     .await?;
-
                     break (
                         password_hash,
                         Signer::from_parts(parameters.clone(), dolphin_state),

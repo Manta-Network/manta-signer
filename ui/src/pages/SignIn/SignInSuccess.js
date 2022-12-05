@@ -3,6 +3,7 @@ import mantaLogo from "../../icons/manta.png";
 import dolphinLogo from "../../icons/Square150x150Logo.png";
 import calamariLogo from "../../icons/calamari.png";
 import newAccount from "../../icons/new_account.png";
+import CopyButton from '../../components/copyButton';
 import "../../App.css";
 
 const SignInSuccess = ({
