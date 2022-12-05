@@ -20,7 +20,7 @@ import ShowPhrase from './pages/AccountCreation/ShowPhrase';
 import ConfirmPhrase from './pages/AccountCreation/ConfirmPhrase';
 
 const SEND = "Send";
-const WITHDRAW = "Withdraw";
+const PUBLIC = "Public";
 const GET_RECOVERY_PHRASE = "GetRecoveryPhrase";
 
 function App() {
@@ -141,9 +141,9 @@ function App() {
         + "..." + toAddress.substr(toAddress.length - 10);
       parsedAuthorizationSummary.toAddress = toAddress;
       parsedAuthorizationSummary.network = summary[6];
-    } else if (summary[0] === WITHDRAW) {
+    } else if (summary[0] === PUBLIC) {
 
-      // Withdraw {} on {} network
+      // Public {} on {} network
       parsedAuthorizationSummary.toAddress = "Your Public Address";
       parsedAuthorizationSummary.network = summary[4];
     } else {
