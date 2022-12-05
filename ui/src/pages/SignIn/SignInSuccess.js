@@ -1,4 +1,4 @@
-import { Button, Icon } from 'semantic-ui-react';
+import { Button } from 'semantic-ui-react';
 import mantaLogo from "../../icons/manta.png";
 import dolphinLogo from "../../icons/Square150x150Logo.png";
 import calamariLogo from "../../icons/calamari.png";
