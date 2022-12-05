@@ -23,14 +23,10 @@ const SignInSuccess = ({
     </div>
     <div className='zk-address-container'>
       <p className='sub-text'>{receivingKeyDisplay}</p>
-      {showCopyNotification ?
-        <Button onClick={onClickCopyZkAddress} className='button ui copy'>
-          <Icon name="checkmark" className='specific' />
-        </Button> :
-        <Button onClick={onClickCopyZkAddress} className='button ui copy'>
-          <Icon name="copy outline" className='specific' />
-        </Button>
-      }
+      <CopyButton
+        showCopyNotification={showCopyNotification}
+        onClickCopyPhrase={onClickCopyZkAddress}
+      />
     </div>
     <div className='supported-networks-container'>
       <div className='supported-networks-child'>
