@@ -304,7 +304,11 @@ function App() {
       <Container className="page">
         <Routes>
           <Route exact path='/' element={<Navigate to={"/loading"} />} />
-          <Route path='/loading' element={<Loading />} />
+          <Route path='/loading' element={
+            <Loading
+              isConnected={isConnected}
+            />
+          } />
           <Route path='/create-or-recover' element={
             <CreateOrRecover
               startCreate={startCreate}
