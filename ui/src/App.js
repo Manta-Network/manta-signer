@@ -40,6 +40,7 @@ function App() {
     show_secret_phrase: false
   });
   const [exportedSecretPhrase, setExportedSecretPhrase] = useState(null);
+  const [loginFailedOccured, setLoginFailedOccured] = useState(false);
 
   // keeps show secret phrase listener in sync with exportingPhrase state
   // whether or not we are currently exporting the phrase.
@@ -362,6 +363,8 @@ function App() {
               endInitialConnectionPhase={endInitialConnectionPhase}
               startRecover={startRecover}
               hideWindow={hideWindow}
+              loginFailedOccured={loginFailedOccured}
+              setLoginFailedOccured={setLoginFailedOccured}
             />
           } />
           <Route path='/authorize' element={

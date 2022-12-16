@@ -10,7 +10,9 @@ const SignIn = ({
   sendPassword,
   endInitialConnectionPhase,
   startRecover,
-  hideWindow
+  hideWindow,
+  loginFailedOccured,
+  setLoginFailedOccured
 }) => {
   const [password, setPassword] = useState('');
   const [passwordInvalid, setPasswordInvalid] = useState(null);
@@ -20,7 +22,11 @@ const SignIn = ({
 
   const onClickSignIn = async () => {
     setLoading(true);
-    await sendSelection("SignIn");
+
+    if (!loginFailedOccured) {
+      await sendSelection("SignIn");
+    }
+
     const shouldRetry = await sendPassword(password);
 
     if (!shouldRetry) {
@@ -30,8 +36,9 @@ const SignIn = ({
       setPassword('');
       setLoginSuccess(true);
     } else {
-      console.log("[INFO]: Invalid password, RETRY!");
+      setLoginFailedOccured(true);
       setPasswordInvalid(true);
+      console.log("[INFO]: Invalid password, RETRY!");
     }
     setLoading(false);
   };
