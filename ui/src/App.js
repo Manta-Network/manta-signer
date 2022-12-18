@@ -128,7 +128,7 @@ function App() {
   const parseTransactionSummary = (summary) => {
 
     let parsedAuthorizationSummary = {
-      sendAmount: summary[1],
+      sendAmount: parseFloat(summary[1]),
       currency: summary[2],
       toAddress: null,
       network: null
