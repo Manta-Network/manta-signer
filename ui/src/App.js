@@ -32,12 +32,14 @@ function App() {
   const [recoveryPhrase, setRecoveryPhrase] = useState(null);
   const [authorizationSummary, setAuthorizationSummary] = useState(null);
   const [receivingKey, setReceivingKey] = useState(null);
+  const [loginSuccess, setLoginSuccess] = useState(false);
   const [receivingKeyDisplay, setReceivingKeyDisplay] = useState(null);
   const [activeListeners, setActiveListeners] = useState({
     authorize: false,
     connect: false,
     tray_reset_account: false,
-    show_secret_phrase: false
+    show_secret_phrase: false,
+    show_zk_address: false
   });
   const [exportedSecretPhrase, setExportedSecretPhrase] = useState(null);
   const [loginFailedOccured, setLoginFailedOccured] = useState(false);
@@ -88,14 +90,7 @@ function App() {
       console.log("[INFO]: Setup tray reset listener.");
       listen('tray_reset_account', async (event) => {
         console.log("[INFO]: Wake: ", event);
-
-        // checking to make sure to end password stalling listener on backend if we switch away
-        // from the export secret phrase.
-        if (exportingPhraseRef.current) {
-          console.log("[INFO]: Ending export phrase process.");
-          await stopPasswordPrompt();
-          endExportPhrase(false);
-        }
+        await checkAndStopExportingPhrase();
         navigate("/reset");
       })
     }
@@ -169,6 +164,7 @@ function App() {
       }
 
       // Case 2: we need authorization for signing a transaction.
+      await checkAndStopExportingPhrase();
       let parsedAuthorizationSummary = parseTransactionSummary(event.payload.split(" "));
 
       setAuthorizationSummary(parsedAuthorizationSummary);
@@ -181,6 +177,25 @@ function App() {
     console.log("[INFO]: Setup tray show secret phrase listener.");
     listen('show_secret_phrase', (_event) => {
       getSecretRecoveryPhrase();
+    })
+  }
+
+  const checkAndStopExportingPhrase = async () => {
+    // checking to make sure to end password stalling listener on backend if we switch away
+    // from the export secret phrase.
+    if (exportingPhraseRef.current) {
+      console.log("[INFO]: Ending export phrase process.");
+      await stopPasswordPrompt();
+      endExportPhrase(false);
+    }
+  }
+
+  const listenForShowZkAddressRequests = async () => {
+    console.log("[INFO]: Setup tray show zk address listener.");
+    listen('show_zk_address', async (_event) => {
+      await checkAndStopExportingPhrase();
+      navigate("/sign-in");
+      appWindow.show();
     })
   }
 
@@ -252,6 +267,14 @@ function App() {
       setActiveListeners({
         ...activeListeners,
         show_secret_phrase: true
+      })
+    }
+
+    if (!activeListeners.show_zk_address) {
+      listenForShowZkAddressRequests();
+      setActiveListeners({
+        ...activeListeners,
+        show_zk_address: true
       })
     }
 
@@ -355,6 +378,8 @@ function App() {
           </Route>
           <Route path='/sign-in' element={
             <SignIn
+              loginSuccess={loginSuccess}
+              setLoginSuccess={setLoginSuccess}
               sendSelection={sendSelection}
               getReceivingKeys={getReceivingKeys}
               receivingKey={receivingKey}

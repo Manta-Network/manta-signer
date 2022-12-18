@@ -3,6 +3,8 @@ import SignInPage from './SignInPage';
 import SignInSuccess from './SignInSuccess';
 
 const SignIn = ({
+  loginSuccess,
+  setLoginSuccess,
   sendSelection,
   getReceivingKeys,
   receivingKey,
@@ -16,7 +18,6 @@ const SignIn = ({
 }) => {
   const [password, setPassword] = useState('');
   const [passwordInvalid, setPasswordInvalid] = useState(null);
-  const [loginSuccess, setLoginSuccess] = useState(false);
   const [showCopyNotification, setShowCopyNotification] = useState(false);
   const [loading, setLoading] = useState(false);
 
