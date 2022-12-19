@@ -600,18 +600,18 @@ fn main() {
                         window(app, "main")
                             .emit("show_secret_phrase", ())
                             .expect("Unable to emit reset tray event to window.");
-                    },
+                    }
                     "view zk address" => {
                         window(app, "main")
                             .emit("show_zk_address", ())
                             .expect("Unable to emit reset tray event to window.");
-                    },
+                    }
                     "reset" => {
                         window(app, "main").show().expect("Unable to show window");
                         window(app, "main")
                             .emit("tray_reset_account", ())
                             .expect("Unable to emit reset tray event to window.");
-                    },
+                    }
                     "exit" => app.exit(0),
                     _ => {}
                 }
