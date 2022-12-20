@@ -6,6 +6,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 ## [Unreleased]
 
 ### Added
+- [\#228](https://github.com/Manta-Network/manta-signer/pull/228) Adding support for new V3 protocol(AES) and bug fixed(UI).
 - [\#215](https://github.com/Manta-Network/manta-signer/pull/215) Added signer redesign UI, account deletion and recovery.
 
 ### Changed
