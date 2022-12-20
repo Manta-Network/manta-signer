@@ -3,6 +3,8 @@ import SignInPage from './SignInPage';
 import SignInSuccess from './SignInSuccess';
 
 const SignIn = ({
+  loginSuccess,
+  setLoginSuccess,
   sendSelection,
   getReceivingKeys,
   receivingKey,
@@ -10,17 +12,22 @@ const SignIn = ({
   sendPassword,
   endInitialConnectionPhase,
   startRecover,
-  hideWindow
+  hideWindow,
+  loginFailedOccured,
+  setLoginFailedOccured
 }) => {
   const [password, setPassword] = useState('');
   const [passwordInvalid, setPasswordInvalid] = useState(null);
-  const [loginSuccess, setLoginSuccess] = useState(false);
   const [showCopyNotification, setShowCopyNotification] = useState(false);
   const [loading, setLoading] = useState(false);
 
   const onClickSignIn = async () => {
     setLoading(true);
-    await sendSelection("SignIn");
+
+    if (!loginFailedOccured) {
+      await sendSelection("SignIn");
+    }
+
     const shouldRetry = await sendPassword(password);
 
     if (!shouldRetry) {
@@ -30,8 +37,9 @@ const SignIn = ({
       setPassword('');
       setLoginSuccess(true);
     } else {
-      console.log("[INFO]: Invalid password, RETRY!");
+      setLoginFailedOccured(true);
       setPasswordInvalid(true);
+      console.log("[INFO]: Invalid password, RETRY!");
     }
     setLoading(false);
   };

@@ -20,7 +20,7 @@ import ShowPhrase from './pages/AccountCreation/ShowPhrase';
 import ConfirmPhrase from './pages/AccountCreation/ConfirmPhrase';
 
 const SEND = "Send";
-const WITHDRAW = "Withdraw";
+const PUBLIC = "Public";
 const GET_RECOVERY_PHRASE = "GetRecoveryPhrase";
 
 function App() {
@@ -32,15 +32,20 @@ function App() {
   const [recoveryPhrase, setRecoveryPhrase] = useState(null);
   const [authorizationSummary, setAuthorizationSummary] = useState(null);
   const [receivingKey, setReceivingKey] = useState(null);
+  const [loginSuccess, setLoginSuccess] = useState(false);
   const [receivingKeyDisplay, setReceivingKeyDisplay] = useState(null);
   const [activeListeners, setActiveListeners] = useState({
     authorize: false,
     connect: false,
     tray_reset_account: false,
-    show_secret_phrase: false
+    show_secret_phrase: false,
+    show_zk_address: false
   });
   const [exportedSecretPhrase, setExportedSecretPhrase] = useState(null);
+  const [loginFailedOccured, setLoginFailedOccured] = useState(false);
 
+  // keeps show secret phrase listener in sync with exportingPhrase state
+  // whether or not we are currently exporting the phrase.
   const exportingPhraseRef = useRef(false);
 
   const pathnameRef = useRef(location.pathname);
@@ -85,14 +90,7 @@ function App() {
       console.log("[INFO]: Setup tray reset listener.");
       listen('tray_reset_account', async (event) => {
         console.log("[INFO]: Wake: ", event);
-
-        // checking to make sure to end password stalling listener on backend if we switch away
-        // from the export secret phrase.
-        if (exportingPhraseRef.current) {
-          console.log("[INFO]: Ending export phrase process.");
-          await stopPasswordPrompt();
-          endExportPhrase(false);
-        }
+        await checkAndStopExportingPhrase();
         navigate("/reset");
       })
     }
@@ -125,7 +123,7 @@ function App() {
   const parseTransactionSummary = (summary) => {
 
     let parsedAuthorizationSummary = {
-      sendAmount: summary[1],
+      sendAmount: parseFloat(summary[1]),
       currency: summary[2],
       toAddress: null,
       network: null
@@ -139,9 +137,9 @@ function App() {
         + "..." + toAddress.substr(toAddress.length - 10);
       parsedAuthorizationSummary.toAddress = toAddress;
       parsedAuthorizationSummary.network = summary[6];
-    } else if (summary[0] === WITHDRAW) {
+    } else if (summary[0] === PUBLIC) {
 
-      // Withdraw {} on {} network
+      // Public {} on {} network
       parsedAuthorizationSummary.toAddress = "Your Public Address";
       parsedAuthorizationSummary.network = summary[4];
     } else {
@@ -166,6 +164,7 @@ function App() {
       }
 
       // Case 2: we need authorization for signing a transaction.
+      await checkAndStopExportingPhrase();
       let parsedAuthorizationSummary = parseTransactionSummary(event.payload.split(" "));
 
       setAuthorizationSummary(parsedAuthorizationSummary);
@@ -178,6 +177,25 @@ function App() {
     console.log("[INFO]: Setup tray show secret phrase listener.");
     listen('show_secret_phrase', (_event) => {
       getSecretRecoveryPhrase();
+    })
+  }
+
+  const checkAndStopExportingPhrase = async () => {
+    // checking to make sure to end password stalling listener on backend if we switch away
+    // from the export secret phrase.
+    if (exportingPhraseRef.current) {
+      console.log("[INFO]: Ending export phrase process.");
+      await stopPasswordPrompt();
+      endExportPhrase(false);
+    }
+  }
+
+  const listenForShowZkAddressRequests = async () => {
+    console.log("[INFO]: Setup tray show zk address listener.");
+    listen('show_zk_address', async (_event) => {
+      await checkAndStopExportingPhrase();
+      navigate("/sign-in");
+      appWindow.show();
     })
   }
 
@@ -252,6 +270,14 @@ function App() {
       })
     }
 
+    if (!activeListeners.show_zk_address) {
+      listenForShowZkAddressRequests();
+      setActiveListeners({
+        ...activeListeners,
+        show_zk_address: true
+      })
+    }
+
   };
 
   const endConnection = async () => {
@@ -285,8 +311,7 @@ function App() {
 
   const getReceivingKeys = async () => {
     console.log("[INFO]: Getting receiving keys.")
-    const newReceivingKeys = await invoke('receiving_keys');
-    const newReceivingKey = newReceivingKeys[0];
+    const newReceivingKey = await invoke('address');
     setReceivingKey(newReceivingKey);
     const newReceivingKeyDisplay = newReceivingKey ?
       `${newReceivingKey.slice(0, 10)}...${newReceivingKey.slice(-10)}` :
@@ -303,7 +328,11 @@ function App() {
       <Container className="page">
         <Routes>
           <Route exact path='/' element={<Navigate to={"/loading"} />} />
-          <Route path='/loading' element={<Loading />} />
+          <Route path='/loading' element={
+            <Loading
+              isConnected={isConnected}
+            />
+          } />
           <Route path='/create-or-recover' element={
             <CreateOrRecover
               startCreate={startCreate}
@@ -349,6 +378,8 @@ function App() {
           </Route>
           <Route path='/sign-in' element={
             <SignIn
+              loginSuccess={loginSuccess}
+              setLoginSuccess={setLoginSuccess}
               sendSelection={sendSelection}
               getReceivingKeys={getReceivingKeys}
               receivingKey={receivingKey}
@@ -357,6 +388,8 @@ function App() {
               endInitialConnectionPhase={endInitialConnectionPhase}
               startRecover={startRecover}
               hideWindow={hideWindow}
+              loginFailedOccured={loginFailedOccured}
+              setLoginFailedOccured={setLoginFailedOccured}
             />
           } />
           <Route path='/authorize' element={

@@ -51,10 +51,11 @@ impl Authorizer for MockUser {
 
     #[inline]
     fn setup(&mut self, data_exists: bool) -> SetupFuture {
+        let new_mnemonic = Mnemonic::sample(&mut OsRng);
         if data_exists {
             Box::pin(async move { Setup::Login })
         } else {
-            Box::pin(async move { Setup::CreateAccount(Mnemonic::sample(&mut OsRng)) })
+            Box::pin(async move { Setup::CreateAccount(new_mnemonic) })
         }
     }
 }

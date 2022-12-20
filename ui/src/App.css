@@ -411,7 +411,7 @@
     display: flex;
     justify-content: space-between;
     width: 75%;
-    height:2.7rem;
+    min-height:2.7rem;
 }
 
 .transaction-detail-padded {

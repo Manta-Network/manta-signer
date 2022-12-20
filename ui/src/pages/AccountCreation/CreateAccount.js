@@ -30,7 +30,6 @@ const CreateAccount = ({
   const navigate = useNavigate();
   const location = useLocation();
 
-
   const onClickCopyPhrase = () => {
     navigator.clipboard.writeText(actualPhrase);
 

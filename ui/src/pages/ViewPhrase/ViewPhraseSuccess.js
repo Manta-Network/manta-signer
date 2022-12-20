@@ -1,12 +1,15 @@
 import { Button } from 'semantic-ui-react';
 import hiddenImage from "../../icons/eye-close.png";
+import CopyButton from '../../components/copyButton';
 import "../../App.css";
 
 const ViewPhraseSuccess = ({
   recoveryPhraseConfirmed,
   exportedSecretPhrase,
   onClickConfirmRecoveryPhrase,
-  onClickFinish
+  onClickFinish,
+  showCopyNotification,
+  onClickCopyPhrase
 }) => {
 
   return (<>
@@ -35,7 +38,17 @@ const ViewPhraseSuccess = ({
         </div>
       }
     </div>
-
+      <div className="copy-icon-container">
+        {
+          recoveryPhraseConfirmed ?
+            <CopyButton
+              showCopyNotification={showCopyNotification}
+              onClickCopyPhrase={onClickCopyPhrase}
+            />
+            :
+            <div className='empty-place-holder-1rem'></div>
+        }
+      </div>
     <div className="secret-phrase-warning-container">
       <div className="secret-phrase-warning">
         <p className="secret-phrase-warning-text">Warning: Never share your secret recovery phrase. {<br />} Anyone with your secret recovery phrase can steal assets in your wallet.</p>

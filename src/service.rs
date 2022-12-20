@@ -31,17 +31,13 @@ use http_types::headers::HeaderValue;
 use manta_accounting::{
     asset::{Asset, AssetMetadata},
     fs::{cocoon::File, File as _, SaveError},
-    key::HierarchicalKeyDerivationScheme,
     transfer::canonical::TransferShape,
 };
 use manta_pay::{
     config::Transaction,
     key::{Mnemonic, TestnetKeySecret},
     signer::{
-        base::{
-            HierarchicalKeyDerivationFunction, Signer, SignerParameters, SignerState,
-            UtxoAccumulator,
-        },
+        base::{Signer, SignerParameters, SignerState, UtxoAccumulator},
         client::network::{Message, Network, NetworkSpecific},
     },
 };
@@ -63,7 +59,7 @@ use tokio::{
 };
 
 pub use manta_pay::{
-    config::{receiving_key_to_base58, ReceivingKey},
+    config::{address_to_base58, Address},
     signer::{self, SignError, SignResponse, SyncError, SyncResponse},
 };
 
@@ -74,7 +70,7 @@ pub type SyncRequest = Message<signer::SyncRequest>;
 pub type SignRequest = Message<signer::SignRequest>;
 
 /// Receiving Key Request
-pub type ReceivingKeyRequest = Message<signer::ReceivingKeyRequest>;
+pub type ReceivingKeyRequest = Message<signer::GetRequest>;
 
 /// Password Retry Interval
 pub const PASSWORD_RETRY_INTERVAL: Duration = Duration::from_millis(1000);
@@ -140,11 +136,11 @@ impl Display for Error {
     #[inline]
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
-            Self::AddrParseError(err) => write!(f, "Address Parse Error: {}", err),
-            Self::JoinError(err) => write!(f, "Join Error: {}", err),
+            Self::AddrParseError(err) => write!(f, "Address Parse Error: {err}"),
+            Self::JoinError(err) => write!(f, "Join Error: {err}"),
             Self::ParameterLoadingError => write!(f, "Parameter Loading Error"),
-            Self::SaveError(err) => write!(f, "Save Error: {}", err),
-            Self::Io(err) => write!(f, "I/O Error: {}", err),
+            Self::SaveError(err) => write!(f, "Save Error: {err}"),
+            Self::Io(err) => write!(f, "I/O Error: {err}"),
             Self::AuthorizationError => write!(f, "Authorization Error"),
             Self::Delayed => write!(f, "Delay Error"),
         }
@@ -162,24 +158,26 @@ pub fn display_transaction(
     network: Network,
 ) -> String {
     match transaction {
-        Transaction::Mint(Asset { value, .. }) => format!(
+        Transaction::ToPrivate(Asset { value, .. }) => format!(
             "Privatize {} on {} network",
-            metadata.display(*value),
+            metadata.display(*value, metadata.decimals),
             network
         ),
         Transaction::PrivateTransfer(Asset { value, .. }, receiving_key) => {
             format!(
                 "Send {} to {} on {} network",
-                metadata.display(*value),
-                receiving_key_to_base58(receiving_key),
+                metadata.display(*value, metadata.decimals),
+                address_to_base58(receiving_key),
                 network
             )
         }
-        Transaction::Reclaim(Asset { value, .. }) => format!(
-            "Withdraw {} on {} network",
-            metadata.display(*value),
-            network
-        ),
+        Transaction::ToPublic(Asset { value, .. }) => {
+            format!(
+                "Public {} on {} network",
+                metadata.display(*value, metadata.decimals),
+                network
+            )
+        }
     }
 }
 
@@ -302,7 +300,6 @@ where
                         mnemonic.clone(),
                     )
                     .await?;
-
                     break (
                         password_hash,
                         Signer::from_parts(parameters.clone(), dolphin_state),
@@ -403,18 +400,17 @@ where
         } else {
             &config.data_path.manta
         };
-        let exisitng_signer = Signer::from_parts(
+        let existing_signer = Signer::from_parts(
             parameters.clone(),
             Self::load_state(existing_state_path, password_hash)
                 .await
                 .expect("Unable to get dolphin state")?,
         );
         Some(
-            exisitng_signer
+            existing_signer
                 .state()
                 .accounts()
                 .keys()
-                .base()
                 .expose_mnemonic()
                 .clone(),
         )
@@ -437,7 +433,7 @@ where
                 recovery_mnemonic.expect("unable to retrieve mnemonic for account recreation."),
             )
             .await
-            .expect("Unable to recreate signer instance from exisitng mnemonic.");
+            .expect("Unable to recreate signer instance from existing mnemonic.");
             Ok(Some(state))
         } else {
             Self::load_state(data_path, password_hash).await
@@ -471,7 +467,7 @@ where
             .get(|_| http::into_body(Server::<A>::version));
         http::register_post(&mut api, "/sync", Server::sync);
         http::register_post(&mut api, "/sign", Server::sign);
-        http::register_post(&mut api, "/receivingKeys", Server::receiving_keys);
+        http::register_post(&mut api, "/address", Server::address);
         info!("serving signer API at {}", socket_address)?;
         api.listen(socket_address).await?;
         Ok(())
@@ -495,7 +491,7 @@ where
     ) -> Result<SignerState> {
         info!("creating signer state")?;
         let state = SignerState::new(
-            TestnetKeySecret::new(mnemonic, "").map(HierarchicalKeyDerivationFunction::default()),
+            TestnetKeySecret::new(mnemonic, ""),
             UtxoAccumulator::new(
                 task::spawn_blocking(crate::parameters::load_utxo_accumulator_model)
                     .await?
@@ -589,7 +585,7 @@ where
                 },
         } = request;
         match transaction.shape() {
-            TransferShape::Mint => {
+            TransferShape::ToPrivate => {
                 // NOTE: We skip authorization on mint transactions because they are deposits not
                 //       withdrawals from the point of view of the signer. Everything else, by
                 //       default, requests authorization.
@@ -621,7 +617,6 @@ where
             .state()
             .accounts()
             .keys()
-            .base()
             .expose_mnemonic()
             .clone();
         Ok(stored_mnemonic)
@@ -629,28 +624,18 @@ where
 
     /// Runs the receiving key sampling protocol on the signer.
     #[inline]
-    pub async fn receiving_keys(self, request: ReceivingKeyRequest) -> Result<Vec<ReceivingKey>> {
-        info!("[REQUEST] processing `receivingKeys`: {:?}", request)?;
-        let response = self.state.lock().signer[request.network].receiving_keys(request.message);
-        info!(
-            "[RESPONSE] responding to `receivingKeys` with: {:?}",
-            response
-        )?;
+    pub async fn address(self, request: ReceivingKeyRequest) -> Result<Address> {
+        let response = self.state.lock().signer[request.network].address();
+        info!("[RESPONSE] responding to `receivingKeys` with: {response:?}")?;
         Ok(response)
     }
 
     /// Runs the receiving key sampling protocol on a mutable reference of the signer, and formats
     /// the result to base 58.
     #[inline]
-    pub async fn get_receiving_keys(
-        &mut self,
-        request: ReceivingKeyRequest,
-    ) -> Result<Vec<String>, ()> {
-        let response = self.state.lock().signer[request.network].receiving_keys(request.message);
-        let keys = response
-            .into_iter()
-            .map(|key| receiving_key_to_base58(&key))
-            .collect();
-        Ok(keys)
+    pub async fn get_address(&mut self, request: ReceivingKeyRequest) -> Result<String, ()> {
+        let response = self.state.lock().signer[request.network].address();
+        let key = address_to_base58(&response);
+        Ok(key)
     }
 }
