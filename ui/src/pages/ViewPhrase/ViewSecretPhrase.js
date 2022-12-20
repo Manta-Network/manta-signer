@@ -13,6 +13,7 @@ const ViewSecretPhrase = ({
   const [passwordInvalid, setPasswordInvalid] = useState(false);
   const [recoveryPhraseConfirmed, setRecoveryPhraseConfirmed] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [showCopyNotification, setShowCopyNotification] = useState(false);
 
   const onChangePassword = password => {
     setPassword(password)
@@ -38,10 +39,20 @@ const ViewSecretPhrase = ({
     }
   }
 
-  // This function enables the Next button to continue in the account creation
+  // This function enables the Next button to continue in the view secret phrase
   // process once the user has read the recovery phrase.
   const onClickConfirmRecoveryPhrase = () => {
     setRecoveryPhraseConfirmed(true);
+  }
+
+  const onClickCopyPhrase = () => {
+    navigator.clipboard.writeText(exportedSecretPhrase);
+
+    if (!showCopyNotification) {
+      setShowCopyNotification(true);
+      setTimeout(function () { setShowCopyNotification(false) }, 2000);
+    }
+
   }
 
   const onClickFinish = () => {
@@ -68,6 +79,8 @@ const ViewSecretPhrase = ({
     exportedSecretPhrase={exportedSecretPhrase}
     onClickConfirmRecoveryPhrase={onClickConfirmRecoveryPhrase}
     onClickFinish={onClickFinish}
+    showCopyNotification={showCopyNotification}
+    onClickCopyPhrase={onClickCopyPhrase}
     />}
   </>);
 }

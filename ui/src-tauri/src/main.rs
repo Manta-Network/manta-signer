@@ -32,10 +32,12 @@ use core::{
 };
 use manta_signer::{
     config::{Config, Setup},
-    manta_accounting::wallet::signer::ReceivingKeyRequest,
     manta_pay::{
         key::Mnemonic,
-        signer::client::network::{Message, Network},
+        signer::{
+            client::network::{Message, Network},
+            GetRequest,
+        },
     },
     secret::{
         mnemonic_channel, password_channel, sample_mnemonic, Authorizer, MnemonicReceiver,
@@ -329,6 +331,7 @@ async fn set_tray_reset(tray_handle: SystemTrayHandle, reset: bool, show_phrase:
                 "view secret recovery phrase",
                 "View Secret Recovery Phrase",
             ))
+            .add_item(CustomMenuItem::new("view zk address", "View ZkAddress"))
             .add_item(CustomMenuItem::new("reset", "Delete Account"))
             .add_item(CustomMenuItem::new("exit", "Quit"))
     } else if reset {
@@ -518,15 +521,16 @@ async fn reset_account(
 
 /// Returns receiving keys to front end to display once user is logged in.
 #[tauri::command]
-async fn receiving_keys(server_store: State<'_, ServerStore>) -> Result<Vec<String>, ()> {
+async fn address(server_store: State<'_, ServerStore>) -> Result<String, ()> {
     if let Some(store) = &mut *server_store.lock().await {
-        let keys = store
-            .get_receiving_keys(Message {
+        let key = store
+            .get_address(Message {
+                // TODO: do we need to passing network?
                 network: Network::Dolphin,
-                message: ReceivingKeyRequest::GetAll,
+                message: GetRequest::Get,
             })
             .await;
-        return keys;
+        return key;
     }
     Err(())
 }
@@ -597,6 +601,11 @@ fn main() {
                             .emit("show_secret_phrase", ())
                             .expect("Unable to emit reset tray event to window.");
                     }
+                    "view zk address" => {
+                        window(app, "main")
+                            .emit("show_zk_address", ())
+                            .expect("Unable to emit reset tray event to window.");
+                    }
                     "reset" => {
                         window(app, "main").show().expect("Unable to show window");
                         window(app, "main")
@@ -653,7 +662,7 @@ fn main() {
             reset_account,
             connect_ui,
             disconnect_ui,
-            receiving_keys,
+            address,
             get_recovery_phrase,
             cancel_sign,
             enable_reset_menu_item

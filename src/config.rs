@@ -123,7 +123,7 @@ impl Config {
             Ok(metadata) if metadata.is_file() => Ok(true),
             Ok(metadata) => Err(io::Error::new(
                 io::ErrorKind::Other,
-                format!("Invalid file format: {:?}.", metadata),
+                format!("Invalid file format: {metadata:?}."),
             )),
             _ => Ok(false),
         }
@@ -173,7 +173,7 @@ impl Config {
             }
             Ok(metadata) => Err(io::Error::new(
                 io::ErrorKind::Other,
-                format!("Invalid file format: {:?}.", metadata),
+                format!("Invalid file format: {metadata:?}."),
             )),
             _ => Ok(false),
         }
