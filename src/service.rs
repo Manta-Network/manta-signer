@@ -31,7 +31,7 @@ use http_types::headers::HeaderValue;
 use manta_accounting::{
     asset::{Asset, AssetMetadata},
     fs::{cocoon::File, File as _, SaveError},
-    transfer::canonical::TransferShape,
+    transfer::canonical::TransferShape
 };
 use manta_pay::{
     config::Transaction,
@@ -60,7 +60,7 @@ use tokio::{
 
 pub use manta_pay::{
     config::{address_to_base58, Address},
-    signer::{self, SignError, SignResponse, SyncError, SyncResponse},
+    signer::{self, SignError, SignResponse, SyncError, SyncResponse, TransactionDataResponse},
 };
 
 /// Synchronization Request
@@ -71,6 +71,9 @@ pub type SignRequest = Message<signer::SignRequest>;
 
 /// Receiving Key Request
 pub type ReceivingKeyRequest = Message<signer::GetRequest>;
+
+/// Transaction Data Request
+pub type TransactionDataRequest = Message<signer::TransactionDataRequest>;
 
 /// Password Retry Interval
 pub const PASSWORD_RETRY_INTERVAL: Duration = Duration::from_millis(1000);
@@ -468,6 +471,7 @@ where
         http::register_post(&mut api, "/sync", Server::sync);
         http::register_post(&mut api, "/sign", Server::sign);
         http::register_post(&mut api, "/address", Server::address);
+        http::register_post(&mut api, "/transaction_data", Server::transaction_data);
         info!("serving signer API at {}", socket_address)?;
         api.listen(socket_address).await?;
         Ok(())
@@ -601,6 +605,18 @@ where
         let response = self.state.lock().signer[network].sign(transaction);
         info!("[RESPONSE] responding to `sign` with: {:?}.", response)?;
         self.state.lock().currently_signing = false;
+        Ok(response)
+    }
+
+    /// Processes a TransactionDataRequest `request` which contains TransferPosts, and returns Transaction Data,
+    /// depending on 
+    #[inline]
+    pub async fn transaction_data(self, request: TransactionDataRequest) -> Result<TransactionDataResponse, Error> {
+        info!("[REQUEST] processing `transaction_data`: {:?}.", request)?;
+        info!("[AUTH] asking for transaction data authorization")?;
+        let summary = "Transaction Data Authorization Request";
+        self.authorizer.lock().await.check(&summary).await?;
+        let response = self.state.lock().signer[request.network].batched_transaction_data(request.message.0);
         Ok(response)
     }
 
