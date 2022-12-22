@@ -31,6 +31,12 @@ pub mod service;
 pub mod storage;
 
 #[doc(inline)]
+pub use manta_accounting;
+
+#[doc(inline)]
+pub use manta_pay;
+
+#[doc(inline)]
 pub use manta_util::serde;
 
 #[doc(inline)]

@@ -20,6 +20,8 @@
 
 use crate::config::Setup;
 use futures::future::BoxFuture;
+use manta_crypto::rand::OsRng;
+use manta_pay::key::Mnemonic;
 use manta_util::serde::Serialize;
 use password_hash::{PasswordHashString, SaltString};
 use tokio::sync::mpsc::{channel, Receiver, Sender};
@@ -80,18 +82,39 @@ impl Default for Password {
 /// [`sleep`]: Authorizer::sleep
 pub type UnitFuture<'t> = BoxFuture<'t, ()>;
 
+/// Setup Future
+///
+/// This `type` is used by the [`setup`] method of [`Authorizer`]. See its documentation for more.
+///
+/// [`setup`]: Authorizer::setup
+pub type SetupFuture<'t> = BoxFuture<'t, Setup>;
+
 /// Password Future
 ///
 /// This `type` is used by the [`password`](Authorizer::password) method of [`Authorizer`].
 /// See its documentation for more.
 pub type PasswordFuture<'t> = BoxFuture<'t, Password>;
 
+/// User Selection for different choices the user can make while in the setup phase
+/// of the singer
+pub enum UserSelection {
+    /// Create a new account, generates new recovery phrase
+    Create,
+
+    /// Recover an old account by providing a recovery phrase
+    Recover,
+
+    /// Sign in to an existing account by providing a password
+    SignIn,
+}
+
 /// Authorizer
 pub trait Authorizer: 'static + Send {
     /// Retrieves the password from the authorizer.
     fn password(&mut self) -> PasswordFuture;
 
-    /// Runs some setup for the authorizer using the `setup`.
+    /// Runs some setup for the authorizer using the `data_exists` flag, and depending on whether
+    /// user selects to create a new account or recover an old one.
     ///
     /// # Implementation Note
     ///
@@ -99,11 +122,7 @@ pub trait Authorizer: 'static + Send {
     /// The [`Server::start`] function already calls this method internally.
     ///
     /// [`Server::start`]: crate::service::Server::start
-    #[inline]
-    fn setup<'s>(&'s mut self, setup: &'s Setup) -> UnitFuture<'s> {
-        let _ = setup;
-        Box::pin(async move {})
-    }
+    fn setup(&mut self, data_exists: bool) -> SetupFuture;
 
     /// Prompts the authorizer with `prompt` so that they can be notified that their password is
     /// requested.
@@ -209,6 +228,63 @@ pub struct PasswordSender {
     pub retry: Receiver<bool>,
 }
 
+/// Mnemonic Sender
+pub struct MnemonicSender {
+    /// Mnemonic Sender
+    pub mnemonic: Sender<Mnemonic>,
+
+    /// Selection Sender -> Create account or Recover
+    pub selection: Sender<UserSelection>,
+
+    /// Retry Receiver
+    pub retry: Receiver<bool>,
+}
+
+impl MnemonicSender {
+    /// Builds a new [`MnemonicSender`] from `mnemonic` and `retry`.
+    #[inline]
+    pub fn new(
+        mnemonic: Sender<Mnemonic>,
+        selection: Sender<UserSelection>,
+        retry: Receiver<bool>,
+    ) -> Self {
+        Self {
+            mnemonic,
+            selection,
+            retry,
+        }
+    }
+
+    /// Loads the mnemonic with `mnemonic` waiting for a retry message.
+    #[inline]
+    pub async fn load(&mut self, mnemonic: Mnemonic) -> bool {
+        self.load_exact(mnemonic).await;
+        self.retry
+            .recv()
+            .await
+            .expect("Failed to receive retry message.")
+    }
+
+    /// Loads the mnemonic with `mnemonic` without requesting a retry message.
+    #[inline]
+    pub async fn load_exact(&mut self, mnemonic: Mnemonic) {
+        let _ = self.mnemonic.send(mnemonic).await;
+    }
+
+    /// Loads the user selection into the selection channel.
+    #[inline]
+    pub async fn load_selection(&mut self, selection: UserSelection) {
+        let _ = self.selection.send(selection).await;
+    }
+
+    /// Clears the currently stored mnemonic.
+    #[inline]
+    pub async fn clear(&self) {
+        let random_mnemonic = Mnemonic::sample(&mut OsRng);
+        let _ = self.mnemonic.send(random_mnemonic).await;
+    }
+}
+
 impl PasswordSender {
     /// Builds a new [`PasswordSender`] from `password` and `retry`.
     #[inline]
@@ -248,6 +324,18 @@ pub struct PasswordReceiver {
     pub retry: Sender<bool>,
 }
 
+/// Mnemonic Receiver
+pub struct MnemonicReceiver {
+    /// Mnemonic Receiver
+    pub mnemonic: Receiver<Mnemonic>,
+
+    /// Selection Receiver
+    pub selection: Receiver<UserSelection>,
+
+    /// Retry Sender
+    pub retry: Sender<bool>,
+}
+
 impl PasswordReceiver {
     /// Builds a new [`PasswordReceiver`] from `password` and `retry`.
     #[inline]
@@ -257,7 +345,7 @@ impl PasswordReceiver {
 
     /// Sends the message `retry` across the retry channel.
     #[inline]
-    pub async fn should_retry(&mut self, retry: bool) {
+    pub async fn send_retry(&mut self, retry: bool) {
         self.retry
             .send(retry)
             .await
@@ -274,6 +362,49 @@ impl PasswordReceiver {
     }
 }
 
+impl MnemonicReceiver {
+    /// Builds a new [`MnemonicReceiver`] from `mnemonic` and `retry`.
+    #[inline]
+    pub fn new(
+        mnemonic: Receiver<Mnemonic>,
+        selection: Receiver<UserSelection>,
+        retry: Sender<bool>,
+    ) -> Self {
+        Self {
+            mnemonic,
+            selection,
+            retry,
+        }
+    }
+
+    /// Sends the message `retry` across the retry channel.
+    #[inline]
+    pub async fn send_retry(&mut self, retry: bool) {
+        self.retry
+            .send(retry)
+            .await
+            .expect("Failed to send retry message.");
+    }
+
+    /// Loads the mnemonic from the mnemonic channel.
+    #[inline]
+    pub async fn load_mnemonic(&mut self) -> Mnemonic {
+        self.mnemonic
+            .recv()
+            .await
+            .expect("Failed to receive password message.")
+    }
+
+    /// Loads the selection from the selection channel.
+    #[inline]
+    pub async fn load_selection(&mut self) -> UserSelection {
+        self.selection
+            .recv()
+            .await
+            .expect("Failed to load user selection.")
+    }
+}
+
 /// Generates a new password-sending channel.
 #[inline]
 pub fn password_channel() -> (PasswordSender, PasswordReceiver) {
@@ -283,4 +414,22 @@ pub fn password_channel() -> (PasswordSender, PasswordReceiver) {
         PasswordSender::new(password_sender, retry_receiver),
         PasswordReceiver::new(password_receiver, retry_sender),
     )
+}
+
+/// Generates a new mnemonic-sending channel.
+#[inline]
+pub fn mnemonic_channel() -> (MnemonicSender, MnemonicReceiver) {
+    let (mnemonic_sender, mnemonic_receiver) = channel(1);
+    let (retry_sender, retry_receiver) = channel(1);
+    let (selection_sender, selection_receiver) = channel(1);
+    (
+        MnemonicSender::new(mnemonic_sender, selection_sender, retry_receiver),
+        MnemonicReceiver::new(mnemonic_receiver, selection_receiver, retry_sender),
+    )
+}
+
+/// Samples a random mnemonic using OsRng.
+#[inline]
+pub fn sample_mnemonic() -> Mnemonic {
+    Mnemonic::sample(&mut OsRng)
 }
