@@ -614,7 +614,7 @@ where
     pub async fn transaction_data(self, request: TransactionDataRequest) -> Result<TransactionDataResponse, Error> {
         info!("[REQUEST] processing `transaction_data`: {:?}.", request)?;
         info!("[AUTH] asking for transaction data authorization")?;
-        let summary = "Transaction Data Authorization Request";
+        let summary = "TransactionDataRequest";
         self.authorizer.lock().await.check(&summary).await?;
         let response = self.state.lock().signer[request.network].batched_transaction_data(request.message.0);
         Ok(response)
