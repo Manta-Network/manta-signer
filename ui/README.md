@@ -14,7 +14,7 @@ See the `tauri` docs for `npm` or `yarn` installation of the `tauri-cli`.
 
 ### Building
 
-To build the project go to the `src-tauri` directory and run any `cargo` commands like `cargo build`, `cargo clippy`, or `cargo doc`. To run the executable, first run `yarn start`, then run `cargo tauri dev` (installed above using `cargo`) in a separate terminal window:
+To build the project go to the `src-tauri` directory and run any `cargo` commands like `cargo build`, `cargo clippy`, or `cargo doc`. To run the executable, first run `yarn start`, then run `cargo tauri dev --features=disable-restart` (installed above using `cargo`) in a separate terminal window:
 
 Note that ZKP generation will be very slow for dev builds
 
