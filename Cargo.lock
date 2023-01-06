@@ -2710,7 +2710,7 @@ dependencies = [
 [[package]]
 name = "manta-accounting"
 version = "0.5.8"
-source = "git+https://github.com/manta-network/manta-rs?branch=fix-asset-value-display#7375382441982d14568dfa42d102c4f7f0232f28"
+source = "git+https://github.com/manta-network/manta-rs#c3a9c7472021bfc5d46bea75b03a38aa2da4c41d"
 dependencies = [
  "bitflags",
  "cocoon",
@@ -2724,7 +2724,7 @@ dependencies = [
 [[package]]
 name = "manta-crypto"
 version = "0.5.8"
-source = "git+https://github.com/manta-network/manta-rs?branch=fix-asset-value-display#7375382441982d14568dfa42d102c4f7f0232f28"
+source = "git+https://github.com/manta-network/manta-rs#c3a9c7472021bfc5d46bea75b03a38aa2da4c41d"
 dependencies = [
  "ark-bls12-381",
  "ark-bn254",
@@ -2750,7 +2750,7 @@ dependencies = [
 [[package]]
 name = "manta-parameters"
 version = "0.5.8"
-source = "git+https://github.com/manta-network/manta-rs?branch=fix-asset-value-display#7375382441982d14568dfa42d102c4f7f0232f28"
+source = "git+https://github.com/manta-network/manta-rs#c3a9c7472021bfc5d46bea75b03a38aa2da4c41d"
 dependencies = [
  "anyhow",
  "attohttpc",
@@ -2763,7 +2763,7 @@ dependencies = [
 [[package]]
 name = "manta-pay"
 version = "0.5.8"
-source = "git+https://github.com/manta-network/manta-rs?branch=fix-asset-value-display#7375382441982d14568dfa42d102c4f7f0232f28"
+source = "git+https://github.com/manta-network/manta-rs#c3a9c7472021bfc5d46bea75b03a38aa2da4c41d"
 dependencies = [
  "aes-gcm 0.9.4",
  "bip0039",
@@ -2817,7 +2817,7 @@ dependencies = [
 [[package]]
 name = "manta-util"
 version = "0.5.8"
-source = "git+https://github.com/manta-network/manta-rs?branch=fix-asset-value-display#7375382441982d14568dfa42d102c4f7f0232f28"
+source = "git+https://github.com/manta-network/manta-rs#c3a9c7472021bfc5d46bea75b03a38aa2da4c41d"
 dependencies = [
  "crossbeam-channel",
  "serde",
@@ -4860,9 +4860,9 @@ checksum = "cda74da7e1a664f795bb1f8a87ec406fb89a02522cf6e50620d016add6dbbf5c"
 
 [[package]]
 name = "tokio"
-version = "1.23.0"
+version = "1.24.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "eab6d665857cc6ca78d6e80303a02cea7a7851e85dfbd77cbdc09bd129f1ef46"
+checksum = "1d9f76183f91ecfb55e1d7d5602bd1d979e38a3a522fe900241cf195624d67ae"
 dependencies = [
  "autocfg",
  "bytes",
