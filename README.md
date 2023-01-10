@@ -14,9 +14,19 @@
 - `ui`: `manta-signer` Desktop UI
 - `js`: external Javascript libraries that interact with `manta-signer`
 
-## Restarting Your Account
+## Deleting Your Account
 
-To remove your private account data completely and set up a new account, you should remove these files:
+To delete your private account data completely and set up a new account, open manta-signer on the task bar, select 'Delete Account' and confirm that you would like to delete your account in the pop-up window. 
+
+<p align="center">
+    <img width="355" src="./delete-account-dropdown.png">
+</p>
+
+<p align="center">
+    <img width="455" src="./delete-account-tab.png">
+</p>
+
+Alternatively, you can achieve the same result by removing these files:
 
 - macOS: `~/Library/Application Support/manta-signer/`
 - Linux: `~/.config/manta-signer/`
@@ -36,5 +46,10 @@ Executables can be found in ./target/release or ./ui/src-tauri/target/release.
 
 ### Testing
 Can use non-UI testing server in ./examples
-```cargo run --example test_server --features=unsafe-disable-cors --release```
+```cargo run --example test_server --features=unsafe-disable-cors,disable-restart --release```
+
 ```--features=unsafe-disable-cors``` use only if you are using the local manta-front-end
+
+```--features=disable-restart``` this feature is required if signer is being run in dev mode. 
+
+To run the signer in dev mode: ```cargo tauri dev --features=disable-restart``` or ```cargo tauri dev --features=disable-restart,unsafe-disable-cors```
