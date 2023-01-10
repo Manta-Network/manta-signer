@@ -1,5 +1,6 @@
-
+import { once } from '@tauri-apps/api/event';
 import { Button, Form, Input } from 'semantic-ui-react';
+import { useEffect } from 'react';
 import mainLogo from "../../icons/manta.png";
 import "../../App.css";
 
@@ -13,7 +14,12 @@ const ViewPhrasePage = ({
   onClickCancel
 }) => {
 
-
+  useEffect(() => {
+    once("abort_auth", async () => {
+      await onClickCancel();
+    });
+  });
+  
   return (<>
 
     <div className='main-logo-container view-phrase'>
