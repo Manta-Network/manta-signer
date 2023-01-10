@@ -240,7 +240,6 @@ function App() {
       + "Delete Account: " + deleteAccount + " Restart App: " + restartApp
     );
     await endConnection();
-    await invoke('disconnect_ui');
 
     const payload = {
       delete: deleteAccount,
@@ -252,6 +251,7 @@ function App() {
 
   const endInitialConnectionPhase = async () => {
     console.log("[INFO]: End Initial Connection Phase");
+    await invoke("set_signer_ready", true);
     setIsConnected(true);
 
     if (!activeListeners.authorize) {
@@ -282,6 +282,8 @@ function App() {
 
   const endConnection = async () => {
     console.log("[INFO]: Ending connection.");
+    await invoke('disconnect_ui');
+    await invoke('set_signer_ready', false);
     setIsConnected(false);
   }
 
@@ -343,7 +345,6 @@ function App() {
             <Reset
               isConnected={isConnected}
               hideWindow={hideWindow}
-              endConnection={endConnection}
               restartServer={restartServer}
               cancelReset={cancelReset}
             />
