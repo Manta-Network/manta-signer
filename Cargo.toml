@@ -43,11 +43,11 @@ derivative = { version = "2.2.0", default-features = false, features = ["use_cor
 dirs-next = { version = "2.0.0", default-features = false }
 futures = { version = "0.3.17", default-features = false, features = ["alloc"] }
 http-types = { version = "2.12.0", default-features = false }
-manta-accounting = { git = "https://github.com/manta-network/manta-rs", default-features = false, features = ["cocoon-fs"] }
-manta-crypto = { git = "https://github.com/manta-network/manta-rs", default-features = false, features = ["getrandom"] }
-manta-parameters = { git = "https://github.com/manta-network/manta-rs", default-features = false, features = ["download"] }
-manta-pay = { git = "https://github.com/manta-network/manta-rs", default-features = false, features = ["bs58", "groth16", "serde", "wallet", "network", "parameters"] }
-manta-util = { git = "https://github.com/manta-network/manta-rs", default-features = false }
+manta-accounting = { git = "https://github.com/manta-network/manta-rs", branch = "feat/manta-api-assetmetadata", default-features = false, features = ["cocoon-fs"] }
+manta-crypto = { git = "https://github.com/manta-network/manta-rs", branch = "feat/manta-api-assetmetadata", default-features = false, features = ["getrandom"] }
+manta-parameters = { git = "https://github.com/manta-network/manta-rs", branch = "feat/manta-api-assetmetadata", default-features = false, features = ["download"] }
+manta-pay = { git = "https://github.com/manta-network/manta-rs", branch = "feat/manta-api-assetmetadata", default-features = false, features = ["bs58", "groth16", "serde", "wallet", "network", "parameters"] }
+manta-util = { git = "https://github.com/manta-network/manta-rs", branch = "feat/manta-api-assetmetadata", default-features = false }
 parking_lot = { version = "0.12.1", default-features = false }
 password-hash = { version = "0.4.2", default-features = false, features = ["alloc"] }
 reqwest = { version = "0.11.11", default-features = false, features = ["json"] }
