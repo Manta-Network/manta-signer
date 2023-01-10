@@ -251,7 +251,7 @@ function App() {
 
   const endInitialConnectionPhase = async () => {
     console.log("[INFO]: End Initial Connection Phase");
-    await invoke("set_signer_ready", true);
+    await invoke("set_signer_ready", { ready: true });
     setIsConnected(true);
 
     if (!activeListeners.authorize) {
@@ -283,7 +283,7 @@ function App() {
   const endConnection = async () => {
     console.log("[INFO]: Ending connection.");
     await invoke('disconnect_ui');
-    await invoke('set_signer_ready', false);
+    await invoke("set_signer_ready", { ready: false });
     setIsConnected(false);
   }
 
