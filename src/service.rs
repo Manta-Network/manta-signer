@@ -29,7 +29,7 @@ use core::{
 };
 use http_types::headers::HeaderValue;
 use manta_accounting::{
-    asset::{Asset, AssetMetadata},
+    asset::Asset,
     fs::{cocoon::File, File as _, SaveError},
     transfer::canonical::TransferShape,
 };
@@ -39,6 +39,7 @@ use manta_pay::{
     signer::{
         base::{Signer, SignerParameters, SignerState, UtxoAccumulator},
         client::network::{Message, Network, NetworkSpecific},
+        AssetMetadata,
     },
 };
 use manta_util::{from_variant, serde::Serialize};
@@ -160,23 +161,19 @@ pub fn display_transaction(
     match transaction {
         Transaction::ToPrivate(Asset { value, .. }) => format!(
             "Privatize {} on {} network",
-            metadata.display(*value, metadata.decimals),
+            metadata.display(*value),
             network
         ),
         Transaction::PrivateTransfer(Asset { value, .. }, receiving_key) => {
             format!(
                 "Send {} to {} on {} network",
-                metadata.display(*value, metadata.decimals),
+                metadata.display(*value),
                 address_to_base58(receiving_key),
                 network
             )
         }
         Transaction::ToPublic(Asset { value, .. }) => {
-            format!(
-                "Public {} on {} network",
-                metadata.display(*value, metadata.decimals),
-                network
-            )
+            format!("Public {} on {} network", metadata.display(*value), network)
         }
     }
 }
