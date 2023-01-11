@@ -1,6 +1,6 @@
 {
     "package": {
-        "productName": "manta-signer",
+        "productName": "MantaSigner",
         "version": "1.0.0"
     },
     "build": {
@@ -94,7 +94,7 @@
             "csp": "default-src blob: data: filesystem: ws: wss: http: https: tauri: 'unsafe-eval' 'unsafe-inline' 'self' img-src: 'self'"
         },
         "systemTray": {
-            "iconPath": "icons/tray.png",
+            "iconPath": "icons/tray_colored_big.png",
             "iconAsTemplate": true
         }
     }
