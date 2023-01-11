@@ -276,7 +276,7 @@ impl Authorizer for User {
     #[inline]
     fn sleep(&mut self) -> UnitFuture {
         APP_STATE.set_authorizing(false);
-        self.emit("abort_auth",&());
+        self.emit("abort_auth", &());
         Box::pin(async move { self.validate_password().await })
     }
 }
@@ -714,7 +714,7 @@ fn main() {
             match label.as_str() {
                 "about" => window(app, "about").hide().expect("Unable to hide window."),
                 "main" => {
-                    if APP_STATE.get_ready(){
+                    if APP_STATE.get_ready() {
                         window(app, "main").hide().expect("Unable to hide window.");
                         if APP_STATE.get_authorizing() {
                             window(app, "main")
