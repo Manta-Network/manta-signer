@@ -40,14 +40,11 @@ where
     directory.push("proving");
     fs::create_dir_all(&directory).ok()?;
     let mint = directory.join("to-private.dat");
-    manta_parameters::pay::testnet::proving::ToPrivate::download_if_invalid(&mint).ok()?;
+    manta_parameters::pay::proving::ToPrivate::download_if_invalid(&mint).ok()?;
     let private_transfer = directory.join("private-transfer.dat");
-    manta_parameters::pay::testnet::proving::PrivateTransfer::download_if_invalid(
-        &private_transfer,
-    )
-    .ok()?;
+    manta_parameters::pay::proving::PrivateTransfer::download_if_invalid(&private_transfer).ok()?;
     let reclaim = directory.join("to-public.dat");
-    manta_parameters::pay::testnet::proving::ToPublic::download_if_invalid(&reclaim).ok()?;
+    manta_parameters::pay::proving::ToPublic::download_if_invalid(&reclaim).ok()?;
     let parameters = load_transfer_parameters();
     Some(SignerParameters {
         proving_context: config::MultiProvingContext {
@@ -66,7 +63,7 @@ where
 #[inline]
 pub fn load_utxo_accumulator_model() -> Option<config::UtxoAccumulatorModel> {
     config::UtxoAccumulatorModel::decode(
-        manta_parameters::pay::testnet::parameters::UtxoAccumulatorModel::get()?,
+        manta_parameters::pay::parameters::UtxoAccumulatorModel::get()?,
     )
     .ok()
 }

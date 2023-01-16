@@ -180,15 +180,13 @@ impl User {
     /// Requests selection from user, either to create account or recover old account.
     #[inline]
     async fn request_selection(&mut self) -> UserSelection {
-        let user_selection = self.mnemonic_receiver.load_selection().await;
-        user_selection
+        self.mnemonic_receiver.load_selection().await
     }
 
-    /// Requests mnemonic from user
+    /// Requests mnemonic from the user.
     #[inline]
     async fn request_mnemonic(&mut self) -> Mnemonic {
-        let mnemonic = self.mnemonic_receiver.load_mnemonic().await;
-        mnemonic
+        self.mnemonic_receiver.load_mnemonic().await
     }
 
     /// Sends validation message when password was correctly matched.
