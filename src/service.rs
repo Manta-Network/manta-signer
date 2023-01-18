@@ -60,7 +60,7 @@ use tokio::{
 
 pub use manta_pay::{
     config::{address_to_base58, Address},
-    signer::{self, SignError, SignResponse, SyncError, SyncResponse, TransactionDataResponse},
+    signer::{self, SignError, SignResponse, SyncError, SyncResponse, TransactionDataResponse, SignWithTransactionDataResponse},
 };
 
 /// Synchronization Request
@@ -472,6 +472,7 @@ where
         http::register_post(&mut api, "/sign", Server::sign);
         http::register_post(&mut api, "/address", Server::address);
         http::register_post(&mut api, "/transaction_data", Server::transaction_data);
+        http::register_post(&mut api, "/sign_with_transaction_data", Server::sign_with_transaction_data);
         info!("serving signer API at {}", socket_address)?;
         api.listen(socket_address).await?;
         Ok(())
@@ -603,6 +604,42 @@ where
             }
         }
         let response = self.state.lock().signer[network].sign(transaction);
+        info!("[RESPONSE] responding to `sign` with: {:?}.", response)?;
+        self.state.lock().currently_signing = false;
+        Ok(response)
+    }
+
+    /// Runs the transaction signing protocol on the signer.
+    #[inline]
+    pub async fn sign_with_transaction_data(self, request: SignRequest) -> Result<Result<SignWithTransactionDataResponse, SignError>> {
+        info!("[REQUEST] processing `sign with transaction data`: {:?}.", request)?;
+        if self.state.lock().currently_signing {
+            return Err(Error::Delayed);
+        }
+        self.state.lock().currently_signing = true;
+        let SignRequest {
+            network,
+            message:
+            signer::SignRequest {
+                transaction,
+                metadata,
+            },
+        } = request;
+        match transaction.shape() {
+            TransferShape::ToPrivate => {
+                // NOTE: We skip authorization on mint transactions because they are deposits not
+                //       withdrawals from the point of view of the signer. Everything else, by
+                //       default, requests authorization.
+            }
+            _ => {
+                info!("[AUTH] asking for transaction authorization")?;
+                let summary = metadata
+                    .map(|metadata| display_transaction(&transaction, &metadata, network))
+                    .unwrap_or_default();
+                self.authorizer.lock().await.check(&summary).await?
+            }
+        }
+        let response = self.state.lock().signer[network].sign_with_transaction_data(transaction);
         info!("[RESPONSE] responding to `sign` with: {:?}.", response)?;
         self.state.lock().currently_signing = false;
         Ok(response)
