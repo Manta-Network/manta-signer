@@ -40,7 +40,8 @@ where
     directory.push("proving");
     fs::create_dir_all(&directory).ok()?;
     let parameters = load_transfer_parameters();
-    let mut exec_dir = std::env::current_exe().expect("Could not get Manta Signer executable file directory");
+    let mut exec_dir =
+        std::env::current_exe().expect("Could not get Manta Signer executable file directory");
     exec_dir.pop();
 
     // MacOs installation puts assets in another folder "Resources" compared to Win/Linux Installations
@@ -62,12 +63,18 @@ where
     println!("{:?}", to_private);
     Some(SignerParameters {
         proving_context: config::MultiProvingContext {
-            to_private: config::ProvingContext::decode(IoReader(File::open(to_private).expect("Could not read to_private.lfs"))).ok()?,
+            to_private: config::ProvingContext::decode(IoReader(
+                File::open(to_private).expect("Could not read to_private.lfs"),
+            ))
+            .ok()?,
             private_transfer: config::ProvingContext::decode(IoReader(
                 File::open(private_transfer).expect("Could not read private_transfer.lfs"),
             ))
             .ok()?,
-            to_public: config::ProvingContext::decode(IoReader(File::open(to_public).expect("Could not read to_public.lfs"))).ok()?,
+            to_public: config::ProvingContext::decode(IoReader(
+                File::open(to_public).expect("Could not read to_public.lfs"),
+            ))
+            .ok()?,
         },
         parameters,
     })
