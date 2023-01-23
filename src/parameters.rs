@@ -18,7 +18,7 @@
 
 // TODO: Report a more informative error.
 
-use manta_parameters::{Download, Get};
+use manta_parameters::Get;
 use manta_pay::{config, parameters::load_transfer_parameters, signer::base::SignerParameters};
 use manta_util::codec::{Decode, IoReader};
 use std::{
@@ -49,7 +49,7 @@ where
         exec_dir.pop();
         exec_dir.push("Resources");
     }
-    println!("{:?}", exec_dir);
+
     // use absolute paths for release
     let mut to_private = PathBuf::from(&exec_dir);
     to_private.push("proving/to-private.lfs");
@@ -60,7 +60,6 @@ where
     let mut to_public = PathBuf::from(&exec_dir);
     to_public.push("proving/to-public.lfs");
 
-    println!("{:?}", to_private);
     Some(SignerParameters {
         proving_context: config::MultiProvingContext {
             to_private: config::ProvingContext::decode(IoReader(
