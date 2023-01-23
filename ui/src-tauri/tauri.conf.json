@@ -64,9 +64,6 @@
             },
             "shell": {
                 "all": true
-            },
-            "fs": {
-                "scope": ["$RESOURCE/*"]
             }
         },
         "windows": [{

@@ -42,8 +42,13 @@ where
     let parameters = load_transfer_parameters();
     let mut exec_dir = std::env::current_exe().expect("Could not get Manta Signer executable file directory");
     exec_dir.pop();
-    println!("{:?}", exec_dir);
 
+    // MacOs installation puts assets in another folder "Resources" compared to Win/Linux Installations
+    if cfg!(target_os = "macos") {
+        exec_dir.pop();
+        exec_dir.push("Resources");
+    }
+    println!("{:?}", exec_dir);
     // use absolute paths for release
     let mut to_private = PathBuf::from(&exec_dir);
     to_private.push("proving/to-private.lfs");
