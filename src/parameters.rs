@@ -40,17 +40,29 @@ where
     directory.push("proving");
     fs::create_dir_all(&directory).ok()?;
     let parameters = load_transfer_parameters();
-    let exec_dir = std::env::current_exe().expect("Could not get Manta Signer executable file directory");
-    let mut to_private = PathBuf::from(exec_dir);
-    to_private.push("proving/to_private.lfs");
+    let mut exec_dir = std::env::current_exe().expect("Could not get Manta Signer executable file directory");
+    exec_dir.pop();
+    println!("{:?}", exec_dir);
+
+    // use absolute paths for release
+    let mut to_private = PathBuf::from(&exec_dir);
+    to_private.push("proving/to-private.lfs");
+
+    let mut private_transfer = PathBuf::from(&exec_dir);
+    private_transfer.push("proving/private-transfer.lfs");
+
+    let mut to_public = PathBuf::from(&exec_dir);
+    to_public.push("proving/to-public.lfs");
+
+    println!("{:?}", to_private);
     Some(SignerParameters {
         proving_context: config::MultiProvingContext {
             to_private: config::ProvingContext::decode(IoReader(File::open(to_private).expect("Could not read to_private.lfs"))).ok()?,
             private_transfer: config::ProvingContext::decode(IoReader(
-                File::open("proving/private_transfer.lfs").expect("Could not read private_transfer.lfs"),
+                File::open(private_transfer).expect("Could not read private_transfer.lfs"),
             ))
             .ok()?,
-            to_public: config::ProvingContext::decode(IoReader(File::open("proving/to_public.lfs").expect("Could not read to_public.lfs"))).ok()?,
+            to_public: config::ProvingContext::decode(IoReader(File::open(to_public).expect("Could not read to_public.lfs"))).ok()?,
         },
         parameters,
     })
