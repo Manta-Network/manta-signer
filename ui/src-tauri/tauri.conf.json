@@ -20,7 +20,9 @@
                 "icons/128x128@2x.png",
                 "icons/icon.ico"
             ],
-            "resources": [],
+            "resources": [
+                "proving/*"
+            ],
             "externalBin": [],
             "copyright": "Copyright 2019-2022 Manta Network",
             "category": "DeveloperTool",
@@ -62,6 +64,9 @@
             },
             "shell": {
                 "all": true
+            },
+            "fs": {
+                "scope": ["$RESOURCE/*"]
             }
         },
         "windows": [{
