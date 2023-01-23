@@ -32,7 +32,7 @@ const Authorize = ({
   };
 
   const onClickDecline = async () => {
-    ("[INFO]: Declining Transaction.");
+    console.log("[INFO]: Declining Transaction.");
     setPassword('');
     setPasswordInvalid(false)
     await stopPasswordPrompt();

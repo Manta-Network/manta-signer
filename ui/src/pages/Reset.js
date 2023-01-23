@@ -4,13 +4,11 @@ import "../App.css";
 const Reset = ({
   isConnected,
   hideWindow,
-  endConnection,
   restartServer,
   cancelReset
 }) => {
 
   const onClickReset = async () => {
-    await endConnection();
     restartServer(true, true);
   }
 

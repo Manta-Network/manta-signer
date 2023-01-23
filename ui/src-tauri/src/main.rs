@@ -64,6 +64,10 @@ pub struct AppState {
     /// UI is Connected
     pub ui_connected: AtomicBool,
 
+    /// User has logged in and the Signer is running
+    /// Used to stop signer window from closing from the X button
+    pub ready: AtomicBool,
+
     /// Currently Authorising
     pub authorizing: AtomicBool,
 }
@@ -74,6 +78,7 @@ impl AppState {
     pub const fn new() -> Self {
         Self {
             ui_connected: AtomicBool::new(false),
+            ready: AtomicBool::new(false),
             authorizing: AtomicBool::new(false),
         }
     }
@@ -88,6 +93,18 @@ impl AppState {
     #[inline]
     pub fn set_ui_connected(&self, ui_connected: bool) {
         self.ui_connected.store(ui_connected, Ordering::Relaxed)
+    }
+
+    /// Returns the ready status.
+    #[inline]
+    pub fn get_ready(&self) -> bool {
+        self.ready.load(Ordering::Relaxed)
+    }
+
+    /// Sets the ready status.
+    #[inline]
+    pub fn set_ready(&self, ready: bool) {
+        self.ready.store(ready, Ordering::Relaxed)
     }
 
     /// Returns the authorizing status.
@@ -259,6 +276,7 @@ impl Authorizer for User {
     #[inline]
     fn sleep(&mut self) -> UnitFuture {
         APP_STATE.set_authorizing(false);
+        self.emit("abort_auth", &());
         Box::pin(async move { self.validate_password().await })
     }
 }
@@ -294,6 +312,17 @@ fn connect_ui() {
 #[tauri::command]
 fn disconnect_ui() {
     APP_STATE.set_ui_connected(false);
+}
+
+/// TRUE: Called when Signer is ready: User has logged in and signer has minimized to the background/tray
+/// This is to prevent signer closure from the [X] button when opening windows from the tray
+/// Exiting through the tray menu should be the only way
+///
+/// False: When there was recovery/aborting recovery and the server
+/// needs to restart/reset up
+#[tauri::command]
+fn set_signer_ready(ready: bool) {
+    APP_STATE.set_ready(ready);
 }
 
 /// Sends the current `password` into storage from the UI.
@@ -662,6 +691,7 @@ fn main() {
             reset_account,
             connect_ui,
             disconnect_ui,
+            set_signer_ready,
             address,
             get_recovery_phrase,
             cancel_sign,
@@ -684,11 +714,13 @@ fn main() {
             match label.as_str() {
                 "about" => window(app, "about").hide().expect("Unable to hide window."),
                 "main" => {
-                    if APP_STATE.get_authorizing() {
+                    if APP_STATE.get_ready() {
                         window(app, "main").hide().expect("Unable to hide window.");
-                        window(app, "main")
-                            .emit("abort_auth", "Aborting Authorization")
-                            .expect("Failed to abort authorization");
+                        if APP_STATE.get_authorizing() {
+                            window(app, "main")
+                                .emit_all("abort_auth", "Aborting Authorization")
+                                .expect("Failed to abort authorization");
+                        }
                     } else {
                         app.exit(0);
                     }
