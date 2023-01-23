@@ -45,11 +45,18 @@ where
     exec_dir.pop();
 
     // MacOs installation puts assets in another folder "Resources" compared to Win/Linux Installations
-    if cfg!(target_os = "macos") {
+    let mut directory_check = PathBuf::from(&exec_dir).join("proving");
+    println!("{:?}", directory_check);
+    // check for test server and MacOs installation folder hierachy discrepancy relative to Win/Ubuntu
+    if !directory_check.is_dir() {
         exec_dir.pop();
-        exec_dir.push("Resources");
-    }
+        directory_check = PathBuf::from(&exec_dir).join("proving");
 
+        if !directory_check.is_dir() {
+            exec_dir.push("Resources");
+        }
+    }
+    println!("### {:?}", exec_dir);
     // use absolute paths for release
     let mut to_private = PathBuf::from(&exec_dir);
     to_private.push("proving/to-private.lfs");
