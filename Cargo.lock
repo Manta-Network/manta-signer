@@ -2710,7 +2710,7 @@ dependencies = [
 [[package]]
 name = "manta-accounting"
 version = "0.5.8"
-source = "git+https://github.com/manta-network/manta-rs?branch=fix-asset-value-display#7375382441982d14568dfa42d102c4f7f0232f28"
+source = "git+https://github.com/manta-network/manta-rs#e0b5cd33265086c7b2d975901aaaa4805d8893fe"
 dependencies = [
  "bitflags",
  "cocoon",
@@ -2724,7 +2724,7 @@ dependencies = [
 [[package]]
 name = "manta-crypto"
 version = "0.5.8"
-source = "git+https://github.com/manta-network/manta-rs?branch=fix-asset-value-display#7375382441982d14568dfa42d102c4f7f0232f28"
+source = "git+https://github.com/manta-network/manta-rs#e0b5cd33265086c7b2d975901aaaa4805d8893fe"
 dependencies = [
  "ark-bls12-381",
  "ark-bn254",
@@ -2750,7 +2750,7 @@ dependencies = [
 [[package]]
 name = "manta-parameters"
 version = "0.5.8"
-source = "git+https://github.com/manta-network/manta-rs?branch=fix-asset-value-display#7375382441982d14568dfa42d102c4f7f0232f28"
+source = "git+https://github.com/manta-network/manta-rs#e0b5cd33265086c7b2d975901aaaa4805d8893fe"
 dependencies = [
  "anyhow",
  "attohttpc",
@@ -2763,7 +2763,7 @@ dependencies = [
 [[package]]
 name = "manta-pay"
 version = "0.5.8"
-source = "git+https://github.com/manta-network/manta-rs?branch=fix-asset-value-display#7375382441982d14568dfa42d102c4f7f0232f28"
+source = "git+https://github.com/manta-network/manta-rs#e0b5cd33265086c7b2d975901aaaa4805d8893fe"
 dependencies = [
  "aes-gcm 0.9.4",
  "bip0039",
@@ -2817,7 +2817,7 @@ dependencies = [
 [[package]]
 name = "manta-util"
 version = "0.5.8"
-source = "git+https://github.com/manta-network/manta-rs?branch=fix-asset-value-display#7375382441982d14568dfa42d102c4f7f0232f28"
+source = "git+https://github.com/manta-network/manta-rs#e0b5cd33265086c7b2d975901aaaa4805d8893fe"
 dependencies = [
  "crossbeam-channel",
  "serde",
