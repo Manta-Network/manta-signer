@@ -1,6 +1,6 @@
 {
     "name": "manta-signer-ui",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "private": true,
     "dependencies": {
         "@tauri-apps/api": "1.0.1",

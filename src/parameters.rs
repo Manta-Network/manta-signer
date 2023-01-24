@@ -88,7 +88,7 @@ where
 #[inline]
 pub fn load_utxo_accumulator_model() -> Option<config::UtxoAccumulatorModel> {
     config::UtxoAccumulatorModel::decode(
-        manta_parameters::pay::testnet::parameters::UtxoAccumulatorModel::get()?,
+        manta_parameters::pay::parameters::UtxoAccumulatorModel::get()?,
     )
     .ok()
 }
