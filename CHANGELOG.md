@@ -3,17 +3,19 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [1.0.1] 2023-01-24
 
 ### Added
+- [\#261](https://github.com/Manta-Network/manta-signer/pull/261) Bundle Proving Keys with MantaSigner (no download anymore)
 
 ### Changed
-
+- [\#252](https://github.com/Manta-Network/manta-signer/pull/252) Change app name to MantaSigner and coloured icons
 ### Deprecated
 
 ### Removed
 
 ### Fixed
+- [\#250](https://github.com/Manta-Network/manta-signer/pull/250) Fix View recovery phrase window not opening and ZkAddress window closure closing the whole app sometimes
 - [\#236](https://github.com/Manta-Network/manta-signer/pull/236) Fix missing file reload
 
 ### Security
