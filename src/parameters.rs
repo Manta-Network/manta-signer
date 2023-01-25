@@ -42,10 +42,7 @@ where
     let mint = directory.join("to-private.dat");
     manta_parameters::pay::proving::ToPrivate::download_if_invalid(&mint).ok()?;
     let private_transfer = directory.join("private-transfer.dat");
-    manta_parameters::pay::proving::PrivateTransfer::download_if_invalid(
-        &private_transfer,
-    )
-    .ok()?;
+    manta_parameters::pay::proving::PrivateTransfer::download_if_invalid(&private_transfer).ok()?;
     let reclaim = directory.join("to-public.dat");
     manta_parameters::pay::proving::ToPublic::download_if_invalid(&reclaim).ok()?;
     let parameters = load_transfer_parameters();

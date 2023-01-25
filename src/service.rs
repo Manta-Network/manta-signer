@@ -31,7 +31,7 @@ use http_types::headers::HeaderValue;
 use manta_accounting::{
     asset::{Asset, AssetMetadata},
     fs::{cocoon::File, File as _, SaveError},
-    transfer::canonical::TransferShape
+    transfer::canonical::TransferShape,
 };
 use manta_pay::{
     config::Transaction,
@@ -60,7 +60,10 @@ use tokio::{
 
 pub use manta_pay::{
     config::{address_to_base58, Address},
-    signer::{self, SignError, SignResponse, SyncError, SyncResponse, TransactionDataResponse, SignWithTransactionDataResponse},
+    signer::{
+        self, IdentityResponse, SignError, SignResponse, SignWithTransactionDataResponse,
+        SyncError, SyncResponse, TransactionDataResponse,
+    },
 };
 
 /// Synchronization Request
@@ -74,6 +77,9 @@ pub type ReceivingKeyRequest = Message<signer::GetRequest>;
 
 /// Transaction Data Request
 pub type TransactionDataRequest = Message<signer::TransactionDataRequest>;
+
+/// Request for proof of identity
+pub type IdentityProofRequest = Message<signer::IdentityRequest>;
 
 /// Password Retry Interval
 pub const PASSWORD_RETRY_INTERVAL: Duration = Duration::from_millis(1000);
@@ -109,6 +115,11 @@ pub enum Error {
     ///
     /// The signer could not process the request at this time.
     Delayed,
+
+    /// Bad Data Error
+    ///
+    /// The data given to signer could not be processed correctly
+    BadData,
 }
 
 from_variant!(Error, AddrParseError, AddrParseError);
@@ -146,6 +157,7 @@ impl Display for Error {
             Self::Io(err) => write!(f, "I/O Error: {err}"),
             Self::AuthorizationError => write!(f, "Authorization Error"),
             Self::Delayed => write!(f, "Delay Error"),
+            Self::BadData => write!(f, "Bad Data Error"),
         }
     }
 }
@@ -472,7 +484,12 @@ where
         http::register_post(&mut api, "/sign", Server::sign);
         http::register_post(&mut api, "/address", Server::address);
         http::register_post(&mut api, "/transaction_data", Server::transaction_data);
-        http::register_post(&mut api, "/sign_with_transaction_data", Server::sign_with_transaction_data);
+        http::register_post(
+            &mut api,
+            "/sign_with_transaction_data",
+            Server::sign_with_transaction_data,
+        );
+        http::register_post(&mut api, "/identity_proof", Server::identity_proof);
         info!("serving signer API at {}", socket_address)?;
         api.listen(socket_address).await?;
         Ok(())
@@ -611,8 +628,14 @@ where
 
     /// Runs the transaction signing protocol on the signer.
     #[inline]
-    pub async fn sign_with_transaction_data(self, request: SignRequest) -> Result<Result<SignWithTransactionDataResponse, SignError>> {
-        info!("[REQUEST] processing `sign with transaction data`: {:?}.", request)?;
+    pub async fn sign_with_transaction_data(
+        self,
+        request: SignRequest,
+    ) -> Result<Result<SignWithTransactionDataResponse, SignError>> {
+        info!(
+            "[REQUEST] processing `sign with transaction data`: {:?}.",
+            request
+        )?;
         if self.state.lock().currently_signing {
             return Err(Error::Delayed);
         }
@@ -620,10 +643,10 @@ where
         let SignRequest {
             network,
             message:
-            signer::SignRequest {
-                transaction,
-                metadata,
-            },
+                signer::SignRequest {
+                    transaction,
+                    metadata,
+                },
         } = request;
         match transaction.shape() {
             TransferShape::ToPrivate => {
@@ -646,14 +669,32 @@ where
     }
 
     /// Processes a TransactionDataRequest `request` which contains TransferPosts, and returns Transaction Data,
-    /// depending on 
     #[inline]
-    pub async fn transaction_data(self, request: TransactionDataRequest) -> Result<TransactionDataResponse, Error> {
+    pub async fn transaction_data(
+        self,
+        request: TransactionDataRequest,
+    ) -> Result<TransactionDataResponse, Error> {
         info!("[REQUEST] processing `transaction_data`: {:?}.", request)?;
         info!("[AUTH] asking for transaction data authorization")?;
         let summary = "TransactionDataRequest";
         self.authorizer.lock().await.check(&summary).await?;
-        let response = self.state.lock().signer[request.network].batched_transaction_data(request.message.0);
+        let response =
+            self.state.lock().signer[request.network].batched_transaction_data(request.message.0);
+        Ok(response)
+    }
+
+    /// Processes a IdentityProofRequest and produces a virtual `ToPublic` post from that request
+    #[inline]
+    pub async fn identity_proof(
+        self,
+        request: IdentityProofRequest,
+    ) -> Result<IdentityResponse, Error> {
+        info!("[REQUEST] processing `identity`: {:?}.", request)?;
+        info!("[AUTH] asking for transaction data authorization")?;
+        let summary = "IdentityProofRequest";
+        self.authorizer.lock().await.check(&summary).await?;
+        let response =
+            self.state.lock().signer[request.network].batched_identity_proof(request.message.0);
         Ok(response)
     }
 

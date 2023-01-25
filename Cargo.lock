@@ -2722,8 +2722,8 @@ dependencies = [
 
 [[package]]
 name = "manta-accounting"
-version = "0.5.9"
-source = "git+https://github.com/manta-network/manta-rs?branch=feat/sign_with_transaction_data#559eb5e39ac7696f5c3bb5f2edeb21b94168595b"
+version = "0.5.10"
+source = "git+https://github.com/manta-network/manta-rs?branch=feat/sign_with_transaction_data#d8926ca416227bbfd1712ce4e051b34ecf8e5b6d"
 dependencies = [
  "bitflags",
  "cocoon",
@@ -2736,8 +2736,8 @@ dependencies = [
 
 [[package]]
 name = "manta-crypto"
-version = "0.5.9"
-source = "git+https://github.com/manta-network/manta-rs?branch=feat/sign_with_transaction_data#559eb5e39ac7696f5c3bb5f2edeb21b94168595b"
+version = "0.5.10"
+source = "git+https://github.com/manta-network/manta-rs?branch=feat/sign_with_transaction_data#d8926ca416227bbfd1712ce4e051b34ecf8e5b6d"
 dependencies = [
  "ark-bls12-381",
  "ark-bn254",
@@ -2762,8 +2762,8 @@ dependencies = [
 
 [[package]]
 name = "manta-parameters"
-version = "0.5.9"
-source = "git+https://github.com/manta-network/manta-rs?branch=feat/sign_with_transaction_data#559eb5e39ac7696f5c3bb5f2edeb21b94168595b"
+version = "0.5.10"
+source = "git+https://github.com/manta-network/manta-rs?branch=feat/sign_with_transaction_data#d8926ca416227bbfd1712ce4e051b34ecf8e5b6d"
 dependencies = [
  "anyhow",
  "attohttpc 0.24.0",
@@ -2775,8 +2775,8 @@ dependencies = [
 
 [[package]]
 name = "manta-pay"
-version = "0.5.9"
-source = "git+https://github.com/manta-network/manta-rs?branch=feat/sign_with_transaction_data#559eb5e39ac7696f5c3bb5f2edeb21b94168595b"
+version = "0.5.10"
+source = "git+https://github.com/manta-network/manta-rs?branch=feat/sign_with_transaction_data#d8926ca416227bbfd1712ce4e051b34ecf8e5b6d"
 dependencies = [
  "aes-gcm 0.9.4",
  "bip0039",
@@ -2829,8 +2829,8 @@ dependencies = [
 
 [[package]]
 name = "manta-util"
-version = "0.5.9"
-source = "git+https://github.com/manta-network/manta-rs?branch=feat/sign_with_transaction_data#559eb5e39ac7696f5c3bb5f2edeb21b94168595b"
+version = "0.5.10"
+source = "git+https://github.com/manta-network/manta-rs?branch=feat/sign_with_transaction_data#d8926ca416227bbfd1712ce4e051b34ecf8e5b6d"
 dependencies = [
  "crossbeam-channel",
  "serde",
