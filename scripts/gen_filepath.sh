@@ -2,12 +2,12 @@
 
 if [ "$1" == "ubuntu" ]
 then
-    echo '::set-output name=IMAGE::appimage/MantaSigner_'$3'_amd64.AppImage'
-    echo '::set-output name=IMAGE_UPDATE::appimage/MantaSigner_'$3'_amd64.AppImage.tar.gz'
-    echo '::set-output name=UPDATE_SIG::appimage/MantaSigner_'$3'_amd64.AppImage.tar.gz.sig'
-    echo '::set-output name=RELEASE_IMAGE::MantaSigner-'$2'_'$3'_amd64.AppImage'
-    echo '::set-output name=RELEASE_IMAGE_UPDATE::MantaSigner-'$2'_'$3'_amd64.AppImage.tar.gz'
-    echo '::set-output name=RELEASE_UPDATE_SIG::MantaSigner-'$2'_'$3'_amd64.AppImage.tar.gz.sig'
+    echo '::set-output name=IMAGE::appimage/manta-signer_'$3'_amd64.AppImage'
+    echo '::set-output name=IMAGE_UPDATE::appimage/manta-signer_'$3'_amd64.AppImage.tar.gz'
+    echo '::set-output name=UPDATE_SIG::appimage/manta-signer_'$3'_amd64.AppImage.tar.gz.sig'
+    echo '::set-output name=RELEASE_IMAGE::manta-signer-'$2'_'$3'_amd64.AppImage'
+    echo '::set-output name=RELEASE_IMAGE_UPDATE::manta-signer-'$2'_'$3'_amd64.AppImage.tar.gz'
+    echo '::set-output name=RELEASE_UPDATE_SIG::manta-signer-'$2'_'$3'_amd64.AppImage.tar.gz.sig'
 elif [ "$1" == "windows" ]
 then
     echo '::set-output name=IMAGE::msi/MantaSigner_'$3'_x64_en-US.msi'
