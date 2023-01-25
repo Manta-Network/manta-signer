@@ -75,6 +75,7 @@ function App() {
         </h1>
         <a
           className='px-6 py-4 text-white text-2xl bg-button rounded-full mt-12 cursor-pointer'
+          onclick="window.fathom.trackGoal('KUBL03QU', 0);"
           href={
             os === 'Mac'
               ? 'https://github.com/Manta-Network/manta-signer/releases/download/v1.0.1/MantaSigner-macos-latest_1.0.1-103_x64.dmg'
