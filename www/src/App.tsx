@@ -11,6 +11,7 @@ import DolphinLogo from './assets/dolphin.svg';
 import MantaLogo from './assets/manta.png';
 import './App.css';
 
+
 function App() {
   const [os, setOs] = useState<string | undefined>('');
 
@@ -74,12 +75,13 @@ function App() {
         </h1>
         <a
           className='px-6 py-4 text-white text-2xl bg-button rounded-full mt-12 cursor-pointer'
+          onclick="window.fathom.trackGoal('KUBL03QU', 0);"
           href={
             os === 'Mac'
-              ? 'https://github.com/Manta-Network/manta-signer/releases/download/v1.0.0/manta-signer-macos-latest_1.0.0-103_x64.dmg'
+              ? 'https://github.com/Manta-Network/manta-signer/releases/download/v1.0.1/MantaSigner-macos-latest_1.0.1-103_x64.dmg'
               : os === 'Windows'
-              ? 'https://github.com/Manta-Network/manta-signer/releases/download/v1.0.0/manta-signer-windows-2019_1.0.0_x64.msi'
-              : 'https://github.com/Manta-Network/manta-signer/releases/download/v1.0.0/manta-signer-ubuntu-18.04_1.0.0_amd64.deb'
+              ? 'https://github.com/Manta-Network/manta-signer/releases/download/v1.0.1/MantaSigner-windows-2019_1.0.1_x64.msi'
+              : 'https://github.com/Manta-Network/manta-signer/releases/download/v1.0.1/MantaSigner-ubuntu-18.04_1.0.1_amd64.deb'
           }
           title={
             os === 'Mac'

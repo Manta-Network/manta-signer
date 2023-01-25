@@ -6,7 +6,7 @@ const Loading = ({
   return (
     <>
       <Header as='h1'> Manta Signer </Header>
-      {!isConnected ? <h3>Downloading Manta Proving Keys...</h3> : null}
+        <h3>Loading ...  Please Wait</h3>
       <img src={loadingGif} alt = "Loading ..." style={{width:"5rem"}}/>
     </>
   );
