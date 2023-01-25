@@ -1,12 +1,10 @@
 name: Build and upload release binaries
 on:
-  #pull_request:
-  # branches:
-  #   - main
-  #release:
-  #  types: [published]
   pull_request:
-  push:
+    branches:
+      - main
+  release:
+    types: [published]
 jobs:
   setup:
     name: Get version
@@ -112,7 +110,7 @@ jobs:
         uses: bruceadams/get-release@v1.2.3
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        #if: github.event_name == 'release' && github.event.action == 'published'
+        if: github.event_name == 'release' && github.event.action == 'published'
       - name: Upload .deb Package
         uses: actions/upload-release-asset@v1
         env:
@@ -122,7 +120,7 @@ jobs:
           asset_path: target/release/bundle/deb/MantaSigner_${{ steps.suffixed.outputs.SUFFIXED }}_amd64.deb
           asset_name: MantaSigner-${{ matrix.os }}_${{ needs.setup.outputs.release_version }}_amd64.deb
           asset_content_type: application/binary
-        if: matrix.os_type == 'ubuntu' #&& github.event_name == 'release' && github.event.action == 'published'
+        if: matrix.os_type == 'ubuntu' && github.event_name == 'release' && github.event.action == 'published'
       - name: Set release vars
         id: release_vars
         run: ./scripts/gen_filepath.sh ${{ matrix.os_type }} ${{ matrix.os }} ${{ steps.suffixed.outputs.SUFFIXED}}
@@ -138,7 +136,7 @@ jobs:
           asset_path: "target/release/bundle/${{ steps.release_vars.outputs.IMAGE }}"
           asset_name: "${{ steps.release_vars.outputs.RELEASE_IMAGE }}" 
           asset_content_type: application/binary
-        #if: github.event_name == 'release' && github.event.action == 'published'
+        if: github.event_name == 'release' && github.event.action == 'published'
       - name: Content Hash
         id: content_hash
         run: echo "::set-output name=HASH::${{ hashFiles( env.FILE ) }}"
@@ -154,7 +152,7 @@ jobs:
           asset_path: "target/release/bundle/${{ steps.release_vars.outputs.IMAGE_UPDATE }}"
           asset_name: "${{ steps.release_vars.outputs.RELEASE_IMAGE_UPDATE }}"
           asset_content_type: application/binary
-        #if: github.event_name == 'release' && github.event.action == 'published'
+        if: github.event_name == 'release' && github.event.action == 'published'
       - name: Upload Updater signature
         id: sig
         uses: actions/upload-release-asset@v1
@@ -165,23 +163,23 @@ jobs:
           asset_path: "target/release/bundle/${{ steps.release_vars.outputs.UPDATE_SIG }}"
           asset_name: "${{ steps.release_vars.outputs.RELEASE_UPDATE_SIG }}"
           asset_content_type: application/binary
-        # && github.event.action == 'published'
+        if: github.event_name == 'release' && github.event.action == 'published'
       - run: curl -L ${{ steps.sig.outputs.browser_download_url }} > sig.txt
-        #if: github.event_name == 'release' && github.event.action == 'published'
+        if: github.event_name == 'release' && github.event.action == 'published'
       - name: Capture Sig
         id: sig_out
         run: echo "::set-output name=SIG::$(cat sig.txt)"
-        #if: github.event_name == 'release' && github.event.action == 'published'
+        if: github.event_name == 'release' && github.event.action == 'published'
       - run: echo "::set-output name=EXPIRY::$(node -e 'console.log(Math.floor(Date.now()/1000) + 300)')"
         id: expiry
-        #if: github.event_name == 'release' && github.event.action == 'published'
+        if: github.event_name == 'release' && github.event.action == 'published'
       - name: JWT Generator
         id: jwtGenerator
         uses: morzzz007/github-actions-jwt-generator@1.0.1
         with:
           secret: ${{ secrets.JWT_SECRET }}
           payload: "{\"user\":\"updates\", \"exp\": ${{ steps.expiry.outputs.EXPIRY }}}"
-        #if: github.event_name == 'release' && github.event.action == 'published'
+        if: github.event_name == 'release' && github.event.action == 'published'
       - name: Notify updater server
         uses: satak/webrequest-action@master
         with:
@@ -189,4 +187,4 @@ jobs:
           method: POST
           payload: "{\"target\": \"${{ matrix.target }}\", \"version\": \"${{ steps.suffixed.outputs.SUFFIXED }}\", \"release_notes\": \"Release page: ${{ github.event.release.html_url }}\\n SHA-256: ${{ steps.content_hash.outputs.HASH }}\\n \", \"url\": \"${{ steps.updater.outputs.browser_download_url }}\", \"signature\": \"${{ steps.sig_out.outputs.SIG }}\" }"
           headers: "{\"Authorization\": \"Bearer ${{ steps.jwtGenerator.outputs.token }}\"}"
-        #if: github.event_name == 'release' && github.event.action == 'published'
+        if: github.event_name == 'release' && github.event.action == 'published'
