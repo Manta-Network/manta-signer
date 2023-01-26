@@ -489,7 +489,7 @@ where
             "/sign_with_transaction_data",
             Server::sign_with_transaction_data,
         );
-        http::register_post(&mut api, "/identity_proof", Server::identity_proof);
+        http::register_post(&mut api, "/identity", Server::identity_proof);
         info!("serving signer API at {}", socket_address)?;
         api.listen(socket_address).await?;
         Ok(())
@@ -690,9 +690,6 @@ where
         request: IdentityProofRequest,
     ) -> Result<IdentityResponse, Error> {
         info!("[REQUEST] processing `identity`: {:?}.", request)?;
-        info!("[AUTH] asking for transaction data authorization")?;
-        let summary = "IdentityProofRequest";
-        self.authorizer.lock().await.check(&summary).await?;
         let response =
             self.state.lock().signer[request.network].batched_identity_proof(request.message.0);
         Ok(response)
