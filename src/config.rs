@@ -28,7 +28,7 @@ use std::{
 use tokio::fs;
 
 /// Manta Path Identifier
-pub const PATH_IDENTIFIER: &str = "MantaSigner";
+pub const PATH_IDENTIFIER: &str = "manta-signer";
 
 /// Pushes the [`PATH_IDENTIFIER`] to the end of the given `path` if it exists, attaching the file
 /// `name` afterwards.

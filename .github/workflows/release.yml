@@ -24,32 +24,32 @@ jobs:
         include:
           - os: ubuntu-latest
             os_type: ubuntu
-            artifact_name: MantaSigner
-            asset_name: MantaSigner-linux-amd64
+            artifact_name: manta-signer
+            asset_name: manta-signer-linux-amd64
             version_suffix: 0
             target: linux
           - os: ubuntu-18.04
             os_type: ubuntu
-            artifact_name: MantaSigner
-            asset_name: MantaSigner-linux-amd64
+            artifact_name: manta-signer
+            asset_name: manta-signer-linux-amd64
             version_suffix: 1
             target: linux
           - os: ubuntu-22.04
             os_type: ubuntu
-            artifact_name: MantaSigner
-            asset_name: MantaSigner-linux-amd64
+            artifact_name: manta-signer
+            asset_name: manta-signer-linux-amd64
             version_suffix: 2
             target: linux
           - os: windows-2019
             os_type: windows
-            artifact_name: MantaSigner
-            asset_name: MantaSigner-windows
+            artifact_name: manta-signer
+            asset_name: manta-signer-windows
             version_suffix: 2
             target: win64
           - os: macos-latest
             os_type: macos
-            artifact_name: MantaSigner
-            asset_name: MantaSigner-macos-amd64
+            artifact_name: manta-signer
+            asset_name: manta-signer-macos-amd64
             version_suffix: 3
             target: darwin
     steps:
@@ -118,7 +118,7 @@ jobs:
         with:
           upload_url: ${{ steps.get_release.outputs.upload_url }}
           asset_path: target/release/bundle/deb/manta-signer_${{ steps.suffixed.outputs.SUFFIXED }}_amd64.deb
-          asset_name: MantaSigner-${{ matrix.os }}_${{ needs.setup.outputs.release_version }}_amd64.deb
+          asset_name: manta-signer-${{ matrix.os }}_${{ needs.setup.outputs.release_version }}_amd64.deb
           asset_content_type: application/binary
         if: matrix.os_type == 'ubuntu' && github.event_name == 'release' && github.event.action == 'published'
       - name: Set release vars
