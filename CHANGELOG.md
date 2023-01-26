@@ -3,15 +3,12 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.0.2] 2023-01-25
-No changes
-
 ## [1.0.1] 2023-01-24
 ### Added
-- [\#261](https://github.com/Manta-Network/manta-signer/pull/261) Bundle Proving Keys with MantaSigner (no download anymore)
+- [\#261](https://github.com/Manta-Network/manta-signer/pull/261) Bundle Proving Keys with manta-signer (no download anymore)
 
 ### Changed
-- [\#252](https://github.com/Manta-Network/manta-signer/pull/252) Change app name to MantaSigner and coloured icons
+- [\#252](https://github.com/Manta-Network/manta-signer/pull/252) Change app name to manta-signer and coloured icons
 ### Deprecated
 
 ### Removed
