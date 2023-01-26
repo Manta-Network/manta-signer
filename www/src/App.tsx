@@ -78,10 +78,10 @@ function App() {
           onclick="window.fathom.trackGoal('KUBL03QU', 0);"
           href={
             os === 'Mac'
-              ? 'https://github.com/Manta-Network/manta-signer/releases/download/v1.0.1/MantaSigner-macos-latest_1.0.1-103_x64.dmg'
+              ? 'https://github.com/Manta-Network/manta-signer/releases/download/v1.0.2/MantaSigner-macos-latest_1.0.2-103_x64.dmg'
               : os === 'Windows'
-              ? 'https://github.com/Manta-Network/manta-signer/releases/download/v1.0.1/MantaSigner-windows-2019_1.0.1_x64.msi'
-              : 'https://github.com/Manta-Network/manta-signer/releases/download/v1.0.1/MantaSigner-ubuntu-18.04_1.0.1_amd64.deb'
+              ? 'https://github.com/Manta-Network/manta-signer/releases/download/v1.0.2/MantaSigner-windows-2019_1.0.2_x64.msi'
+              : 'https://github.com/Manta-Network/manta-signer/releases/download/v1.0.2/manta-signer-ubuntu-18.04_1.0.2_amd64.deb'
           }
           title={
             os === 'Mac'
