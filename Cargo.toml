@@ -15,7 +15,8 @@ publish = false
 
 [workspace]
 resolver = "2"
-members = ["ui/src-tauri", "update-server"]
+members = ["ui/src-tauri"]
+exclude = ["update-server"]
 
 [package.metadata.docs.rs]
 # To build locally:
