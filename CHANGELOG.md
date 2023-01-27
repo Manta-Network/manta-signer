@@ -14,6 +14,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 ### Removed
 
 ### Fixed
+- [\#236](https://github.com/Manta-Network/manta-signer/pull/236) Fix missing file reload
 
 ### Security
 

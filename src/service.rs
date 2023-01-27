@@ -351,15 +351,15 @@ where
 
                     let calamari_state = Self::create_or_load_state(
                         !data_exists.calamari,
-                        &config.data_path.dolphin,
+                        &config.data_path.calamari,
                         &password_hash,
                         recovery_mnemonic.clone(),
                     )
                     .await?;
 
                     let manta_state = Self::create_or_load_state(
-                        !data_exists.calamari,
-                        &config.data_path.dolphin,
+                        !data_exists.manta,
+                        &config.data_path.manta,
                         &password_hash,
                         recovery_mnemonic.clone(),
                     )

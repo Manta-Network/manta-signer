@@ -1,6 +1,6 @@
 {
     "package": {
-        "productName": "manta-signer",
+        "productName": "MantaSigner",
         "version": "1.0.0"
     },
     "build": {
