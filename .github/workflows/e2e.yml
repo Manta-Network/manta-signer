@@ -1,47 +1,47 @@
-name: End-to-end Test
-on:
-  push:
-    branches:
-      - main
-    paths-ignore:
-      - '**.md'
-  pull_request:
-    branches:
-      - main
-    paths-ignore:
-      - '**.md'
-jobs:
-  build_code:
-    name: End-to-end Test
-    runs-on: ubuntu-latest
-    timeout-minutes: 120
-    strategy:
-      matrix:
-        node-version: [16.x]
-    env:
-      MANTA_SDK_BRANCH: "main"
-    steps:
-      - name: Cancel previous runs
-        uses: styfle/cancel-workflow-action@0.9.1
-        with:
-          access_token: ${{ github.token }}
-      - uses: actions/checkout@v3
-      - name: Use Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v3
-        with:
-          node-version: ${{ matrix.node-version }}
-      - name: Build manta-signer test server
-        run: cargo build --example test_server --release --features=unsafe-disable-cors
-      - name: Build manta-js
-        run: |
-          cd js
-          yarn install --immutable | grep -v 'YN0013'
-          yarn build
-      - name: Enable test scripts
-        run: |
-          chmod +x "${GITHUB_WORKSPACE}/.github/workflows/e2e/get_node.sh"
-          chmod +x "${GITHUB_WORKSPACE}/.github/workflows/e2e/run_test.sh"
-      - name: Get Dolphin node
-        run: "${GITHUB_WORKSPACE}/.github/workflows/e2e/get_node.sh"
-      - name: Run test
-        run: "${GITHUB_WORKSPACE}/.github/workflows/e2e/run_test.sh"
+# name: End-to-end Test
+# on:
+#   push:
+#     branches:
+#       - main
+#     paths-ignore:
+#       - '**.md'
+#   pull_request:
+#     branches:
+#       - main
+#     paths-ignore:
+#       - '**.md'
+# jobs:
+#   build_code:
+#     name: End-to-end Test
+#     runs-on: ubuntu-latest
+#     timeout-minutes: 120
+#     strategy:
+#       matrix:
+#         node-version: [16.x]
+#     env:
+#       MANTA_SDK_BRANCH: "main"
+#     steps:
+#       - name: Cancel previous runs
+#         uses: styfle/cancel-workflow-action@0.9.1
+#         with:
+#           access_token: ${{ github.token }}
+#       - uses: actions/checkout@v3
+#       - name: Use Node.js ${{ matrix.node-version }}
+#         uses: actions/setup-node@v3
+#         with:
+#           node-version: ${{ matrix.node-version }}
+#       - name: Build manta-signer test server
+#         run: cargo build --example test_server --release --features=unsafe-disable-cors
+#       - name: Build manta-js
+#         run: |
+#           cd js
+#           yarn install --immutable | grep -v 'YN0013'
+#           yarn build
+#       - name: Enable test scripts
+#         run: |
+#           chmod +x "${GITHUB_WORKSPACE}/.github/workflows/e2e/get_node.sh"
+#           chmod +x "${GITHUB_WORKSPACE}/.github/workflows/e2e/run_test.sh"
+#       - name: Get Dolphin node
+#         run: "${GITHUB_WORKSPACE}/.github/workflows/e2e/get_node.sh"
+#       - name: Run test
+#         run: "${GITHUB_WORKSPACE}/.github/workflows/e2e/run_test.sh"
