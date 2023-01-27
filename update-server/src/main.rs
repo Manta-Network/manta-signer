@@ -1,4 +1,4 @@
-//! Updater Server
+//! Update Server
 
 use crate::types::NewRelease;
 use endpoints::{get_latest, handle_rejection, healthcheck, new_release, release_info, updates};

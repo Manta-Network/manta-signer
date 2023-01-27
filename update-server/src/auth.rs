@@ -1,4 +1,4 @@
-//! Updater Server Auth
+//! Update Server Auth
 
 use crate::types::*;
 use chrono::Utc;

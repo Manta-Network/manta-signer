@@ -1,4 +1,4 @@
-//! Updater Server Endpoints
+//! Update Server Endpoints
 
 use crate::types::*;
 use log::{error, info, warn};
@@ -8,15 +8,6 @@ use warp::{http::StatusCode, reject, reply::with_status, Filter, Reply};
 
 const MAX_JSON_BODY: u64 = 1024 * 16;
 const RELEASES_DYNAMODB: &str = "release-versions";
-
-fn customize_target(target: String, version: &String) -> String {
-    let part = if target.starts_with("win") {
-        version.split('.').next_back().unwrap()
-    } else {
-        version.split('-').next_back().unwrap()
-    };
-    format!("{target}:{part}")
-}
 
 pub fn release_info() -> impl Filter<Extract = (NewRelease,), Error = warp::Rejection> + Clone {
     warp::body::content_length_limit(MAX_JSON_BODY).and(warp::body::json())
@@ -73,7 +64,6 @@ async fn update_available(
     get_item_input.table_name = RELEASES_DYNAMODB.into();
 
     let mut key = AttributeValue::default();
-    let target = customize_target(target, &version);
     info!("UPDATE query {target}");
     key.s = Some(target);
     get_item_input.key = HashMap::from_iter([("target".to_string(), key)]);
@@ -123,7 +113,6 @@ pub async fn new_release(
 
     let mut entry = HashMap::new();
     entry.insert("item".to_string(), map_attribute(item));
-    let target = customize_target(target, &version);
     info!("NEW RELEASE target {target}");
     entry.insert("target".to_string(), string_attribute(target));
 

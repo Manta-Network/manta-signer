@@ -1,4 +1,4 @@
-//! Updater Server Types
+//! Update Server Types
 
 use serde::{Deserialize, Serialize};
 
