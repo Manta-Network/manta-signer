@@ -200,6 +200,11 @@ pub async fn get_latest(
     client: DynamoDbClient,
 ) -> Result<impl warp::Reply, warp::Rejection> {
     info!("Request for {target}:latest");
+
+    let mut target = target;
+    if target == "windows" {
+      target = String::from("win64")
+    }
     if let Some(releases) = latests(target, client).await {
         Ok(releases.into_response())
     } else {
@@ -213,6 +218,11 @@ pub async fn updates(
     client: DynamoDbClient,
 ) -> Result<impl warp::Reply, warp::Rejection> {
     info!("Request for {target}:{version}");
+
+    let mut target = target;
+    if target == "windows" {
+      target = String::from("win64")
+    }
     if let Some(release) = update_available(target, version, client).await {
         Ok(release.into_response())
     } else {
