@@ -573,7 +573,7 @@ async fn get_recovery_phrase(
     if let Some(store) = &mut *server_store.lock().await {
         match store.get_stored_mnemonic(Network::Dolphin, &prompt).await {
             Ok(mnemonic) => Ok(mnemonic),
-            Err(_) => Err(())
+            Err(_) => Err(()),
         }
     } else {
         Err(())
