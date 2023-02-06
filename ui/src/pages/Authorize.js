@@ -1,5 +1,4 @@
-import { once } from '@tauri-apps/api/event';
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Button, Input } from 'semantic-ui-react';
 
 const Authorize = ({
@@ -11,13 +10,6 @@ const Authorize = ({
 }) => {
   const [password, setPassword] = useState('');
   const [passwordInvalid, setPasswordInvalid] = useState(false);
-
-
-  // useEffect(() => {
-  //   once("abort_auth", async () => {
-  //     await onClickDecline();
-  //   });
-  // });
 
   const onClickAuthorize = async () => {
     console.log("[INFO]: Authorizing.");
