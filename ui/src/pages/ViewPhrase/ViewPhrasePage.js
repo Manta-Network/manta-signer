@@ -13,13 +13,13 @@ const ViewPhrasePage = ({
   onClickSubmitPassword,
   onClickCancel
 }) => {
-
+  
   useEffect(() => {
     once("abort_auth", async () => {
       await onClickCancel();
     });
   });
-  
+
   return (<>
 
     <div className='main-logo-container view-phrase'>

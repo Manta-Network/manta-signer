@@ -158,6 +158,7 @@ function App() {
 
       // Case 1: we need authorization for exporting the recovery phrase.
       if (event.payload === GET_RECOVERY_PHRASE) {
+        console.log("Viewing secret phrase window");
         navigate("/view-secret-phrase");
         appWindow.show();
         return;
@@ -208,7 +209,11 @@ function App() {
     }
 
     console.log("[INFO]: Send request to export recovery phrase.");
-    let phrase = await invoke('get_recovery_phrase', { prompt: GET_RECOVERY_PHRASE });
+    let phrase = await invoke('get_recovery_phrase', { prompt: GET_RECOVERY_PHRASE })
+    .catch(error => {
+      console.log("Failed getting mnemonic, either fail or abort(expected)");
+      return
+    });
 
     if (phrase) {
       setExportedSecretPhrase(phrase);

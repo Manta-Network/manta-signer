@@ -267,6 +267,7 @@ impl Authorizer for User {
         T: Serialize,
     {
         APP_STATE.set_authorizing(true);
+        println!("INFO: Server Awake");
         self.emit("authorize", prompt);
         Box::pin(async move {})
     }
@@ -274,6 +275,7 @@ impl Authorizer for User {
     #[inline]
     fn sleep(&mut self) -> UnitFuture {
         APP_STATE.set_authorizing(false);
+        println!("INFO: Server Sleeping");
         self.emit("abort_auth", &());
         Box::pin(async move { self.validate_password().await })
     }
@@ -569,11 +571,10 @@ async fn get_recovery_phrase(
     server_store: State<'_, ServerStore>,
 ) -> Result<Mnemonic, ()> {
     if let Some(store) = &mut *server_store.lock().await {
-        let mnemonic = store
-            .get_stored_mnemonic(Network::Dolphin, &prompt)
-            .await
-            .expect("Unable to fetch mnemonic");
-        Ok(mnemonic)
+        match store.get_stored_mnemonic(Network::Dolphin, &prompt).await {
+            Ok(mnemonic) => Ok(mnemonic),
+            Err(_) => Err(())
+        }
     } else {
         Err(())
     }
@@ -713,10 +714,10 @@ fn main() {
                 "about" => window(app, "about").hide().expect("Unable to hide window."),
                 "main" => {
                     if APP_STATE.get_ready() {
-                        window(app, "main").hide().expect("Unable to hide window.");
                         if APP_STATE.get_authorizing() {
+                            //window(app, "main").hide().expect("Unable to hide window.");
                             window(app, "main")
-                                .emit_all("abort_auth", "Aborting Authorization")
+                                .emit("abort_auth", "Aborting Authorization")
                                 .expect("Failed to abort authorization");
                         }
                     } else {

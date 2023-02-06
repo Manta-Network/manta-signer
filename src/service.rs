@@ -212,9 +212,12 @@ where
                     .is_ok()
                 {
                     self.authorizer.sleep().await;
+                    println!("Password is ok");
                     return Ok(());
                 }
             } else {
+                println!("Password is now known, returning auth error");
+                self.authorizer.sleep().await;
                 return Err(Error::AuthorizationError);
             }
             delay_password_retry().await;
@@ -445,7 +448,6 @@ where
     #[inline]
     pub async fn cancel_signing(&mut self) {
         self.state.lock().currently_signing = false;
-
         // Forcefully sleep because the authorizer gets stuck awake if we exit recovery window
         self.authorizer.lock().await.authorizer.sleep();
     }

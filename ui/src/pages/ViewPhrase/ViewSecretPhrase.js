@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { once } from '@tauri-apps/api/event';
+import React, { useState, useEffect } from 'react';
 import ViewPhrasePage from "./ViewPhrasePage";
 import ViewPhraseSuccess from "./ViewPhraseSuccess";
 

@@ -13,11 +13,11 @@ const Authorize = ({
   const [passwordInvalid, setPasswordInvalid] = useState(false);
 
 
-  useEffect(() => {
-    once("abort_auth", async () => {
-      await onClickDecline();
-    });
-  });
+  // useEffect(() => {
+  //   once("abort_auth", async () => {
+  //     await onClickDecline();
+  //   });
+  // });
 
   const onClickAuthorize = async () => {
     console.log("[INFO]: Authorizing.");
