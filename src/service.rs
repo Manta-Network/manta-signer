@@ -616,7 +616,6 @@ where
         network: Network,
         prompt: &String,
     ) -> Result<Mnemonic> {
-        info!("Getting stored mnemonic");
         self.authorizer.lock().await.check(prompt).await?;
         let stored_mnemonic = self.state.lock().signer[network]
             .state()
