@@ -276,7 +276,6 @@ impl Authorizer for User {
     fn sleep(&mut self) -> UnitFuture {
         APP_STATE.set_authorizing(false);
         println!("INFO: Server Sleeping");
-        self.emit("abort_auth", &());
         Box::pin(async move { self.validate_password().await })
     }
 }
@@ -360,7 +359,7 @@ async fn set_tray_reset(tray_handle: SystemTrayHandle, reset: bool, show_phrase:
                 "view secret recovery phrase",
                 "View Secret Recovery Phrase",
             ))
-            .add_item(CustomMenuItem::new("view zk address", "View ZkAddress"))
+            .add_item(CustomMenuItem::new("view zk address", "View zkAddress"))
             .add_item(CustomMenuItem::new("reset", "Delete Account"))
             .add_item(CustomMenuItem::new("exit", "Quit"))
     } else if reset {
@@ -715,10 +714,14 @@ fn main() {
                 "main" => {
                     if APP_STATE.get_ready() {
                         if APP_STATE.get_authorizing() {
-                            //window(app, "main").hide().expect("Unable to hide window.");
+                            // should not hide from here, let UI handle its authorization aborting and hiding
                             window(app, "main")
                                 .emit("abort_auth", "Aborting Authorization")
                                 .expect("Failed to abort authorization");
+                            APP_STATE.set_authorizing(false);
+                        } else {
+                            // hide any non process showing window like show zkAddress
+                            window(app, "main").hide().expect("Unable to hide window.");
                         }
                     } else {
                         app.exit(0);

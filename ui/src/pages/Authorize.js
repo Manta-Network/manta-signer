@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import { once } from '@tauri-apps/api/event';
+import React, { useState, useEffect } from 'react';
 import { Button, Input } from 'semantic-ui-react';
 
 const Authorize = ({
@@ -10,6 +11,14 @@ const Authorize = ({
 }) => {
   const [password, setPassword] = useState('');
   const [passwordInvalid, setPasswordInvalid] = useState(false);
+
+  useEffect(() => {
+    once("abort_auth", async () => {
+      console.log("Authorization window aborting to cancel function");
+      await onClickDecline();
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const onClickAuthorize = async () => {
     console.log("[INFO]: Authorizing.");

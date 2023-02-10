@@ -165,6 +165,7 @@ function App() {
       }
 
       // Case 2: we need authorization for signing a transaction.
+      console.log("Authorization for transaction");
       await checkAndStopExportingPhrase();
       let parsedAuthorizationSummary = parseTransactionSummary(event.payload.split(" "));
 
@@ -176,7 +177,7 @@ function App() {
 
   const listenForShowSecretPhraseRequests = async () => {
     console.log("[INFO]: Setup tray show secret phrase listener.");
-    listen('show_secret_phrase', (_event) => {
+    listen('show_secret_phrase', async (_event) => {
       getSecretRecoveryPhrase();
     })
   }
@@ -208,15 +209,17 @@ function App() {
       exportingPhraseRef.current = true;
     }
 
-    console.log("[INFO]: Send request to export recovery phrase.");
-    let phrase = await invoke('get_recovery_phrase', { prompt: GET_RECOVERY_PHRASE })
-    .catch(error => {
-      console.log("Failed getting mnemonic, either fail or abort(expected)");
-      return
-    });
+    try {
+      console.log("[INFO]: Send request to export recovery phrase.");
+      let phrase = await invoke('get_recovery_phrase', { prompt: GET_RECOVERY_PHRASE })
 
-    if (phrase) {
-      setExportedSecretPhrase(phrase);
+      console.log("[INFO]: Request for recovery phrase passed");
+      if (phrase) {
+        await setExportedSecretPhrase(phrase);
+      }
+    } catch(error) {
+      console.log("Failed getting mnemonic, either fail or aborted (expected)");
+      return;
     }
   }
 

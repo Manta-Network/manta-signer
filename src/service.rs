@@ -217,7 +217,6 @@ where
                 }
             } else {
                 println!("Password is now known, returning auth error");
-                self.authorizer.sleep().await;
                 return Err(Error::AuthorizationError);
             }
             delay_password_retry().await;
@@ -617,6 +616,7 @@ where
         network: Network,
         prompt: &String,
     ) -> Result<Mnemonic> {
+        info!("Getting stored mnemonic");
         self.authorizer.lock().await.check(prompt).await?;
         let stored_mnemonic = self.state.lock().signer[network]
             .state()

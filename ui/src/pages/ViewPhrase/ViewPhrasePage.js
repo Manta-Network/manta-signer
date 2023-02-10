@@ -16,9 +16,11 @@ const ViewPhrasePage = ({
   
   useEffect(() => {
     once("abort_auth", async () => {
+      console.log("ViewPhrasePage aborting to cancel function");
       await onClickCancel();
     });
-  });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (<>
 

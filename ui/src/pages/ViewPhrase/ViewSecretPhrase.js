@@ -21,6 +21,7 @@ const ViewSecretPhrase = ({
   }
 
   const onClickCancel = async () => {
+    console.log("Canceling Phrase Exporting Process");
     await stopPasswordPrompt();
     endExportPhrase();
   }
