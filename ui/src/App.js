@@ -158,14 +158,14 @@ function App() {
 
       // Case 1: we need authorization for exporting the recovery phrase.
       if (event.payload === GET_RECOVERY_PHRASE) {
-        console.log("Viewing secret phrase window");
+        console.log("[INFO]: Viewing secret phrase window");
         navigate("/view-secret-phrase");
         appWindow.show();
         return;
       }
 
       // Case 2: we need authorization for signing a transaction.
-      console.log("Authorization for transaction");
+      console.log("[INFO]: Authorization for transaction");
       await checkAndStopExportingPhrase();
       let parsedAuthorizationSummary = parseTransactionSummary(event.payload.split(" "));
 
@@ -218,7 +218,7 @@ function App() {
         await setExportedSecretPhrase(phrase);
       }
     } catch(error) {
-      console.log("Failed getting mnemonic, either fail or aborted (expected)");
+      console.log("[WARNING]: Failed getting mnemonic, either fail or aborted (expected)");
       return;
     }
   }

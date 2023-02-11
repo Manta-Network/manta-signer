@@ -14,7 +14,7 @@ const Authorize = ({
 
   useEffect(() => {
     once("abort_auth", async () => {
-      console.log("Authorization window aborting to cancel function");
+      console.log("[INFO]: Authorization window aborting to cancel function");
       await onClickDecline();
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
