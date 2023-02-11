@@ -18,8 +18,6 @@
 
 // TODO: Report a more informative error.
 
-#![cfg_attr(doc_cfg, feature(doc_cfg))]
-
 use manta_parameters::Get;
 use manta_pay::{config, parameters::load_transfer_parameters, signer::base::SignerParameters};
 use manta_util::codec::{Decode, IoReader};
