@@ -13,13 +13,15 @@ const ViewPhrasePage = ({
   onClickSubmitPassword,
   onClickCancel
 }) => {
-
+  
   useEffect(() => {
     once("abort_auth", async () => {
+      console.log("[INFO]: ViewPhrasePage aborting to cancel function");
       await onClickCancel();
     });
-  });
-  
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   return (<>
 
     <div className='main-logo-container view-phrase'>

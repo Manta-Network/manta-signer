@@ -16,6 +16,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### Security
 
+## Unreleased
+### Added
+
+### Changed
+
+### Deprecated
+
+### Removed
+
+### Fixed
+- [\#289](https://github.com/Manta-Network/manta-signer/pull/289) Fix authorization state preventing consecutive transactions
+
+### Security
+
 ## [1.0.1] 2023-01-24
 ### Added
 - [\#261](https://github.com/Manta-Network/manta-signer/pull/261) Bundle Proving Keys with manta-signer (no download anymore)

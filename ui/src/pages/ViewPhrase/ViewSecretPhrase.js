@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useState } from 'react';
 import ViewPhrasePage from "./ViewPhrasePage";
 import ViewPhraseSuccess from "./ViewPhraseSuccess";
 
@@ -21,6 +21,7 @@ const ViewSecretPhrase = ({
   }
 
   const onClickCancel = async () => {
+    console.log("[INFO]: Canceling Phrase Exporting Process");
     await stopPasswordPrompt();
     endExportPhrase();
   }

@@ -267,6 +267,7 @@ impl Authorizer for User {
         T: Serialize,
     {
         APP_STATE.set_authorizing(true);
+        println!("INFO: Server Awake");
         self.emit("authorize", prompt);
         Box::pin(async move {})
     }
@@ -274,7 +275,7 @@ impl Authorizer for User {
     #[inline]
     fn sleep(&mut self) -> UnitFuture {
         APP_STATE.set_authorizing(false);
-        self.emit("abort_auth", &());
+        println!("INFO: Server Sleeping");
         Box::pin(async move { self.validate_password().await })
     }
 }
@@ -358,7 +359,7 @@ async fn set_tray_reset(tray_handle: SystemTrayHandle, reset: bool, show_phrase:
                 "view secret recovery phrase",
                 "View Secret Recovery Phrase",
             ))
-            .add_item(CustomMenuItem::new("view zk address", "View ZkAddress"))
+            .add_item(CustomMenuItem::new("view zk address", "View zkAddress"))
             .add_item(CustomMenuItem::new("reset", "Delete Account"))
             .add_item(CustomMenuItem::new("exit", "Quit"))
     } else if reset {
@@ -569,11 +570,10 @@ async fn get_recovery_phrase(
     server_store: State<'_, ServerStore>,
 ) -> Result<Mnemonic, ()> {
     if let Some(store) = &mut *server_store.lock().await {
-        let mnemonic = store
-            .get_stored_mnemonic(Network::Dolphin, &prompt)
-            .await
-            .expect("Unable to fetch mnemonic");
-        Ok(mnemonic)
+        match store.get_stored_mnemonic(Network::Dolphin, &prompt).await {
+            Ok(mnemonic) => Ok(mnemonic),
+            Err(_) => Err(()),
+        }
     } else {
         Err(())
     }
@@ -713,11 +713,15 @@ fn main() {
                 "about" => window(app, "about").hide().expect("Unable to hide window."),
                 "main" => {
                     if APP_STATE.get_ready() {
-                        window(app, "main").hide().expect("Unable to hide window.");
                         if APP_STATE.get_authorizing() {
+                            // should not hide from here, let UI handle its authorization aborting and hiding
                             window(app, "main")
-                                .emit_all("abort_auth", "Aborting Authorization")
+                                .emit("abort_auth", "Aborting Authorization")
                                 .expect("Failed to abort authorization");
+                            APP_STATE.set_authorizing(false);
+                        } else {
+                            // hide any non process showing window like show zkAddress
+                            window(app, "main").hide().expect("Unable to hide window.");
                         }
                     } else {
                         app.exit(0);
