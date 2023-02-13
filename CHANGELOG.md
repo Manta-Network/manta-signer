@@ -2,7 +2,8 @@
 All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
-## Unreleased
+
+## [1.1.1] 2023-02-13
 ### Added
 
 ### Changed
@@ -13,19 +14,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### Fixed
 - [\#292](https://github.com/Manta-Network/manta-signer/pull/292) Fix linux signer not finding proving keys on system
-
-### Security
-
-## Unreleased
-### Added
-
-### Changed
-
-### Deprecated
-
-### Removed
-
-### Fixed
 - [\#289](https://github.com/Manta-Network/manta-signer/pull/289) Fix authorization state preventing consecutive transactions
 
 ### Security
