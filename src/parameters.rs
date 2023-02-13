@@ -46,13 +46,20 @@ where
 
     // MacOs installation puts assets in another folder "Resources" compared to Win/Linux Installations
     let mut directory_check = PathBuf::from(&exec_dir).join("proving");
+
     // check for test server and MacOs installation folder hierachy discrepancy relative to Win/Ubuntu
     if !directory_check.is_dir() {
         exec_dir.pop();
         directory_check = PathBuf::from(&exec_dir).join("proving");
 
         if !directory_check.is_dir() {
-            exec_dir.push("Resources");
+            if cfg!(target_os = "macos") {
+                // macos
+                exec_dir.push("Resources");
+            } else {
+                // linux (ubuntu) specific
+                exec_dir = PathBuf::from("/usr/lib/manta-signer");
+            }
         }
     }
     // use absolute paths for release
