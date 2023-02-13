@@ -12,7 +12,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 ### Removed
 
 ### Fixed
-- [\#289](https://github.com/Manta-Network/manta-signer/pull/289) Fixing authorization state issues which prevented consecutive transactions
+- [\#292](https://github.com/Manta-Network/manta-signer/pull/292) Fix linux signer not finding proving keys on system
 
 ### Security
 
