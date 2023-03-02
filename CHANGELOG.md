@@ -7,6 +7,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 ### Added
 
 ### Changed
+- [\#329](https://github.com/Manta-Network/manta-signer/pull/329) Fix bad sync after reimport or password reset
 
 ### Deprecated
 
