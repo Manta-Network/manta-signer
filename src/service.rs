@@ -175,7 +175,7 @@ pub fn display_transaction(
 ) -> String {
     let decimal = match metadata.token_type {
         TokenType::FT(decimal) => decimal,
-        TokenType::NFT => 0
+        TokenType::NFT => 1
     };
     match transaction {
         Transaction::ToPrivate(Asset { value, .. }) => format!(
