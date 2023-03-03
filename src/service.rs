@@ -29,7 +29,7 @@ use core::{
 };
 use http_types::headers::HeaderValue;
 use manta_accounting::{
-    asset::{Asset, AssetMetadata},
+    asset::Asset,
     fs::{cocoon::File, File as _, SaveError},
     transfer::canonical::TransferShape,
 };
@@ -65,6 +65,7 @@ pub use manta_pay::{
         SyncError, SyncResponse, TransactionDataResponse,
     },
 };
+use manta_pay::signer::AssetMetadata;
 
 /// Synchronization Request
 pub type SyncRequest = Message<signer::SyncRequest>;

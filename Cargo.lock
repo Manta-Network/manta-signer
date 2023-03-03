@@ -2723,7 +2723,7 @@ dependencies = [
 [[package]]
 name = "manta-accounting"
 version = "0.5.10"
-source = "git+https://github.com/manta-network/manta-rs?branch=feat/sign_with_transaction_data#d8926ca416227bbfd1712ce4e051b34ecf8e5b6d"
+source = "git+https://github.com/manta-network/manta-rs?rev=9f020c9eea0b93dcb12f8382f413a214826ff98b#9f020c9eea0b93dcb12f8382f413a214826ff98b"
 dependencies = [
  "bitflags",
  "cocoon",
@@ -2731,13 +2731,12 @@ dependencies = [
  "derive_more",
  "manta-crypto",
  "manta-util",
- "rand_chacha 0.3.1",
 ]
 
 [[package]]
 name = "manta-crypto"
 version = "0.5.10"
-source = "git+https://github.com/manta-network/manta-rs?branch=feat/sign_with_transaction_data#d8926ca416227bbfd1712ce4e051b34ecf8e5b6d"
+source = "git+https://github.com/manta-network/manta-rs?rev=9f020c9eea0b93dcb12f8382f413a214826ff98b#9f020c9eea0b93dcb12f8382f413a214826ff98b"
 dependencies = [
  "ark-bls12-381",
  "ark-bn254",
@@ -2763,7 +2762,7 @@ dependencies = [
 [[package]]
 name = "manta-parameters"
 version = "0.5.10"
-source = "git+https://github.com/manta-network/manta-rs?branch=feat/sign_with_transaction_data#d8926ca416227bbfd1712ce4e051b34ecf8e5b6d"
+source = "git+https://github.com/manta-network/manta-rs?rev=9f020c9eea0b93dcb12f8382f413a214826ff98b#9f020c9eea0b93dcb12f8382f413a214826ff98b"
 dependencies = [
  "anyhow",
  "attohttpc 0.24.0",
@@ -2776,7 +2775,7 @@ dependencies = [
 [[package]]
 name = "manta-pay"
 version = "0.5.10"
-source = "git+https://github.com/manta-network/manta-rs?branch=feat/sign_with_transaction_data#d8926ca416227bbfd1712ce4e051b34ecf8e5b6d"
+source = "git+https://github.com/manta-network/manta-rs?rev=9f020c9eea0b93dcb12f8382f413a214826ff98b#9f020c9eea0b93dcb12f8382f413a214826ff98b"
 dependencies = [
  "aes-gcm 0.9.4",
  "bip0039",
@@ -2830,7 +2829,7 @@ dependencies = [
 [[package]]
 name = "manta-util"
 version = "0.5.10"
-source = "git+https://github.com/manta-network/manta-rs?branch=feat/sign_with_transaction_data#d8926ca416227bbfd1712ce4e051b34ecf8e5b6d"
+source = "git+https://github.com/manta-network/manta-rs?rev=9f020c9eea0b93dcb12f8382f413a214826ff98b#9f020c9eea0b93dcb12f8382f413a214826ff98b"
 dependencies = [
  "crossbeam-channel",
  "serde",
