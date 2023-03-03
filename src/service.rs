@@ -65,7 +65,7 @@ pub use manta_pay::{
         SyncError, SyncResponse, TransactionDataResponse,
     },
 };
-use manta_pay::signer::AssetMetadata;
+use manta_pay::signer::{AssetMetadata, TokenType};
 
 /// Synchronization Request
 pub type SyncRequest = Message<signer::SyncRequest>;
@@ -173,16 +173,20 @@ pub fn display_transaction(
     metadata: &AssetMetadata,
     network: Network,
 ) -> String {
+    let decimal = match metadata.token_type {
+        TokenType::FT(decimal) => decimal,
+        TokenType::NFT => 0
+    };
     match transaction {
         Transaction::ToPrivate(Asset { value, .. }) => format!(
             "Privatize {} on {} network",
-            metadata.display(*value, metadata.decimals),
+            metadata.display(*value, decimal),
             network
         ),
         Transaction::PrivateTransfer(Asset { value, .. }, receiving_key) => {
             format!(
                 "Send {} to {} on {} network",
-                metadata.display(*value, metadata.decimals),
+                metadata.display(*value, decimal),
                 address_to_base58(receiving_key),
                 network
             )
@@ -190,7 +194,7 @@ pub fn display_transaction(
         Transaction::ToPublic(Asset { value, .. }) => {
             format!(
                 "Public {} on {} network",
-                metadata.display(*value, metadata.decimals),
+                metadata.display(*value, decimal),
                 network
             )
         }
