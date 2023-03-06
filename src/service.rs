@@ -31,6 +31,7 @@ use http_types::headers::HeaderValue;
 use manta_accounting::{
     asset::Asset,
     fs::{cocoon::File, File as _, SaveError},
+    key::AccountTable,
     transfer::canonical::TransferShape,
 };
 use manta_pay::{
@@ -190,7 +191,7 @@ pub fn display_transaction(
                 }
             }
         }
-        Transaction::ToPublic(Asset { value, .. }) => match metadata.token_type {
+        Transaction::ToPublic(Asset { value, .. }, _) => match metadata.token_type {
             TokenType::FT(decimals) => {
                 format!(
                     "Public {} on {} network",
@@ -518,17 +519,15 @@ where
         data_path: &Path,
         password_hash: &PasswordHash<Argon2>,
         mnemonic: Mnemonic,
-        public_address: [u8; 32],
     ) -> Result<SignerState> {
         info!("creating signer state")?;
-        let state = SignerState::new(
-            UtxoAccumulator::new(
-                task::spawn_blocking(crate::parameters::load_utxo_accumulator_model)
-                    .await?
-                    .ok_or(Error::ParameterLoadingError)?,
-            ),
-            public_address,
-        );
+        let mut state = SignerState::new(UtxoAccumulator::new(
+            task::spawn_blocking(crate::parameters::load_utxo_accumulator_model)
+                .await?
+                .ok_or(Error::ParameterLoadingError)?,
+        ));
+        state.load_accounts(AccountTable::new(TestnetKeySecret::new(mnemonic, "")));
+
         info!("saving signer state")?;
         let data_path = data_path.to_owned();
         let password_hash_bytes = password_hash.as_bytes();
