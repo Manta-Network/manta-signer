@@ -527,6 +527,7 @@ where
                 .ok_or(Error::ParameterLoadingError)?,
         ));
         state.load_accounts(AccountTable::new(TestnetKeySecret::new(mnemonic, "")));
+        state.load_authorization_context(Default::default());
 
         info!("saving signer state")?;
         let data_path = data_path.to_owned();
