@@ -33,9 +33,10 @@ use manta_accounting::{
     fs::{cocoon::File, File as _, SaveError},
     key::AccountTable,
     transfer::canonical::TransferShape,
+    wallet::signer::functions::default_authorization_context,
 };
 use manta_pay::{
-    config::Transaction,
+    config::{Config as MantaPayConfig, Transaction},
     key::{Mnemonic, TestnetKeySecret},
     signer::{
         base::{Signer, SignerParameters, SignerState, UtxoAccumulator},
@@ -309,6 +310,7 @@ where
                         &config.data_path.dolphin,
                         &password_hash,
                         mnemonic.clone(),
+                        &parameters,
                     )
                     .await?;
 
@@ -317,6 +319,7 @@ where
                         &config.data_path.calamari,
                         &password_hash,
                         mnemonic.clone(),
+                        &parameters,
                     )
                     .await?;
 
@@ -325,6 +328,7 @@ where
                         &config.data_path.manta,
                         &password_hash,
                         mnemonic.clone(),
+                        &parameters,
                     )
                     .await?;
                     break (
@@ -358,6 +362,7 @@ where
                         &config.data_path.dolphin,
                         &password_hash,
                         recovery_mnemonic.clone(),
+                        &parameters,
                     )
                     .await?;
 
@@ -366,6 +371,7 @@ where
                         &config.data_path.calamari,
                         &password_hash,
                         recovery_mnemonic.clone(),
+                        &parameters,
                     )
                     .await?;
 
@@ -374,6 +380,7 @@ where
                         &config.data_path.manta,
                         &password_hash,
                         recovery_mnemonic.clone(),
+                        &parameters,
                     )
                     .await?;
 
@@ -453,6 +460,7 @@ where
         data_path: &Path,
         password_hash: &PasswordHash<Argon2>,
         recovery_mnemonic: Option<Mnemonic>,
+        parameters: &SignerParameters,
     ) -> Result<Option<SignerState>> {
         if should_recreate {
             info!("state missing! recreating state.")?;
@@ -460,6 +468,7 @@ where
                 data_path,
                 password_hash,
                 recovery_mnemonic.expect("unable to retrieve mnemonic for account recreation."),
+                parameters,
             )
             .await
             .expect("Unable to recreate signer instance from existing mnemonic.");
@@ -519,6 +528,7 @@ where
         data_path: &Path,
         password_hash: &PasswordHash<Argon2>,
         mnemonic: Mnemonic,
+        parameters: &SignerParameters,
     ) -> Result<SignerState> {
         info!("creating signer state")?;
         let mut state = SignerState::new(UtxoAccumulator::new(
@@ -526,8 +536,12 @@ where
                 .await?
                 .ok_or(Error::ParameterLoadingError)?,
         ));
-        state.load_accounts(AccountTable::new(TestnetKeySecret::new(mnemonic, "")));
-        state.load_authorization_context(Default::default());
+        let accounts = AccountTable::new(TestnetKeySecret::new(mnemonic, ""));
+        state.load_authorization_context(default_authorization_context::<MantaPayConfig>(
+            &accounts,
+            &parameters.parameters,
+        ));
+        state.load_accounts(accounts);
 
         info!("saving signer state")?;
         let data_path = data_path.to_owned();
