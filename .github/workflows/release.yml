@@ -95,6 +95,10 @@ jobs:
       - run: echo "SUFFIX ${{ steps.suffixed.outputs.SUFFIXED }}"
       - name: Append version suffix
         run: node ./scripts/suffix.js ${{ steps.suffixed.outputs.SUFFIXED }}
+      - name: Use Node.js 16.x
+        uses: actions/setup-node@v3
+        with:
+          node-version: 16.x
       - name: Build & Sign
         run: cd ui;yarn && yarn tauri build -v
         env:
@@ -126,7 +130,7 @@ jobs:
         run: ./scripts/gen_filepath.sh ${{ matrix.os_type }} ${{ matrix.os }} ${{ steps.suffixed.outputs.SUFFIXED}}
         shell: bash
       - name: DBG
-        run: echo "${{ steps.release_vars.outputs.IMAGE }} ${{ steps.release_vars.outputs.RELEASE_IMAGE }}" 
+        run: echo "${{ steps.release_vars.outputs.IMAGE }} ${{ steps.release_vars.outputs.RELEASE_IMAGE }}"
       - name: Upload Image
         uses: actions/upload-release-asset@v1
         env:
@@ -134,7 +138,7 @@ jobs:
         with:
           upload_url: ${{ steps.get_release.outputs.upload_url }}
           asset_path: "target/release/bundle/${{ steps.release_vars.outputs.IMAGE }}"
-          asset_name: "${{ steps.release_vars.outputs.RELEASE_IMAGE }}" 
+          asset_name: "${{ steps.release_vars.outputs.RELEASE_IMAGE }}"
           asset_content_type: application/binary
         if: github.event_name == 'release' && github.event.action == 'published'
       - name: Content Hash
