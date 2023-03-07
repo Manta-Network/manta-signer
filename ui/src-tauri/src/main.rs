@@ -504,6 +504,7 @@ async fn reset_account(
 
     if config.can_app_restart && restart {
         app_handle.restart();
+        return Ok(());
     }
 
     let (password_sender, password_receiver) = password_channel();
