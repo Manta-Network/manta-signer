@@ -95,6 +95,10 @@ jobs:
       - run: echo "SUFFIX ${{ steps.suffixed.outputs.SUFFIXED }}"
       - name: Append version suffix
         run: node ./scripts/suffix.js ${{ steps.suffixed.outputs.SUFFIXED }}
+      - name: Use Node.js 16.x
+        uses: actions/setup-node@v3
+        with:
+          node-version: 16.x
       - name: Build & Sign
         run: cd ui;yarn && yarn tauri build -v
         env:
