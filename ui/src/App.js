@@ -33,6 +33,7 @@ function App() {
   const [authorizationSummary, setAuthorizationSummary] = useState(null);
   const [receivingKey, setReceivingKey] = useState(null);
   const [loginSuccess, setLoginSuccess] = useState(false);
+  const [signerReady, setSignerReady] = useState(false);
   const [receivingKeyDisplay, setReceivingKeyDisplay] = useState(null);
   const [activeListeners, setActiveListeners] = useState({
     authorize: false,
@@ -389,6 +390,8 @@ function App() {
             <SignIn
               loginSuccess={loginSuccess}
               setLoginSuccess={setLoginSuccess}
+              signerReady={signerReady}
+              setSignerReady={setSignerReady}
               sendSelection={sendSelection}
               getReceivingKeys={getReceivingKeys}
               receivingKey={receivingKey}
