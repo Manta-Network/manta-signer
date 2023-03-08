@@ -163,9 +163,9 @@ dependencies = [
 
 [[package]]
 name = "anyhow"
-version = "1.0.67"
+version = "1.0.69"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7724808837b77f4b4de9d283820f9d98bcf496d5692934b857a2399d31ff22e6"
+checksum = "224afbd727c3d6e4b90103ece64b8d1b67fbb1973b1046c2281eed3f3803f800"
 
 [[package]]
 name = "argon2"
@@ -639,6 +639,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "attohttpc"
+version = "0.24.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8d9a9bf8b79a749ee0b911b91b671cc2b6c670bdbc7e3dfd537576ddc94bb2a2"
+dependencies = [
+ "flate2",
+ "http",
+ "log",
+ "native-tls",
+ "url",
+]
+
+[[package]]
 name = "autocfg"
 version = "1.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -661,6 +674,12 @@ name = "base64"
 version = "0.13.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9e1b586273c5702936fe7b7d6896644d8be71e6314cfe09d3167c95f712589e8"
+
+[[package]]
+name = "base64"
+version = "0.21.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a4a4ddaa51a5bc52a6948f74c06d20aaaddb71924eab79b8c97a8c556e942d6a"
 
 [[package]]
 name = "base64ct"
@@ -1086,7 +1105,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "03a5d7b21829bc7b4bf4754a978a241ae54ea55a40f92bb20216e54096f4b951"
 dependencies = [
  "aes-gcm 0.8.0",
- "base64",
+ "base64 0.13.1",
  "hkdf",
  "hmac 0.10.1",
  "percent-encoding",
@@ -1760,9 +1779,11 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "197676987abd2f9cadff84926f410af1c183608d36641465df73ae8211dc65d6"
 dependencies = [
  "futures-core",
+ "futures-io",
  "futures-macro",
  "futures-sink",
  "futures-task",
+ "memchr",
  "pin-project-lite 0.2.9",
  "pin-utils",
  "slab",
@@ -2282,7 +2303,7 @@ dependencies = [
  "anyhow",
  "async-channel",
  "async-std",
- "base64",
+ "base64 0.13.1",
  "cookie",
  "futures-lite",
  "infer 0.2.3",
@@ -2709,22 +2730,22 @@ dependencies = [
 
 [[package]]
 name = "manta-accounting"
-version = "0.5.8"
-source = "git+https://github.com/manta-network/manta-rs#e0b5cd33265086c7b2d975901aaaa4805d8893fe"
+version = "0.5.10"
+source = "git+https://github.com/manta-network/manta-rs?tag=v0.5.10#86b4630b02ec211c4cce8628d771e2c26f18a814"
 dependencies = [
  "bitflags",
  "cocoon",
  "derivative",
  "derive_more",
  "manta-crypto",
- "manta-util",
+ "manta-util 0.5.10",
  "rand_chacha 0.3.1",
 ]
 
 [[package]]
 name = "manta-crypto"
-version = "0.5.8"
-source = "git+https://github.com/manta-network/manta-rs#e0b5cd33265086c7b2d975901aaaa4805d8893fe"
+version = "0.5.10"
+source = "git+https://github.com/manta-network/manta-rs?tag=v0.5.10#86b4630b02ec211c4cce8628d771e2c26f18a814"
 dependencies = [
  "ark-bls12-381",
  "ark-bn254",
@@ -2740,7 +2761,7 @@ dependencies = [
  "ark-std",
  "derivative",
  "ed25519-dalek",
- "manta-util",
+ "manta-util 0.5.10",
  "num-integer",
  "rand 0.8.5",
  "rand_chacha 0.3.1",
@@ -2749,11 +2770,11 @@ dependencies = [
 
 [[package]]
 name = "manta-parameters"
-version = "0.5.8"
-source = "git+https://github.com/manta-network/manta-rs#e0b5cd33265086c7b2d975901aaaa4805d8893fe"
+version = "0.5.10"
+source = "git+https://github.com/manta-network/manta-rs?tag=v0.5.10#86b4630b02ec211c4cce8628d771e2c26f18a814"
 dependencies = [
  "anyhow",
- "attohttpc",
+ "attohttpc 0.24.1",
  "blake3",
  "gitignore",
  "hex",
@@ -2762,8 +2783,8 @@ dependencies = [
 
 [[package]]
 name = "manta-pay"
-version = "0.5.8"
-source = "git+https://github.com/manta-network/manta-rs#e0b5cd33265086c7b2d975901aaaa4805d8893fe"
+version = "0.5.10"
+source = "git+https://github.com/manta-network/manta-rs?tag=v0.5.10#86b4630b02ec211c4cce8628d771e2c26f18a814"
 dependencies = [
  "aes-gcm 0.9.4",
  "bip0039",
@@ -2774,13 +2795,13 @@ dependencies = [
  "manta-accounting",
  "manta-crypto",
  "manta-parameters",
- "manta-util",
+ "manta-util 0.5.10",
  "num-bigint",
 ]
 
 [[package]]
 name = "manta-signer"
-version = "1.0.0"
+version = "1.1.1"
 dependencies = [
  "argon2",
  "async-std",
@@ -2793,7 +2814,7 @@ dependencies = [
  "manta-crypto",
  "manta-parameters",
  "manta-pay",
- "manta-util",
+ "manta-util 0.5.12",
  "parking_lot",
  "password-hash",
  "reqwest",
@@ -2807,7 +2828,7 @@ dependencies = [
 
 [[package]]
 name = "manta-signer-ui"
-version = "1.0.0"
+version = "1.1.1"
 dependencies = [
  "manta-signer",
  "tauri",
@@ -2816,13 +2837,18 @@ dependencies = [
 
 [[package]]
 name = "manta-util"
-version = "0.5.8"
-source = "git+https://github.com/manta-network/manta-rs#e0b5cd33265086c7b2d975901aaaa4805d8893fe"
+version = "0.5.10"
+source = "git+https://github.com/manta-network/manta-rs?tag=v0.5.10#86b4630b02ec211c4cce8628d771e2c26f18a814"
 dependencies = [
  "crossbeam-channel",
  "serde",
  "serde_with",
 ]
+
+[[package]]
+name = "manta-util"
+version = "0.5.12"
+source = "git+https://github.com/manta-network/manta-rs?tag=v0.5.12#ba1a4b747456bc4f76a9cb18b515aaf0810b4c9c"
 
 [[package]]
 name = "markup5ever"
@@ -3414,7 +3440,7 @@ version = "1.3.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "bd39bc6cdc9355ad1dc5eeedefee696bb35c34caf21768741e81826c0bbd7225"
 dependencies = [
- "base64",
+ "base64 0.13.1",
  "indexmap",
  "line-wrap",
  "serde",
@@ -3713,11 +3739,11 @@ dependencies = [
 
 [[package]]
 name = "reqwest"
-version = "0.11.13"
+version = "0.11.14"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "68cc60575865c7831548863cc02356512e3f1dc2f3f82cb837d7fc4cc8f3c97c"
+checksum = "21eed90ec8570952d53b772ecf8f206aa1ec9a3d76b2521c56c42973f2d91ee9"
 dependencies = [
- "base64",
+ "base64 0.21.0",
  "bytes",
  "encoding_rs",
  "futures-core",
@@ -3745,6 +3771,7 @@ dependencies = [
  "url",
  "wasm-bindgen",
  "wasm-bindgen-futures",
+ "wasm-streams",
  "web-sys",
  "winreg",
 ]
@@ -3991,9 +4018,9 @@ dependencies = [
 
 [[package]]
 name = "serde"
-version = "1.0.151"
+version = "1.0.153"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "97fed41fc1a24994d044e6db6935e69511a1153b52c15eb42493b26fa87feba0"
+checksum = "3a382c72b4ba118526e187430bb4963cd6d55051ebf13d9b25574d379cc98d20"
 dependencies = [
  "serde_derive",
 ]
@@ -4009,9 +4036,9 @@ dependencies = [
 
 [[package]]
 name = "serde_derive"
-version = "1.0.151"
+version = "1.0.153"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "255abe9a125a985c05190d687b320c12f9b1f0b99445e608c21ba0782c719ad8"
+checksum = "1ef476a5790f0f6decbc66726b6e5d63680ed518283e64c7df415989d880954f"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -4020,9 +4047,9 @@ dependencies = [
 
 [[package]]
 name = "serde_json"
-version = "1.0.90"
+version = "1.0.94"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8778cc0b528968fe72abec38b5db5a20a70d148116cd9325d2bc5f5180ca3faf"
+checksum = "1c533a59c9d8a93a09c6ab31f0fd5e5f4dd1b8fc9434804029839884765d04ea"
 dependencies = [
  "itoa 1.0.5",
  "ryu",
@@ -4516,8 +4543,8 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d8ea1d785ab2164373703817bff144c4610a69ad3f659becaca0e1ea004b98d8"
 dependencies = [
  "anyhow",
- "attohttpc",
- "base64",
+ "attohttpc 0.22.0",
+ "base64 0.13.1",
  "bytes",
  "cocoa",
  "dirs-next",
@@ -4588,7 +4615,7 @@ version = "1.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "14388d484b6b1b5dc0f6a7d6cc6433b3b230bec85eaa576adcdf3f9fafa49251"
 dependencies = [
- "base64",
+ "base64 0.13.1",
  "ico",
  "json-patch",
  "plist",
@@ -5251,6 +5278,19 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1c38c045535d93ec4f0b4defec448e4291638ee608530863b1e2ba115d4fff7f"
 
 [[package]]
+name = "wasm-streams"
+version = "0.2.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6bbae3363c08332cadccd13b67db371814cd214c2524020932f0804b8cf7c078"
+dependencies = [
+ "futures-util",
+ "js-sys",
+ "wasm-bindgen",
+ "wasm-bindgen-futures",
+ "web-sys",
+]
+
+[[package]]
 name = "web-sys"
 version = "0.3.60"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -5628,7 +5668,7 @@ version = "0.23.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "4c1ad8e2424f554cc5bdebe8aa374ef5b433feff817aebabca0389961fc7ef98"
 dependencies = [
- "base64",
+ "base64 0.13.1",
  "block",
  "cocoa",
  "core-graphics",
