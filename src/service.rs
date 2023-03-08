@@ -29,16 +29,19 @@ use core::{
 };
 use http_types::headers::HeaderValue;
 use manta_accounting::{
-    asset::{Asset, AssetMetadata},
+    asset::Asset,
     fs::{cocoon::File, File as _, SaveError},
+    key::AccountTable,
     transfer::canonical::TransferShape,
+    wallet::signer::functions::default_authorization_context,
 };
 use manta_pay::{
-    config::Transaction,
+    config::{Config as MantaPayConfig, Transaction},
     key::{Mnemonic, TestnetKeySecret},
     signer::{
         base::{Signer, SignerParameters, SignerState, UtxoAccumulator},
         client::network::{Message, Network, NetworkSpecific},
+        AssetMetadata, TokenType,
     },
 };
 use manta_util::{from_variant, serde::Serialize};
@@ -158,26 +161,49 @@ pub fn display_transaction(
     network: Network,
 ) -> String {
     match transaction {
-        Transaction::ToPrivate(Asset { value, .. }) => format!(
-            "Privatize {} on {} network",
-            metadata.display(*value, metadata.decimals),
-            network
-        ),
+        Transaction::ToPrivate(Asset { value, .. }) => match metadata.token_type {
+            TokenType::FT(decimals) => {
+                format!(
+                    "Privatize {} on {} network",
+                    metadata.display(*value, decimals),
+                    network
+                )
+            }
+            TokenType::NFT => {
+                format!("Privatize NFT on {} network", network)
+            }
+        },
         Transaction::PrivateTransfer(Asset { value, .. }, receiving_key) => {
-            format!(
-                "Send {} to {} on {} network",
-                metadata.display(*value, metadata.decimals),
-                address_to_base58(receiving_key),
-                network
-            )
+            match metadata.token_type {
+                TokenType::FT(decimals) => {
+                    format!(
+                        "Send {} to {} on {} network",
+                        metadata.display(*value, decimals),
+                        address_to_base58(receiving_key),
+                        network
+                    )
+                }
+                TokenType::NFT => {
+                    format!(
+                        "Send NFT to {} on {} network",
+                        address_to_base58(receiving_key),
+                        network
+                    )
+                }
+            }
         }
-        Transaction::ToPublic(Asset { value, .. }) => {
-            format!(
-                "Public {} on {} network",
-                metadata.display(*value, metadata.decimals),
-                network
-            )
-        }
+        Transaction::ToPublic(Asset { value, .. }, _) => match metadata.token_type {
+            TokenType::FT(decimals) => {
+                format!(
+                    "Public {} on {} network",
+                    metadata.display(*value, decimals),
+                    network
+                )
+            }
+            TokenType::NFT => {
+                format!("Public NFT on {} network", network)
+            }
+        },
     }
 }
 
@@ -284,6 +310,7 @@ where
                         &config.data_path.dolphin,
                         &password_hash,
                         mnemonic.clone(),
+                        &parameters,
                     )
                     .await?;
 
@@ -292,6 +319,7 @@ where
                         &config.data_path.calamari,
                         &password_hash,
                         mnemonic.clone(),
+                        &parameters,
                     )
                     .await?;
 
@@ -300,6 +328,7 @@ where
                         &config.data_path.manta,
                         &password_hash,
                         mnemonic.clone(),
+                        &parameters,
                     )
                     .await?;
                     break (
@@ -333,6 +362,7 @@ where
                         &config.data_path.dolphin,
                         &password_hash,
                         recovery_mnemonic.clone(),
+                        &parameters,
                     )
                     .await?;
 
@@ -341,6 +371,7 @@ where
                         &config.data_path.calamari,
                         &password_hash,
                         recovery_mnemonic.clone(),
+                        &parameters,
                     )
                     .await?;
 
@@ -349,6 +380,7 @@ where
                         &config.data_path.manta,
                         &password_hash,
                         recovery_mnemonic.clone(),
+                        &parameters,
                     )
                     .await?;
 
@@ -412,6 +444,8 @@ where
             existing_signer
                 .state()
                 .accounts()
+                .as_ref()
+                .expect("No accounts in signer state!")
                 .keys()
                 .expose_mnemonic()
                 .clone(),
@@ -426,6 +460,7 @@ where
         data_path: &Path,
         password_hash: &PasswordHash<Argon2>,
         recovery_mnemonic: Option<Mnemonic>,
+        parameters: &SignerParameters,
     ) -> Result<Option<SignerState>> {
         if should_recreate {
             info!("state missing! recreating state.")?;
@@ -433,6 +468,7 @@ where
                 data_path,
                 password_hash,
                 recovery_mnemonic.expect("unable to retrieve mnemonic for account recreation."),
+                parameters,
             )
             .await
             .expect("Unable to recreate signer instance from existing mnemonic.");
@@ -492,16 +528,21 @@ where
         data_path: &Path,
         password_hash: &PasswordHash<Argon2>,
         mnemonic: Mnemonic,
+        parameters: &SignerParameters,
     ) -> Result<SignerState> {
         info!("creating signer state")?;
-        let state = SignerState::new(
-            TestnetKeySecret::new(mnemonic, ""),
-            UtxoAccumulator::new(
-                task::spawn_blocking(crate::parameters::load_utxo_accumulator_model)
-                    .await?
-                    .ok_or(Error::ParameterLoadingError)?,
-            ),
-        );
+        let mut state = SignerState::new(UtxoAccumulator::new(
+            task::spawn_blocking(crate::parameters::load_utxo_accumulator_model)
+                .await?
+                .ok_or(Error::ParameterLoadingError)?,
+        ));
+        let accounts = AccountTable::new(TestnetKeySecret::new(mnemonic, ""));
+        state.load_authorization_context(default_authorization_context::<MantaPayConfig>(
+            &accounts,
+            &parameters.parameters,
+        ));
+        state.load_accounts(accounts);
+
         info!("saving signer state")?;
         let data_path = data_path.to_owned();
         let password_hash_bytes = password_hash.as_bytes();
@@ -620,6 +661,8 @@ where
         let stored_mnemonic = self.state.lock().signer[network]
             .state()
             .accounts()
+            .as_ref()
+            .expect("No accounts in signer")
             .keys()
             .expose_mnemonic()
             .clone();
@@ -629,7 +672,9 @@ where
     /// Runs the receiving key sampling protocol on the signer.
     #[inline]
     pub async fn address(self, request: ReceivingKeyRequest) -> Result<Address> {
-        let response = self.state.lock().signer[request.network].address();
+        let response = self.state.lock().signer[request.network]
+            .address()
+            .expect("No address present in signer!");
         info!("[RESPONSE] responding to `receivingKeys` with: {response:?}")?;
         Ok(response)
     }
@@ -638,7 +683,9 @@ where
     /// the result to base 58.
     #[inline]
     pub async fn get_address(&mut self, request: ReceivingKeyRequest) -> Result<String, ()> {
-        let response = self.state.lock().signer[request.network].address();
+        let response = self.state.lock().signer[request.network]
+            .address()
+            .ok_or(())?;
         let key = address_to_base58(&response);
         Ok(key)
     }

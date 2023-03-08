@@ -8,6 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 ### Added
 
 ### Changed
+[\#332](https://github.com/Manta-Network/manta-signer/pull/332) Add sink account validation
 
 ### Deprecated
 
