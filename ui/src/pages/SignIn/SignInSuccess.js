@@ -7,6 +7,7 @@ import CopyButton from '../../components/copyButton';
 import "../../App.css";
 
 const SignInSuccess = ({
+  signerReady,
   receivingKeyDisplay,
   showCopyNotification,
   onClickCopyZkAddress,
@@ -56,9 +57,16 @@ const SignInSuccess = ({
       </div>
 
     </div>
-    <Button className="button ui first" onClick={onClickFinishSignIn}>
-      Start
-    </Button>
+    {
+      signerReady ?
+        <Button className="button ui first" onClick={onClickFinishSignIn}>
+          Continue
+        </Button>
+        :
+        <Button className="button ui first" onClick={onClickFinishSignIn}>
+          Start
+        </Button>
+    }
   </div>)
 }
 
