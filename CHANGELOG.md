@@ -8,7 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 ### Added
 
 ### Changed
-
+- [\#338](https://github.com/Manta-Network/manta-signer/pull/338) Change start button to continue in View zkAddress.
 ### Deprecated
 
 ### Removed
