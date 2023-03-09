@@ -44,6 +44,10 @@ use manta_pay::{
         AssetMetadata, TokenType,
     },
 };
+
+/// previous version of manta-pay state. Should use versioning system for SignerState
+use previous_state_manta_pay::signer::base::SignerState as OldSignerState;
+
 use manta_util::{from_variant, serde::Serialize};
 use parking_lot::Mutex;
 use std::{
@@ -436,7 +440,7 @@ where
         };
         let existing_signer = Signer::from_parts(
             parameters.clone(),
-            Self::load_state(existing_state_path, password_hash)
+            Self::load_state(existing_state_path, password_hash, &parameters)
                 .await
                 .expect("Unable to get dolphin state")?,
         );
@@ -474,7 +478,7 @@ where
             .expect("Unable to recreate signer instance from existing mnemonic.");
             Ok(Some(state))
         } else {
-            Self::load_state(data_path, password_hash).await
+            Self::load_state(data_path, password_hash, parameters).await
         }
     }
 
@@ -557,17 +561,51 @@ where
     async fn load_state(
         data_path: &Path,
         password_hash: &PasswordHash<Argon2>,
+        parameters: &SignerParameters,
     ) -> Result<Option<SignerState>> {
         info!("loading signer state from disk")?;
-        let data_path = data_path.to_owned();
+        let data_path_buf = data_path.to_owned();
+        let password_hash_bytes = password_hash.as_bytes();
+
+        let state_result = task::spawn_blocking(move || {
+            File::load::<_, SignerState>(&data_path_buf, &password_hash_bytes)
+        })
+        .await?;
+
+        if let Ok(correct_state) = state_result {
+            Ok(Some(correct_state))
+        } else {
+            // fallback to try from old state version
+            Self::new_state_from_old_state(data_path, password_hash, parameters).await
+        }
+    }
+
+    /// Attempts to create new signer state from the old signer state version
+    #[inline]
+    async fn new_state_from_old_state(
+        data_path: &Path,
+        password_hash: &PasswordHash<Argon2>,
+        parameters: &SignerParameters,
+    ) -> Result<Option<SignerState>> {
+        info!("loading mnemonic from old state")?;
+        let data_path_buf = data_path.to_owned();
         let password_hash_bytes = password_hash.as_bytes();
 
         if let Ok(state) = task::spawn_blocking(move || {
-            File::load::<_, SignerState>(&data_path, &password_hash_bytes)
+            File::load::<_, OldSignerState>(&data_path_buf, &password_hash_bytes)
         })
         .await?
         {
-            Ok(Some(state))
+            let mnemonic = state.accounts().keys().expose_mnemonic().clone();
+
+            let encoded: Vec<u8> = bincode::serialize(&mnemonic).expect("encoding mnenomic failed");
+            let new_mnemonic: Mnemonic =
+                bincode::deserialize(&encoded[..]).expect("decoding mnenomic failed");
+
+            let new_state =
+                Self::create_state(data_path, password_hash, new_mnemonic, parameters).await?;
+
+            Ok(Some(new_state))
         } else {
             Ok(None)
         }
