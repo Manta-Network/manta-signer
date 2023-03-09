@@ -3,11 +3,13 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+
 ## v1.2.0 2023-03-08
 
 ### Added
 
 ### Changed
+- [\#343](https://github.com/Manta-Network/manta-signer/pull/343) Adds ability to load mnemonic from old state version.
 - [\#338](https://github.com/Manta-Network/manta-signer/pull/338) Change start button to continue in View zkAddress.
 - [\#332](https://github.com/Manta-Network/manta-signer/pull/332) Add sink account validation
 
