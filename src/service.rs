@@ -598,8 +598,9 @@ where
         {
             let mnemonic = state.accounts().keys().expose_mnemonic().clone();
 
-            let encoded: Vec<u8> = bincode::serialize(&mnemonic).unwrap();
-            let new_mnemonic: Mnemonic = bincode::deserialize(&encoded[..]).unwrap();
+            let encoded: Vec<u8> = bincode::serialize(&mnemonic).expect("encoding mnenomic failed");
+            let new_mnemonic: Mnemonic =
+                bincode::deserialize(&encoded[..]).expect("decoding mnenomic failed");
 
             let new_state =
                 Self::create_state(&data_path, password_hash, new_mnemonic, parameters).await?;
