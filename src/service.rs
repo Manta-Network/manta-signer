@@ -46,9 +46,7 @@ use manta_pay::{
 };
 
 /// previous version of manta-pay state. Should use versioning system for SignerState
-use previous_state_manta_pay::{
-    signer::base::{SignerState as OldSignerState},
-};
+use previous_state_manta_pay::signer::base::SignerState as OldSignerState;
 
 use manta_util::{from_variant, serde::Serialize};
 use parking_lot::Mutex;
@@ -571,24 +569,16 @@ where
 
         let state_result = task::spawn_blocking(move || {
             File::load::<_, SignerState>(&data_path_buf, &password_hash_bytes)
-        }).await;
+        })
+        .await?;
 
-        match state_result {
-            Ok(state) => {
-                if let Ok(correct_state) = state {
-                    Ok(Some(correct_state))
-                } else {
-                    Ok(None)
-                }
-            }
-            Err(_) => {
-                // fallback to try from old state version
-                Self::new_state_from_old_state(&data_path, password_hash, parameters).await
-            }
+        if let Ok(correct_state) = state_result {
+            Ok(Some(correct_state))
+        } else {
+            // fallback to try from old state version
+            Self::new_state_from_old_state(&data_path, password_hash, parameters).await
         }
-
     }
-
 
     /// Attempts to create new signer state from the old signer state version
     #[inline]
@@ -606,22 +596,18 @@ where
         })
         .await?
         {
-            let mnemonic = state
-                .accounts()
-                .keys()
-                .expose_mnemonic()
-                .clone();
+            let mnemonic = state.accounts().keys().expose_mnemonic().clone();
 
             let encoded: Vec<u8> = bincode::serialize(&mnemonic).unwrap();
-            let new_mnemonic: Option<Mnemonic> = bincode::deserialize(&encoded[..]).unwrap();
+            let new_mnemonic: Mnemonic = bincode::deserialize(&encoded[..]).unwrap();
 
-            let new_state = Self::create_state(&data_path, password_hash, new_mnemonic.unwrap(), parameters).await?;
+            let new_state =
+                Self::create_state(&data_path, password_hash, new_mnemonic, parameters).await?;
 
             Ok(Some(new_state))
         } else {
             Ok(None)
         }
-
     }
 
     /// Saves the signer state corresponding to `network` to disk.
