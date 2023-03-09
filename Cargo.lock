@@ -2876,7 +2876,7 @@ dependencies = [
 
 [[package]]
 name = "manta-signer"
-version = "1.1.1"
+version = "1.1.2"
 dependencies = [
  "argon2",
  "async-std",
@@ -2905,7 +2905,7 @@ dependencies = [
 
 [[package]]
 name = "manta-signer-ui"
-version = "1.1.1"
+version = "1.2.0"
 dependencies = [
  "manta-signer",
  "tauri",
