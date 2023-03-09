@@ -688,6 +688,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b645a089122eccb6111b4f81cbc1a49f5900ac4666bb93ac027feaecf15607bf"
 
 [[package]]
+name = "bincode"
+version = "1.3.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b1f45e9417d87227c7a56d22e471c6206462cba514c7590c09aff4cf6d1ddcad"
+dependencies = [
+ "serde",
+]
+
+[[package]]
 name = "bip0039"
 version = "0.10.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2730,6 +2739,17 @@ dependencies = [
 
 [[package]]
 name = "manta-accounting"
+version = "0.5.10"
+source = "git+https://github.com/manta-network/manta-rs?tag=v0.5.10#86b4630b02ec211c4cce8628d771e2c26f18a814"
+dependencies = [
+ "derivative",
+ "derive_more",
+ "manta-crypto 0.5.10",
+ "manta-util 0.5.10",
+]
+
+[[package]]
+name = "manta-accounting"
 version = "0.5.12"
 source = "git+https://github.com/manta-network/manta-rs?tag=v0.5.12#ba1a4b747456bc4f76a9cb18b515aaf0810b4c9c"
 dependencies = [
@@ -2737,8 +2757,34 @@ dependencies = [
  "cocoon",
  "derivative",
  "derive_more",
- "manta-crypto",
- "manta-util",
+ "manta-crypto 0.5.12",
+ "manta-util 0.5.12",
+]
+
+[[package]]
+name = "manta-crypto"
+version = "0.5.10"
+source = "git+https://github.com/manta-network/manta-rs?tag=v0.5.10#86b4630b02ec211c4cce8628d771e2c26f18a814"
+dependencies = [
+ "ark-bls12-381",
+ "ark-bn254",
+ "ark-ec",
+ "ark-ed-on-bls12-381",
+ "ark-ed-on-bn254",
+ "ark-ff",
+ "ark-groth16",
+ "ark-r1cs-std",
+ "ark-relations",
+ "ark-serialize",
+ "ark-snark",
+ "ark-std",
+ "derivative",
+ "ed25519-dalek",
+ "manta-util 0.5.10",
+ "num-integer",
+ "rand 0.8.5",
+ "rand_chacha 0.3.1",
+ "rand_core 0.6.4",
 ]
 
 [[package]]
@@ -2760,11 +2806,23 @@ dependencies = [
  "ark-std",
  "derivative",
  "ed25519-dalek",
- "manta-util",
+ "manta-util 0.5.12",
  "num-integer",
  "rand 0.8.5",
  "rand_chacha 0.3.1",
  "rand_core 0.6.4",
+]
+
+[[package]]
+name = "manta-parameters"
+version = "0.5.10"
+source = "git+https://github.com/manta-network/manta-rs?tag=v0.5.10#86b4630b02ec211c4cce8628d771e2c26f18a814"
+dependencies = [
+ "anyhow",
+ "blake3",
+ "gitignore",
+ "hex",
+ "walkdir",
 ]
 
 [[package]]
@@ -2782,6 +2840,24 @@ dependencies = [
 
 [[package]]
 name = "manta-pay"
+version = "0.5.10"
+source = "git+https://github.com/manta-network/manta-rs?tag=v0.5.10#86b4630b02ec211c4cce8628d771e2c26f18a814"
+dependencies = [
+ "aes-gcm 0.9.4",
+ "bip0039",
+ "bip32",
+ "blake2 0.10.6",
+ "bs58",
+ "derivative",
+ "manta-accounting 0.5.10",
+ "manta-crypto 0.5.10",
+ "manta-parameters 0.5.10",
+ "manta-util 0.5.10",
+ "num-bigint",
+]
+
+[[package]]
+name = "manta-pay"
 version = "0.5.12"
 source = "git+https://github.com/manta-network/manta-rs?tag=v0.5.12#ba1a4b747456bc4f76a9cb18b515aaf0810b4c9c"
 dependencies = [
@@ -2791,10 +2867,10 @@ dependencies = [
  "blake2 0.10.6",
  "bs58",
  "derivative",
- "manta-accounting",
- "manta-crypto",
- "manta-parameters",
- "manta-util",
+ "manta-accounting 0.5.12",
+ "manta-crypto 0.5.12",
+ "manta-parameters 0.5.12",
+ "manta-util 0.5.12",
  "num-bigint",
 ]
 
@@ -2804,16 +2880,18 @@ version = "1.1.1"
 dependencies = [
  "argon2",
  "async-std",
+ "bincode",
  "chrono",
  "derivative",
  "dirs-next",
  "futures",
  "http-types",
- "manta-accounting",
- "manta-crypto",
- "manta-parameters",
- "manta-pay",
- "manta-util",
+ "manta-accounting 0.5.12",
+ "manta-crypto 0.5.12",
+ "manta-parameters 0.5.12",
+ "manta-pay 0.5.10",
+ "manta-pay 0.5.12",
+ "manta-util 0.5.12",
  "parking_lot",
  "password-hash",
  "reqwest",
@@ -2832,6 +2910,16 @@ dependencies = [
  "manta-signer",
  "tauri",
  "tauri-build",
+]
+
+[[package]]
+name = "manta-util"
+version = "0.5.10"
+source = "git+https://github.com/manta-network/manta-rs?tag=v0.5.10#86b4630b02ec211c4cce8628d771e2c26f18a814"
+dependencies = [
+ "crossbeam-channel",
+ "serde",
+ "serde_with",
 ]
 
 [[package]]
