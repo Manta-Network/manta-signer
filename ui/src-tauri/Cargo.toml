@@ -39,7 +39,7 @@ disable-restart = ["manta-signer/disable-restart"]
 
 [dependencies]
 manta-signer = { path = "../../", default-features = false }
-tauri = { version = "1.0.2", default-features = false, features = ["reqwest-client", "shell-all", "system-tray", "updater", "window-hide", "window-set-size", "window-show", "wry"] }
+tauri = { version = "1.2.4", default-features = false, features = ["reqwest-client", "shell-all", "system-tray", "updater", "window-hide", "window-set-size", "window-show", "wry"] }
 
 [build-dependencies]
 tauri-build = { version = "1.0.2", default-features = false, features = [] }
