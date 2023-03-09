@@ -564,7 +564,7 @@ where
         parameters: &SignerParameters,
     ) -> Result<Option<SignerState>> {
         info!("loading signer state from disk")?;
-        let data_path_buf = data_path.to_owned().clone();
+        let data_path_buf = data_path.to_owned();
         let password_hash_bytes = password_hash.as_bytes();
 
         let state_result = task::spawn_blocking(move || {
@@ -576,7 +576,7 @@ where
             Ok(Some(correct_state))
         } else {
             // fallback to try from old state version
-            Self::new_state_from_old_state(&data_path, password_hash, parameters).await
+            Self::new_state_from_old_state(data_path, password_hash, parameters).await
         }
     }
 
@@ -588,7 +588,7 @@ where
         parameters: &SignerParameters,
     ) -> Result<Option<SignerState>> {
         info!("loading mnemonic from old state")?;
-        let data_path_buf = data_path.to_owned().clone();
+        let data_path_buf = data_path.to_owned();
         let password_hash_bytes = password_hash.as_bytes();
 
         if let Ok(state) = task::spawn_blocking(move || {
@@ -603,7 +603,7 @@ where
                 bincode::deserialize(&encoded[..]).expect("decoding mnenomic failed");
 
             let new_state =
-                Self::create_state(&data_path, password_hash, new_mnemonic, parameters).await?;
+                Self::create_state(data_path, password_hash, new_mnemonic, parameters).await?;
 
             Ok(Some(new_state))
         } else {
