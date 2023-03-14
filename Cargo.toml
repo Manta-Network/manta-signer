@@ -50,7 +50,7 @@ manta-parameters = { git = "https://github.com/manta-network/manta-rs", tag = "v
 manta-pay = { git = "https://github.com/manta-network/manta-rs", tag = "v0.5.12", default-features = false, features = ["bs58", "groth16", "serde", "wallet", "std", "parameters"] }
 manta-util = { git = "https://github.com/manta-network/manta-rs", tag = "v0.5.12", default-features = false }
 parking_lot = { version = "0.12.1", default-features = false }
-password-hash = { version = "0.4.2", default-features = false, features = ["alloc"] }
+password-hash = { version = "0.5.0", default-features = false, features = ["alloc"] }
 previous-state-manta-pay = { package = "manta-pay", git = "https://github.com/manta-network/manta-rs", tag = "v0.5.10", default-features = false, features = ["bs58", "groth16", "serde", "wallet", "std", "parameters"] }
 reqwest = { version = "0.11.14", default-features = false, features = ["json"] }
 secrecy = { version = "0.8.0", default-features = false, features = ["alloc"] }
