@@ -45,7 +45,6 @@ const SignInSuccess = ({
             <tr>
               <th><img className='mini-calamari-logo' alt="Calamari Logo" src={calamariLogo} /></th>
               <th><p className='network-text'>&nbsp;Calamari Network&nbsp;&nbsp;</p></th>
-              <th><a href='https://calamari.network/' target="_blank" rel="noreferrer">(soon)</a></th>
             </tr>
             <tr>
               <th><img className='mini-manta-logo' alt="Manta Logo" src={mantaLogo} /></th>
