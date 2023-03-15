@@ -3,8 +3,37 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## v1.2.1 2023-03-14
+### Added
 
+### Changed
+- [\#348](https://github.com/Manta-Network/manta-signer/pull/348) Remove "soon" next to Calamari for release.
+
+### Deprecated
+
+### Removed
+
+### Security
+
+## v1.2.0 2023-03-08
+
+### Added
+
+### Changed
+- [\#343](https://github.com/Manta-Network/manta-signer/pull/343) Adds ability to load mnemonic from old state version.
+- [\#338](https://github.com/Manta-Network/manta-signer/pull/338) Change start button to continue in View zkAddress.
+- [\#332](https://github.com/Manta-Network/manta-signer/pull/332) Add sink account validation
+
+### Deprecated
+
+### Removed
+
+### Fixed
+- [\#329](https://github.com/Manta-Network/manta-signer/pull/329) Fix bad sync after reimport or password reset
+
+### Security
+
+## [1.1.1] 2023-02-13
 ### Added
 
 ### Changed
@@ -14,6 +43,23 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 ### Removed
 
 ### Fixed
+- [\#292](https://github.com/Manta-Network/manta-signer/pull/292) Fix linux signer not finding proving keys on system
+- [\#289](https://github.com/Manta-Network/manta-signer/pull/289) Fix authorization state preventing consecutive transactions
+
+### Security
+
+## [1.0.1] 2023-01-24
+### Added
+- [\#261](https://github.com/Manta-Network/manta-signer/pull/261) Bundle Proving Keys with manta-signer (no download anymore)
+
+### Changed
+- [\#252](https://github.com/Manta-Network/manta-signer/pull/252) Change app name to manta-signer and coloured icons
+### Deprecated
+
+### Removed
+
+### Fixed
+- [\#250](https://github.com/Manta-Network/manta-signer/pull/250) Fix View recovery phrase window not opening and ZkAddress window closure closing the whole app sometimes
 - [\#236](https://github.com/Manta-Network/manta-signer/pull/236) Fix missing file reload
 
 ### Security

@@ -5,6 +5,8 @@ import SignInSuccess from './SignInSuccess';
 const SignIn = ({
   loginSuccess,
   setLoginSuccess,
+  signerReady,
+  setSignerReady,
   sendSelection,
   getReceivingKeys,
   receivingKey,
@@ -64,6 +66,7 @@ const SignIn = ({
   }
 
   const onClickFinishSignIn = async () => {
+    setSignerReady(true);
     await hideWindow();
   }
 
@@ -80,6 +83,7 @@ const SignIn = ({
     }
     {loginSuccess &&
       <SignInSuccess
+      signerReady={signerReady}
       receivingKeyDisplay={receivingKeyDisplay}
       showCopyNotification={showCopyNotification}
       onClickCopyZkAddress={onClickCopyZkAddress}

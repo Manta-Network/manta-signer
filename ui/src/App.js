@@ -34,6 +34,7 @@ function App() {
   const [authorizationSummary, setAuthorizationSummary] = useState(null);
   const [receivingKey, setReceivingKey] = useState(null);
   const [loginSuccess, setLoginSuccess] = useState(false);
+  const [signerReady, setSignerReady] = useState(false);
   const [receivingKeyDisplay, setReceivingKeyDisplay] = useState(null);
   const [activeListeners, setActiveListeners] = useState({
     authorize: false,
@@ -172,12 +173,14 @@ function App() {
 
       // Case 1: we need authorization for exporting the recovery phrase.
       if (event.payload === GET_RECOVERY_PHRASE) {
+        console.log("[INFO]: Viewing secret phrase window");
         navigate("/view-secret-phrase");
         appWindow.show();
         return;
       }
 
       // Case 2: we need authorization for signing a transaction.
+      console.log("[INFO]: Authorization for transaction");
       await checkAndStopExportingPhrase();
       let parsedAuthorizationSummary = parseTransactionSummary(event.payload.split(" "));
 
@@ -189,7 +192,7 @@ function App() {
 
   const listenForShowSecretPhraseRequests = async () => {
     console.log("[INFO]: Setup tray show secret phrase listener.");
-    listen('show_secret_phrase', (_event) => {
+    listen('show_secret_phrase', async (_event) => {
       getSecretRecoveryPhrase();
     })
   }
@@ -221,11 +224,17 @@ function App() {
       exportingPhraseRef.current = true;
     }
 
-    console.log("[INFO]: Send request to export recovery phrase.");
-    let phrase = await invoke('get_recovery_phrase', { prompt: GET_RECOVERY_PHRASE });
+    try {
+      console.log("[INFO]: Send request to export recovery phrase.");
+      let phrase = await invoke('get_recovery_phrase', { prompt: GET_RECOVERY_PHRASE })
 
-    if (phrase) {
-      setExportedSecretPhrase(phrase);
+      console.log("[INFO]: Request for recovery phrase passed");
+      if (phrase) {
+        await setExportedSecretPhrase(phrase);
+      }
+    } catch(error) {
+      console.log("[WARNING]: Failed getting mnemonic, either fail or aborted (expected)");
+      return;
     }
   }
 
@@ -254,7 +263,6 @@ function App() {
       + "Delete Account: " + deleteAccount + " Restart App: " + restartApp
     );
     await endConnection();
-    await invoke('disconnect_ui');
 
     const payload = {
       delete: deleteAccount,
@@ -266,6 +274,7 @@ function App() {
 
   const endInitialConnectionPhase = async () => {
     console.log("[INFO]: End Initial Connection Phase");
+    await invoke("set_signer_ready", { ready: true });
     setIsConnected(true);
 
     if (!activeListeners.authorize) {
@@ -296,6 +305,8 @@ function App() {
 
   const endConnection = async () => {
     console.log("[INFO]: Ending connection.");
+    await invoke('disconnect_ui');
+    await invoke("set_signer_ready", { ready: false });
     setIsConnected(false);
   }
 
@@ -357,7 +368,6 @@ function App() {
             <Reset
               isConnected={isConnected}
               hideWindow={hideWindow}
-              endConnection={endConnection}
               restartServer={restartServer}
               cancelReset={cancelReset}
             />
@@ -394,6 +404,8 @@ function App() {
             <SignIn
               loginSuccess={loginSuccess}
               setLoginSuccess={setLoginSuccess}
+              signerReady={signerReady}
+              setSignerReady={setSignerReady}
               sendSelection={sendSelection}
               getReceivingKeys={getReceivingKeys}
               receivingKey={receivingKey}

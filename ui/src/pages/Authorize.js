@@ -12,12 +12,13 @@ const Authorize = ({
   const [password, setPassword] = useState('');
   const [passwordInvalid, setPasswordInvalid] = useState(false);
 
-
   useEffect(() => {
     once("abort_auth", async () => {
+      console.log("[INFO]: Authorization window aborting to cancel function");
       await onClickDecline();
     });
-  });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const onClickAuthorize = async () => {
     console.log("[INFO]: Authorizing.");
@@ -32,7 +33,7 @@ const Authorize = ({
   };
 
   const onClickDecline = async () => {
-    ("[INFO]: Declining Transaction.");
+    console.log("[INFO]: Declining Transaction.");
     setPassword('');
     setPasswordInvalid(false)
     await stopPasswordPrompt();

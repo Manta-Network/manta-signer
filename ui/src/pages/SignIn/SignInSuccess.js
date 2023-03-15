@@ -7,6 +7,7 @@ import CopyButton from '../../components/copyButton';
 import "../../App.css";
 
 const SignInSuccess = ({
+  signerReady,
   receivingKeyDisplay,
   showCopyNotification,
   onClickCopyZkAddress,
@@ -44,7 +45,6 @@ const SignInSuccess = ({
             <tr>
               <th><img className='mini-calamari-logo' alt="Calamari Logo" src={calamariLogo} /></th>
               <th><p className='network-text'>&nbsp;Calamari Network&nbsp;&nbsp;</p></th>
-              <th><a href='https://calamari.network/' target="_blank" rel="noreferrer">(soon)</a></th>
             </tr>
             <tr>
               <th><img className='mini-manta-logo' alt="Manta Logo" src={mantaLogo} /></th>
@@ -56,9 +56,16 @@ const SignInSuccess = ({
       </div>
 
     </div>
-    <Button className="button ui first" onClick={onClickFinishSignIn}>
-      Start
-    </Button>
+    {
+      signerReady ?
+        <Button className="button ui first" onClick={onClickFinishSignIn}>
+          Continue
+        </Button>
+        :
+        <Button className="button ui first" onClick={onClickFinishSignIn}>
+          Start
+        </Button>
+    }
   </div>)
 }
 

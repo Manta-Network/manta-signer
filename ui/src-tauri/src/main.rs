@@ -64,6 +64,10 @@ pub struct AppState {
     /// UI is Connected
     pub ui_connected: AtomicBool,
 
+    /// User has logged in and the Signer is running
+    /// Used to stop signer window from closing from the X button
+    pub ready: AtomicBool,
+
     /// Currently Authorising
     pub authorizing: AtomicBool,
 }
@@ -74,6 +78,7 @@ impl AppState {
     pub const fn new() -> Self {
         Self {
             ui_connected: AtomicBool::new(false),
+            ready: AtomicBool::new(false),
             authorizing: AtomicBool::new(false),
         }
     }
@@ -88,6 +93,18 @@ impl AppState {
     #[inline]
     pub fn set_ui_connected(&self, ui_connected: bool) {
         self.ui_connected.store(ui_connected, Ordering::Relaxed)
+    }
+
+    /// Returns the ready status.
+    #[inline]
+    pub fn get_ready(&self) -> bool {
+        self.ready.load(Ordering::Relaxed)
+    }
+
+    /// Sets the ready status.
+    #[inline]
+    pub fn set_ready(&self, ready: bool) {
+        self.ready.store(ready, Ordering::Relaxed)
     }
 
     /// Returns the authorizing status.
@@ -180,15 +197,13 @@ impl User {
     /// Requests selection from user, either to create account or recover old account.
     #[inline]
     async fn request_selection(&mut self) -> UserSelection {
-        let user_selection = self.mnemonic_receiver.load_selection().await;
-        user_selection
+        self.mnemonic_receiver.load_selection().await
     }
 
     /// Requests mnemonic from user
     #[inline]
     async fn request_mnemonic(&mut self) -> Mnemonic {
-        let mnemonic = self.mnemonic_receiver.load_mnemonic().await;
-        mnemonic
+        self.mnemonic_receiver.load_mnemonic().await
     }
 
     /// Sends validation message when password was correctly matched.
@@ -252,6 +267,7 @@ impl Authorizer for User {
         T: Serialize,
     {
         APP_STATE.set_authorizing(true);
+        println!("INFO: Server Awake");
         self.emit("authorize", prompt);
         Box::pin(async move {})
     }
@@ -259,6 +275,7 @@ impl Authorizer for User {
     #[inline]
     fn sleep(&mut self) -> UnitFuture {
         APP_STATE.set_authorizing(false);
+        println!("INFO: Server Sleeping");
         Box::pin(async move { self.validate_password().await })
     }
 }
@@ -296,6 +313,17 @@ fn disconnect_ui() {
     APP_STATE.set_ui_connected(false);
 }
 
+/// TRUE: Called when Signer is ready: User has logged in and signer has minimized to the background/tray
+/// This is to prevent signer closure from the [X] button when opening windows from the tray
+/// Exiting through the tray menu should be the only way
+///
+/// False: When there was recovery/aborting recovery and the server
+/// needs to restart/reset up
+#[tauri::command]
+fn set_signer_ready(ready: bool) {
+    APP_STATE.set_ready(ready);
+}
+
 /// Sends the current `password` into storage from the UI.
 #[tauri::command]
 async fn send_password(
@@ -331,7 +359,7 @@ async fn set_tray_reset(tray_handle: SystemTrayHandle, reset: bool, show_phrase:
                 "view secret recovery phrase",
                 "View Secret Recovery Phrase",
             ))
-            .add_item(CustomMenuItem::new("view zk address", "View ZkAddress"))
+            .add_item(CustomMenuItem::new("view zk address", "View zkAddress"))
             .add_item(CustomMenuItem::new("reset", "Delete Account"))
             .add_item(CustomMenuItem::new("exit", "Quit"))
     } else if reset {
@@ -476,6 +504,7 @@ async fn reset_account(
 
     if config.can_app_restart && restart {
         app_handle.restart();
+        return Ok(());
     }
 
     let (password_sender, password_receiver) = password_channel();
@@ -542,11 +571,10 @@ async fn get_recovery_phrase(
     server_store: State<'_, ServerStore>,
 ) -> Result<Mnemonic, ()> {
     if let Some(store) = &mut *server_store.lock().await {
-        let mnemonic = store
-            .get_stored_mnemonic(Network::Dolphin, &prompt)
-            .await
-            .expect("Unable to fetch mnemonic");
-        Ok(mnemonic)
+        match store.get_stored_mnemonic(Network::Dolphin, &prompt).await {
+            Ok(mnemonic) => Ok(mnemonic),
+            Err(_) => Err(()),
+        }
     } else {
         Err(())
     }
@@ -662,6 +690,7 @@ fn main() {
             reset_account,
             connect_ui,
             disconnect_ui,
+            set_signer_ready,
             address,
             get_recovery_phrase,
             cancel_sign,
@@ -684,11 +713,17 @@ fn main() {
             match label.as_str() {
                 "about" => window(app, "about").hide().expect("Unable to hide window."),
                 "main" => {
-                    if APP_STATE.get_authorizing() {
-                        window(app, "main").hide().expect("Unable to hide window.");
-                        window(app, "main")
-                            .emit("abort_auth", "Aborting Authorization")
-                            .expect("Failed to abort authorization");
+                    if APP_STATE.get_ready() {
+                        if APP_STATE.get_authorizing() {
+                            // should not hide from here, let UI handle its authorization aborting and hiding
+                            window(app, "main")
+                                .emit("abort_auth", "Aborting Authorization")
+                                .expect("Failed to abort authorization");
+                            APP_STATE.set_authorizing(false);
+                        } else {
+                            // hide any non process showing window like show zkAddress
+                            window(app, "main").hide().expect("Unable to hide window.");
+                        }
                     } else {
                         app.exit(0);
                     }

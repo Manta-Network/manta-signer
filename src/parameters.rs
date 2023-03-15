@@ -18,12 +18,12 @@
 
 // TODO: Report a more informative error.
 
-use manta_parameters::{Download, Get};
+use manta_parameters::Get;
 use manta_pay::{config, parameters::load_transfer_parameters, signer::base::SignerParameters};
 use manta_util::codec::{Decode, IoReader};
 use std::{
     fs::{self, File},
-    path::Path,
+    path::{Path, PathBuf},
 };
 
 /// Loads the [`SignerParameters`] from the Manta SDK.
@@ -39,21 +39,54 @@ where
     directory.push("testnet");
     directory.push("proving");
     fs::create_dir_all(&directory).ok()?;
-    let mint = directory.join("to-private.dat");
-    manta_parameters::pay::proving::ToPrivate::download_if_invalid(&mint).ok()?;
-    let private_transfer = directory.join("private-transfer.dat");
-    manta_parameters::pay::proving::PrivateTransfer::download_if_invalid(&private_transfer).ok()?;
-    let reclaim = directory.join("to-public.dat");
-    manta_parameters::pay::proving::ToPublic::download_if_invalid(&reclaim).ok()?;
+
     let parameters = load_transfer_parameters();
+    let mut exec_dir =
+        std::env::current_exe().expect("Could not get Manta Signer executable file directory");
+    exec_dir.pop();
+
+    // MacOs installation puts assets in another folder "Resources" compared to Win/Linux Installations
+    let mut directory_check = PathBuf::from(&exec_dir).join("proving");
+
+    // check for test server and MacOs installation folder hierachy discrepancy relative to Win/Ubuntu
+    if !directory_check.is_dir() {
+        exec_dir.pop();
+        directory_check = PathBuf::from(&exec_dir).join("proving");
+
+        if !directory_check.is_dir() {
+            if cfg!(target_os = "macos") {
+                // macos
+                exec_dir.push("Resources");
+            } else {
+                // linux (ubuntu) specific
+                exec_dir = PathBuf::from("/usr/lib/manta-signer");
+            }
+        }
+    }
+    // use absolute paths for release
+    let mut to_private = PathBuf::from(&exec_dir);
+    to_private.push("proving/to-private.lfs");
+
+    let mut private_transfer = PathBuf::from(&exec_dir);
+    private_transfer.push("proving/private-transfer.lfs");
+
+    let mut to_public = PathBuf::from(&exec_dir);
+    to_public.push("proving/to-public.lfs");
+
     Some(SignerParameters {
         proving_context: config::MultiProvingContext {
-            to_private: config::ProvingContext::decode(IoReader(File::open(mint).ok()?)).ok()?,
-            private_transfer: config::ProvingContext::decode(IoReader(
-                File::open(private_transfer).ok()?,
+            to_private: config::ProvingContext::decode(IoReader(
+                File::open(to_private).expect("Could not read to_private.lfs"),
             ))
             .ok()?,
-            to_public: config::ProvingContext::decode(IoReader(File::open(reclaim).ok()?)).ok()?,
+            private_transfer: config::ProvingContext::decode(IoReader(
+                File::open(private_transfer).expect("Could not read private_transfer.lfs"),
+            ))
+            .ok()?,
+            to_public: config::ProvingContext::decode(IoReader(
+                File::open(to_public).expect("Could not read to_public.lfs"),
+            ))
+            .ok()?,
         },
         parameters,
     })

@@ -1,5 +1,6 @@
-
+import { once } from '@tauri-apps/api/event';
 import { Button, Form, Input } from 'semantic-ui-react';
+import { useEffect } from 'react';
 import mainLogo from "../../icons/manta.png";
 import "../../App.css";
 
@@ -12,7 +13,14 @@ const ViewPhrasePage = ({
   onClickSubmitPassword,
   onClickCancel
 }) => {
-
+  
+  useEffect(() => {
+    once("abort_auth", async () => {
+      console.log("[INFO]: ViewPhrasePage aborting to cancel function");
+      await onClickCancel();
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (<>
 
