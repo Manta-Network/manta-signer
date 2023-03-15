@@ -22,6 +22,7 @@ import ConfirmPhrase from './pages/AccountCreation/ConfirmPhrase';
 const SEND = "Send";
 const PUBLIC = "Public";
 const GET_RECOVERY_PHRASE = "GetRecoveryPhrase";
+const TRANSACTION = "TransactionDataRequest";
 
 function App() {
   const navigate = useNavigate();
@@ -123,11 +124,24 @@ function App() {
   // on the type of transaction: TransferShape::PrivateTransfer, TransferShape::Reclaim
   const parseTransactionSummary = (summary) => {
 
+    if (summary[0] === TRANSACTION) {
+      let parsedAuthorizationSummary = {
+        sendAmount: null,
+        currency: null,
+        toAddress: null,
+        network: null,
+        isTransactionDataRequest: true
+      };
+      return parsedAuthorizationSummary;
+    }
+
+
     let parsedAuthorizationSummary = {
       sendAmount: parseFloat(summary[1]),
       currency: summary[2],
       toAddress: null,
-      network: null
+      network: null,
+      isTransactionDataRequest: false
     };
 
     if (summary[0] === SEND) {

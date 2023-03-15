@@ -67,7 +67,10 @@ use tokio::{
 
 pub use manta_pay::{
     config::{address_to_base58, Address},
-    signer::{self, SignError, SignResponse, SyncError, SyncResponse},
+    signer::{
+        self, IdentityResponse, SignError, SignResponse, SignWithTransactionDataResponse,
+        SyncError, SyncResponse, TransactionDataResponse,
+    },
 };
 
 /// Synchronization Request
@@ -78,6 +81,12 @@ pub type SignRequest = Message<signer::SignRequest>;
 
 /// Receiving Key Request
 pub type ReceivingKeyRequest = Message<signer::GetRequest>;
+
+/// Transaction Data Request
+pub type TransactionDataRequest = Message<signer::TransactionDataRequest>;
+
+/// Request for proof of identity
+pub type IdentityProofRequest = Message<signer::IdentityRequest>;
 
 /// Password Retry Interval
 pub const PASSWORD_RETRY_INTERVAL: Duration = Duration::from_millis(1000);
@@ -113,6 +122,11 @@ pub enum Error {
     ///
     /// The signer could not process the request at this time.
     Delayed,
+
+    /// Bad Data Error
+    ///
+    /// The data given to signer could not be processed correctly
+    BadData,
 }
 
 from_variant!(Error, AddrParseError, AddrParseError);
@@ -150,6 +164,7 @@ impl Display for Error {
             Self::Io(err) => write!(f, "I/O Error: {err}"),
             Self::AuthorizationError => write!(f, "Authorization Error"),
             Self::Delayed => write!(f, "Delay Error"),
+            Self::BadData => write!(f, "Bad Data Error"),
         }
     }
 }
@@ -164,6 +179,10 @@ pub fn display_transaction(
     metadata: &AssetMetadata,
     network: Network,
 ) -> String {
+    let decimal = match metadata.token_type {
+        TokenType::FT(decimal) => decimal,
+        TokenType::NFT => 1
+    };
     match transaction {
         Transaction::ToPrivate(Asset { value, .. }) => match metadata.token_type {
             TokenType::FT(decimals) => {
@@ -512,6 +531,13 @@ where
         http::register_post(&mut api, "/sync", Server::sync);
         http::register_post(&mut api, "/sign", Server::sign);
         http::register_post(&mut api, "/address", Server::address);
+        http::register_post(&mut api, "/transaction_data", Server::transaction_data);
+        http::register_post(
+            &mut api,
+            "/sign_with_transaction_data",
+            Server::sign_with_transaction_data,
+        );
+        http::register_post(&mut api, "/identity", Server::identity_proof);
         info!("serving signer API at {}", socket_address)?;
         api.listen(socket_address).await?;
         Ok(())
@@ -684,6 +710,75 @@ where
         let response = self.state.lock().signer[network].sign(transaction);
         info!("[RESPONSE] responding to `sign` with: {:?}.", response)?;
         self.state.lock().currently_signing = false;
+        Ok(response)
+    }
+
+    /// Runs the transaction signing protocol on the signer.
+    #[inline]
+    pub async fn sign_with_transaction_data(
+        self,
+        request: SignRequest,
+    ) -> Result<Result<SignWithTransactionDataResponse, SignError>> {
+        info!(
+            "[REQUEST] processing `sign with transaction data`: {:?}.",
+            request
+        )?;
+        if self.state.lock().currently_signing {
+            return Err(Error::Delayed);
+        }
+        self.state.lock().currently_signing = true;
+        let SignRequest {
+            network,
+            message:
+                signer::SignRequest {
+                    transaction,
+                    metadata,
+                },
+        } = request;
+        match transaction.shape() {
+            TransferShape::ToPrivate => {
+                // NOTE: We skip authorization on mint transactions because they are deposits not
+                //       withdrawals from the point of view of the signer. Everything else, by
+                //       default, requests authorization.
+            }
+            _ => {
+                info!("[AUTH] asking for transaction authorization")?;
+                let summary = metadata
+                    .map(|metadata| display_transaction(&transaction, &metadata, network))
+                    .unwrap_or_default();
+                self.authorizer.lock().await.check(&summary).await?
+            }
+        }
+        let response = self.state.lock().signer[network].sign_with_transaction_data(transaction);
+        info!("[RESPONSE] responding to `sign` with: {:?}.", response)?;
+        self.state.lock().currently_signing = false;
+        Ok(response)
+    }
+
+    /// Processes a TransactionDataRequest `request` which contains TransferPosts, and returns Transaction Data,
+    #[inline]
+    pub async fn transaction_data(
+        self,
+        request: TransactionDataRequest,
+    ) -> Result<TransactionDataResponse, Error> {
+        info!("[REQUEST] processing `transaction_data`: {:?}.", request)?;
+        info!("[AUTH] asking for transaction data authorization")?;
+        let summary = "TransactionDataRequest";
+        self.authorizer.lock().await.check(&summary).await?;
+        let response =
+            self.state.lock().signer[request.network].batched_transaction_data(request.message.0);
+        Ok(response)
+    }
+
+    /// Processes a IdentityProofRequest and produces a virtual `ToPublic` post from that request
+    #[inline]
+    pub async fn identity_proof(
+        self,
+        request: IdentityProofRequest,
+    ) -> Result<IdentityResponse, Error> {
+        info!("[REQUEST] processing `identity`: {:?}.", request)?;
+        let response =
+            self.state.lock().signer[request.network].batched_identity_proof(request.message.0);
         Ok(response)
     }
 
