@@ -29,6 +29,7 @@ function App() {
       <header className='h-16 flex flex-shrink-0 px-4 sm:px-6 justify-between items-center border border-gray-300 border-x-0 border-t-0'>
         <a
           className='flex gap-2 cursor-pointer'
+          rel='noreferrer'
           href='http://manta.network/'
           target='_blank'
         >
@@ -40,6 +41,7 @@ function App() {
         <div className='flex items-center gap-3 text-primary pr-0 sm:px-4'>
           <a
             href='https://discord.gg/PRDBTChSsF'
+            rel='noreferrer'
             target='_blank'
             className='cursor-pointer'
           >
@@ -47,6 +49,7 @@ function App() {
           </a>
           <a
             href='https://twitter.com/mantanetwork'
+            rel='noreferrer'
             target='_blank'
             className='cursor-pointer'
           >
@@ -54,6 +57,7 @@ function App() {
           </a>
           <a
             href='https://t.me/mantanetworkofficial'
+            rel='noreferrer'
             target='_blank'
             className='cursor-pointer'
           >
@@ -61,6 +65,7 @@ function App() {
           </a>
           <a
             href='https://github.com/manta-network'
+            rel='noreferrer'
             target='_blank'
             className='cursor-pointer'
           >
@@ -105,24 +110,24 @@ function App() {
           Network, Calamari Network, and Dolphin Testnet.
         </p>
         <a
-          href='https://docs.manta.network/docs/concepts/Signer?utm_source=website&utm_id=manta-signer-landing-page'
+          href='https://docs.manta.network/docs/guides/MantaSigner'
           target='_blank'
+          rel='noreferrer'
           className='text-2xl mt-6 text-thirdry'
         >
           Learn More about Manta Signer
         </a>
 
         <p className='mt-10 text-secondary text-lg max-w-lg'>
-          Try MantaPay on the Dolphin Testnet - MantaPay allows users to
-          privatize public assets, transfer private assets, and convert private
-          assets back into public assets.
+        Use MantaPay on Calamari - MantaPay allows users to privatize public assets, transfer private assets, and convert private assets back into public assets.
         </p>
         <a
-          href='https://app.dolphin.manta.network/?utm_source=website&utm_id=manta-signer-landing-page#/transact'
+          href='https://app.manta.network'
           target='_blank'
+          rel='noreferrer'
           className='text-2xl mt-6 text-thirdry'
         >
-          Try Dolphin Testnet
+          Use MantaPay on Calamari
         </a>
       </div>
     </div>
