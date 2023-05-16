@@ -1,5 +1,5 @@
 // @ts-nocheck
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
   faDiscord,
@@ -7,22 +7,11 @@ import {
   faTelegram,
   faGithub,
 } from '@fortawesome/free-brands-svg-icons';
-import DolphinLogo from './assets/dolphin.svg';
 import MantaLogo from './assets/manta.png';
 import './App.css';
 
 
 function App() {
-  const [os, setOs] = useState<string | undefined>('');
-
-  const getOS = () => {
-    const os = ['Linux', 'Mac', 'Windows'];
-    return os.find((v) => navigator.appVersion.indexOf(v) >= 0);
-  };
-
-  useEffect(() => {
-    setOs(getOS());
-  }, []);
 
   return (
     <div className='App bg-primary flex flex-grow flex-col'>
@@ -74,50 +63,20 @@ function App() {
         </div>
       </header>
       <div className='flex flex-col flex-grow justify-center items-center p-4'>
-        <img src={DolphinLogo} alt='Dolphin Network' className='sm:w-24 w-16' />
+        <img src={MantaLogo} alt='Dolphin Network' className='sm:w-24 w-16' />
         <h1 className='mt-6 text-4xl sm:text-6xl'>
-          Your Gateway to Web3 Privacy.
+        The Manta Wallet: Your Gateway to Web3 Privacy
         </h1>
         <a
           className='px-6 py-4 text-white text-2xl bg-button rounded-full mt-12 cursor-pointer'
           onclick="window.fathom.trackGoal('KUBL03QU', 0);"
-          href={
-            os === 'Mac'
-              ? 'https://github.com/Manta-Network/manta-signer/releases/download/v1.2.1/manta-signer-macos-latest_1.2.1-103_x64.dmg'
-              : os === 'Windows'
-              ? 'https://github.com/Manta-Network/manta-signer/releases/download/v1.2.1/manta-signer-windows-2019_1.2.1_x64.msi'
-              : 'https://github.com/Manta-Network/manta-signer/releases/download/v1.2.1/manta-signer-ubuntu-18.04_1.2.1_amd64.deb'
-          }
-          title={
-            os === 'Mac'
-              ? 'Manta Signer for macOS 10.15 or later'
-              : os === 'Windows'
-              ? 'Manta Signer for Windows 10 or later'
-              : 'Manta Signer for Ubuntu 18.04 or later'
-          }
-        >
-          Download Manta Signer
-        </a>
-        <p className='text-center text-secondary text-2xl mt-3'>
-          {os === 'Mac'
-            ? 'For macOS 10.15 or later'
-            : os === 'Windows'
-            ? 'For Windows 10 or later'
-            : 'For Ubuntu 18.04 or later'}
-        </p>
-        <p className='mt-10 text-secondary text-lg max-w-lg'>
-          Manta Signer enables access to all privacy tools and services on Manta
-          Network, Calamari Network, and Dolphin Testnet.
-        </p>
-        <a
-          href='https://docs.manta.network/docs/guides/MantaSigner'
-          target='_blank'
+          href={'https://chrome.google.com/webstore/detail/manta-wallet/enabgbdfcbaehmbigakijjabdpdnimlg'}
           rel='noreferrer'
-          className='text-2xl mt-6 text-thirdry'
+          target='_blank'
+          title={'Download Manta Wallet'}
         >
-          Learn More about Manta Signer
+          Download Manta Wallet
         </a>
-
         <p className='mt-10 text-secondary text-lg max-w-lg'>
         Use MantaPay on Calamari - MantaPay allows users to privatize public assets, transfer private assets, and convert private assets back into public assets.
         </p>
