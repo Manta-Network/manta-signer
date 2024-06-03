@@ -48,25 +48,32 @@ const Authorize = ({
 
   return (
     <>
+      {!summary.isTransactionDataRequest ? 
       <div className='auth-transaction-header'>
-        <h1 className='main-headline'>Authorize Transaction</h1>
-      </div>
-      <div className='transaction-container'>
-        <div className='transaction-detail'>
-          <h5 className='transaction-description'>Send</h5>
-          <div>
-            <h5 className='transaction-value'>{summary.sendAmount + " " + summary.currency}</h5>
+        <h1 className='main-headline'>Authorize Transaction Data Request</h1>
+      </div> :
+      <div>
+        <div className='auth-transaction-header'>
+          <h1 className='main-headline'>Authorize Transaction</h1>
+        </div>
+        <div className='transaction-container'>
+          <div className='transaction-detail'>
+            <h5 className='transaction-description'>Send</h5>
+            <div>
+              <h5 className='transaction-value'>{summary.sendAmount + " " + summary.currency}</h5>
+            </div>
+          </div>
+          <div className='transaction-detail'>
+            <h5 className='transaction-description'>To</h5>
+            <h5 className='transaction-value'>{summary.toAddress}</h5>
+          </div>
+          <div className='transaction-detail-padded'>
+            <h5 className='transaction-description'>Network</h5>
+            <h5 className='transaction-value'>{summary.network}</h5>
           </div>
         </div>
-        <div className='transaction-detail'>
-          <h5 className='transaction-description'>To</h5>
-          <h5 className='transaction-value'>{summary.toAddress}</h5>
-        </div>
-        <div className='transaction-detail-padded'>
-          <h5 className='transaction-description'>Network</h5>
-          <h5 className='transaction-value'>{summary.network}</h5>
-        </div>
       </div>
+      }
       <Input
         className='input ui password'
         type="password"

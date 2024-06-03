@@ -39,6 +39,7 @@ where
     directory.push("testnet");
     directory.push("proving");
     fs::create_dir_all(&directory).ok()?;
+
     let parameters = load_transfer_parameters();
     let mut exec_dir =
         std::env::current_exe().expect("Could not get Manta Signer executable file directory");
